@@ -28,6 +28,7 @@ options {
 tokens {
     CAST;
     COND;
+    EXPR_LIST;
     FUNC;
 }
 
@@ -39,8 +40,20 @@ package jaitools.jiffle.parser;
 package jaitools.jiffle.parser;
 }
 
+@members {
+    private boolean printParseTree = false;
 
-jiffle		: (statement { System.out.println($statement.tree == null ? "null" : $statement.tree.toStringTree()); })+ ;
+    public void setPrint(boolean b) { printParseTree = b; }
+}
+
+
+jiffle		: (statement 
+                    { 
+                        if (printParseTree) {
+                            System.out.println($statement.tree == null ? "null" : $statement.tree.toStringTree());
+                        }
+                    })+ 
+                ;
 
 statement	: expr EOS!
 		| EOS!
@@ -51,8 +64,11 @@ expr		: func
                 | cond_expr
 		;
 
-func            : ID '(' expr ')' -> ^(FUNC ID expr)
+func            : ID '(' expr_list ')' -> ^(FUNC ID expr_list)
                 ;
+
+expr_list       : expr (',' expr)* -> ^(EXPR_LIST expr+)
+		;
 		
 assign_expr     : ID assign_op^ expr
                 ;
