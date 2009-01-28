@@ -6,19 +6,167 @@ The jiffle language is intended to make it easier to create images from mathemat
 
 = Description of the language =
 
-Jiffle's syntax is similar to (ie. heavily borrowed from) C and Java.
+Jiffle's (somewhat preliminary) syntax borrows is C-ish / Java-ish.  The language is case sensitive. All statements must be terminated with a semicolon.
 
-* Arithmetic operators
-  || `^` ||Raise to power     ||
-  || `*` ||Multiply           ||
-  || `/` ||Divide             ||
-  || `%` ||Modulo (remainder) ||
-  || `+` ||Add                ||
-  || `-` ||Subtract           ||
+== Arithmetic operators ==
+  `^` Raise to power <br>
+  `*` Multiply <br>
+  `/` Divide <br>
+  `%` Modulo (remainder) <br>
+  `+` Add <br>
+  `-` Subtract <br>
 
-All the ones you'd expect...
+== Logical operators ==
+These can be specified using familiar C/Java symbols or capitalized operator names.
+  `&&` *AND* <br>
+  `||` *OR* <br>
+  `^|` *XOR* <br>
+  `==` *EQ* <br>
+  `!=` *NE* <br>
+  `>`  *GT* <br>
+  `>=` *GE* <br>
+  `<=` *LE* <br>
+  `<`  *LT* <br>
+  `!`  *NOT* <br>
+
+== Conditional expressions ==
+These are of the form:
+{{{
+   (expr) ? (true expr) : false expr
+}}}
+
+== Function calls ==
+
+Jiffle presently supports functions taking 1 or 2 *double* arguments and returning a *double* value. The language includes a set of basic functions: log(x), sqrt(x), abs(x), rand(x) random double in the range [0,x), randInt(x) random integer (actually a floored double) in the range [0,x), sin(x), cos(x), tan(x), asin(x), acos(x), atan(x), radToDeg(x), degToRad(x).
+
+The next step is to allow users to plug their own functions into the jiffle interpreter and support no-arg and variable arg functions.
+
+== Variables ==
+
+Local variables can be defined to store double values in jiffle code. Variable names must start with a letter, optionally followed by letters, numbers and underscores. Names are case-sensitive.
+
+Boolean variables and lists are not catered for yet.
+
+Jiffle knows a small number of pre-defined constants: PI, E and NaN.
+
+= What's missing ? =
+
+Inputs !  The next step is to add language elements for input images and image coordinates.
 
 
 = ANTLR grammar for jiffle =
+{{{
+grammar Jiffle;
 
-This is a sim
+jiffle		: statement+ 
+		;
+
+statement	: expr EOS
+		| EOS
+		;
+
+expr		: func
+                | assign_expr
+                | cond_expr
+		;
+
+func            : ID '(' expr ')'
+                ;
+		
+assign_expr     : ID assign_op expr
+                ;
+
+assign_op	: '='
+		| '*='
+		| '/='
+		| '%='
+		| '+='
+		| '-='
+		;
+		
+cond_expr	: or_expr ('?' cond_expr ':' cond_expr)?
+                ;
+
+or_expr		: and_expr (OR and_expr)*
+		;
+
+and_expr	: xor_expr (AND xor_expr)*
+		;
+
+xor_expr	: eq_expr (XOR eq_expr)*
+		;
+		
+eq_expr		: comp_expr ((EQ | NE) comp_expr)?
+		;
+		
+comp_expr	: add_expr ((GT | GE | LE | LT) add_expr)?
+		;
+
+add_expr	: mult_expr (('+' | '-') mult_expr)*
+		;
+		
+mult_expr	: cast_expr (('*' | '/' | '%') cast_expr)*
+		;					
+		
+cast_expr	: '(' type_name ')' cast_expr
+		| unary_expr
+		;	
+
+unary_expr	: '++' postfix_expr
+		| '--' postfix_expr
+		| unary_op postfix_expr
+		| postfix_expr
+		;
+		
+postfix_expr	: '++'
+		| '--'
+		| atom_expr
+		;
+		
+unary_op	: '+'
+		| '-'
+		| '!'
+		;
+		
+type_name	: 'int'
+		| 'float'
+		| 'double'
+		| 'boolean'
+		;
+
+atom_expr	: ID
+		| constant
+		| '(' expr ')'
+		;
+
+constant	: INT_LITERAL
+		| FLOAT_LITERAL
+		;
+		
+OR		: '||' | 'OR' ;
+AND		: '&&' | 'AND' ;
+XOR		: '^|' | 'XOR' ;
+EQ		: '==' | 'EQ' ;
+NE		: '!=' | 'NE' ;
+GT		: '>' | 'GT' ;
+GE		: '>=' | 'GE' ;
+LE		: '<=' | 'LE' ;
+LT		: '<' | 'LT' ;
+
+ID		: (LETTER) (LETTER | '_' | '0'..'9')*
+		;
+
+fragment
+LETTER		: 'a'..'z' | 'A'..'Z'
+		;
+		
+INT_LITERAL	: '0' | '1'..'9' '0'..'9'*
+		;
+
+FLOAT_LITERAL	: ('0' | '1'..'9' '0'..'9'*)? '.' '0'..'9'* ('e'|'E' ('+'|'-')? '0'..'9'+)?
+		;
+				
+EOS		: ';' ;
+
+WS  		:  (' '|'\r'|'\t'|'\u000C'|'\n') {$channel=HIDDEN;} ;
+}}}
