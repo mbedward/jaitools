@@ -2,11 +2,11 @@
 
 = Introduction =
 
-The jiffle language is intended to make it easier to create images from mathematical expressions whose inputs are image location and/or other image values.
+The jiffle language is intended to make it easier to create images from expressions whose inputs are image location and/or other image values and which may contain mathematical and logical operators.
 
 = Description of the language =
 
-Jiffle's (somewhat preliminary) syntax borrows is C-ish / Java-ish.  The language is case sensitive. All statements must be terminated with a semicolon.
+Jiffle's (somewhat preliminary) syntax is C-ish / Java-ish.  The language is case sensitive. All statements are terminated with a semicolon.
 
 == Arithmetic operators ==
   `^` Raise to power <br>
@@ -30,9 +30,9 @@ These can be specified using familiar C/Java symbols or capitalized operator nam
   `!`  *NOT* <br>
 
 == Conditional expressions ==
-These are of the form:
+Example:
 {{{
-   (expr) ? (true expr) : false expr
+   z = (x > 2.5 ? 1 : 0);
 }}}
 
 == Function calls ==
@@ -43,7 +43,7 @@ The next step is to allow users to plug their own functions into the jiffle inte
 
 == Variables ==
 
-Local variables can be defined to store double values in jiffle code. Variable names must start with a letter, optionally followed by letters, numbers and underscores. Names are case-sensitive.
+Local variables can be defined to store double values. Variable names must start with a letter, optionally followed by letters, numbers and underscores. Names are case-sensitive.
 
 Boolean variables and lists are not catered for yet.
 
@@ -52,6 +52,8 @@ Jiffle knows a small number of pre-defined constants: PI, E and NaN.
 = What's missing ? =
 
 Inputs !  The next step is to add language elements for input images and image coordinates.
+
+Operators for neighbourhood analyses.
 
 
 = ANTLR grammar for jiffle =
