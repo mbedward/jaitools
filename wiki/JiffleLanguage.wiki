@@ -1,0 +1,24 @@
+#summary jiffle: a JAI ImageFunction scripting language
+
+= Introduction =
+
+The jiffle language is intended to make it easier to create images from mathematical expressions whose inputs are image location and/or other image values.
+
+= Description of the language =
+
+Jiffle's syntax is similar to (ie. heavily borrowed from) C and Java.
+
+* Arithmetic operators
+  || `^` ||Raise to power     ||
+  || `*` ||Multiply           ||
+  || `/` ||Divide             ||
+  || `%` ||Modulo (remainder) ||
+  || `+` ||Add                ||
+  || `-` ||Subtract           ||
+
+All the ones you'd expect...
+
+
+= ANTLR grammar for jiffle =
+
+This is a sim
