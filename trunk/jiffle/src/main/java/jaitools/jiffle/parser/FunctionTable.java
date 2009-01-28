@@ -21,6 +21,7 @@
 package jaitools.jiffle.parser;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -79,37 +80,63 @@ public class FunctionTable {
     /**
      * Get a function by name.
      * @param name the function name (case-sensitive)
+     * @return an OpBase ref for the function or null if the function
+     * has not been defined
      */
     private OpBase getOp(String name) {
         if (lookup == null) {
             initLookup();
         }
-        OpBase op = lookup.get(name);
+        return lookup.get(name);
+    }
+    
+    boolean isDefined(String name, int numArgs) {
+        OpBase op = getOp(name);
         if (op == null) {
-            throw new IllegalArgumentException("unknown function: " + name);
+            return false;
         }
-        return op;
+        
+        /* @todo this is terribly inelegant */
+        boolean match = 
+                (op instanceof OpBase1 && numArgs == 1) ||
+                (op instanceof OpBase2 && numArgs == 2);
+        
+        return match;
+    }
+    
+    double invoke(String name, List<Double> args) {
+        switch (args.size()) {
+            case 1:
+                return invoke(name, args.get(0));
+                
+            case 2:
+                return invoke(name, args.get(0), args.get(1));
+                
+            default:
+                throw new IllegalStateException(
+                        "unsupported function: " + name + " with " + args.size() + " args");
+        }
     }
 
     /**
      * Invoke a single argument function.
-     * @param op the function name
+     * @param name the function name
      * @param x argument value
      * @return result as a double
      */
-    double doOp(String op, double x) {
-        return ((OpBase1)getOp(op)).call(x);
+    private double invoke(String name, double x) {
+        return ((OpBase1)getOp(name)).call(x);
     }
 
     /**
      * Invoke a two argument function.
-     * @param op the function name
+     * @param name the function name
      * @param x1 first argument value
      * @param x2 second argument value
      * @return result as a double
      */
-    double doOp(String op, double x1, double x2) {
-        return ((OpBase2)getOp(op)).call(x1, x2);
+    private double invoke(String name, double x1, double x2) {
+        return ((OpBase2)getOp(name)).call(x1, x2);
     }
 
 }
