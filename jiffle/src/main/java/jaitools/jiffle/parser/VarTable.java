@@ -17,7 +17,6 @@
  * along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-
 package jaitools.jiffle.parser;
 
 import java.util.HashMap;
@@ -30,7 +29,15 @@ import java.util.HashMap;
  */
 class VarTable {
 
+    private static final int ASSIGN = 1;
+    private static final int PLUS_EQ = 2;
+    private static final int MINUS_EQ = 3;
+    private static final int TIMES_EQ = 4;
+    private static final int DIVIDE_EQ = 5;
+    private static final int MOD_EQ = 6;
+    
     private HashMap<String, Number> lookup = null;
+    private HashMap<String, Integer> ops;
 
     /**
      * Initialize the lookup map
@@ -39,7 +46,56 @@ class VarTable {
         if (lookup == null) {
             lookup = new HashMap<String, Number>();
             setConstants();
+
+            initOps();
         }
+    }
+
+    private void initOps() {
+        ops = new HashMap<String, Integer>();
+
+        ops.put("=", ASSIGN);
+        ops.put("+=", PLUS_EQ);
+        ops.put("-=", MINUS_EQ);
+        ops.put("*=", TIMES_EQ);
+        ops.put("/=", DIVIDE_EQ);
+        ops.put("%=", MOD_EQ);
+    }
+
+    private void doAssignOp(int op, String id, double x) {
+        if (op == ASSIGN) {
+            put(id, x);
+            return;
+        }
+        
+        Number stored = lookup.get(id);
+        if (stored != null) {
+            switch (op) {
+                case TIMES_EQ:
+                    lookup.put(id, stored.doubleValue() * x);
+                    break;
+                    
+                case DIVIDE_EQ:
+                    lookup.put(id, stored.doubleValue() / x);
+                    break;
+
+                case PLUS_EQ:
+                    lookup.put(id, stored.doubleValue() + x);
+                    break;
+                    
+                case MINUS_EQ:
+                    lookup.put(id, stored.doubleValue() - x);
+                    break;
+                    
+                case MOD_EQ:
+                    lookup.put(id, stored.doubleValue() % x);
+                    break;
+            }
+            
+        } else {
+            throw new IllegalStateException("using undefined var " + id + " with " + op);
+        }
+
     }
 
     /**
@@ -51,12 +107,16 @@ class VarTable {
         lookup.put("NaN", Double.NaN);
     }
 
+    public void assign(String id, String op, double x) {
+        doAssignOp(ops.get(op), id, x);
+    }
+
     /**
      * Store / update variable
      * @param id variable name
      * @param x double value
      */
-    public void put(String id, double x) {
+    private void put(String id, double x) {
         initLookup();
         lookup.put(id, x);
     }
@@ -76,18 +136,18 @@ class VarTable {
 
         return n.doubleValue();
     }
-    
+
     /**
      * Remove a variable. Does nothing if the variable is not defined.
      * @param id variable name
      */
     public void remove(String id) {
         /* 
-           We shouldn't really be here if we need to do this...
-           Be generous or throw an exception ?
+        We shouldn't really be here if we need to do this...
+        Be generous or throw an exception ?
          */
         initLookup();
-        
+
         lookup.remove(id);
     }
 }
