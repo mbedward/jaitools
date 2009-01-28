@@ -63,10 +63,10 @@ public class FunctionTable {
             new OpBase1(){public double call(double x){return Math.asin(x);}});
 
         lookup.put("acos",
-            new OpBase1(){public double call(double x){return Math.cos(x);}});
+            new OpBase1(){public double call(double x){return Math.acos(x);}});
 
         lookup.put("atan",
-            new OpBase1(){public double call(double x){return Math.tan(x);}});
+            new OpBase1(){public double call(double x){return Math.atan(x);}});
 
         lookup.put("degToRad",
             new OpBase1(){public double call(double x){return Math.PI * x / 180d;}});
