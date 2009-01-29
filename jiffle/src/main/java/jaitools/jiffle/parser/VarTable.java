@@ -38,19 +38,32 @@ class VarTable {
     
     private HashMap<String, Number> lookup = null;
     private HashMap<String, Integer> ops;
+    
+    public VarTable() {
+        initLookup();
+        setConstants();
+        initOps();
+    }
 
     /**
      * Initialize the lookup map
      */
     private void initLookup() {
-        if (lookup == null) {
-            lookup = new HashMap<String, Number>();
-            setConstants();
-
-            initOps();
-        }
+        lookup = new HashMap<String, Number>();
     }
 
+    /**
+     * Load pre-defined constants
+     */
+    private void setConstants() {
+        lookup.put("PI", Math.PI);
+        lookup.put("E", Math.E);
+        lookup.put("NaN", Double.NaN);
+    }
+
+    /**
+     * Set up the assignment operators table
+     */
     private void initOps() {
         ops = new HashMap<String, Integer>();
 
@@ -62,15 +75,26 @@ class VarTable {
         ops.put("%=", MOD_EQ);
     }
 
-    private void doAssignOp(int op, String id, double x) {
-        if (op == ASSIGN) {
+
+    /**
+     * Assign a value to a variable
+     * @param id the variable id
+     * @param op operator symbol as a string
+     * @param x value to assign
+     * @throws IllegalStateExeption if an arithmetic assignment is applied to 
+     * a variable that is not yet defined
+     */
+    public void assign(String id, String op, double x) {
+        Integer opCode = ops.get(op);
+        
+        if (opCode == ASSIGN) {
             put(id, x);
             return;
         }
         
         Number stored = lookup.get(id);
         if (stored != null) {
-            switch (op) {
+            switch (opCode) {
                 case TIMES_EQ:
                     lookup.put(id, stored.doubleValue() * x);
                     break;
@@ -95,20 +119,6 @@ class VarTable {
         } else {
             throw new IllegalStateException("using undefined var " + id + " with " + op);
         }
-
-    }
-
-    /**
-     * Load pre-defined constants
-     */
-    private void setConstants() {
-        lookup.put("PI", Math.PI);
-        lookup.put("E", Math.E);
-        lookup.put("NaN", Double.NaN);
-    }
-
-    public void assign(String id, String op, double x) {
-        doAssignOp(ops.get(op), id, x);
     }
 
     /**
@@ -117,7 +127,6 @@ class VarTable {
      * @param x double value
      */
     private void put(String id, double x) {
-        initLookup();
         lookup.put(id, x);
     }
 
@@ -128,7 +137,6 @@ class VarTable {
      * @throws IllegalArgumentException if the variable is not defined
      */
     public double get(String id) {
-        initLookup();
         Number n = lookup.get(id);
         if (n == null) {
             throw new IllegalArgumentException();
@@ -142,12 +150,6 @@ class VarTable {
      * @param id variable name
      */
     public void remove(String id) {
-        /* 
-        We shouldn't really be here if we need to do this...
-        Be generous or throw an exception ?
-         */
-        initLookup();
-
         lookup.remove(id);
     }
 }

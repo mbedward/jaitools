@@ -95,17 +95,15 @@ public class FunctionTable {
         if (op == null) {
             return false;
         }
-        
-        /* @todo this is terribly inelegant */
-        boolean match = 
-                (op instanceof OpBase1 && numArgs == 1) ||
-                (op instanceof OpBase2 && numArgs == 2);
-        
-        return match;
+
+        return op.getNumArgs() == numArgs;
     }
     
     double invoke(String name, List<Double> args) {
         switch (args.size()) {
+            case 0:
+                return invoke(name);
+                
             case 1:
                 return invoke(name, args.get(0));
                 
@@ -116,6 +114,15 @@ public class FunctionTable {
                 throw new IllegalStateException(
                         "unsupported function: " + name + " with " + args.size() + " args");
         }
+    }
+
+    /**
+     * Invoke a no argument function.
+     * @param name the function name
+     * @return result as a double
+     */
+    private double invoke(String name) {
+        return ((OpBase0)getOp(name)).call();
     }
 
     /**

@@ -27,6 +27,8 @@ import org.antlr.runtime.tree.CommonTree;
 
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
+import jaitools.jiffle.parser.JiffleWalker;
+import org.antlr.runtime.tree.CommonTreeNodeStream;
 
 /**
  * A simple, and probably temporary, class to demonstrate that we
@@ -40,8 +42,7 @@ public class JiffleDemo {
     CommonTree tree;
 
     public static void main(String[] args) throws Exception {
-        String s = "z = (x > 3.14159 ? 1 : 0);" +
-                "sqrt(2);" +
+        String s = "sqrt(2);" +
                 "log(10);" +
                 "rand(10);" +
                 "randInt(10);" +
@@ -72,16 +73,16 @@ public class JiffleDemo {
 
     private void parse() throws RecognitionException {
         JiffleParser parser = new JiffleParser(tokens);
+        parser.setPrint(true);  // print debug output
+        
         JiffleParser.jiffle_return r = parser.jiffle();
         tree = (CommonTree) r.getTree();
     }
 
     private void walkTree() throws RecognitionException {
-/*
         CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
         nodes.setTokenStream(tokens);
         JiffleWalker walker = new JiffleWalker(nodes);
-        walker.prog();
- */
+        walker.jiffle();
     }
 }
