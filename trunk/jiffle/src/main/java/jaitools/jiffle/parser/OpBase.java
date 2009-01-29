@@ -24,6 +24,9 @@ package jaitools.jiffle.parser;
  * Empty interface to act as a container for functions
  * @author Michael Bedward
  */
-interface OpBase {
-
+public interface OpBase {
+    /**
+     * Get the number of arguments
+     */
+    public int getNumArgs();
 }

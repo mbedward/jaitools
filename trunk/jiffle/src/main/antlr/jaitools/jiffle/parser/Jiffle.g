@@ -26,10 +26,10 @@ options {
 }
 
 tokens {
+    ASSIGN;
     CAST;
-    COND;
     EXPR_LIST;
-    FUNC;
+    FUNC_CALL;
 }
 
 @header {
@@ -59,18 +59,18 @@ statement	: expr EOS!
 		| EOS!
 		;
 
-expr		: func
+expr		: func_call
                 | assign_expr
-                | cond_expr
+                | or_expr
 		;
 
-func            : ID '(' expr_list ')' -> ^(FUNC ID expr_list)
+func_call       : ID '(' expr_list ')' -> ^(FUNC_CALL ID expr_list)
                 ;
 
-expr_list       : expr (',' expr)* -> ^(EXPR_LIST expr+)
+expr_list       : (expr (',' expr)* )? -> ^(EXPR_LIST expr*)
 		;
 		
-assign_expr     : ID assign_op^ expr
+assign_expr     : ID assign_op expr -> ^(ASSIGN assign_op ID expr)
                 ;
 
 assign_op	: '='
@@ -81,9 +81,6 @@ assign_op	: '='
 		| '-='
 		;
 		
-cond_expr	: or_expr ('?' yes=cond_expr ':' no=cond_expr)? -> ^(COND $yes $no)? or_expr
-                ;
-
 or_expr		: and_expr (OR^ and_expr)*
 		;
 
@@ -102,7 +99,7 @@ comp_expr	: add_expr ((GT^ | GE^ | LE^ | LT^) add_expr)?
 add_expr	: mult_expr (('+'^ | '-'^) mult_expr)*
 		;
 		
-mult_expr	: cast_expr (('*'^ | '/'^ | '%') cast_expr)*
+mult_expr	: cast_expr (('*'^ | '/'^ | '%'^) cast_expr)*
 		;					
 		
 cast_expr	: '(' type_name ')' cast_expr -> ^(CAST cast_expr)

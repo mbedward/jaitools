@@ -34,26 +34,49 @@ import java.util.Random;
 @members {
     VarTable varTable = new VarTable();
     FunctionTable fnTable = new FunctionTable();
+
+    private static class GeneralValue {
+        enum Type {DOUBLE, BOOLEAN};
+
+        Object value;
+        Type type;
+
+        GeneralValue(double d) { value = Double.valueOf(d); type = Type.DOUBLE; }
+        GeneralValue(boolean b) { value = Boolean.valueOf(b); type = Type.BOOLEAN; }
+
+        boolean isNumber() { return type == Type.DOUBLE; }
+        boolean isBoolean() { return type == Type.BOOLEAN; }
+
+        double getAsDouble() { return ((Double)value).doubleValue(); }
+        boolean getAsBoolean() { return (Boolean)value; }
+        String getAsString() { return value.toString(); }
+
+        boolean equals(GeneralValue other) {
+            if (other != null) {
+                if (type == other.type) {
+                    if (isNumber()) return getAsDouble() == other.getAsDouble();
+                    if (isBoolean()) return getAsBoolean() == other.getAsBoolean();
+                }
+            }
+            return false;
+        }
+    }
 }
 
 jiffle          : statement+ ;
 
-statement       : expr { System.out.println("" + $expr.value); }
+statement       : general_expr { 
+                    System.out.println("" + $general_expr.value.getAsString()); }
                 ;
 
-expr_list returns [List<Double> values] : ^(EXPR_LIST expr+) 
-                  { List<Double> vlist = new ArrayList<Double>();
-                    int n = $EXPR_LIST.getChildCount();
-                    for (int i = 0; i < n; i++) {
-                        vlist.add($expr.value);
-                    }
-                    $values = vlist;
-                  }
+expr_list returns [ List<Double> values ] :
+                 { $values = new ArrayList<Double>(); }
+                  ^(EXPR_LIST ( e=expr {$values.add($e.value);} )*)
                 ;
                         
-general_expr returns [Object value] :
-                  expr { $value = Double.valueOf($expr.value); }
-                | bool_expr { $value = Boolean.valueOf($bool_expr.value); }
+general_expr returns [GeneralValue value] :
+                  expr { $value = new GeneralValue($expr.value); }
+                | bool_expr { $value = new GeneralValue($bool_expr.value); }
                 ;
 
 bool_expr returns [boolean value] :
@@ -64,17 +87,18 @@ bool_expr returns [boolean value] :
                   ^(GE x=expr y=expr) {$value = x >= y;}
                   ^(LE x=expr y=expr) {$value = x <= y;}
                   ^(LT x=expr y=expr) {$value = x < y;}
-                  ^(EQ g=general_expr h=general_expr) {$value = g == h;}
-                  ^(NE g=general_expr h=general_expr) {$value = g != h;}
+                  ^(EQ g=general_expr h=general_expr) {$value = g.equals(h);}
+                  ^(NE g=general_expr h=general_expr) {$value = !g.equals(h);}
                 ;
 
 expr returns [double value] : 
-                  ^(FUNC ID expr_list) { fnTable.invoke($ID.text, $expr_list.values); }
+                  ^(FUNC_CALL ID expr_list) { $value = fnTable.invoke($ID.text, $expr_list.values); }
 
-                | ^(assign_op ID a=expr) 
-                  { varTable.assign($ID.text, $assign_op.text, a); $value = a; }
-
-                | ^(COND yes=general_expr no=general_expr) test=bool_expr { }
+                | ^(ASSIGN assign_op ID a=expr)
+                  { 
+                    varTable.assign($ID.text, $assign_op.text, a); 
+                    $value = a; 
+                  }
 
                 | ^('+' a=expr b=expr) {$value = a+b;} 
                 | ^('-' a=expr b=expr) {$value = a-b;} 
@@ -82,7 +106,9 @@ expr returns [double value] :
                 | ^('/' a=expr b=expr) {$value = a/b;}
                 | ^('%' a=expr b=expr) {$value = a%b;}
                 | ^('^' a=expr b=expr) {$value = Math.pow(a, b);}
-                
+                | ID {$value = varTable.get($ID.text);}
+                | INT_LITERAL {$value = Double.valueOf($INT_LITERAL.text);}
+                | FLOAT_LITERAL {$value = Double.valueOf($FLOAT_LITERAL.text);}
                 ;
 
 assign_op	: '='

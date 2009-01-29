@@ -21,17 +21,29 @@
 package jaitools.jiffle.parser;
 
 /**
- * Interface to invoke two argument functions
+ * Class to invoke two argument functions
  * 
  * @author Michael Bedward
  */
-interface OpBase2 extends OpBase {
+/**
+ * Class to invoke single argument functions
+ * 
+ * @author Michael Bedward
+ */
+public abstract class OpBase2 implements OpBase {
 
     /**
-     * Invokes the single argument function
+     * Invokes a two argument function
      * @param x arg value as double
      * @return result as double
      */
-    public double call(double x1, double x2);
+    public abstract double call(double x1, double x2);
+    
+    /**
+     * Get the number of arguments
+     */
+    public int getNumArgs() {
+        return 2;
+    }
+    
 }
-
