@@ -57,10 +57,9 @@ jiffle		: (statement
                     })+ 
                 ;
 
-statement	: expr EOS!
-		| EOS!
+statement	: expr eos!
 		;
-
+		
 expr		: func_call
                 | assign_expr
                 | cond_expr
@@ -146,6 +145,11 @@ type_name	: 'int'
 		| 'boolean'
 		;
 
+/* end of statement */
+eos		: SEMICOLON ( NEWLINE )*   /* semicolon, options followed by newline(s) */
+		| NEWLINE ( SEMICOLON ( NEWLINE )* )*  /* newline optionally followed by semicolon and any number of newlines */
+		;
+
 
 /* Operators sorted and grouped by precedence order */
 INCR            : '++' ;  /* pre-fix and post-fix operations */
@@ -215,6 +219,11 @@ fragment
 FloatExp        : ('e'|'E' (PLUS|MINUS)? '0'..'9'+)
                 ;
 				
-EOS		: ';' ;
+SEMICOLON	: ';' ;
 
-WS  		:  (' '|'\r'|'\t'|'\u000C'|'\n') {$channel=HIDDEN;} ;
+/* Mac: \r  PC: \r\n  Unix \n */
+NEWLINE		: '\r' '\n'?
+		| '\n'
+		;
+
+WS  		:  (' '|'\t'|'\u000C') {$channel=HIDDEN;} ;
