@@ -61,57 +61,11 @@ Operators for neighbourhood analyses.
 
 
 = ANTLR grammar for jiffle =
+
+*Note:* the complete parser grammar with header sections and tree construction elements can be found in the svn repository [http://code.google.com/p/jai-tools/source/browse/#svn/trunk/jiffle/src/main/antlr/jaitools/jiffle/parser here] (Jiffle.g) as well as a tree parser grammar (JiffleWalker.g).
+
 {{{
-/*
- * Copyright 2009 Michael Bedward
- * 
- * This file is part of jai-tools.
-
- * jai-tools is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of the 
- * License, or (at your option) any later version.
-
- * jai-tools is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
-
- * You should have received a copy of the GNU Lesser General Public 
- * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
- * 
- */
-
 grammar Jiffle;
-
-options {
-    output = AST;
-    ASTLabelType = CommonTree;
-}
-
-tokens {
-    ASSIGN;
-    CAST;
-    EXPR_LIST;
-    FUNC_CALL;
-    POSTFIX;
-    PREFIX;
-}
-
-@header {
-package jaitools.jiffle.parser;
-}
-
-@lexer::header {
-package jaitools.jiffle.parser;
-}
-
-@members {
-    private boolean printParseTree = false;
-
-    public void setPrint(boolean b) { printParseTree = b; }
-}
-
 
 jiffle		: statement+
                 ;
