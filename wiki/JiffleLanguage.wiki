@@ -62,7 +62,7 @@ Operators for neighbourhood analyses.
 
 = ANTLR grammar for jiffle =
 
-*Note:* the complete parser grammar with header sections and tree construction elements can be found in the svn repository [http://code.google.com/p/jai-tools/source/browse/#svn/trunk/jiffle/src/main/antlr/jaitools/jiffle/parser here] (Jiffle.g) as well as a tree parser grammar (JiffleWalker.g).
+*Note:* the complete parser grammar with header sections and tree construction elements can be found in the svn repository [http://code.google.com/p/jai-tools/source/browse/#svn/trunk/jiffle/src/main/antlr/jaitools/jiffle/parser here] (Jiffle.g) as well as a tree parser grammar (!JiffleWalker.g).
 
 {{{
 grammar Jiffle;
