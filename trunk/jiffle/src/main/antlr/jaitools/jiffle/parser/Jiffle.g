@@ -30,6 +30,8 @@ tokens {
     CAST;
     EXPR_LIST;
     FUNC_CALL;
+    POSTFIX;
+    PREFIX;
 }
 
 @header {
@@ -73,26 +75,18 @@ expr_list       : (expr (',' expr)* )? -> ^(EXPR_LIST expr*)
 assign_expr     : ID assign_op expr -> ^(ASSIGN assign_op ID expr)
                 ;
 
-assign_op	: EQ
-		| TIMESEQ
-		| DIVEQ
-		| MODEQ
-		| PLUSEQ
-		| MINUSEQ
-		;
-
 cond_expr       : or_expr (QUESTION^ expr ':'! expr)? 
 		;
 		
-or_expr		: and_expr (OR^ and_expr)*
+or_expr		: xor_expr (OR^ xor_expr)*
 		;
 
-and_expr	: xor_expr (AND^ xor_expr)*
-		;
-
-xor_expr	: eq_expr (XOR^ eq_expr)*
+xor_expr	: and_expr (XOR^ and_expr)*
 		;
 		
+and_expr	: eq_expr (AND^ eq_expr)*
+		;
+
 eq_expr		: comp_expr ((LOGICALEQ^ | NE^) comp_expr)?
 		;
 		
@@ -102,35 +96,24 @@ comp_expr	: add_expr ((GT^ | GE^ | LE^ | LT^) add_expr)?
 add_expr	: mult_expr ((PLUS^ | MINUS^) mult_expr)*
 		;
 		
-mult_expr	: cast_expr ((MULT^ | DIV^ | MOD^) cast_expr)*
-		;					
+mult_expr	: exp_expr ((TIMES^ | DIV^ | MOD^) exp_expr)*
+		;
+
+exp_expr        : cast_expr (POW^ cast_expr)*
+                ;
 		
 cast_expr	: LPAR type_name RPAR cast_expr -> ^(CAST cast_expr)
 		| unary_expr
 		;	
 
-unary_expr	: INCR^ postfix_expr
-		| DECR^ postfix_expr
-		| unary_op^ postfix_expr
+unary_expr	: incdec_op postfix_expr -> ^(PREFIX incdec_op postfix_expr)
+		| unary_op postfix_expr -> ^(PREFIX unary_op postfix_expr)
 		| postfix_expr
 		;
 		
-postfix_expr	: INCR
-		| DECR
-		| atom_expr
+postfix_expr	: a=atom_expr (incdec_op^)?
 		;
 		
-unary_op	: PLUS
-		| MINUS
-		| NOT
-		;
-		
-type_name	: 'int'
-		| 'float'
-		| 'double'
-		| 'boolean'
-		;
-
 atom_expr	: ID
 		| constant
 		| LPAR! expr RPAR!
@@ -139,96 +122,99 @@ atom_expr	: ID
 constant	: INT_LITERAL
 		| FLOAT_LITERAL
 		;
+
+incdec_op       : INCR
+                | DECR
+                ;
+
+unary_op	: PLUS
+		| MINUS
+		| NOT
+		;
 		
-QUESTION        : '?' ;
-OR		: '||';
-AND		: '&&';
-XOR		: '^|';
-LOGICALEQ	: '==';
-NE		: '!=';
+assign_op	: EQ
+		| TIMESEQ
+		| DIVEQ
+		| MODEQ
+		| PLUSEQ
+		| MINUSEQ
+		;
+
+type_name	: 'int'
+		| 'float'
+		| 'double'
+		| 'boolean'
+		;
+
+
+/* Operators sorted and grouped by precedence order */
+INCR            : '++' ;  /* pre-fix and post-fix operations */
+DECR            : '--' ;
+
+NOT             : '!' ;
+
+POW             : '^' ;      
+
+TIMES           : '*' ;
+DIV             : '/' ;
+MOD             : '%' ;
+
+PLUS            : '+' ;
+MINUS           : '-' ;
+
 GT		: '>';
 GE		: '>=';
 LE		: '<=';
 LT		: '<';
 
-ID		: (LETTER) (LETTER | '_' | '0'..'9')*
+LOGICALEQ	: '==';
+NE		: '!=';
+
+AND		: '&&';
+
+OR		: '||';
+XOR		: '^|';
+
+QUESTION        : '?' ;  /* conditional operator ?: */
+
+TIMESEQ         : '*=' ;
+DIVEQ           : '/=' ;
+MODEQ           : '%=' ;
+PLUSEQ          : '+=' ;
+MINUSEQ         : '-=' ;
+EQ              : '='  ;
+
+
+/* General symbols and token rules */
+LPAR            : '(' ;
+RPAR            : ')' ;
+
+ID		: (Letter) (Letter | UNDERSCORE | Digit)*
 		;
 
 fragment
-LETTER		: 'a'..'z' | 'A'..'Z'
-		;
-		
-INT_LITERAL	: '0' | '1'..'9' '0'..'9'*
+Letter		: 'a'..'z' | 'A'..'Z'
 		;
 
-FLOAT_LITERAL	: ('0' | '1'..'9' '0'..'9'*)? '.' '0'..'9'* ('e'|'E' (PLUS|MINUS)? '0'..'9'+)?
+UNDERSCORE      : '_' ;
+
+INT_LITERAL	: '0' | NonZeroDigit Digit*
 		;
+
+FLOAT_LITERAL	: ('0' | NonZeroDigit Digit*)? '.' Digit* FloatExp?
+		;
+fragment
+Digit           : '0'..'9'
+                ;
+
+fragment
+NonZeroDigit    : '1'..'9'
+                ;
+
+fragment
+FloatExp        : ('e'|'E' (PLUS|MINUS)? '0'..'9'+)
+                ;
 				
 EOS		: ';' ;
 
 WS  		:  (' '|'\r'|'\t'|'\u000C'|'\n') {$channel=HIDDEN;} ;
-
-
-PLUS
-	:	'+'
-	;
-
-MINUS
-	:	'-'
-	;
-
-MULT
-	:	'*'
-	;
-
-DIV
-	:	'/'
-	;
-
-MOD
-	:	'%'
-	;
-
-INCR
-	:	'++'
-	;
-
-DECR
-	:	'--'
-	;
-
-NOT
-	:	'!'
-	;
-
-LPAR
-	:	'('
-	;
-
-RPAR
-	:	')'
-	;
-
-TIMESEQ
-	:	'*='
-	;
-
-DIVEQ
-	:	'/='
-	;
-
-MODEQ
-	:	'%='
-	;
-
-PLUSEQ
-	:	'+='
-	;
-
-MINUSEQ
-	:	'-='
-	;
-
-EQ
-	:	'='
-	;
