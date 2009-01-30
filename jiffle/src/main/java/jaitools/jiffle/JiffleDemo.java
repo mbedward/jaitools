@@ -43,6 +43,9 @@ public class JiffleDemo {
 
     public static void main(String[] args) throws Exception {
         String s =
+                "1234 + 4321;";
+        
+/*
                 "sqrt(2);" +
                 "log(10);" +
                 "rand(10);" +
@@ -54,7 +57,8 @@ public class JiffleDemo {
                 "y == 0.5;" +
                 "log(E);" +
                 "55 % 15 % 6.5;";
-
+*/
+        
         JiffleDemo me = new JiffleDemo();
 
         try {

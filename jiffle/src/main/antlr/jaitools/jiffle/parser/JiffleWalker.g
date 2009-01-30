@@ -32,18 +32,27 @@ import java.util.Random;
 }
 
 @members {
+    private boolean printDebug = false;
+    public void setPrint(boolean b) { printDebug = b; }
+
     VarTable varTable = new VarTable();
     FunctionTable fnTable = new FunctionTable();
 
     // comparison of doubles within set tolerance
     private final static double TOL=1.0e-8;  
     int deq(double d1, double d2) { return ((Math.abs(d1-d2) < TOL) ? 1 : 0); }
+
+    private double result = 0.0d;
+    public double getResult() { return result; }
 }
 
 jiffle          : statement+ ;
 
-statement       : general_expr { 
-                    System.out.println("" + $general_expr.value); }
+statement       : general_expr 
+                  { 
+                    result = $general_expr.value;
+                    if (printDebug) System.out.println("" + result); 
+                  }
                 ;
 
 expr_list returns [ List<Double> values ] :
@@ -80,12 +89,12 @@ expr returns [double value] :
                 | ^(QUESTION t=bool_expr a=expr b=expr)
                   { $value = (($t.value != 0) ? $a.value : $b.value); }
 
-                | ^(PLUS a=expr b=expr) {$value = a+b;} 
-                | ^(MINUS a=expr b=expr) {$value = a-b;} 
+                | ^(POW a=expr b=expr) {$value = Math.pow(a, b);}
                 | ^(TIMES a=expr b=expr) {$value = a*b;}
                 | ^(DIV a=expr b=expr) {$value = a/b;}
-                | ^(MOD a=expr b=expr) {$value = a % b;}
-                | ^(POW a=expr b=expr) {$value = Math.pow(a, b);}
+                | ^(MOD a=expr b=expr) {$value = a \% b;}  /* percent sign escaped for antlr */
+                | ^(PLUS a=expr b=expr) {$value = a+b;} 
+                | ^(MINUS a=expr b=expr) {$value = a-b;} 
                 | ID {$value = varTable.get($ID.text);}
                 | INT_LITERAL {$value = Double.valueOf($INT_LITERAL.text);}
                 | FLOAT_LITERAL {$value = Double.valueOf($FLOAT_LITERAL.text);}
@@ -99,3 +108,17 @@ assign_op	: EQ
 		| MINUSEQ
 		;
 		
+incdec_op       : INCR
+                | DECR
+                ;
+
+unary_op	: PLUS
+		| MINUS
+		| NOT
+		;
+		
+type_name	: 'int'
+		| 'float'
+		| 'double'
+		| 'boolean'
+		;
