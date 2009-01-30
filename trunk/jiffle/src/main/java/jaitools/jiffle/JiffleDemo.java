@@ -43,9 +43,6 @@ public class JiffleDemo {
 
     public static void main(String[] args) throws Exception {
         String s =
-                "1234 + 4321;";
-        
-/*
                 "sqrt(2);" +
                 "log(10);" +
                 "rand(10);" +
@@ -57,13 +54,14 @@ public class JiffleDemo {
                 "y == 0.5;" +
                 "log(E);" +
                 "55 % 15 % 6.5;";
-*/
         
         JiffleDemo me = new JiffleDemo();
 
         try {
             me.lex(s);
             me.parse();
+            
+            System.out.println("Results:");
             me.walkTree();
             
         } catch (RecognitionException ex) {
@@ -80,7 +78,6 @@ public class JiffleDemo {
     private void parse() throws RecognitionException {
         JiffleParser parser = new JiffleParser(tokens);
         parser.setPrint(true);  // print debug output
-        
         JiffleParser.jiffle_return r = parser.jiffle();
         tree = (CommonTree) r.getTree();
     }
@@ -89,6 +86,7 @@ public class JiffleDemo {
         CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
         nodes.setTokenStream(tokens);
         JiffleWalker walker = new JiffleWalker(nodes);
+        walker.setPrint(true);
         walker.jiffle();
     }
 }
