@@ -4,9 +4,13 @@
 
 The jiffle language is intended to make it easier to create images from expressions whose inputs are image location and/or other image values and which may contain mathematical and logical operators.
 
+<wiki:toc max_depth="2" />
+
 = Description of the language =
 
-Jiffle's (somewhat preliminary) syntax is C-ish / Java-ish.  The language is case sensitive. All statements are terminated with a semicolon.
+Jiffle's preliminary syntax will be familiar to C and Java programmers.  Most arithmetic and logical operators are identical, with the exception of `^` for exponentiation and `^|` for exclusive-or. 
+
+The language is case sensitive. Statements are terminated by a newline or (optionally) a semicolon.
 
 == Arithmetic operators ==
   `^` Raise to power <br>
@@ -58,117 +62,219 @@ Operators for neighbourhood analyses.
 
 = ANTLR grammar for jiffle =
 {{{
+/*
+ * Copyright 2009 Michael Bedward
+ * 
+ * This file is part of jai-tools.
+
+ * jai-tools is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the 
+ * License, or (at your option) any later version.
+
+ * jai-tools is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+
+ * You should have received a copy of the GNU Lesser General Public 
+ * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ */
+
 grammar Jiffle;
 
-jiffle		: statement+ 
-		;
+options {
+    output = AST;
+    ASTLabelType = CommonTree;
+}
+
+tokens {
+    ASSIGN;
+    CAST;
+    EXPR_LIST;
+    FUNC_CALL;
+    POSTFIX;
+    PREFIX;
+}
+
+@header {
+package jaitools.jiffle.parser;
+}
+
+@lexer::header {
+package jaitools.jiffle.parser;
+}
+
+@members {
+    private boolean printParseTree = false;
+
+    public void setPrint(boolean b) { printParseTree = b; }
+}
+
+
+jiffle		: statement+
+                ;
 
 statement	: expr EOS
 		| EOS
 		;
 
-expr		: func
+expr		: func_call
                 | assign_expr
                 | cond_expr
 		;
 
-func            : ID '(' expr ')'
+func_call       : ID LPAR expr_list RPAR
                 ;
+
+expr_list       : (expr (',' expr)* )?
+		;
 		
 assign_expr     : ID assign_op expr
                 ;
 
-assign_op	: '='
-		| '*='
-		| '/='
-		| '%='
-		| '+='
-		| '-='
+cond_expr       : or_expr (QUESTION expr ':' expr)? 
 		;
 		
-cond_expr	: or_expr ('?' cond_expr ':' cond_expr)?
-                ;
-
-or_expr		: and_expr (OR and_expr)*
+or_expr		: xor_expr (OR xor_expr)*
 		;
 
-and_expr	: xor_expr (AND xor_expr)*
-		;
-
-xor_expr	: eq_expr (XOR eq_expr)*
+xor_expr	: and_expr (XOR and_expr)*
 		;
 		
-eq_expr		: comp_expr ((EQ | NE) comp_expr)?
+and_expr	: eq_expr (AND eq_expr)*
+		;
+
+eq_expr		: comp_expr ((LOGICALEQ | NE) comp_expr)?
 		;
 		
 comp_expr	: add_expr ((GT | GE | LE | LT) add_expr)?
 		;
 
-add_expr	: mult_expr (('+' | '-') mult_expr)*
+add_expr	: mult_expr ((PLUS | MINUS) mult_expr)*
 		;
 		
-mult_expr	: cast_expr (('*' | '/' | '%') cast_expr)*
-		;					
+mult_expr	: exp_expr ((TIMES | DIV | MOD) exp_expr)*
+		;
+
+exp_expr        : cast_expr (POW cast_expr)*
+                ;
 		
-cast_expr	: '(' type_name ')' cast_expr
+cast_expr	: LPAR type_name RPAR cast_expr
 		| unary_expr
 		;	
 
-unary_expr	: '++' postfix_expr
-		| '--' postfix_expr
+unary_expr	: incdec_op postfix_expr
 		| unary_op postfix_expr
 		| postfix_expr
 		;
 		
-postfix_expr	: '++'
-		| '--'
-		| atom_expr
+postfix_expr	: a=atom_expr (incdec_op)?
 		;
 		
-unary_op	: '+'
-		| '-'
-		| '!'
+atom_expr	: ID
+		| constant
+		| LPAR expr RPAR
+		;
+
+constant	: INT_LITERAL
+		| FLOAT_LITERAL
+		;
+
+incdec_op       : INCR
+                | DECR
+                ;
+
+unary_op	: PLUS
+		| MINUS
+		| NOT
 		;
 		
+assign_op	: EQ
+		| TIMESEQ
+		| DIVEQ
+		| MODEQ
+		| PLUSEQ
+		| MINUSEQ
+		;
+
 type_name	: 'int'
 		| 'float'
 		| 'double'
 		| 'boolean'
 		;
 
-atom_expr	: ID
-		| constant
-		| '(' expr ')'
-		;
 
-constant	: INT_LITERAL
-		| FLOAT_LITERAL
-		;
-		
-OR		: '||' | 'OR' ;
-AND		: '&&' | 'AND' ;
-XOR		: '^|' | 'XOR' ;
-EQ		: '==' | 'EQ' ;
-NE		: '!=' | 'NE' ;
-GT		: '>' | 'GT' ;
-GE		: '>=' | 'GE' ;
-LE		: '<=' | 'LE' ;
-LT		: '<' | 'LT' ;
+/* Operators sorted and grouped by precedence order */
+INCR            : '++' ;  /* pre-fix and post-fix operations */
+DECR            : '--' ;
 
-ID		: (LETTER) (LETTER | '_' | '0'..'9')*
+NOT             : '!' ;
+
+POW             : '^' ;      
+
+TIMES           : '*' ;
+DIV             : '/' ;
+MOD             : '%' ;
+
+PLUS            : '+' ;
+MINUS           : '-' ;
+
+GT		: '>';
+GE		: '>=';
+LE		: '<=';
+LT		: '<';
+
+LOGICALEQ	: '==';
+NE		: '!=';
+
+AND		: '&&';
+
+OR		: '||';
+XOR		: '^|';
+
+QUESTION        : '?' ;  /* conditional operator ?: */
+
+TIMESEQ         : '*=' ;
+DIVEQ           : '/=' ;
+MODEQ           : '%=' ;
+PLUSEQ          : '+=' ;
+MINUSEQ         : '-=' ;
+EQ              : '='  ;
+
+
+/* General symbols and token rules */
+LPAR            : '(' ;
+RPAR            : ')' ;
+
+ID		: (Letter) (Letter | UNDERSCORE | Digit)*
 		;
 
 fragment
-LETTER		: 'a'..'z' | 'A'..'Z'
-		;
-		
-INT_LITERAL	: '0' | '1'..'9' '0'..'9'*
+Letter		: 'a'..'z' | 'A'..'Z'
 		;
 
-FLOAT_LITERAL	: ('0' | '1'..'9' '0'..'9'*)? '.' '0'..'9'* ('e'|'E' ('+'|'-')? '0'..'9'+)?
+UNDERSCORE      : '_' ;
+
+INT_LITERAL	: '0' | NonZeroDigit Digit*
 		;
+
+FLOAT_LITERAL	: ('0' | NonZeroDigit Digit*)? '.' Digit* FloatExp?
+		;
+fragment
+Digit           : '0'..'9'
+                ;
+
+fragment
+NonZeroDigit    : '1'..'9'
+                ;
+
+fragment
+FloatExp        : ('e'|'E' (PLUS|MINUS)? '0'..'9'+)
+                ;
 				
 EOS		: ';' ;
 
-WS  		:  (' '|'\r'|'\t'|'\u000C'|'\n') {$channel=HIDDEN;} ;
+WS  		:  (' '|'\r'|'\t'|'\u000C'|'\n') ;
 }}}
