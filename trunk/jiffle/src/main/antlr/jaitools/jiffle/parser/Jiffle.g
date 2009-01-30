@@ -61,10 +61,10 @@ statement	: expr EOS!
 
 expr		: func_call
                 | assign_expr
-                | or_expr
+                | cond_expr
 		;
 
-func_call       : ID '(' expr_list ')' -> ^(FUNC_CALL ID expr_list)
+func_call       : ID LPAR expr_list RPAR -> ^(FUNC_CALL ID expr_list)
                 ;
 
 expr_list       : (expr (',' expr)* )? -> ^(EXPR_LIST expr*)
@@ -73,12 +73,15 @@ expr_list       : (expr (',' expr)* )? -> ^(EXPR_LIST expr*)
 assign_expr     : ID assign_op expr -> ^(ASSIGN assign_op ID expr)
                 ;
 
-assign_op	: '='
-		| '*='
-		| '/='
-		| '%='
-		| '+='
-		| '-='
+assign_op	: EQ
+		| TIMESEQ
+		| DIVEQ
+		| MODEQ
+		| PLUSEQ
+		| MINUSEQ
+		;
+
+cond_expr       : or_expr (QUESTION^ expr ':'! expr)? 
 		;
 		
 or_expr		: and_expr (OR^ and_expr)*
@@ -90,36 +93,36 @@ and_expr	: xor_expr (AND^ xor_expr)*
 xor_expr	: eq_expr (XOR^ eq_expr)*
 		;
 		
-eq_expr		: comp_expr ((EQ^ | NE^) comp_expr)?
+eq_expr		: comp_expr ((LOGICALEQ^ | NE^) comp_expr)?
 		;
 		
 comp_expr	: add_expr ((GT^ | GE^ | LE^ | LT^) add_expr)?
 		;
 
-add_expr	: mult_expr (('+'^ | '-'^) mult_expr)*
+add_expr	: mult_expr ((PLUS^ | MINUS^) mult_expr)*
 		;
 		
-mult_expr	: cast_expr (('*'^ | '/'^ | '%'^) cast_expr)*
+mult_expr	: cast_expr ((MULT^ | DIV^ | MOD^) cast_expr)*
 		;					
 		
-cast_expr	: '(' type_name ')' cast_expr -> ^(CAST cast_expr)
+cast_expr	: LPAR type_name RPAR cast_expr -> ^(CAST cast_expr)
 		| unary_expr
 		;	
 
-unary_expr	: '++'^ postfix_expr
-		| '--'^ postfix_expr
+unary_expr	: INCR^ postfix_expr
+		| DECR^ postfix_expr
 		| unary_op^ postfix_expr
 		| postfix_expr
 		;
 		
-postfix_expr	: '++'
-		| '--'
+postfix_expr	: INCR
+		| DECR
 		| atom_expr
 		;
 		
-unary_op	: '+'
-		| '-'
-		| '!'
+unary_op	: PLUS
+		| MINUS
+		| NOT
 		;
 		
 type_name	: 'int'
@@ -130,22 +133,23 @@ type_name	: 'int'
 
 atom_expr	: ID
 		| constant
-		| '('! expr ')'!
+		| LPAR! expr RPAR!
 		;
 
 constant	: INT_LITERAL
 		| FLOAT_LITERAL
 		;
 		
-OR		: '||' | 'OR' ;
-AND		: '&&' | 'AND' ;
-XOR		: '^|' | 'XOR' ;
-EQ		: '==' | 'EQ' ;
-NE		: '!=' | 'NE' ;
-GT		: '>' | 'GT' ;
-GE		: '>=' | 'GE' ;
-LE		: '<=' | 'LE' ;
-LT		: '<' | 'LT' ;
+QUESTION        : '?' ;
+OR		: '||';
+AND		: '&&';
+XOR		: '^|';
+LOGICALEQ	: '==';
+NE		: '!=';
+GT		: '>';
+GE		: '>=';
+LE		: '<=';
+LT		: '<';
 
 ID		: (LETTER) (LETTER | '_' | '0'..'9')*
 		;
@@ -157,9 +161,74 @@ LETTER		: 'a'..'z' | 'A'..'Z'
 INT_LITERAL	: '0' | '1'..'9' '0'..'9'*
 		;
 
-FLOAT_LITERAL	: ('0' | '1'..'9' '0'..'9'*)? '.' '0'..'9'* ('e'|'E' ('+'|'-')? '0'..'9'+)?
+FLOAT_LITERAL	: ('0' | '1'..'9' '0'..'9'*)? '.' '0'..'9'* ('e'|'E' (PLUS|MINUS)? '0'..'9'+)?
 		;
 				
 EOS		: ';' ;
 
 WS  		:  (' '|'\r'|'\t'|'\u000C'|'\n') {$channel=HIDDEN;} ;
+
+
+PLUS
+	:	'+'
+	;
+
+MINUS
+	:	'-'
+	;
+
+MULT
+	:	'*'
+	;
+
+DIV
+	:	'/'
+	;
+
+MOD
+	:	'%'
+	;
+
+INCR
+	:	'++'
+	;
+
+DECR
+	:	'--'
+	;
+
+NOT
+	:	'!'
+	;
+
+LPAR
+	:	'('
+	;
+
+RPAR
+	:	')'
+	;
+
+TIMESEQ
+	:	'*='
+	;
+
+DIVEQ
+	:	'/='
+	;
+
+MODEQ
+	:	'%='
+	;
+
+PLUSEQ
+	:	'+='
+	;
+
+MINUSEQ
+	:	'-='
+	;
+
+EQ
+	:	'='
+	;

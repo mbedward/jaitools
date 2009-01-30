@@ -42,14 +42,16 @@ public class JiffleDemo {
     CommonTree tree;
 
     public static void main(String[] args) throws Exception {
-        String s = "sqrt(2);" +
+        String s =
+                "sqrt(2);" +
                 "log(10);" +
                 "rand(10);" +
                 "randInt(10);" +
                 "asin(sin(1.234));" +
                 "x = radToDeg(PI / 6);" +
                 "x;" +
-                "sin(degToRad(x));" +
+                "y = sin(degToRad(x));" +
+                "y == 0.5;" +
                 "log(E);" +
                 "55 % 15 % 6.5;";
 

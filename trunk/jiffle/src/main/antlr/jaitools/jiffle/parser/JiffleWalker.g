@@ -35,60 +35,37 @@ import java.util.Random;
     VarTable varTable = new VarTable();
     FunctionTable fnTable = new FunctionTable();
 
-    private static class GeneralValue {
-        enum Type {DOUBLE, BOOLEAN};
-
-        Object value;
-        Type type;
-
-        GeneralValue(double d) { value = Double.valueOf(d); type = Type.DOUBLE; }
-        GeneralValue(boolean b) { value = Boolean.valueOf(b); type = Type.BOOLEAN; }
-
-        boolean isNumber() { return type == Type.DOUBLE; }
-        boolean isBoolean() { return type == Type.BOOLEAN; }
-
-        double getAsDouble() { return ((Double)value).doubleValue(); }
-        boolean getAsBoolean() { return (Boolean)value; }
-        String getAsString() { return value.toString(); }
-
-        boolean equals(GeneralValue other) {
-            if (other != null) {
-                if (type == other.type) {
-                    if (isNumber()) return getAsDouble() == other.getAsDouble();
-                    if (isBoolean()) return getAsBoolean() == other.getAsBoolean();
-                }
-            }
-            return false;
-        }
-    }
+    // comparison of doubles within set tolerance
+    private final static double TOL=1.0e-8;  
+    int deq(double d1, double d2) { return ((Math.abs(d1-d2) < TOL) ? 1 : 0); }
 }
 
 jiffle          : statement+ ;
 
 statement       : general_expr { 
-                    System.out.println("" + $general_expr.value.getAsString()); }
+                    System.out.println("" + $general_expr.value); }
                 ;
 
 expr_list returns [ List<Double> values ] :
                  { $values = new ArrayList<Double>(); }
                   ^(EXPR_LIST ( e=expr {$values.add($e.value);} )*)
                 ;
-                        
-general_expr returns [GeneralValue value] :
-                  expr { $value = new GeneralValue($expr.value); }
-                | bool_expr { $value = new GeneralValue($bool_expr.value); }
+
+general_expr returns [double value] :
+                  expr { $value = $expr.value; }
+                | bool_expr { $value = (double)$bool_expr.value; }
                 ;
 
-bool_expr returns [boolean value] :
-                  ^(OR a=bool_expr b=bool_expr) {$value = a || b;}
-                  ^(AND a=bool_expr b=bool_expr) {$value = a && b;}
-                  ^(XOR a=bool_expr b=bool_expr) {$value = a^b;}
-                  ^(GT x=expr y=expr) {$value = x > y;}
-                  ^(GE x=expr y=expr) {$value = x >= y;}
-                  ^(LE x=expr y=expr) {$value = x <= y;}
-                  ^(LT x=expr y=expr) {$value = x < y;}
-                  ^(EQ g=general_expr h=general_expr) {$value = g.equals(h);}
-                  ^(NE g=general_expr h=general_expr) {$value = !g.equals(h);}
+bool_expr returns [int value] :
+                  ^(OR a=bool_expr b=bool_expr) {$value = (a!=0 || b!=0) ? 1 : 0;}
+                | ^(AND a=bool_expr b=bool_expr) {$value = (a!=0 && b!=0) ? 1 : 0;}
+                | ^(XOR a=bool_expr b=bool_expr) {$value = (a!=0 ^ b!=0) ? 1 : 0;}
+                | ^(GT x=expr y=expr) {$value = x > y ? 1 : 0;}
+                | ^(GE x=expr y=expr) {$value = x >= y ? 1 : 0;}
+                | ^(LE x=expr y=expr) {$value = x <= y ? 1 : 0;}
+                | ^(LT x=expr y=expr) {$value = x < y ? 1 : 0;}
+                | ^(LOGICALEQ g=general_expr h=general_expr) {$value = deq(g, h);}
+                | ^(NE g=general_expr h=general_expr) {$value = (deq(g, h) == 1 ? 0 : 1);}
                 ;
 
 expr returns [double value] : 
@@ -100,22 +77,25 @@ expr returns [double value] :
                     $value = a; 
                   }
 
-                | ^('+' a=expr b=expr) {$value = a+b;} 
-                | ^('-' a=expr b=expr) {$value = a-b;} 
-                | ^('*' a=expr b=expr) {$value = a*b;}
-                | ^('/' a=expr b=expr) {$value = a/b;}
-                | ^('%' a=expr b=expr) {$value = a%b;}
-                | ^('^' a=expr b=expr) {$value = Math.pow(a, b);}
+                | ^(QUESTION t=bool_expr a=expr b=expr)
+                  { $value = (($t.value != 0) ? $a.value : $b.value); }
+
+                | ^(PLUS a=expr b=expr) {$value = a+b;} 
+                | ^(MINUS a=expr b=expr) {$value = a-b;} 
+                | ^(TIMES a=expr b=expr) {$value = a*b;}
+                | ^(DIV a=expr b=expr) {$value = a/b;}
+                | ^(MOD a=expr b=expr) {$value = a % b;}
+                | ^(POW a=expr b=expr) {$value = Math.pow(a, b);}
                 | ID {$value = varTable.get($ID.text);}
                 | INT_LITERAL {$value = Double.valueOf($INT_LITERAL.text);}
                 | FLOAT_LITERAL {$value = Double.valueOf($FLOAT_LITERAL.text);}
                 ;
 
-assign_op	: '='
-		| '*='
-		| '/='
-		| '%='
-		| '+='
-		| '-='
+assign_op	: EQ
+		| TIMESEQ
+		| DIVEQ
+		| MODEQ
+		| PLUSEQ
+		| MINUSEQ
 		;
 		
