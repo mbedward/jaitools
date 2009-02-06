@@ -63,8 +63,8 @@ the script as one of:
 method of the Jiffle class in the {{{./apidocs/index.html}API docs}}. For these variables, 
 JiffleClassifier checks that each is treated exclusively an input or output image in the script.
 
-    Next, JiffleClassifier scans for any user-defined variables that directly depend on the
-in-built positional methods such as x() (see {{Methods}below}). If any are found they are tagged
+    Next, the classifier scans for any user-defined variables that directly depend on the
+in-built positional methods such as x() (see {{{Methods}below}}). If any are found they are tagged
 as positional variables and another scan is done for variables that depend upon these. This process
 repeats until no further positional variables are identified.
 
