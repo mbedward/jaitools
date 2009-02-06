@@ -106,10 +106,10 @@ public class JiffleTest {
 
         CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
         nodes.setTokenStream(tokens);
-        JiffleWalker walker = new JiffleWalker(nodes);
-        walker.prog();
+        JiffleDirectEval eval = new JiffleDirectEval(nodes);
+        eval.prog();
         
-        return walker.getResult();
+        return eval.getResult();
     }
     
     private boolean deq(double d1, double d2) {

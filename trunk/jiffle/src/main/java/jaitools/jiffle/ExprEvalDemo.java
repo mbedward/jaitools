@@ -27,7 +27,7 @@ import org.antlr.runtime.tree.CommonTree;
 
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
-import jaitools.jiffle.parser.JiffleWalker;
+import jaitools.jiffle.parser.JiffleDirectEval;
 import java.util.ArrayList;
 import java.util.List;
 import org.antlr.runtime.tree.CommonTreeNodeStream;
@@ -117,9 +117,9 @@ public class ExprEvalDemo {
     private double walkTree(CommonTree tree, CommonTokenStream tokens) throws RecognitionException {
         CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
         nodes.setTokenStream(tokens);
-        JiffleWalker walker = new JiffleWalker(nodes);
+        JiffleDirectEval eval = new JiffleDirectEval(nodes);
         //walker.setPrint(true);  // print debug output
-        walker.prog();
-        return walker.getResult();
+        eval.prog();
+        return eval.getResult();
     }
 }

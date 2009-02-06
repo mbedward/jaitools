@@ -31,9 +31,13 @@ import java.awt.image.RenderedImage;
 import javax.media.jai.TiledImage;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
+import org.antlr.tool.Interpreter;
 
 /**
- *
+ * Demonstrates creating an image from a mathematical expression
+ * involving pixel position. This is equivalent to plotting a function
+ * in the x,y plane.
+ * 
  * @author Michael Bedward
  */
 public class ImageEvalDemo {
@@ -41,11 +45,19 @@ public class ImageEvalDemo {
     private JiffleInterpreter interp;
     
 
+    /**
+     * Main function - runs the demo
+     * @param args ignored
+     */
     public static void main(String[] args) {
         ImageEvalDemo demo = new ImageEvalDemo();
         demo.createImageFromCoordExpr();
     }
     
+    /**
+     * Constructor. Creates an instance of JiffleInterpeter and 
+     * sets up interpreter event handlers.
+     */
     public ImageEvalDemo() {
         interp = new JiffleInterpreter();
         interp.addEventListener(new JiffleEventListener() {
@@ -59,6 +71,25 @@ public class ImageEvalDemo {
         });
     }
     
+    /**
+     * Create an image of concentric ripples calculated as: 
+     * <pre>{@code \u0000 
+     * f(x,y) = sin(8\u03c0d)
+     * }</pre>
+     * where {@code d} is distance from image centre.
+     * <p>
+     * The jiffle code for this function is:
+     * <pre>{@code \u0000
+     * xc = width() / 2;
+     * yc = height() / 2;
+     * dx = (x() - xc) / xc;
+     * dy = (y() - yc) / yc;
+     * d = sqrt(dx^2 + dy^2);
+     * result = sin(8 * PI * d);
+     * }</pre>
+     * where the variable {@code result} is linked to the output {@link java.awt.image.RenderedImage}
+     * 
+     */
     public void createImageFromCoordExpr() {
         final int width = 1000;
         final int height = 1000;
@@ -66,7 +97,9 @@ public class ImageEvalDemo {
         String cmd = 
                 "xc = width() / 2; " +
                 "yc = height() / 2;" +
-                "d = sqrt((x()-xc)^2 + (y()-yc)^2);" +
+                "dx = (x()-xc)/xc;" +
+                "dy = (y()-yc)/yc;" +
+                "d = sqrt(dx^2 + dy^2);" +
                 "result = sin(8 * PI * d);";
         
         TiledImage tImg = JiffleUtilities.createDoubleImage(width, height, 1);
@@ -79,14 +112,26 @@ public class ImageEvalDemo {
         }
     }
     
+    /**
+     * Called when a completion event is received from the jiffle interpreter
+     * @param ev the event
+     */
     private void onCompletion(JiffleCompletionEvent ev) {
         displayImage(ev.getJiffle().getImage("result"));
     }
     
+    /**
+     * Called if a failure event is received from the jiffle interpreter
+     * @param ev the event
+     */
     private void onFailure(JiffleFailureEvent ev) {
         System.err.println("Bummer: script failed to run");
     }
 
+    /**
+     * Displays the image in a simple widget
+     * @param img image to be displayed
+     */
     private void displayImage(RenderedImage img) {
         JFrame frame = new JFrame("Jiffle image demo");
         
