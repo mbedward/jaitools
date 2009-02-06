@@ -90,7 +90,7 @@ public class Jiffle {
 
                 JiffleParser parser = new JiffleParser(tokens);
 
-                JiffleParser.jiffle_return r = parser.jiffle();
+                JiffleParser.prog_return r = parser.prog();
                 tree = (CommonTree) r.getTree();
                 
             } catch (RecognitionException re) {

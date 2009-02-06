@@ -38,7 +38,7 @@ class JiffleRunnable implements Runnable {
     public void run() {
         JiffleWalker w = new JiffleWalker(j.getTree());
         try {
-            w.jiffle();
+            w.prog();
             
         } catch (RecognitionException re) {
             // @todo WRITE ME

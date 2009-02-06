@@ -101,13 +101,13 @@ public class JiffleTest {
         CommonTokenStream tokens = new CommonTokenStream(lexer);
 
         JiffleParser parser = new JiffleParser(tokens);
-        JiffleParser.jiffle_return r = parser.jiffle();
+        JiffleParser.prog_return r = parser.prog();
         CommonTree tree = (CommonTree) r.getTree();
 
         CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
         nodes.setTokenStream(tokens);
         JiffleWalker walker = new JiffleWalker(nodes);
-        walker.jiffle();
+        walker.prog();
         
         return walker.getResult();
     }

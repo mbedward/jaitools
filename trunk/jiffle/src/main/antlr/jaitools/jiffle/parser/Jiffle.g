@@ -49,7 +49,7 @@ package jaitools.jiffle.parser;
 }
 
 
-jiffle		: (statement 
+prog		: (statement 
                     { 
                         if (printParseTree) {
                             System.out.println($statement.tree == null ? "null" : $statement.tree.toStringTree());
