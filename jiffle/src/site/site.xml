@@ -9,6 +9,7 @@
         </links>
         <menu name="Jiffle">
             <item name="Introduction" href="index.html"/>
+            <item name="Design" href="interpeter_design.html"/>
             <item name="Jiffle API" href="apidocs/"/>
             <item name="HTML'd code" href="jxr.html"/>
         </menu>
