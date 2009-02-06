@@ -25,6 +25,7 @@ import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
 import java.awt.image.RenderedImage;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
@@ -51,6 +52,10 @@ public class Jiffle {
         this.script = new String(script);
         compile();
     }
+    
+    public RenderedImage getImage(String varName) {
+        return imageMappings.get(varName);
+    }
 
     /**
      * Query if the input script has been compiled successfully
@@ -59,10 +64,34 @@ public class Jiffle {
         return (tree != null);
     }
 
+    /**
+     * Associate a variable name with a rendered image
+     * @param varName
+     * @param image
+     * @return true if the mapping was valid; false otherwise (e.g. if
+     * the variable name does not appear in the jiffle script)
+     */
     public boolean setImageMapping(String varName, RenderedImage image) {
         // @todo check varName against a symbol table
         
         imageMappings.put(varName, image);
+        return true;
+    }
+    
+    /**
+     * Associate a group of variable names with rendered
+     * images
+     * @param map variable names and their corresponding images
+     * @return true if all mappings were successful; false otherwise (e.g.
+     * if one of the variable names does not appear in the jiffle script)
+     */
+    public boolean setImageMapping(Map<String, RenderedImage> map) {
+        for (Entry<String, RenderedImage> e : map.entrySet()) {
+            if (!setImageMapping(e.getKey(), e.getValue())) {
+                return false;
+            }
+        }
+        
         return true;
     }
 

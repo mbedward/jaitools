@@ -26,8 +26,8 @@ package jaitools.jiffle.interpreter;
  */
 public class JiffleFailureEvent extends JiffleEvent {
     
-    public JiffleFailureEvent(int jobId) {
-        super(jobId);
+    public JiffleFailureEvent(int jobId, Jiffle jiffle) {
+        super(jobId, jiffle);
     }
 
 }

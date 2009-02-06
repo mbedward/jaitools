@@ -28,10 +28,7 @@ package jaitools.jiffle.interpreter;
  */
 public class JiffleEventAdapter implements JiffleEventListener {
 
-    public void onEvent(JiffleEvent ev) {
-    }
-
-    public void onCompletedEvent(JiffleCompletionEvent ev) {
+    public void onCompletionEvent(JiffleCompletionEvent ev) {
     }
 
     public void onFailureEvent(JiffleFailureEvent ev) {

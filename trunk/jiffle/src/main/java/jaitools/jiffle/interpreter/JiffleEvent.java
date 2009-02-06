@@ -25,13 +25,19 @@ package jaitools.jiffle.interpreter;
  * @author Michael Bedward
  */
 public abstract class JiffleEvent {
-    int jobId;
+    protected int jobId;
+    protected Jiffle jiffle;
     
-    public JiffleEvent(int jobId) {
+    public JiffleEvent(int jobId, Jiffle jiffle) {
         this.jobId = jobId;
+        this.jiffle = jiffle;
     }
     
     public int getJobId() {
         return jobId;
+    }
+    
+    public Jiffle getJiffle() {
+        return jiffle;
     }
 }

@@ -28,7 +28,53 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
- *
+ * This class runs compiled scripts in Jiffle objects (referred to as jiffles).
+ * <p>
+ * When a jiffle is submitted to the interpreter it is allocated a 
+ * job ID (an integer, unique across all interpreter instances). A thread
+ * is then created for running the jiffle.  The status of the executing
+ * jiffle is communicated via {@link JiffleEvent} objects.
+ * <p>
+ * Example of use:
+ * <pre>{@code \u0000
+ * class Foo {
+ * 
+ *     public Foo() {
+ *         private JiffleInterpreter interp = new JiffleInterpreter();
+ *         interp.addEventListener(new JiffleEventAdapter() {
+ *             public void onCompletionEvent(JiffleCompletionEvent ev) {
+ *                 onCompletion(ev);
+ *             }
+ * 
+ *             public void onFailureEvent(JiffleFailureEvent ev) {
+ *                 onFailure(ev);
+ *             }
+ *         });
+ *     }
+ * 
+ *     public doFoo() {
+ *         // get script and create compiled jiffle
+ *         String script = ....
+ *         Jiffle j = new Jiffle(script);
+ *         if (j.isCompiled()) {
+ *             // set input and output images etc., then...
+ *             interp.submit(j);
+ *         }
+ *     }
+ * 
+ *     private void onCompletion(JiffleCompletionEvent ev) {
+ *         RenderedImage img = ev.getJiffle().getImage("anImageName");
+ * 
+ *         // do something with the image...
+ *     }
+ * 
+ *     private void onFailure(JiffleFailureEvent ev) {
+ *         System.err.println("Bummer: script failed to run");
+ *     }
+ * }
+ * 
+ * }</pre>
+ * 
  * @author Michael Bedward
  */
 public class JiffleInterpreter {
@@ -47,7 +93,12 @@ public class JiffleInterpreter {
         listeners = CollectionFactory.newList();
     }
 
-    public void addListener(JiffleEventListener listener) {
+    /**
+     * Add a listener for interpreter events
+     * @param listener the listening object
+     * @see {@link JiffleEvent}
+     */
+    public void addEventListener(JiffleEventListener listener) {
         listeners.add(listener);
     }
 

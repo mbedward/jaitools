@@ -20,12 +20,14 @@
 
 package jaitools.jiffle;
 
+import jaitools.jiffle.interpreter.JiffleFailureEvent;
 import jaitools.jiffle.interpreter.JiffleInterpreter;
 import com.sun.media.jai.widget.DisplayJAI;
 import jaitools.jiffle.interpreter.Jiffle;
 import jaitools.jiffle.interpreter.JiffleCompletionEvent;
-import jaitools.jiffle.interpreter.JiffleEventAdapter;
+import jaitools.jiffle.interpreter.JiffleEventListener;
 import java.awt.BorderLayout;
+import java.awt.image.RenderedImage;
 import javax.media.jai.TiledImage;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
@@ -37,7 +39,6 @@ import javax.swing.JScrollPane;
 public class ImageEvalDemo {
     
     private JiffleInterpreter interp;
-    private int jobId;
     
 
     public static void main(String[] args) {
@@ -47,9 +48,13 @@ public class ImageEvalDemo {
     
     public ImageEvalDemo() {
         interp = new JiffleInterpreter();
-        interp.addListener(new JiffleEventAdapter() {
-            public void onEvent(JiffleCompletionEvent ev) {
+        interp.addEventListener(new JiffleEventListener() {
+            public void onCompletionEvent(JiffleCompletionEvent ev) {
                 onCompletion(ev);
+            }
+            
+            public void onFailureEvent(JiffleFailureEvent ev) {
+                onFailure(ev);
             }
         });
     }
@@ -70,17 +75,19 @@ public class ImageEvalDemo {
         
         if (j.isCompiled()) {
             j.setImageMapping("result", tImg);
-            jobId = interp.submit(j);
+            interp.submit(j);
         }
     }
     
     private void onCompletion(JiffleCompletionEvent ev) {
-        if (ev.getJobId() == jobId) {
-            
-        }
+        displayImage(ev.getJiffle().getImage("result"));
+    }
+    
+    private void onFailure(JiffleFailureEvent ev) {
+        System.err.println("Bummer: script failed to run");
     }
 
-    private void displayImage(TiledImage img) {
+    private void displayImage(RenderedImage img) {
         JFrame frame = new JFrame("Jiffle image demo");
         
         DisplayJAI disp = new DisplayJAI(img);
