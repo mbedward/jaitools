@@ -110,7 +110,7 @@ public class ExprEvalDemo {
     private CommonTree parse(CommonTokenStream tokens) throws RecognitionException {
         JiffleParser parser = new JiffleParser(tokens);
         //parser.setPrint(true);  // print debug output
-        JiffleParser.jiffle_return r = parser.jiffle();
+        JiffleParser.prog_return r = parser.prog();
         return (CommonTree) r.getTree();
     }
 
@@ -119,7 +119,7 @@ public class ExprEvalDemo {
         nodes.setTokenStream(tokens);
         JiffleWalker walker = new JiffleWalker(nodes);
         //walker.setPrint(true);  // print debug output
-        walker.jiffle();
+        walker.prog();
         return walker.getResult();
     }
 }

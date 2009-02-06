@@ -46,7 +46,7 @@ import java.util.Random;
     public double getResult() { return result; }
 }
 
-jiffle          : statement+ ;
+prog            : statement+ ;
 
 statement       : general_expr 
                   { 
