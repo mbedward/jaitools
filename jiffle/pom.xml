@@ -5,9 +5,20 @@
     <artifactId>jiffle</artifactId>
     <packaging>jar</packaging>
     <version>0.0.1</version>
-    <name>jiffle</name>
-    <description>Jai Image Function Language</description>
+    <name>Jiffle: JAI Image Function Language</name>
     <url>http://code.google.com/p/jai-tools</url>
+    <description>
+        Jiffle is a language and interpreter intended to make it easier to create
+        images from mathematical functions.
+    </description>
+    <developers>
+        <developer>
+            <id>michael</id>
+            <name>Michael Bedward</name>
+            <email>michael.bedward@gmail.com</email>
+            <timezone>+10</timezone>
+        </developer>
+    </developers>
     <build>
         <plugins>
             <plugin>
@@ -35,6 +46,26 @@
             </plugin>
         </plugins>
     </build>
+    <reporting>
+        <plugins>
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>jxr-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-report-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </reporting>
+    <distributionManagement>
+        <site>
+            <id>Jiffle website</id>
+            <url>file://${basedir}/website</url>
+        </site>
+    </distributionManagement>
     <dependencies>
         <dependency>
             <groupId>junit</groupId>

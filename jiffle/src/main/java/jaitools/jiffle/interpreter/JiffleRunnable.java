@@ -20,7 +20,6 @@
 
 package jaitools.jiffle.interpreter;
 
-import jaitools.jiffle.parser.JiffleWalker;
 import org.antlr.runtime.RecognitionException;
 
 /**
@@ -36,13 +35,7 @@ class JiffleRunnable implements Runnable {
     }
 
     public void run() {
-        JiffleWalker w = new JiffleWalker(j.getTree());
-        try {
-            w.prog();
-            
-        } catch (RecognitionException re) {
-            // @todo WRITE ME
-        }
+        // @todo WRITE ME !
     }
 }
 

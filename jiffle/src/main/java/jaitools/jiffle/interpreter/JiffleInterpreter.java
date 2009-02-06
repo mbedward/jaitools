@@ -65,7 +65,7 @@ import java.util.concurrent.Future;
  *     private void onCompletion(JiffleCompletionEvent ev) {
  *         RenderedImage img = ev.getJiffle().getImage("anImageName");
  * 
- *         // do something with the image...
+ *         // do something with your beautiful image...
  *     }
  * 
  *     private void onFailure(JiffleFailureEvent ev) {
