@@ -72,8 +72,7 @@ repeats until no further positional variables are identified.
         
 ** Methods
 
-    Method names will have been identified by JiffleParser. Each of these is now classified
-as either a positional method, image info method or a general method.
+    Methods are classified as positional, info or general.
 
     The positional methods are:
 
