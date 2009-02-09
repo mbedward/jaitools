@@ -36,6 +36,11 @@ public class JiffleTest {
     
     private static final double TOL = 1.0e-8d;
     
+    /**
+     * Evaluates a series of simple arithmetic expressions and 
+     * checks the result of each
+     * @throws java.lang.Exception
+     */
     @Test
     public void TestArithmetic() throws Exception {
         System.out.println("Test arithmetic");
@@ -72,6 +77,11 @@ public class JiffleTest {
         assertTrue(deq(result, 1.0/8.0));
     }
     
+    /**
+     * Tests operator precedence by evaluating the expression:
+     * <br>{@code 1 + 2*3^2 / 3;}
+     * @throws java.lang.Exception
+     */
     @Test
     public void testPrecedence() throws Exception {
         System.out.println("Testing arithmetic precedence");
@@ -80,6 +90,10 @@ public class JiffleTest {
         assertTrue(deq(result, 7));
     }
     
+    /**
+     * Tests the conditional (ternary) expression type
+     * @throws java.lang.Exception
+     */
     @Test
     public void testConditional() throws Exception {
         System.out.println("Testing conditional expression");
@@ -95,6 +109,12 @@ public class JiffleTest {
         assertTrue(deq(result, 42));
     }
 
+    /**
+     * Evaluates a numeric expression
+     * @param input intput jiffle statement(s)
+     * @return the result as a double value
+     * @throws org.antlr.runtime.RecognitionException
+     */
     private double eval(String input) throws RecognitionException {
         ANTLRStringStream strm = new ANTLRStringStream(input);
         JiffleLexer lexer = new JiffleLexer(strm);
@@ -112,6 +132,11 @@ public class JiffleTest {
         return eval.getResult();
     }
     
+    /**
+     * Test the equality of two double values within a set tolerance
+     * @param d1 first value
+     * @param d2 second value
+     */
     private boolean deq(double d1, double d2) {
         return Math.abs(d1 - d2) < TOL;
     }
