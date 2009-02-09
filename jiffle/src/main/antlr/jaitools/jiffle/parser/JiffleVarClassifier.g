@@ -19,8 +19,10 @@
  */
  
  /** 
-  * A grammar to search for variables and classify them in an AST 
-  * generted by the JiffleParser.
+  * Grammar for JiffleVarClassifier. Reads the AST produced by the token
+  * parser; checks for any user-defined variables used before being assigned 
+  * values; and identifies positional variables (those that depend directly
+  * or indirectly on image position)
   *
   * @author Michael Bedward
   */
@@ -34,7 +36,9 @@ options {
 
 @header {
 package jaitools.jiffle.parser;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 }
 
@@ -48,6 +52,16 @@ import java.util.Set;
         return FunctionTable.getFunctionType(funcName) == FunctionTable.Type.POSITIONAL;
     }
 
+    /* properly defined vars */
+    private Set<String> defVars = new HashSet<String>();
+
+    /* map: key is var name; value is line where var first referenced */
+    private Map<String, Integer> unassignedVars = new HashMap<String, Integer>();
+
+    public Map<String, Integer> getUnassignedVars() {
+        return unassignedVars;
+    }
+    
     private Set<String> positionalVars = new HashSet<String>();
 
     public Set<String> getPositionalVars() {
@@ -71,6 +85,8 @@ assignment
 }
                 : ^(ASSIGN assign_op ID expr)
                   {
+                      defVars.add($ID.text);
+                      
                       if (isPositional) {
                           positionalVars.add($ID.text);
                           if (printDebug) {
@@ -86,13 +102,17 @@ assignment
 
 expr            : ^(FUNC_CALL ID expr_list)
                   { 
-                      if (isPositionalFunc($ID.text)) { 
+                      if (isPositionalFunc($ID.text)) {
                           isPositional = true;
                       }
                   }
 
                 | ID
-                  { 
+                  {
+                      if (!defVars.contains($ID.text)) {
+                          unassignedVars.put($ID.text, $ID.line);
+                      }
+                      
                       if (positionalVars.contains($ID.text)) {
                           isPositional = true;
                       }

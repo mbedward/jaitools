@@ -21,6 +21,7 @@
 package jaitools.jiffle.parser;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Set;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
@@ -48,15 +49,35 @@ public class VarClassifierTest {
                 "yadd1 = 1 + y;" +
                 "pos3 = gen1 + pos1;" ;
 
-        Set<String> posVars = classify(input);
+        JiffleVarClassifier classifier = getClassifier(input);
+        // classifier.setPrint(true);
+        classifier.start();
+        
+        Set<String> posVars = classifier.getPositionalVars();
         assertFalse(posVars.contains("y"));
         assertFalse(posVars.contains("yadd1"));
         assertTrue(posVars.containsAll(Arrays.asList(new String[]{"x", "pos1", "pos2", "pos3"})));
-        
-        assertTrue(true);
     }
     
-    private Set<String> classify(String input) throws Exception {
+    @Test
+    public void testUndefVars() throws Exception {
+        String input = 
+                "a = 3;\n" +
+                "b = a + c;\n" +  // c used before assignment
+                "c = 2;\n" ;
+                
+        JiffleVarClassifier classifier = getClassifier(input);
+        // classifier.setPrint(true);
+        classifier.start();
+        
+        Map<String, Integer> vars = classifier.getUnassignedVars();
+        assertFalse(vars.containsKey("a"));
+        assertFalse(vars.containsKey("b"));
+        assertTrue(vars.containsKey("c"));
+        System.out.println("undefined var c at line: " + vars.get("c"));
+    }
+    
+    private JiffleVarClassifier getClassifier(String input) throws Exception {
         ANTLRStringStream strm = new ANTLRStringStream(input);
         JiffleLexer lexer = new JiffleLexer(strm);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -68,8 +89,6 @@ public class VarClassifierTest {
         CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
         nodes.setTokenStream(tokens);
         JiffleVarClassifier classifier = new JiffleVarClassifier(nodes);
-        // classifier.setPrint(true);
-        classifier.start();
-        return classifier.getPositionalVars();
+        return classifier;
     }
 }
