@@ -18,10 +18,9 @@
  * 
  */
 
-package jaitools.jiffle.parser;
+package jaitools.jiffle.interpreter;
 
 import jaitools.jiffle.collection.CollectionFactory;
-import jaitools.jiffle.interpreter.Foo;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -254,7 +253,7 @@ public class FunctionTable {
     }
     
     
-    boolean isDefined(String name, int numArgs) {
+    public boolean isDefined(String name, int numArgs) {
         OpBase op = generalFuncLookup.get(name).op;
         if (op == null) {
             return false;
@@ -263,7 +262,7 @@ public class FunctionTable {
         return op.getNumArgs() == numArgs;
     }
     
-    double invoke(String name, List<Double> args) {
+    public double invoke(String name, List<Double> args) {
         OpBase op = null;
         Type t = typeLookup.get(name);
         if (t == Type.GENERAL) {

@@ -18,9 +18,11 @@
  * 
  */
 
-package jaitools.jiffle.parser;
+package jaitools.jiffle.interpreter;
 
+import jaitools.jiffle.collection.CollectionFactory;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A symbol table for user-defined variables and pre-defined, named constants
@@ -28,7 +30,7 @@ import java.util.HashMap;
  * 
  * @author Michael Bedward
  */
-class VarTable {
+public class VarTable {
 
     private static final int ASSIGN = 1;
     private static final int PLUS_EQ = 2;
@@ -36,37 +38,10 @@ class VarTable {
     private static final int TIMES_EQ = 4;
     private static final int DIVIDE_EQ = 5;
     private static final int MOD_EQ = 6;
-    
-    private HashMap<String, Number> lookup = null;
-    private HashMap<String, Integer> ops;
-    
-    public VarTable() {
-        initLookup();
-        setConstants();
-        initOps();
-    }
 
-    /**
-     * Initialize the lookup map
-     */
-    private void initLookup() {
-        lookup = new HashMap<String, Number>();
-    }
-
-    /**
-     * Load pre-defined constants
-     */
-    private void setConstants() {
-        lookup.put("PI", Math.PI);
-        lookup.put("E", Math.E);
-        lookup.put("NaN", Double.NaN);
-    }
-
-    /**
-     * Set up the assignment operators table
-     */
-    private void initOps() {
-        ops = new HashMap<String, Integer>();
+    private static Map<String, Integer> ops;
+    static {
+        ops = CollectionFactory.newTreeMap();
 
         ops.put("=", ASSIGN);
         ops.put("+=", PLUS_EQ);
@@ -76,6 +51,44 @@ class VarTable {
         ops.put("%=", MOD_EQ);
     }
 
+    
+    public enum Type {
+        /**
+         * A named constant such as PI
+         */
+        NAMED_CONSTANT,
+        
+        /**
+         * A user-defined variable
+         */
+        USER;
+    }
+    
+    private static Map<String, Double> constants;
+    static {
+        constants = CollectionFactory.newMap();
+        constants.put("PI", Math.PI);
+        constants.put("E", Math.E);
+        constants.put("NaN", Double.NaN);
+    }
+    
+    public static boolean isConstant(String varName) {
+        return constants.containsKey(varName);
+    }
+  
+    private HashMap<String, Number> lookup = null;
+    
+    public VarTable() {
+        initLookup();
+    }
+
+    /**
+     * Initialize the lookup map
+     */
+    private void initLookup() {
+        lookup = new HashMap<String, Number>();
+        lookup.putAll(constants);
+    }
 
     /**
      * Assign a value to a variable
@@ -86,10 +99,14 @@ class VarTable {
      * a variable that is not yet defined
      */
     public void assign(String id, String op, double x) {
+        if (isConstant(id)) {
+            throw new RuntimeException("Trying to assign a value to named constant: " + id);
+        }
+        
         Integer opCode = ops.get(op);
         
         if (opCode == ASSIGN) {
-            put(id, x);
+            lookup.put(id, x);
             return;
         }
         
@@ -123,15 +140,6 @@ class VarTable {
     }
 
     /**
-     * Store / update variable
-     * @param id variable name
-     * @param x double value
-     */
-    private void put(String id, double x) {
-        lookup.put(id, x);
-    }
-
-    /**
      * Get the value for a variable
      * @param id variable name
      * @return value as double
@@ -146,11 +154,4 @@ class VarTable {
         return n.doubleValue();
     }
 
-    /**
-     * Remove a variable. Does nothing if the variable is not defined.
-     * @param id variable name
-     */
-    public void remove(String id) {
-        lookup.remove(id);
-    }
 }

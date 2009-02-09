@@ -18,29 +18,27 @@
  * 
  */
 
-package jaitools.jiffle.parser;
+package jaitools.jiffle.interpreter;
 
 
 /**
- * Class to invoke single argument functions
+ * Class to invoke no-argument functions
  * 
  * @author Michael Bedward
  */
-public abstract class OpBase1 implements OpBase {
+public abstract class OpBase0 implements OpBase {
 
     /**
-     * Invokes the single argument function
-     * @param x arg value as double
+     * Invokes the function
      * @return result as double
      */
-    public abstract double call(double x);
-    
+    public abstract double call();
+
     /**
      * Get the number of arguments
      */
     public int getNumArgs() {
-        return 1;
+        return 0;
     }
-    
 }
 

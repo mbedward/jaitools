@@ -18,27 +18,15 @@
  * 
  */
 
-package jaitools.jiffle.parser;
-
+package jaitools.jiffle.interpreter;
 
 /**
- * Class to invoke no-argument functions
- * 
+ * Empty interface to act as a container for functions
  * @author Michael Bedward
  */
-public abstract class OpBase0 implements OpBase {
-
-    /**
-     * Invokes the function
-     * @return result as double
-     */
-    public abstract double call();
-
+public interface OpBase {
     /**
      * Get the number of arguments
      */
-    public int getNumArgs() {
-        return 0;
-    }
+    public int getNumArgs();
 }
-
