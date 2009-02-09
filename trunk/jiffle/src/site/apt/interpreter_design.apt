@@ -7,9 +7,9 @@
 
 Components
 
-* Scanning: JiffleLexer
+* Scanning
 
-    Converts the input script into a stream of tokens representing:
+    JiffleLexer converts the input script into a stream of tokens representing:
 
     * logical and arithmetic operators
 
@@ -19,11 +19,8 @@ Components
 
     * expression and statement delimiters
 
-    []
 
-    ANTLR grammar file Jiffle.g
-
-* Token parsing: JiffleParser
+* Token parsing
 
     Takes the token stream produced by JiffleLexer and attempts to assemble grammatical
 elements (statements, expressions, function names, variable names etc). Any syntax errors
@@ -31,79 +28,27 @@ in the input script are reported. If the script is error free the parser builds 
 representation of the script known as an Abstract Syntax Tree or AST, which is much more
 conventient to examine and manipulate in subsequent steps than the original script.
 
-    ANTLR grammar file JiffleParser.g
 
-* Classifying variables and methods: JiffleClassifier
+* Checking and classifying variables
 
-** Variables
+    VarClassifier examines the AST produced by JiffleParser and checks for any 
+variables that are used prior to being assigned values.
 
-    Prior to running the script, the interpreter needs to classify each variable in 
-the script as one of:
+    Next it identifies positional variables: those whose value depends, directly or
+indirectly, on image position.  For example, in the following jiffle code...
 
-        * Named constant
++---
+    a = x() / 100;
+    b = sqrt(2);
+    c = a > b ? 1 : 0;
++---
 
-          Variable names pre-defined by the interpreter such as PI and E
+    <<a>> is positional because it references the in-built x() function (current pixel
+x coordinate)
 
-        * Simple variable
+    <<b>> is not positional
 
-          A scalar (single-value) variable independant of the current image position
-          being considered by the interpreter
-
-        * Positional (moving-window) variable
-
-          A scalar variable derived directly or indirectly from the current image position
-
-        * Image variable
-
-          A variable that represents a RenderedImage object.
-
-    Named constants are recognized by simple matching.
-
-    Image variables are defined by the user prior to running the script (see the setImageMapping
-method of the Jiffle class in the {{{./apidocs/index.html}API docs}}. For these variables, 
-JiffleClassifier checks that each is treated exclusively an input or output image in the script.
-
-    Next, the classifier scans for any user-defined variables that directly depend on the
-in-built positional methods such as x() (see {{{Methods}below}}). If any are found they are tagged
-as positional variables and another scan is done for variables that depend upon these. This process
-repeats until no further positional variables are identified.
-
-    Any variables that remain are tagged as simple, user-defined variables.
-        
-** Methods
-
-    Methods are classified as positional, info or general.
-
-    The positional methods are:
-
-*--------+----------------------------------------------+
- Method  | Return value
-*--------+----------------------------------------------+
- x()     | Current pixel x coordinate, indexed from 0
-*--------+----------------------------------------------+
- y()     | current pixel y coordinate, indexed from 0
-*--------+----------------------------------------------+
- row()   | current image row, indexed from 1, ie. y()+1
-*--------+----------------------------------------------+
- col()   | current image col, indexed from 1, ie. x()+1
-*--------+----------------------------------------------+
-
-    The image info methods are:
-
-*--------+----------------------------------------------+
- Method  | Return value
-*--------+----------------------------------------------+
- width() | Number of image cols
-*--------+----------------------------------------------+
- height()| Number of image rows
-*--------+----------------------------------------------+
- bands() | Number of image bands
-*--------+----------------------------------------------+
-
-    General methods include maths functions (e.g. sqrt, sin, abs), random numbers generators
-and statistical functions (e.g. median, stdDev).
-
-    ANTLR grammar file JiffleClassifier.g
-
+    <<c>> is positional because it depends on the 
+value of <<a>>
 
 

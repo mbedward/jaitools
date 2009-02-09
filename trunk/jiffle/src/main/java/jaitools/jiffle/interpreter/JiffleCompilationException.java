@@ -18,15 +18,16 @@
  * 
  */
 
-package jaitools.jiffle.parser;
+package jaitools.jiffle.interpreter;
 
 /**
- * Empty interface to act as a container for functions
+ *
  * @author Michael Bedward
  */
-public interface OpBase {
-    /**
-     * Get the number of arguments
-     */
-    public int getNumArgs();
+public class JiffleCompilationException extends Exception {
+
+    JiffleCompilationException(String msg) {
+        super(msg);
+    }
+
 }

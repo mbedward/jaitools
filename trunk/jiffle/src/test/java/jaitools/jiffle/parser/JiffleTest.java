@@ -126,7 +126,7 @@ public class JiffleTest {
 
         CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
         nodes.setTokenStream(tokens);
-        JiffleDirectEval eval = new JiffleDirectEval(nodes);
+        DirectEval eval = new DirectEval(nodes);
         eval.prog();
         
         return eval.getResult();

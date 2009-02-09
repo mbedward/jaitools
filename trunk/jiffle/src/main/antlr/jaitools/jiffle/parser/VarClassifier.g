@@ -19,15 +19,20 @@
  */
  
  /** 
-  * Grammar for JiffleVarClassifier. Reads the AST produced by the token
-  * parser; checks for any user-defined variables used before being assigned 
-  * values; and identifies positional variables (those that depend directly
-  * or indirectly on image position)
+  * Grammar for VarClassifier. Reads the AST produced by the token
+  * parser and does the following; 
+  * <ol type="1">
+  * <li> performs an check for any user-defined variables that are 
+  *      used before being assigned a value (either an error or an
+  *      an image var)
+  * <li> identifies positional variables (those that depend directly
+  *      or indirectly on image position)
+  * </ol>
   *
   * @author Michael Bedward
   */
 
-tree grammar JiffleVarClassifier;
+tree grammar VarClassifier;
 
 options {
     tokenVocab = Jiffle;
@@ -36,37 +41,56 @@ options {
 
 @header {
 package jaitools.jiffle.parser;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
+import jaitools.jiffle.interpreter.FunctionTable;
+import jaitools.jiffle.interpreter.VarTable;
 }
 
 @members {
     private boolean printDebug = false;
     public void setPrint(boolean b) { printDebug = b; }
 
+    /*
+     * Positional variables - those that depend directly or indirectly
+     * on image position when the jiffle is being run
+     */
     private boolean isPositional;
 
     private boolean isPositionalFunc(String funcName) {
         return FunctionTable.getFunctionType(funcName) == FunctionTable.Type.POSITIONAL;
     }
 
-    /* properly defined vars */
-    private Set<String> defVars = new HashSet<String>();
-
-    /* map: key is var name; value is line where var first referenced */
-    private Map<String, Integer> unassignedVars = new HashMap<String, Integer>();
-
-    public Map<String, Integer> getUnassignedVars() {
-        return unassignedVars;
-    }
-    
     private Set<String> positionalVars = new HashSet<String>();
 
     public Set<String> getPositionalVars() {
         return positionalVars;
     }
+
+
+    /*
+     * Recording of user variables and checking that they are
+     * assigned a value before being used in an expression.
+     * Use of an unsassigned variable is not necessarily an error
+     * as it might be an image variable.
+     */
+    private Set<String> defVars = new HashSet<String>();
+
+    public Set<String> getUserVars() {
+        return defVars;
+    }
+
+    private Set<String> unassignedVars = new HashSet<String>();
+
+    public Set<String> getUnassignedVars() {
+        return unassignedVars;
+    }
+    
+    public boolean hasUnassignedVar() {
+        return !unassignedVars.isEmpty();
+    }
+    
 }
 
 start           : statement+ 
@@ -85,16 +109,18 @@ assignment
 }
                 : ^(ASSIGN assign_op ID expr)
                   {
-                      defVars.add($ID.text);
+                      if (!VarTable.isConstant($ID.text)) {
+                          defVars.add($ID.text);
                       
-                      if (isPositional) {
-                          positionalVars.add($ID.text);
-                          if (printDebug) {
-                              System.out.println($ID.text + " is positional");
-                          }
-                      } else {
-                          if (printDebug) {
-                              System.out.println($ID.text + " is not positional");
+                          if (isPositional) {
+                              positionalVars.add($ID.text);
+                              if (printDebug) {
+                                  System.out.println($ID.text + " is positional");
+                              }
+                          } else {
+                              if (printDebug) {
+                                  System.out.println($ID.text + " is not positional");
+                              }
                           }
                       }
                   }
@@ -109,8 +135,11 @@ expr            : ^(FUNC_CALL ID expr_list)
 
                 | ID
                   {
-                      if (!defVars.contains($ID.text)) {
-                          unassignedVars.put($ID.text, $ID.line);
+                      if (!defVars.contains($ID.text) &&     // not assigned yet
+                          !VarTable.isConstant($ID.text) &&  // not a named constant
+                          !unassignedVars.contains($ID.text))  // not already reported
+                      {
+                          unassignedVars.add($ID.text);
                       }
                       
                       if (positionalVars.contains($ID.text)) {

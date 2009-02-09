@@ -17,15 +17,17 @@
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-
 package jaitools.jiffle.interpreter;
 
 import jaitools.jiffle.collection.CollectionFactory;
+import jaitools.jiffle.parser.ImageVarValidator;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
+import jaitools.jiffle.parser.VarClassifier;
 import java.awt.image.RenderedImage;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
@@ -41,18 +43,19 @@ public class Jiffle {
     private String script;
     private CommonTree tree;
     private CommonTokenStream tokens;
+    
     private Map<String, RenderedImage> imageMappings;
 
     /**
      * Constructor
      * @param script input jiffle statement(s)
      */
-    public Jiffle(String script) {
+    public Jiffle(String script) throws JiffleCompilationException {
         this.imageMappings = CollectionFactory.newTreeMap();
         this.script = new String(script);
         compile();
     }
-    
+
     public RenderedImage getImage(String varName) {
         return imageMappings.get(varName);
     }
@@ -68,31 +71,20 @@ public class Jiffle {
      * Associate a variable name with a rendered image
      * @param varName
      * @param image
-     * @return true if the mapping was valid; false otherwise (e.g. if
-     * the variable name does not appear in the jiffle script)
      */
-    public boolean setImageMapping(String varName, RenderedImage image) {
-        // @todo check varName against a symbol table
-        
+    public void setImageMapping(String varName, RenderedImage image) {
         imageMappings.put(varName, image);
-        return true;
     }
     
     /**
      * Associate a group of variable names with rendered
      * images
      * @param map variable names and their corresponding images
-     * @return true if all mappings were successful; false otherwise (e.g.
-     * if one of the variable names does not appear in the jiffle script)
      */
-    public boolean setImageMapping(Map<String, RenderedImage> map) {
+    public void setImageMapping(Map<String, RenderedImage> map) {
         for (Entry<String, RenderedImage> e : map.entrySet()) {
-            if (!setImageMapping(e.getKey(), e.getValue())) {
-                return false;
-            }
+            setImageMapping(e.getKey(), e.getValue());
         }
-        
-        return true;
     }
 
     /**
@@ -108,9 +100,9 @@ public class Jiffle {
     /**
      * Attempt to compile the script into an AST
      */
-    private void compile() {
+    private void compile() throws JiffleCompilationException {
         tree = null;
-        
+
         if (script != null && script.length() > 0) {
             try {
                 ANTLRStringStream input = new ANTLRStringStream(script);
@@ -121,10 +113,57 @@ public class Jiffle {
 
                 JiffleParser.prog_return r = parser.prog();
                 tree = (CommonTree) r.getTree();
+
+            } catch (RecognitionException re) {
+                reportCompilationError(re);
+            }
+
+            VarClassifier classifier = null;
+            try {
+                CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
+                nodes.setTokenStream(tokens);
+                classifier = new VarClassifier(nodes);
+                classifier.start();
                 
             } catch (RecognitionException re) {
-                reportError(re);
-            } 
+                // anything at this stage is a programmer error
+                throw new RuntimeException("VarClassifier failed to process AST");
+            }
+
+            
+            Set<String> vars = classifier.getUserVars();
+            Set<String> posVars = classifier.getPositionalVars();
+            Set<String> unassignedVars = classifier.getUnassignedVars();
+            
+            /* 
+             * Check image var mappings - they should correspond with 
+             * var names
+             */
+            for (String name : imageMappings.keySet()) {
+                if (!vars.contains(name)) {
+                    throw new JiffleCompilationException(
+                            "Unknown variable " + name + " used in image mapping");
+                }
+            }
+            
+            ImageVarValidator validator;
+            try {
+                CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
+                nodes.setTokenStream(tokens);
+                validator = new ImageVarValidator(nodes);
+                validator.setImageVars(imageMappings.keySet());
+                validator.start();
+                
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+            
+            if (validator.hasImageVarError()) {
+                String msg = "Same image var(s) being used for both input and output";
+                throw new JiffleCompilationException(msg);
+            }
+
+            Set<String> outputImageVars = validator.getOutputImageVars();
         }
     }
 
@@ -132,7 +171,8 @@ public class Jiffle {
      * Report an ANTLR-generated error
      * @param re
      */
-    private void reportError(RecognitionException re) {
+    private void reportCompilationError(RecognitionException re) {
         // @todo WRITE ME !
     }
+    
 }

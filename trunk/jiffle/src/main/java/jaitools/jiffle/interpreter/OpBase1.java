@@ -20,20 +20,26 @@
 
 package jaitools.jiffle.interpreter;
 
+
 /**
- *
- * @author Michael Bedward and Murray Ellis
+ * Class to invoke single argument functions
+ * 
+ * @author Michael Bedward
  */
-class JiffleRunnable implements Runnable {
+public abstract class OpBase1 implements OpBase {
+
+    /**
+     * Invokes the single argument function
+     * @param x arg value as double
+     * @return result as double
+     */
+    public abstract double call(double x);
     
-    private Jiffle jif;
-
-    public JiffleRunnable(Jiffle jif) {
-        this.jif = jif;
-    }
-
-    public void run() {
-
+    /**
+     * Get the number of arguments
+     */
+    public int getNumArgs() {
+        return 1;
     }
     
 }

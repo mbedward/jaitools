@@ -21,26 +21,26 @@
 package jaitools.jiffle.parser;
 
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Set;
-import org.antlr.runtime.ANTLRStringStream;
-import org.antlr.runtime.CommonTokenStream;
-import org.antlr.runtime.tree.CommonTree;
-import org.antlr.runtime.tree.CommonTreeNodeStream;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
 /**
- * Test JiffleVarClassifier: the class that categorizes variables as
- * positional or general for the interpreter
+ * Test JiffleVarClassifier: the class that checks and categorizes
+ * variables in a jiffle script
  * 
  * @author Michael Bedward
  */
-public class VarClassifierTest {
+public class VarClassifierTest extends TreeWalkerTestBase {
 
+    /**
+     * Test identification of positional variables
+     * @throws java.lang.Exception
+     */
     @Test
     public void testClassification() throws Exception {
+        System.out.println("   testClassification");
         String input =
                 "x = x();" +
                 "y = 2.0;" +
@@ -49,8 +49,9 @@ public class VarClassifierTest {
                 "yadd1 = 1 + y;" +
                 "pos3 = gen1 + pos1;" ;
 
-        JiffleVarClassifier classifier = getClassifier(input);
+        VarClassifier classifier = new VarClassifier(getAST(input));
         // classifier.setPrint(true);
+
         classifier.start();
         
         Set<String> posVars = classifier.getPositionalVars();
@@ -59,36 +60,27 @@ public class VarClassifierTest {
         assertTrue(posVars.containsAll(Arrays.asList(new String[]{"x", "pos1", "pos2", "pos3"})));
     }
     
+    /**
+     * Test check for using variables before assigning a value to them
+     * @throws java.lang.Exception
+     */
     @Test
-    public void testUndefVars() throws Exception {
+    public void testUnassignedVars() throws Exception {
+        System.out.println("   testUnassignedVars");
         String input = 
                 "a = 3;\n" +
                 "b = a + c;\n" +  // c used before assignment
                 "c = 2;\n" ;
                 
-        JiffleVarClassifier classifier = getClassifier(input);
+        VarClassifier classifier = new VarClassifier(getAST(input));
         // classifier.setPrint(true);
+
         classifier.start();
         
-        Map<String, Integer> vars = classifier.getUnassignedVars();
-        assertFalse(vars.containsKey("a"));
-        assertFalse(vars.containsKey("b"));
-        assertTrue(vars.containsKey("c"));
-        System.out.println("undefined var c at line: " + vars.get("c"));
+        Set<String> vars = classifier.getUnassignedVars();
+        assertFalse(vars.contains("a"));
+        assertFalse(vars.contains("b"));
+        assertTrue(vars.contains("c"));
     }
     
-    private JiffleVarClassifier getClassifier(String input) throws Exception {
-        ANTLRStringStream strm = new ANTLRStringStream(input);
-        JiffleLexer lexer = new JiffleLexer(strm);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-
-        JiffleParser parser = new JiffleParser(tokens);
-        JiffleParser.prog_return r = parser.prog();
-        CommonTree tree = (CommonTree) r.getTree();
-
-        CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
-        nodes.setTokenStream(tokens);
-        JiffleVarClassifier classifier = new JiffleVarClassifier(nodes);
-        return classifier;
-    }
 }

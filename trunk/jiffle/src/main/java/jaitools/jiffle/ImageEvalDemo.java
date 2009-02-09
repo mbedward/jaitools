@@ -24,6 +24,7 @@ import jaitools.jiffle.interpreter.JiffleFailureEvent;
 import jaitools.jiffle.interpreter.JiffleInterpreter;
 import com.sun.media.jai.widget.DisplayJAI;
 import jaitools.jiffle.interpreter.Jiffle;
+import jaitools.jiffle.interpreter.JiffleCompilationException;
 import jaitools.jiffle.interpreter.JiffleCompletionEvent;
 import jaitools.jiffle.interpreter.JiffleEventListener;
 import java.awt.BorderLayout;
@@ -31,7 +32,6 @@ import java.awt.image.RenderedImage;
 import javax.media.jai.TiledImage;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
-import org.antlr.tool.Interpreter;
 
 /**
  * Demonstrates creating an image from a mathematical expression
@@ -103,8 +103,14 @@ public class ImageEvalDemo {
                 "result = sin(8 * PI * d);";
         
         TiledImage tImg = JiffleUtilities.createDoubleImage(width, height, 1);
-        
-        Jiffle j = new Jiffle(cmd);
+
+        Jiffle j;
+        try {
+            j = new Jiffle(cmd);
+        } catch (JiffleCompilationException cex) {
+            System.err.println("Failed to compile jiffle script");
+            return;
+        }
         
         if (j.isCompiled()) {
             j.setImageMapping("result", tImg);

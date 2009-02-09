@@ -18,7 +18,7 @@
  * 
  */
 
-package jaitools.jiffle.parser;
+package jaitools.jiffle.interpreter;
 
 /**
  * Class to invoke two argument functions
