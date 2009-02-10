@@ -29,6 +29,8 @@ import jaitools.jiffle.interpreter.JiffleCompletionEvent;
 import jaitools.jiffle.interpreter.JiffleEventListener;
 import java.awt.BorderLayout;
 import java.awt.image.RenderedImage;
+import java.util.HashMap;
+import java.util.Map;
 import javax.media.jai.TiledImage;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
@@ -105,15 +107,19 @@ public class ImageEvalDemo {
         TiledImage tImg = JiffleUtilities.createDoubleImage(width, height, 1);
 
         Jiffle j;
+        
+        Map<String, RenderedImage> imgParams = new HashMap<String, RenderedImage>();
+        imgParams.put("result", tImg);
+        
         try {
-            j = new Jiffle(cmd);
+            j = new Jiffle(cmd, imgParams);
+            
         } catch (JiffleCompilationException cex) {
             System.err.println("Failed to compile jiffle script");
             return;
         }
         
         if (j.isCompiled()) {
-            j.setImageMapping("result", tImg);
             interp.submit(j);
         }
     }

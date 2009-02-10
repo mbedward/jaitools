@@ -20,7 +20,6 @@
 package jaitools.jiffle.interpreter;
 
 import jaitools.jiffle.collection.CollectionFactory;
-import jaitools.jiffle.parser.ImageVarValidator;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
 import jaitools.jiffle.parser.VarClassifier;
@@ -41,30 +40,38 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
 public class Jiffle {
 
     private String script;
-    private CommonTree tree;
+    private CommonTree primaryAST;
     private CommonTokenStream tokens;
+    private Map<String, RenderedImage> imageParams;
+    private Set<String> vars;
+    private Set<String> unassignedVars;
+    private Set<String> outputImageVars;
     
-    private Map<String, RenderedImage> imageMappings;
-
+    private Metadata metadata;
+    
     /**
      * Constructor
      * @param script input jiffle statement(s)
      */
-    public Jiffle(String script) throws JiffleCompilationException {
-        this.imageMappings = CollectionFactory.newTreeMap();
+    public Jiffle(String script, Map<String, RenderedImage> imgParams)
+            throws JiffleCompilationException {
+
+        this.imageParams = CollectionFactory.newMap();
+        this.imageParams.putAll(imgParams);
+
         this.script = new String(script);
         compile();
     }
 
     public RenderedImage getImage(String varName) {
-        return imageMappings.get(varName);
+        return imageParams.get(varName);
     }
 
     /**
      * Query if the input script has been compiled successfully
      */
     public boolean isCompiled() {
-        return (tree != null);
+        return (primaryAST != null);
     }
 
     /**
@@ -72,18 +79,18 @@ public class Jiffle {
      * @param varName
      * @param image
      */
-    public void setImageMapping(String varName, RenderedImage image) {
-        imageMappings.put(varName, image);
+    public void setImageParam(String varName, RenderedImage image) {
+        imageParams.put(varName, image);
     }
-    
+
     /**
      * Associate a group of variable names with rendered
      * images
      * @param map variable names and their corresponding images
      */
-    public void setImageMapping(Map<String, RenderedImage> map) {
+    public void setImageParams(Map<String, RenderedImage> map) {
         for (Entry<String, RenderedImage> e : map.entrySet()) {
-            setImageMapping(e.getKey(), e.getValue());
+            setImageParam(e.getKey(), e.getValue());
         }
     }
 
@@ -92,7 +99,7 @@ public class Jiffle {
      * the nodes of the AST.
      */
     CommonTreeNodeStream getTree() {
-        CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
+        CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
         nodes.setTokenStream(tokens);
         return nodes;
     }
@@ -101,78 +108,76 @@ public class Jiffle {
      * Attempt to compile the script into an AST
      */
     private void compile() throws JiffleCompilationException {
-        tree = null;
+        primaryAST = null;
 
         if (script != null && script.length() > 0) {
-            try {
-                ANTLRStringStream input = new ANTLRStringStream(script);
-                JiffleLexer lexer = new JiffleLexer(input);
-                tokens = new CommonTokenStream(lexer);
-
-                JiffleParser parser = new JiffleParser(tokens);
-
-                JiffleParser.prog_return r = parser.prog();
-                tree = (CommonTree) r.getTree();
-
-            } catch (RecognitionException re) {
-                reportCompilationError(re);
-            }
-
-            VarClassifier classifier = null;
-            try {
-                CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
-                nodes.setTokenStream(tokens);
-                classifier = new VarClassifier(nodes);
-                classifier.start();
-                
-            } catch (RecognitionException re) {
-                // anything at this stage is a programmer error
-                throw new RuntimeException("VarClassifier failed to process AST");
-            }
-
-            
-            Set<String> vars = classifier.getUserVars();
-            Set<String> posVars = classifier.getPositionalVars();
-            Set<String> unassignedVars = classifier.getUnassignedVars();
-            
-            /* 
-             * Check image var mappings - they should correspond with 
-             * var names
-             */
-            for (String name : imageMappings.keySet()) {
-                if (!vars.contains(name)) {
-                    throw new JiffleCompilationException(
-                            "Unknown variable " + name + " used in image mapping");
-                }
-            }
-            
-            ImageVarValidator validator;
-            try {
-                CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
-                nodes.setTokenStream(tokens);
-                validator = new ImageVarValidator(nodes);
-                validator.setImageVars(imageMappings.keySet());
-                validator.start();
-                
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
-            
-            if (validator.hasImageVarError()) {
-                String msg = "Same image var(s) being used for both input and output";
-                throw new JiffleCompilationException(msg);
-            }
-
-            Set<String> outputImageVars = validator.getOutputImageVars();
+            buildAST();
+            classifyVars();
         }
     }
 
     /**
-     * Report an ANTLR-generated error
-     * @param re
+     * Build a preliminary AST from the jiffle script. Basic syntax and grammar
+     * checks are done at this stage.
+     * 
+     * @throws jaitools.jiffle.interpreter.JiffleCompilationException
      */
-    private void reportCompilationError(RecognitionException re) {
-        // @todo WRITE ME !
+    private void buildAST() throws JiffleCompilationException {
+        try {
+            ANTLRStringStream input = new ANTLRStringStream(script);
+            JiffleLexer lexer = new JiffleLexer(input);
+            tokens = new CommonTokenStream(lexer);
+
+            JiffleParser parser = new JiffleParser(tokens);
+
+            JiffleParser.prog_return r = parser.prog();
+            primaryAST = (CommonTree) r.getTree();
+
+        } catch (RecognitionException re) {
+            throw new JiffleCompilationException(
+                    "error in script at or around line:" +
+                    re.line + " col:" + re.charPositionInLine);
+        }
     }
-    
+
+    /**
+     * Examine variables in the AST built by {@link #buildAST()} and
+     * do the following:
+     * <ul>
+     * <li> Identify positional and non-positional vars
+     * <li> Report on vars that are used before being assigned a value
+     * (all being well, these will later be tagged as input image vars
+     * by {@link #validateImageVars() })
+     */
+    private void classifyVars() throws JiffleCompilationException {
+        VarClassifier classifier = null;
+        try {
+            CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
+            nodes.setTokenStream(tokens);
+            classifier = new VarClassifier(nodes);
+            classifier.setImageVars(imageParams.keySet());
+            classifier.start();
+
+        } catch (RecognitionException re) {
+            // anything at this stage is a programmer error
+            throw new RuntimeException("VarClassifier failed to process AST");
+        }
+
+        /*
+         * Create a metadata object for later stages of compilation and execution
+         */
+        metadata = new Metadata(imageParams);
+        metadata.setVarData(classifier);
+    }
+
+
+    /**
+     * Takes the preliminary AST built by {@link #buildAST()}, together with the 
+     * classification of script variables from {@link #classifyVars() } and
+     * {@link #validateImageVars() }, produces a (slightly) optimized AST containing
+     * only the positional expressions (ie. those that depend on pixel position).
+     * Values for Non-positional variables are calculated and stored as constants.
+     */
+    private void transformAST() {
+    }
 }
