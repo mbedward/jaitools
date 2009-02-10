@@ -20,7 +20,10 @@
 
 package jaitools.jiffle.parser;
 
+import jaitools.jiffle.interpreter.ErrorCode;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import org.junit.Test;
 
@@ -52,6 +55,8 @@ public class VarClassifierTest extends TreeWalkerTestBase {
         VarClassifier classifier = new VarClassifier(getAST(input));
         // classifier.setPrint(true);
 
+        // set a dummy image var to avoid the classifier complaining
+        classifier.setImageVars(Arrays.asList(new String[]{"foo"}));
         classifier.start();
         
         Set<String> posVars = classifier.getPositionalVars();
@@ -75,6 +80,8 @@ public class VarClassifierTest extends TreeWalkerTestBase {
         VarClassifier classifier = new VarClassifier(getAST(input));
         // classifier.setPrint(true);
 
+        // set a dummy image var to avoid the classifier complaining
+        classifier.setImageVars(Arrays.asList(new String[]{"foo"}));
         classifier.start();
         
         Set<String> vars = classifier.getUnassignedVars();
@@ -82,5 +89,49 @@ public class VarClassifierTest extends TreeWalkerTestBase {
         assertFalse(vars.contains("b"));
         assertTrue(vars.contains("c"));
     }
+ 
+    /**
+     * Test checking for images being used for both input
+     * and output
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testImageVarError() throws Exception {
+        System.out.println("   testImageVarError");
+        
+        String input = 
+                "imgY = y();" +
+                "imgX = x();" +
+                "a = imgX * imgZ;";
+        
+        String[] imageVars = {"imgX", "imgY", "imgFoo"};
+        
+        /*
+         * Errors in the above script and imageVar defs...
+         * - imgX used for both input and output
+         * - imgZ not set as an image so will be picked up
+         *   as an undefined variable
+         * - imgFoo is defined as an image but not used
+         */
+        
+        VarClassifier classifier = new VarClassifier(getAST(input));
+        classifier.setImageVars(Arrays.asList(imageVars));
+        
+        classifier.start();
+        
+        assertTrue(classifier.hasError());
+
+        Map<String, ErrorCode> errors = classifier.getErrors();
+        
+        for (Entry<String, ErrorCode> e : errors.entrySet()) {
+            System.out.println(e.getKey() + ": " + e.getValue());
+        }
+        
+        assertTrue(errors.containsKey("imgX") && errors.get("imgX") == ErrorCode.IMAGE_IO);
+        assertTrue(errors.containsKey("imgZ") && errors.get("imgZ") == ErrorCode.VAR_UNDEFINED);
+        assertTrue(errors.containsKey("imgFoo") && errors.get("imgFoo") == ErrorCode.IMAGE_UNUSED);
+        assertFalse(errors.containsKey("imgY"));
+    }
+    
     
 }

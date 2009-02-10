@@ -42,8 +42,12 @@ options {
 @header {
 package jaitools.jiffle.parser;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+
+import jaitools.jiffle.interpreter.ErrorCode;
 import jaitools.jiffle.interpreter.FunctionTable;
 import jaitools.jiffle.interpreter.VarTable;
 }
@@ -73,7 +77,7 @@ import jaitools.jiffle.interpreter.VarTable;
      * Recording of user variables and checking that they are
      * assigned a value before being used in an expression.
      * Use of an unsassigned variable is not necessarily an error
-     * as it might be an image variable.
+     * as it might (should) be an input image variable.
      */
     private Set<String> defVars = new HashSet<String>();
 
@@ -91,9 +95,70 @@ import jaitools.jiffle.interpreter.VarTable;
         return !unassignedVars.isEmpty();
     }
     
+    /**
+     * Image var validation - there should be at least one output image
+     * and no image should be used for both input and output
+     */
+    private Set<String> imageVars;
+
+    public void setImageVars(Collection<String> varNames) {
+        imageVars = new HashSet<String>();
+        imageVars.addAll(varNames);
+    }
+    
+    private Set<String> inImageVars = new HashSet<String>();
+    private Set<String> outImageVars = new HashSet<String>();
+
+    public Set<String> getOutputImageVars() {
+        return outImageVars;
+    }
+    
+    
+    /* Table of var name : error code */
+    private Map<String, ErrorCode> errorTable = new HashMap<String, ErrorCode>();
+
+    public Map<String, ErrorCode> getErrors() {
+        return errorTable;
+    }
+    
+    public boolean hasError() {
+        return !errorTable.isEmpty();
+    }
+
+    /*
+     * This method is run after the tree has been processed to 
+     * check that the image var params and the AST are in sync
+     */
+    private void postValidation() {
+        for (String varName : unassignedVars) {
+            errorTable.put(varName, ErrorCode.VAR_UNDEFINED);
+        }
+
+        if (outImageVars.isEmpty()) {
+            errorTable.put("n/a", ErrorCode.IMAGE_NO_OUT);
+        }
+        
+        // check all image vars are accounted for
+        for (String varName : imageVars) {
+            if (!inImageVars.contains(varName) && !outImageVars.contains(varName)) {
+                errorTable.put(varName, ErrorCode.IMAGE_UNUSED);
+            }
+        }
+    }
+
+    
 }
 
-start           : statement+ 
+start
+@init {
+    if (imageVars == null || imageVars.isEmpty()) {
+        throw new RuntimeException("failed to set image vars before using VarClassifier");
+    }
+}
+@after {
+    postValidation();
+}
+                : statement+ 
                 ;
 
 statement       : assignment
@@ -109,7 +174,14 @@ assignment
 }
                 : ^(ASSIGN assign_op ID expr)
                   {
-                      if (!VarTable.isConstant($ID.text)) {
+                      if (imageVars.contains($ID.text)) {
+                          outImageVars.add($ID.text);
+                      
+                          if (printDebug) {
+                              System.out.println("Output image var: " + $ID.text);
+                          }
+                          
+                      } else if (!VarTable.isConstant($ID.text)) {
                           defVars.add($ID.text);
                       
                           if (isPositional) {
@@ -135,9 +207,22 @@ expr            : ^(FUNC_CALL ID expr_list)
 
                 | ID
                   {
-                      if (!defVars.contains($ID.text) &&     // not assigned yet
-                          !VarTable.isConstant($ID.text) &&  // not a named constant
-                          !unassignedVars.contains($ID.text))  // not already reported
+                      if (imageVars.contains($ID.text)) {
+                          if (outImageVars.contains($ID.text)) {
+                              // error - using image for input and output
+                              errorTable.put($ID.text, ErrorCode.IMAGE_IO);
+                          
+                              if (printDebug) {
+                                  System.out.println("Image var error: " +
+                                    $ID.text + " used for both input and output");
+                              }
+                          } else {
+                              inImageVars.add($ID.text);
+                          }
+                          
+                      } else if (!defVars.contains($ID.text) &&     // not assigned yet
+                                 !VarTable.isConstant($ID.text) &&  // not a named constant
+                                 !unassignedVars.contains($ID.text))  // not already reported
                       {
                           unassignedVars.add($ID.text);
                       }
