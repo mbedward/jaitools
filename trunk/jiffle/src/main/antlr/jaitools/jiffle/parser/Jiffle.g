@@ -60,11 +60,10 @@ prog		: (statement
 statement	: expr eos!
 		;
 		
-expr		: func_call
-                | assign_expr
+expr		: assign_expr
                 | cond_expr
 		;
-
+                
 func_call       : ID LPAR expr_list RPAR -> ^(FUNC_CALL ID expr_list)
                 ;
 
@@ -116,6 +115,7 @@ postfix_expr	: a=atom_expr (incdec_op^)?
 atom_expr	: ID
 		| constant
 		| LPAR! expr RPAR!
+                | func_call
 		;
 
 constant	: INT_LITERAL
