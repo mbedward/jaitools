@@ -25,11 +25,12 @@ import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.tree.CommonTree;
 import org.antlr.runtime.tree.CommonTreeNodeStream;
 
+
 /**
  *
- * @author Michael Bedward and Murray Ellis
+ * @author Michael Bedward
  */
-public abstract class TreeWalkerTestBase {
+public abstract class DemoBase {
     
     /**
      * Helper function to scan and parse an input script and
@@ -55,4 +56,5 @@ public abstract class TreeWalkerTestBase {
         return nodes;
     }
     
+
 }
