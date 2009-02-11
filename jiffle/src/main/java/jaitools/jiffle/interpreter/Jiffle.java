@@ -20,8 +20,11 @@
 package jaitools.jiffle.interpreter;
 
 import jaitools.jiffle.collection.CollectionFactory;
+import jaitools.jiffle.parser.ExpressionSimplifier;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
+import jaitools.jiffle.parser.TreeRebuilder;
+import jaitools.jiffle.parser.TreeRebuilder.start_return;
 import jaitools.jiffle.parser.VarClassifier;
 import java.awt.image.RenderedImage;
 import java.util.Map;
@@ -42,6 +45,8 @@ public class Jiffle {
     private String script;
     private CommonTree primaryAST;
     private CommonTokenStream tokens;
+    private CommonTree finalTree;
+    
     private Map<String, RenderedImage> imageParams;
     private Set<String> vars;
     private Set<String> unassignedVars;
@@ -71,7 +76,7 @@ public class Jiffle {
      * Query if the input script has been compiled successfully
      */
     public boolean isCompiled() {
-        return (primaryAST != null);
+        return (finalTree != null);
     }
 
     /**
@@ -95,16 +100,6 @@ public class Jiffle {
     }
 
     /**
-     * Package private method called by JiffleInterpreter to provide
-     * the nodes of the AST.
-     */
-    CommonTreeNodeStream getTree() {
-        CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
-        nodes.setTokenStream(tokens);
-        return nodes;
-    }
-
-    /**
      * Attempt to compile the script into an AST
      */
     private void compile() throws JiffleCompilationException {
@@ -113,6 +108,7 @@ public class Jiffle {
         if (script != null && script.length() > 0) {
             buildAST();
             classifyVars();
+            finalTree = simplify(rebuild());
         }
     }
 
@@ -129,6 +125,7 @@ public class Jiffle {
             tokens = new CommonTokenStream(lexer);
 
             JiffleParser parser = new JiffleParser(tokens);
+            parser.setPrint(true);
 
             JiffleParser.prog_return r = parser.prog();
             primaryAST = (CommonTree) r.getTree();
@@ -156,11 +153,12 @@ public class Jiffle {
             nodes.setTokenStream(tokens);
             classifier = new VarClassifier(nodes);
             classifier.setImageVars(imageParams.keySet());
+            classifier.setPrint(true);
             classifier.start();
 
-        } catch (RecognitionException re) {
-            // anything at this stage is a programmer error
-            throw new RuntimeException("VarClassifier failed to process AST");
+        } catch (RecognitionException ex) {
+            // anything at this stage is probably programmer error
+            throw new RuntimeException(ex);
         }
 
         /*
@@ -173,11 +171,58 @@ public class Jiffle {
 
     /**
      * Takes the preliminary AST built by {@link #buildAST()}, together with the 
-     * classification of script variables from {@link #classifyVars() } and
-     * {@link #validateImageVars() }, produces a (slightly) optimized AST containing
-     * only the positional expressions (ie. those that depend on pixel position).
-     * Values for Non-positional variables are calculated and stored as constants.
+     * classification of script variables from {@link #classifyVars() } and 
+     * prepares it to be optimized by tagging variables by type (image, positional
+     * or simple), replacing image property function calls by special variable
+     * tokens, and separating image writes from variable assignments.
+     * 
+     * @return the modified AST
      */
-    private void transformAST() {
+    private CommonTree rebuild() {
+        
+        TreeRebuilder rebuilder;
+        try {
+            CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
+            nodes.setTokenStream(tokens);
+            rebuilder = new TreeRebuilder(nodes);
+            rebuilder.setMetadata(metadata);
+            rebuilder.setPrint(true);
+            
+            TreeRebuilder.start_return retVal = rebuilder.start();
+            
+            CommonTree tree = (CommonTree) retVal.getTree();
+            System.out.println(tree.toStringTree());
+            return tree;
+            
+        } catch (RecognitionException ex) {
+            throw new RuntimeException(ex);
+        }        
+    }
+    
+    /**
+     * Takes the AST prepared by {@link #rebuild() } and simplifies it by
+     * identifying any calculated expressions that involve only non-positional
+     * variables and constants. These are tagged so that they are only calculated
+     * once when the jiffle is run.
+     * 
+     * @param tree the AST prepared by rebuild()
+     * @return the optimized AST
+     */
+    private CommonTree simplify(CommonTree tree) {
+        
+        ExpressionSimplifier simplifier;
+        try {
+            CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
+            simplifier = new ExpressionSimplifier(nodes);
+            simplifier.setPrint(true);
+            ExpressionSimplifier.start_return retVal = simplifier.start();
+            
+            CommonTree simpleTree = (CommonTree) retVal.getTree();
+            System.out.println(simpleTree.toStringTree());
+            return simpleTree;
+            
+        } catch (RecognitionException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }
