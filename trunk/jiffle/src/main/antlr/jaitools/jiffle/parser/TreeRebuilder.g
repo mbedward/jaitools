@@ -32,7 +32,10 @@ options {
 }
 
 tokens {
-    CONSTANT_VAR;
+    POS_VAR;
+    IMAGE_VAR;
+    SIMPLE_VAR;
+
     IMAGE_WRITE;
 }
 
@@ -63,7 +66,9 @@ import jaitools.jiffle.interpreter.VarTable;
     }
     
     private boolean isPosVar(String varName) {
-        return metadata.getPositionalVars().contains(varName);
+        boolean b = metadata.getPositionalVars().contains(varName);
+        System.out.println("isPosVar(" + varName + ") returns " + b);
+        return b;
     }
     
     private boolean isImageVar(String varName) {
@@ -78,11 +83,7 @@ start
         throw new RuntimeException("failed to set metadata for TreeRebuilder");
     }
 }
-                : (statement 
-                   {if (printDebug) 
-                       System.out.println(
-                           ($statement.tree == null ? "null" : $statement.tree.toStringTree()));
-                   })+ 
+                : statement+ 
                 ;
 
 statement       : assignment
@@ -92,23 +93,27 @@ statement       : assignment
 expr_list       : ^(EXPR_LIST expr*)
                 ;
 
-assignment      : ^(ASSIGN assign_op ID expr)
-                  -> {isImageVar($ID.text)}? ^(IMAGE_WRITE ID expr)
-                  -> ^(ASSIGN assign_op ID expr)
+assignment      : ^(ASSIGN assign_op var expr)
+                  -> {isImageVar($var.text)}? ^(IMAGE_WRITE var expr)
+                  -> ^(ASSIGN assign_op var expr)
                 ;
 
 expr            : ^(FUNC_CALL id=ID expr_list)
-                  -> {isPosFunc($id.text) || isInfoFunc($id.text)}? ID["__" + $id.text]
+                  -> {isPosFunc($id.text)}? POS_VAR["__" + $id.text]
+                  -> {isInfoFunc($id.text)}? SIMPLE_VAR["__" + $id.text]
                   -> ^(FUNC_CALL ID expr_list)
-                  
-                | ID
-                  -> {isPosVar($ID.text)}? ID
-                  -> CONSTANT_VAR[$ID.text]
                   
                 | ^(QUESTION expr expr expr)
                 | ^(expr_op expr expr)
+                | var
                 | INT_LITERAL 
                 | FLOAT_LITERAL 
+                ;
+                
+var             :ID
+                  -> {isPosVar($ID.text)}? POS_VAR[$ID.text]
+                  -> {isImageVar($ID.text)}? IMAGE_VAR[$ID.text]
+                  -> SIMPLE_VAR[$ID.text]
                 ;
                 
 expr_op         : POW
