@@ -71,18 +71,14 @@ private int exprId = 0;
 start           : statement+ 
                 ;
 
-statement
-@init {
-    {System.out.println("statement");}
-}
-                : image_write
+statement       : image_write
                 | var_assignment
                 ;
 
-image_write     : {System.out.println("image_write");} ^(IMAGE_WRITE term term)
+image_write     : ^(IMAGE_WRITE term term)
                 ;
 
-var_assignment  : {System.out.println("var assignment");} ^(ASSIGN assign_op term term)
+var_assignment  : ^(ASSIGN assign_op term term)
                 ;
                 
 term

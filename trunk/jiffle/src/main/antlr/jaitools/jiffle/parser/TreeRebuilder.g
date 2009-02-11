@@ -66,9 +66,7 @@ import jaitools.jiffle.interpreter.VarTable;
     }
     
     private boolean isPosVar(String varName) {
-        boolean b = metadata.getPositionalVars().contains(varName);
-        System.out.println("isPosVar(" + varName + ") returns " + b);
-        return b;
+        return metadata.getPositionalVars().contains(varName);
     }
     
     private boolean isImageVar(String varName) {
