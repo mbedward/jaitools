@@ -45,6 +45,7 @@ public class ExprEvalDemo {
 
     public static void main(String[] args) throws Exception {
         String[] stmts = {
+            "x = 3;",
             "2 * 3 + 16 / 4 - 2^3;",
             "55 % 15 % 6;",
             "sqrt(2);",

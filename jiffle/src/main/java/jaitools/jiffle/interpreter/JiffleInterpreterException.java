@@ -26,4 +26,8 @@ package jaitools.jiffle.interpreter;
  */
 public class JiffleInterpreterException extends Exception {
 
+    public JiffleInterpreterException(String msg) {
+        super(msg);
+    }
+    
 }

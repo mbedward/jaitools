@@ -21,8 +21,8 @@
 package jaitools.jiffle.parser;
 
 import jaitools.jiffle.interpreter.Metadata;
-import java.awt.image.RenderedImage;
 import java.util.Collections;
+import javax.media.jai.TiledImage;
 import org.antlr.runtime.tree.CommonTree;
 
 /**
@@ -49,7 +49,7 @@ public class TreeRebuilderDemo extends DemoBase {
         classifier.setPrint(true);
         classifier.start();
         
-        Metadata metadata = new Metadata(Collections.singletonMap("result", (RenderedImage)null));
+        Metadata metadata = new Metadata(Collections.singletonMap("result", (TiledImage)null));
         metadata.setVarData(classifier);
         
         System.out.println("metadata pos vars: " + metadata.getPositionalVars());

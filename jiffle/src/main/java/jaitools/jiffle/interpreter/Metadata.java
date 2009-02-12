@@ -7,10 +7,10 @@ package jaitools.jiffle.interpreter;
 
 import jaitools.jiffle.parser.VarClassifier;
 import java.awt.Rectangle;
-import java.awt.image.RenderedImage;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import javax.media.jai.TiledImage;
 
 /**
  *
@@ -18,13 +18,14 @@ import java.util.Set;
  */
 public class Metadata {
     
-    private Map<String, RenderedImage> imageParams;
+    private Map<String, TiledImage> imageParams;
     private Rectangle outImgBounds;
+    private Set<String> outImgVars;
     private Set<String> positionalVars;
     private Set<String> userVars;
 
     
-    public Metadata(Map<String, RenderedImage> imageParams) {
+    public Metadata(Map<String, TiledImage> imageParams) {
         this.imageParams = imageParams;
     }
 
@@ -37,12 +38,21 @@ public class Metadata {
     }
 
     public void setVarData(VarClassifier classifier) {
+        outImgVars = classifier.getOutputImageVars();
         positionalVars = classifier.getPositionalVars();
         userVars = classifier.getUserVars();
     }
     
+    public Map<String, TiledImage> getImageParams() {
+        return Collections.unmodifiableMap(imageParams);
+    }
+    
     public Set<String> getImageVars() {
         return Collections.unmodifiableSet(imageParams.keySet());
+    }
+    
+    public Set<String> getOutputImageVars() {
+        return Collections.unmodifiableSet(outImgVars);
     }
 
     public Set<String> getPositionalVars() {

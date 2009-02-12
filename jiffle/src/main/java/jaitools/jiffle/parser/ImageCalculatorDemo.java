@@ -22,7 +22,6 @@ package jaitools.jiffle.parser;
 
 import jaitools.jiffle.interpreter.Metadata;
 import java.util.Collections;
-import java.util.Iterator;
 import javax.media.jai.TiledImage;
 import org.antlr.runtime.tree.CommonTree;
 import org.antlr.runtime.tree.CommonTreeNodeStream;
@@ -32,14 +31,14 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
  * 
  * @author Michael Bedward and Murray Ellis
  */
-public class ExpressionSimplifierDemo extends DemoBase {
+public class ImageCalculatorDemo extends DemoBase {
     
     public static void main(String[] args) throws Exception {
-        ExpressionSimplifierDemo instance = new ExpressionSimplifierDemo();
-        instance.testSimplify();
+        ImageCalculatorDemo instance = new ImageCalculatorDemo();
+        instance.demo();
     }
 
-    public void testSimplify() throws Exception {
+    public void demo() throws Exception {
         System.out.println("testSimpleRebuild");
         
         String input = 
@@ -53,42 +52,29 @@ public class ExpressionSimplifierDemo extends DemoBase {
         
         VarClassifier classifier = new VarClassifier(getAST(input));
         classifier.setImageVars(Collections.singleton("result"));
-        classifier.setPrint(true);
         classifier.start();
+        System.out.println("finished classifier");
         
         Metadata metadata = new Metadata(Collections.singletonMap("result", (TiledImage)null));
         metadata.setVarData(classifier);
         
-        System.out.println("metadata pos vars: " + metadata.getPositionalVars());
-        
         TreeRebuilder rebuilder = new TreeRebuilder(getAST(input));
         rebuilder.setMetadata(metadata);
-        rebuilder.setPrint(true);
 
         TreeRebuilder.start_return rebuilderRet = rebuilder.start();
         CommonTree tree = (CommonTree) rebuilderRet.getTree();
-        System.out.println(tree.toStringTree());
+        System.out.println("finished rebuilder");
         
         CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
         ExpressionSimplifier simplifier = new ExpressionSimplifier(nodes);
         ExpressionSimplifier.start_return simplifierRet = simplifier.start();
+        System.out.println("finished simplifier");
         
         CommonTree simplifiedTree = (CommonTree) simplifierRet.getTree();
         nodes = new CommonTreeNodeStream(simplifiedTree);
-        Iterator iter = nodes.iterator();
-        
-        int i = 1;
-        String prefix;
-        while (iter.hasNext()) {
-            Object o = iter.next();
-            if (((CommonTree)o).getType() == ExpressionSimplifier.SIMPLE_EXPR) {
-                prefix = "SIMPLE_EXPR:";
-            } else {
-                prefix = "";
-            }
-            
-            System.out.println("" + (i++) + "  " + prefix + o.toString());
-        }
+        ImageCalculator calc = new ImageCalculator(nodes);
+        calc.start();
+        System.out.println("calculator finished");
     }
     
 }

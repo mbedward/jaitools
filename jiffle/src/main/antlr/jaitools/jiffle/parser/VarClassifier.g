@@ -48,103 +48,103 @@ import java.util.Map;
 import java.util.Set;
 
 import jaitools.jiffle.interpreter.ErrorCode;
-import jaitools.jiffle.interpreter.FunctionTable;
+import jaitools.jiffle.interpreter.JiffleRunner;
 import jaitools.jiffle.interpreter.VarTable;
 }
 
 @members {
-    private boolean printDebug = false;
-    public void setPrint(boolean b) { printDebug = b; }
+private boolean printDebug = false;
+public void setPrint(boolean b) { printDebug = b; }
 
-    /*
-     * Positional variables - those that depend directly or indirectly
-     * on image position when the jiffle is being run
-     */
-    private boolean isPositional;
+/*
+ * Positional variables - those that depend directly or indirectly
+ * on image position when the jiffle is being run
+ */
+private boolean isPositional;
 
-    private boolean isPositionalFunc(String funcName) {
-        return FunctionTable.getFunctionType(funcName) == FunctionTable.Type.POSITIONAL;
+private boolean isPositionalFunc(String funcName) {
+    return JiffleRunner.isPositionalFunction(funcName);
+}
+
+private Set<String> positionalVars = new HashSet<String>();
+
+public Set<String> getPositionalVars() {
+    return positionalVars;
+}
+
+
+/*
+ * Recording of user variables and checking that they are
+ * assigned a value before being used in an expression.
+ * Use of an unsassigned variable is not necessarily an error
+ * as it might (should) be an input image variable.
+ */
+private Set<String> defVars = new HashSet<String>();
+
+public Set<String> getUserVars() {
+    return defVars;
+}
+
+private Set<String> unassignedVars = new HashSet<String>();
+
+public Set<String> getUnassignedVars() {
+    return unassignedVars;
+}
+
+public boolean hasUnassignedVar() {
+    return !unassignedVars.isEmpty();
+}
+
+/**
+ * Image var validation - there should be at least one output image
+ * and no image should be used for both input and output
+ */
+private Set<String> imageVars;
+
+public void setImageVars(Collection<String> varNames) {
+    imageVars = new HashSet<String>();
+    imageVars.addAll(varNames);
+}
+
+private Set<String> inImageVars = new HashSet<String>();
+private Set<String> outImageVars = new HashSet<String>();
+
+public Set<String> getOutputImageVars() {
+    return outImageVars;
+}
+
+
+/* Table of var name : error code */
+private Map<String, ErrorCode> errorTable = new HashMap<String, ErrorCode>();
+
+public Map<String, ErrorCode> getErrors() {
+    return errorTable;
+}
+
+public boolean hasError() {
+    return !errorTable.isEmpty();
+}
+
+/*
+ * This method is run after the tree has been processed to 
+ * check that the image var params and the AST are in sync
+ */
+private void postValidation() {
+    for (String varName : unassignedVars) {
+        errorTable.put(varName, ErrorCode.VAR_UNDEFINED);
     }
 
-    private Set<String> positionalVars = new HashSet<String>();
-
-    public Set<String> getPositionalVars() {
-        return positionalVars;
+    if (outImageVars.isEmpty()) {
+        errorTable.put("n/a", ErrorCode.IMAGE_NO_OUT);
     }
 
-
-    /*
-     * Recording of user variables and checking that they are
-     * assigned a value before being used in an expression.
-     * Use of an unsassigned variable is not necessarily an error
-     * as it might (should) be an input image variable.
-     */
-    private Set<String> defVars = new HashSet<String>();
-
-    public Set<String> getUserVars() {
-        return defVars;
-    }
-
-    private Set<String> unassignedVars = new HashSet<String>();
-
-    public Set<String> getUnassignedVars() {
-        return unassignedVars;
-    }
-    
-    public boolean hasUnassignedVar() {
-        return !unassignedVars.isEmpty();
-    }
-    
-    /**
-     * Image var validation - there should be at least one output image
-     * and no image should be used for both input and output
-     */
-    private Set<String> imageVars;
-
-    public void setImageVars(Collection<String> varNames) {
-        imageVars = new HashSet<String>();
-        imageVars.addAll(varNames);
-    }
-    
-    private Set<String> inImageVars = new HashSet<String>();
-    private Set<String> outImageVars = new HashSet<String>();
-
-    public Set<String> getOutputImageVars() {
-        return outImageVars;
-    }
-    
-    
-    /* Table of var name : error code */
-    private Map<String, ErrorCode> errorTable = new HashMap<String, ErrorCode>();
-
-    public Map<String, ErrorCode> getErrors() {
-        return errorTable;
-    }
-    
-    public boolean hasError() {
-        return !errorTable.isEmpty();
-    }
-
-    /*
-     * This method is run after the tree has been processed to 
-     * check that the image var params and the AST are in sync
-     */
-    private void postValidation() {
-        for (String varName : unassignedVars) {
-            errorTable.put(varName, ErrorCode.VAR_UNDEFINED);
+    // check all image vars are accounted for
+    for (String varName : imageVars) {
+        if (!inImageVars.contains(varName) && !outImageVars.contains(varName)) {
+            errorTable.put(varName, ErrorCode.IMAGE_UNUSED);
         }
-
-        if (outImageVars.isEmpty()) {
-            errorTable.put("n/a", ErrorCode.IMAGE_NO_OUT);
-        }
-        
-        // check all image vars are accounted for
-        for (String varName : imageVars) {
-            if (!inImageVars.contains(varName) && !outImageVars.contains(varName)) {
-                errorTable.put(varName, ErrorCode.IMAGE_UNUSED);
-            }
-        }
     }
+}
 
     
 }

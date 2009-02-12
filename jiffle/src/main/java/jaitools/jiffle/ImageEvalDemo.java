@@ -17,7 +17,6 @@
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-
 package jaitools.jiffle;
 
 import jaitools.jiffle.interpreter.JiffleFailureEvent;
@@ -27,10 +26,14 @@ import jaitools.jiffle.interpreter.Jiffle;
 import jaitools.jiffle.interpreter.JiffleCompilationException;
 import jaitools.jiffle.interpreter.JiffleCompletionEvent;
 import jaitools.jiffle.interpreter.JiffleEventListener;
+import jaitools.jiffle.interpreter.JiffleInterpreterException;
 import java.awt.BorderLayout;
 import java.awt.image.RenderedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import javax.imageio.ImageIO;
 import javax.media.jai.TiledImage;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
@@ -43,9 +46,8 @@ import javax.swing.JScrollPane;
  * @author Michael Bedward
  */
 public class ImageEvalDemo {
-    
+
     private JiffleInterpreter interp;
-    
 
     /**
      * Main function - runs the demo
@@ -55,7 +57,7 @@ public class ImageEvalDemo {
         ImageEvalDemo demo = new ImageEvalDemo();
         demo.createImageFromCoordExpr();
     }
-    
+
     /**
      * Constructor. Creates an instance of JiffleInterpeter and 
      * sets up interpreter event handlers.
@@ -63,16 +65,17 @@ public class ImageEvalDemo {
     public ImageEvalDemo() {
         interp = new JiffleInterpreter();
         interp.addEventListener(new JiffleEventListener() {
+
             public void onCompletionEvent(JiffleCompletionEvent ev) {
                 onCompletion(ev);
             }
-            
+
             public void onFailureEvent(JiffleFailureEvent ev) {
                 onFailure(ev);
             }
         });
     }
-    
+
     /**
      * Create an image of concentric ripples calculated as: 
      * <pre>{@code \u0000 
@@ -82,56 +85,59 @@ public class ImageEvalDemo {
      * <p>
      * The jiffle code for this function is:
      * <pre>{@code \u0000
-     * xc = width() / 2;
-     * yc = height() / 2;
+     * xorigin = width() / 2;
+     * yorigin = height() / 2;
      * dx = (x() - xc) / xc;
      * dy = (y() - yc) / yc;
      * d = sqrt(dx^2 + dy^2);
      * result = sin(8 * PI * d);
      * }</pre>
-     * where the variable {@code result} is linked to the output {@link java.awt.image.RenderedImage}
+     * where the variable {@code result} is linked to the output {@link javax.media.jai.TiledImage}
      * 
      */
     public void createImageFromCoordExpr() {
-        final int width = 1000;
-        final int height = 1000;
-        
-        String cmd = 
+        final int width = 256;
+        final int height = 256;
+
+        String cmd =
                 "xc = width() / 2; " +
                 "yc = height() / 2;" +
                 "dx = (x()-xc)/xc;" +
                 "dy = (y()-yc)/yc;" +
                 "d = sqrt(dx^2 + dy^2);" +
                 "result = sin(8 * PI * d);";
-        
+
         TiledImage tImg = JiffleUtilities.createDoubleImage(width, height, 1);
 
         Jiffle j;
-        
-        Map<String, RenderedImage> imgParams = new HashMap<String, RenderedImage>();
+
+        Map<String, TiledImage> imgParams = new HashMap<String, TiledImage>();
         imgParams.put("result", tImg);
-        
+
         try {
             j = new Jiffle(cmd, imgParams);
-            
+
+            if (j.isCompiled()) {
+                interp.submit(j);
+            }
+
         } catch (JiffleCompilationException cex) {
-            System.err.println("Failed to compile jiffle script");
+            cex.printStackTrace();
             return;
-        }
-        
-        if (j.isCompiled()) {
-            interp.submit(j);
+        } catch (JiffleInterpreterException iex) {
+            iex.printStackTrace();
         }
     }
-    
+
     /**
      * Called when a completion event is received from the jiffle interpreter
      * @param ev the event
      */
     private void onCompletion(JiffleCompletionEvent ev) {
-        displayImage(ev.getJiffle().getImage("result"));
+        TiledImage img = ev.getJiffle().getImage("result");
+        displayImage(img);
     }
-    
+
     /**
      * Called if a failure event is received from the jiffle interpreter
      * @param ev the event
@@ -146,10 +152,10 @@ public class ImageEvalDemo {
      */
     private void displayImage(RenderedImage img) {
         JFrame frame = new JFrame("Jiffle image demo");
-        
+
         DisplayJAI disp = new DisplayJAI(img);
         frame.getContentPane().add(new JScrollPane(disp), BorderLayout.CENTER);
-        
+
         frame.setSize(500, 500);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);

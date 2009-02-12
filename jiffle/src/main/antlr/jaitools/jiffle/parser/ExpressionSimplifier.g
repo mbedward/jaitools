@@ -37,6 +37,8 @@ tokens {
 
 @header {
 package jaitools.jiffle.parser;
+
+import jaitools.jiffle.interpreter.JiffleRunner;
 }
 
 @members {
@@ -66,6 +68,10 @@ private boolean printDebug = false;
 public void setPrint(boolean b) { printDebug = b; }
 
 private int exprId = 0;
+private String getSXName() {
+    exprId++ ;
+    return JiffleRunner.SIMPLE_EXPR_PREFIX + String.valueOf(exprId);
+}
 }
 
 start           : statement+ 
@@ -91,7 +97,7 @@ scope {
     $term::calculated = false;
 }
                 : expr
-                  -> {$term::calculated && !$term::positional}? ^(SIMPLE_EXPR[String.valueOf(++exprId)] expr)
+                  -> {$term::calculated && !$term::positional}? ^(SIMPLE_EXPR[getSXName()] expr)
                   -> expr
                 ;
 
