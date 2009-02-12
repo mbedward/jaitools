@@ -66,7 +66,7 @@ public class JiffleUtilities {
         pb.setParameter("bandValues", dvalues);
         
         RenderedOp op = JAI.create("constant", pb);
-        return new TiledImage(op, true);
+        return new TiledImage(op, false);
     }
 
 }

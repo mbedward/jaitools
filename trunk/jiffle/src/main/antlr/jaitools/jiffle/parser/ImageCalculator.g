@@ -17,8 +17,10 @@
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
- 
+  
  /** 
+  * Grammar for the image calculator that evaluates the runtime AST
+  * for each output image pixel
   *
   * @author Michael Bedward
   */
@@ -32,14 +34,48 @@ options {
 
 @header {
 package jaitools.jiffle.parser;
+
+import java.util.List;
+import jaitools.jiffle.collection.CollectionFactory;
+import jaitools.jiffle.interpreter.JiffleRunner;
 }
 
 @members {
 private boolean printDebug = false;
 public void setPrint(boolean b) { printDebug = b; }
+
+/*
+ * Double value comparison within tolerance methods
+ */
+private static final double TOL = 1.0e-8;
+
+private boolean dzero(double x) {
+    return Math.abs(x) < TOL;
 }
 
-start           : (statement)+
+private int dcomp(double x1, double x2) {
+    if (dzero(x1 - x2)) {
+        return 0;
+    } else {
+        return Double.compare(x1, x2);
+    }
+}
+
+private JiffleRunner runner = null;
+
+public void setRunner(JiffleRunner runner) {
+    this.runner = runner;
+}
+
+}
+
+start
+@init {
+    if (runner == null) {
+        throw new RuntimeException("you must set the runner before calling start()");
+    }
+}
+                : (statement)+
                 ;
 
 statement       : image_write
@@ -47,46 +83,66 @@ statement       : image_write
                 ;
 
 image_write     : ^(IMAGE_WRITE IMAGE_VAR expr)
+                   {
+                       runner.writeToImage($IMAGE_VAR.text, $expr.value);
+                   }
                 ;
 
-var_assignment  : ^(ASSIGN assign_op var expr)
+var_assignment  : ^(ASSIGN assign_op id=(POS_VAR|SIMPLE_VAR) expr)
+                   {
+                       runner.setVar($id.text, $assign_op.text, $expr.value);
+                   }
                 ;
                 
-expr            : ^(SIMPLE_EXPR expr)
+expr returns [double value]
+                : ^(SIMPLE_EXPR e1=expr)
+                  {
+                      if (runner.isVarDefined($SIMPLE_EXPR.text)) {
+                          $value = runner.getVar($SIMPLE_EXPR.text);
+                      } else {
+                          // haven't calculated this one yet...
+                          $value = e1;
+                          runner.setVar($SIMPLE_EXPR.text, $value);
+                      }
+                  }
+                  
                 | ^(FUNC_CALL ID expr_list)
+                  {$value = runner.invokeFunction($ID.text, $expr_list.values);}
+                  
                 | ^(QUESTION expr expr expr)
-                | ^(expr_op expr expr)
-                | var
-                | INT_LITERAL 
-                | FLOAT_LITERAL 
+                  {
+                  }
+                  
+                | ^(POW e1=expr e2=expr) {$value = Math.pow(e1, e2);}
+                | ^(TIMES e1=expr e2=expr) {$value = e1 * e2;}
+                | ^(DIV e1=expr e2=expr) {$value = e1 / e2;}
+                | ^(MOD e1=expr e2=expr) {$value = e1 \% e2;}
+                | ^(PLUS e1=expr e2=expr) {$value = e1 + e2;}
+                | ^(MINUS e1=expr e2=expr) {$value = e1 - e2;}
+                | ^(OR e1=expr e2=expr) {$value = (!dzero(e1) || !dzero(e2)) ? 1 : 0;}
+                | ^(AND e1=expr e2=expr) {$value = (!dzero(e1) && !dzero(e2)) ? 1 : 0;}
+                | ^(XOR e1=expr e2=expr) {$value = (!dzero(e1) ^ !dzero(e2)) ? 1 : 0;}
+                | ^(GT e1=expr e2=expr) {$value = (dcomp(e1, e2) > 0) ? 1 : 0;}
+                | ^(GE e1=expr e2=expr) {$value = (dcomp(e1, e2) >= 0) ? 1 : 0;}
+                | ^(LT e1=expr e2=expr) {$value = (dcomp(e1, e2) < 0) ? 1 : 0;}
+                | ^(LE e1=expr e2=expr) {$value = (dcomp(e1, e2) <= 0) ? 1 : 0;}
+                | ^(LOGICALEQ e1=expr e2=expr) {$value = (dcomp(e1, e2) == 0) ? 1 : 0;}
+                | ^(NE e1=expr e2=expr) {$value = (dcomp(e1, e2) != 0) ? 1 : 0;}
+                | POS_VAR {$value = runner.getVar($POS_VAR.text);}
+                | SIMPLE_VAR {$value = runner.getVar($SIMPLE_VAR.text);}
+                | IMAGE_VAR {$value = runner.getImageValue($IMAGE_VAR.text);}
+                | INT_LITERAL {$value = Double.valueOf($INT_LITERAL.text);}
+                | FLOAT_LITERAL {$value = Double.valueOf($FLOAT_LITERAL.text);}
                 ;
                 
                 
-expr_list       : ^(EXPR_LIST expr*)
-                ;
-                
-var             : POS_VAR
-                | SIMPLE_VAR
-                | IMAGE_VAR
-                ;
-                
-expr_op         : POW
-                | TIMES 
-                | DIV 
-                | MOD
-                | PLUS  
-                | MINUS
-                | OR 
-                | AND 
-                | XOR 
-                | GT 
-                | GE 
-                | LE 
-                | LT 
-                | LOGICALEQ 
-                | NE 
-                ;
+expr_list returns [ List<Double> values ] :
+                 { $values = CollectionFactory.newList(); }
+                  ^(EXPR_LIST ( e=expr {$values.add($e.value);} )*)
+                ;                
 
+
+                
 assign_op	: EQ
 		| TIMESEQ
 		| DIVEQ

@@ -140,6 +140,20 @@ public class VarTable {
     }
 
     /**
+     * Assign a value to a variable
+     * @param id variable name
+     * @param x value to assign
+     */
+    public void set(String id, double x) {
+        if (isConstant(id)) {
+            throw new RuntimeException("Trying to assign a value to named constant: " + id);
+        }
+
+        lookup.put(id, x);
+        return;
+    }
+
+    /**
      * Get the value for a variable
      * @param id variable name
      * @return value as double
@@ -154,4 +168,12 @@ public class VarTable {
         return n.doubleValue();
     }
 
+    /**
+     * Check if a variable is present in the table
+     * @param id name of the variable
+     */
+    public boolean contains(String id) {
+        return lookup.containsKey(id);
+    }
+    
 }

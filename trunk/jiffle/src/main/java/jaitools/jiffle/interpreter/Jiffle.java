@@ -24,12 +24,11 @@ import jaitools.jiffle.parser.ExpressionSimplifier;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
 import jaitools.jiffle.parser.TreeRebuilder;
-import jaitools.jiffle.parser.TreeRebuilder.start_return;
 import jaitools.jiffle.parser.VarClassifier;
-import java.awt.image.RenderedImage;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import javax.media.jai.TiledImage;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
@@ -45,9 +44,9 @@ public class Jiffle {
     private String script;
     private CommonTree primaryAST;
     private CommonTokenStream tokens;
-    private CommonTree finalTree;
+    private CommonTree runtimeAST;
     
-    private Map<String, RenderedImage> imageParams;
+    private Map<String, TiledImage> imageParams;
     private Set<String> vars;
     private Set<String> unassignedVars;
     private Set<String> outputImageVars;
@@ -58,7 +57,7 @@ public class Jiffle {
      * Constructor
      * @param script input jiffle statement(s)
      */
-    public Jiffle(String script, Map<String, RenderedImage> imgParams)
+    public Jiffle(String script, Map<String, TiledImage> imgParams)
             throws JiffleCompilationException {
 
         this.imageParams = CollectionFactory.newMap();
@@ -68,7 +67,7 @@ public class Jiffle {
         compile();
     }
 
-    public RenderedImage getImage(String varName) {
+    public TiledImage getImage(String varName) {
         return imageParams.get(varName);
     }
 
@@ -76,7 +75,7 @@ public class Jiffle {
      * Query if the input script has been compiled successfully
      */
     public boolean isCompiled() {
-        return (finalTree != null);
+        return (runtimeAST != null);
     }
 
     /**
@@ -84,7 +83,7 @@ public class Jiffle {
      * @param varName
      * @param image
      */
-    public void setImageParam(String varName, RenderedImage image) {
+    public void setImageParam(String varName, TiledImage image) {
         imageParams.put(varName, image);
     }
 
@@ -93,10 +92,28 @@ public class Jiffle {
      * images
      * @param map variable names and their corresponding images
      */
-    public void setImageParams(Map<String, RenderedImage> map) {
-        for (Entry<String, RenderedImage> e : map.entrySet()) {
+    public void setImageParams(Map<String, TiledImage> map) {
+        for (Entry<String, TiledImage> e : map.entrySet()) {
             setImageParam(e.getKey(), e.getValue());
         }
+    }
+
+    /**
+     * Package private method for {@link JiffleRunner} to get
+     * the metadata describing variables
+     */
+    Metadata getMetadata() {
+        return metadata;
+    }
+
+    /**
+     * Package private method for {@link JiffleRunner} to get the
+     * runtime AST
+     */
+    CommonTreeNodeStream getRuntimeAST() {
+        CommonTreeNodeStream nodes = new CommonTreeNodeStream(runtimeAST);
+        nodes.setTokenStream(tokens);
+        return nodes;
     }
 
     /**
@@ -108,7 +125,7 @@ public class Jiffle {
         if (script != null && script.length() > 0) {
             buildAST();
             classifyVars();
-            finalTree = simplify(rebuild());
+            runtimeAST = simplify(rebuild());
         }
     }
 
@@ -213,6 +230,7 @@ public class Jiffle {
         ExpressionSimplifier simplifier;
         try {
             CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
+            nodes.setTokenStream(tokens);
             simplifier = new ExpressionSimplifier(nodes);
             simplifier.setPrint(true);
             ExpressionSimplifier.start_return retVal = simplifier.start();

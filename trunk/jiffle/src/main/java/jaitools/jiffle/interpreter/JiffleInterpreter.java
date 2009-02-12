@@ -107,14 +107,39 @@ public class JiffleInterpreter {
      * @param j the compiled jiffle
      * @return the job ID that can be used to query this job's status
      */
-    public int submit(final Jiffle j) {
+    public int submit(final Jiffle j) throws JiffleInterpreterException {
         if (threadPool == null) {
             threadPool = Executors.newCachedThreadPool();
         }
 
         int id = ++jobID;
-        jobs.put(id, threadPool.submit(new JiffleRunnable(j)));
+        jobs.put(id, threadPool.submit(new JiffleTask(id, this, j)));
         return id;
     }
+
+    /**
+     * Package private method to receive events from running tasks
+     * @param task the task sending the event
+     */
+    void onTaskEvent(JiffleTask task) {
+        if (task.isCompleted()) {
+            fireCompletionEvent(task);
+        } else {
+            fireFailureEvent(task);
+        }
+    }
     
+    private void fireCompletionEvent(JiffleTask task) {
+        JiffleCompletionEvent ev = new JiffleCompletionEvent(task.getId(), task.getJiffle());
+        for (JiffleEventListener el : listeners) {
+            el.onCompletionEvent(ev);
+        }
+    }
+
+    private void fireFailureEvent(JiffleTask task) {
+        JiffleFailureEvent ev = new JiffleFailureEvent(task.getId(), task.getJiffle());
+        for (JiffleEventListener el : listeners) {
+            el.onFailureEvent(ev);
+        }
+    }
 }
