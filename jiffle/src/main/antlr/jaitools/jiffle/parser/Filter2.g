@@ -19,54 +19,37 @@
  */
  
  /** 
+  * Replaces any instances of SIMPLE_VAR = FIXED_VALUE with FIXED_VALUE
+  * to avoid var table lookups.
   *
   * @author Michael Bedward
   */
 
-tree grammar ExpressionSimplifier;
+tree grammar Filter2;
 
 options {
-    tokenVocab = TreeRebuilder;
+    tokenVocab = Filter1;
     ASTLabelType = CommonTree;
     output = AST;
-}
-
-tokens {
-    FIXED_EXPR;
-    POS_EXPR;
 }
 
 @header {
 package jaitools.jiffle.parser;
 
-import jaitools.jiffle.interpreter.JiffleRunner;
+import jaitools.jiffle.interpreter.VarTable;
 }
 
 @members {
-public String getErrorMessage(RecognitionException e, String[] tokenNames) 
-{ 
-    List stack = getRuleInvocationStack(e, this.getClass().getName()); 
-    String msg = null; 
-    if ( e instanceof NoViableAltException ) { 
-        NoViableAltException nvae = (NoViableAltException)e; 
-        msg = " no viable alt; token="+e.token+ 
-        " (decision="+nvae.decisionNumber+ 
-        " state "+nvae.stateNumber+")"+ 
-        " decision=<<"+nvae.grammarDecisionDescription+">>"; 
-    } 
-    else { 
-        msg = super.getErrorMessage(e, tokenNames); 
-    } 
-    return stack+" "+msg; 
-} 
-
-public String getTokenErrorDisplay(Token t) { 
-    return t.toString(); 
-} 
-    
     
 private boolean printDebug = false;
 public void setPrint(boolean b) { printDebug = b; }
+
+private VarTable varTable;
+public void setVarTable(VarTable varTable) { this.varTable = varTable; }
+
+private double getFixedValue(CommonTree t) {
+    return ((FixedValueNode)t).getValue();
+}
 
 }
 
@@ -77,42 +60,45 @@ statement       : image_write
                 | var_assignment
                 ;
 
-image_write     : ^(IMAGE_WRITE var[false] term)
+image_write     : ^(IMAGE_WRITE IMAGE_VAR ^(FIXED_EXPR e=expr))
+                  -> {$e.isFixedValue}? 
+                     ^(IMAGE_WRITE IMAGE_VAR FIXED_VALUE<FixedValueNode>[getFixedValue($e.tree)])
+
+                  -> ^(IMAGE_WRITE IMAGE_VAR ^(FIXED_EXPR expr))
+                     
+
+                | ^(IMAGE_WRITE IMAGE_VAR ^(POS_EXPR expr))
                 ;
 
-var_assignment  : ^(ASSIGN assign_op var[false] term)
+var_assignment  : ^(ASSIGN op=assign_op SIMPLE_VAR ^(FIXED_EXPR e=expr))
+                  {
+                      if ($e.isFixedValue) {
+                          varTable.assign($SIMPLE_VAR.text, $op.tree.getText(), $e.value);
+                      }
+                  }
+                  -> {$e.isFixedValue}?   // node discarded
+                     
+                  -> ^(ASSIGN assign_op SIMPLE_VAR ^(FIXED_EXPR expr))
+                  
+                | ^(ASSIGN assign_op POS_VAR ^(POS_EXPR expr))
                 ;
                 
-term
-scope {
-    boolean positional;
-}
+expr returns [boolean isFixedValue, double value]
 @init {
-    $term::positional = false;
+    $isFixedValue = false;
 }
-                : expr
-                  -> {$term::positional}? ^(POS_EXPR expr)
-                  -> ^(FIXED_EXPR expr)
-                ;
-
-expr            : calc_expr
-                | var[true]
-                | INT_LITERAL 
-                | FLOAT_LITERAL 
-                ;
-                
-calc_expr       : ^(FUNC_CALL ID expr_list)
+                : ^(FUNC_CALL ID expr_list)
                 | ^(QUESTION expr expr expr)
                 | ^(expr_op expr expr)
+                
+                | POS_VAR
+                | IMAGE_VAR
+                | SIMPLE_VAR
+                
+                | FIXED_VALUE {$isFixedValue = true; $value = getFixedValue($FIXED_VALUE);}
                 ;
                 
 expr_list       : ^(EXPR_LIST expr*)
-                ;
-                
-var[boolean inExpr]             
-                : POS_VAR {if ($inExpr) $term::positional = true;}
-                | IMAGE_VAR {if ($inExpr) $term::positional = true;}
-                | SIMPLE_VAR
                 ;
                 
 expr_op         : POW

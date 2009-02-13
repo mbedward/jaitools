@@ -19,51 +19,29 @@
  */
  
  /** 
+  * Introduces FIXED_VALUE token with FixedValueNode as the tree node.
+  * Replaces INT_LITERAL AND FLOAT_LITERAL with FIXED_VALUE
   *
   * @author Michael Bedward
   */
 
-tree grammar ExpressionSimplifier;
+tree grammar Filter1;
 
 options {
-    tokenVocab = TreeRebuilder;
+    tokenVocab = ExpressionSimplifier;
     ASTLabelType = CommonTree;
     output = AST;
 }
 
 tokens {
-    FIXED_EXPR;
-    POS_EXPR;
+    FIXED_VALUE;
 }
 
 @header {
 package jaitools.jiffle.parser;
-
-import jaitools.jiffle.interpreter.JiffleRunner;
 }
 
 @members {
-public String getErrorMessage(RecognitionException e, String[] tokenNames) 
-{ 
-    List stack = getRuleInvocationStack(e, this.getClass().getName()); 
-    String msg = null; 
-    if ( e instanceof NoViableAltException ) { 
-        NoViableAltException nvae = (NoViableAltException)e; 
-        msg = " no viable alt; token="+e.token+ 
-        " (decision="+nvae.decisionNumber+ 
-        " state "+nvae.stateNumber+")"+ 
-        " decision=<<"+nvae.grammarDecisionDescription+">>"; 
-    } 
-    else { 
-        msg = super.getErrorMessage(e, tokenNames); 
-    } 
-    return stack+" "+msg; 
-} 
-
-public String getTokenErrorDisplay(Token t) { 
-    return t.toString(); 
-} 
-    
     
 private boolean printDebug = false;
 public void setPrint(boolean b) { printDebug = b; }
@@ -77,42 +55,30 @@ statement       : image_write
                 | var_assignment
                 ;
 
-image_write     : ^(IMAGE_WRITE var[false] term)
+image_write     : ^(IMAGE_WRITE IMAGE_VAR typed_expr)
                 ;
 
-var_assignment  : ^(ASSIGN assign_op var[false] term)
+var_assignment  : ^(ASSIGN assign_op (POS_VAR|SIMPLE_VAR) typed_expr)
                 ;
                 
-term
-scope {
-    boolean positional;
-}
-@init {
-    $term::positional = false;
-}
-                : expr
-                  -> {$term::positional}? ^(POS_EXPR expr)
-                  -> ^(FIXED_EXPR expr)
-                ;
 
-expr            : calc_expr
-                | var[true]
-                | INT_LITERAL 
-                | FLOAT_LITERAL 
+typed_expr      : ^(POS_EXPR expr)
+                | ^(FIXED_EXPR expr)
                 ;
                 
-calc_expr       : ^(FUNC_CALL ID expr_list)
+expr            : ^(FUNC_CALL ID expr_list)
                 | ^(QUESTION expr expr expr)
                 | ^(expr_op expr expr)
+                
+                | POS_VAR
+                | IMAGE_VAR
+                | SIMPLE_VAR
+                
+                | INT_LITERAL -> FIXED_VALUE<FixedValueNode>[$INT_LITERAL.text]
+                | FLOAT_LITERAL -> FIXED_VALUE<FixedValueNode>[$FLOAT_LITERAL.text]
                 ;
                 
 expr_list       : ^(EXPR_LIST expr*)
-                ;
-                
-var[boolean inExpr]             
-                : POS_VAR {if ($inExpr) $term::positional = true;}
-                | IMAGE_VAR {if ($inExpr) $term::positional = true;}
-                | SIMPLE_VAR
                 ;
                 
 expr_op         : POW

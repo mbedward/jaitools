@@ -44,7 +44,7 @@ public class JiffleRunner {
         proxyTable.put("col", new ImageFnProxy(ImageFnProxy.Type.POS, "_col"));
     }
     
-    public static final String SIMPLE_EXPR_PREFIX = "_sx";
+    public static final String FIXED_EXPR_PREFIX = "@";
 
     private Jiffle jiffle;
     private Metadata metadata;

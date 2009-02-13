@@ -28,7 +28,7 @@
 tree grammar ImageCalculator;
 
 options {
-    tokenVocab = ExpressionSimplifier;
+    tokenVocab = FixedExprFilter;
     ASTLabelType = CommonTree;
 }
 
@@ -95,18 +95,7 @@ var_assignment  : ^(ASSIGN assign_op id=(POS_VAR|SIMPLE_VAR) expr)
                 ;
                 
 expr returns [double value]
-                : ^(SIMPLE_EXPR e1=expr)
-                  {
-                      if (runner.isVarDefined($SIMPLE_EXPR.text)) {
-                          $value = runner.getVar($SIMPLE_EXPR.text);
-                      } else {
-                          // haven't calculated this one yet...
-                          $value = e1;
-                          runner.setVar($SIMPLE_EXPR.text, $value);
-                      }
-                  }
-                  
-                | ^(FUNC_CALL ID expr_list)
+                : ^(FUNC_CALL ID expr_list)
                   {$value = runner.invokeFunction($ID.text, $expr_list.values);}
                   
                 | ^(QUESTION expr expr expr)
@@ -131,8 +120,7 @@ expr returns [double value]
                 | POS_VAR {$value = runner.getVar($POS_VAR.text);}
                 | SIMPLE_VAR {$value = runner.getVar($SIMPLE_VAR.text);}
                 | IMAGE_VAR {$value = runner.getImageValue($IMAGE_VAR.text);}
-                | INT_LITERAL {$value = Double.valueOf($INT_LITERAL.text);}
-                | FLOAT_LITERAL {$value = Double.valueOf($FLOAT_LITERAL.text);}
+                | FIXED_VALUE {$value = ((FixedValueNode)$FIXED_VALUE).getValue();}
                 ;
                 
                 
