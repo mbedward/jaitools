@@ -96,8 +96,8 @@ public class ImageEvalDemo {
      * 
      */
     public void createImageFromCoordExpr() {
-        final int width = 256;
-        final int height = 256;
+        final int width = 500;
+        final int height = 500;
 
         String cmd =
                 "xc = width() / 2; " +

@@ -7,10 +7,8 @@
     <version>0.0.1</version>
     <name>Jiffle: JAI Image Function Language</name>
     <url>http://code.google.com/p/jai-tools</url>
-    <description>
-        Jiffle is a language and interpreter intended to make it easier to create
-        images from mathematical functions.
-    </description>
+    <description>Jiffle is a language and interpreter intended to make it easier to create
+        images from mathematical functions.</description>
     <developers>
         <developer>
             <id>michael</id>
@@ -96,4 +94,7 @@
             </snapshots>
         </repository>
     </repositories>
+    <properties>
+        <netbeans.hint.useExternalMaven>true</netbeans.hint.useExternalMaven>
+    </properties>
 </project>

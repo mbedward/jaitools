@@ -21,8 +21,8 @@
 package jaitools.jiffle.parser;
 
 import jaitools.jiffle.interpreter.Metadata;
+import jaitools.jiffle.interpreter.VarTable;
 import java.util.Collections;
-import java.util.Iterator;
 import javax.media.jai.TiledImage;
 import org.antlr.runtime.tree.CommonTree;
 import org.antlr.runtime.tree.CommonTreeNodeStream;
@@ -32,24 +32,32 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
  * 
  * @author Michael Bedward and Murray Ellis
  */
-public class ExpressionSimplifierDemo extends DemoBase {
+public class FixedExprFilterDemo extends DemoBase {
     
     public static void main(String[] args) throws Exception {
-        ExpressionSimplifierDemo instance = new ExpressionSimplifierDemo();
-        instance.testSimplify();
+        FixedExprFilterDemo instance = new FixedExprFilterDemo();
+        instance.demo();
     }
 
-    public void testSimplify() throws Exception {
-        System.out.println("testSimpleRebuild");
-        
-        String input = 
-                "w = width();" +
-                "h = height();" +
-                "a = 1.0 - w;" +
-                "b = 2.0 + h;" +
-                "curx = x();" +
-                "cury = y();" +
-                "result = a + b + curx + cury;" ; // weird image :-)
+    public void demo() throws Exception {
+        String input1 = 
+                "a = 5; \n" +
+                "result = a;\n" ;
+
+        String input2 =
+                "w = width();\n" +            // fixed expr form built-in func
+                "fw = sqrt(w) + sin(1);\n" +  // fixed expr from general funcs
+                "p = x() + fw;\n" +           // pos expr because of x()
+                "c = p + w;\n" +              // pos expr because of p
+                "result = c;\n" ;
+
+        compile(input1);
+        compile(input2);
+    }
+
+    public void compile(String input) throws Exception {
+        System.out.println("Input program...");
+        System.out.println(input);
         
         VarClassifier classifier = new VarClassifier(getAST(input));
         classifier.setImageVars(Collections.singleton("result"));
@@ -67,6 +75,8 @@ public class ExpressionSimplifierDemo extends DemoBase {
 
         TreeRebuilder.start_return rebuilderRet = rebuilder.start();
         CommonTree tree = (CommonTree) rebuilderRet.getTree();
+        
+        System.out.println("After rebuilder...");
         System.out.println(tree.toStringTree());
         
         CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
@@ -74,12 +84,53 @@ public class ExpressionSimplifierDemo extends DemoBase {
         ExpressionSimplifier.start_return simplifierRet = simplifier.start();
         
         CommonTree simplifiedTree = (CommonTree) simplifierRet.getTree();
+        System.out.println("After simplifier...");
+        System.out.println(simplifiedTree.toStringTree());
+        
         nodes = new CommonTreeNodeStream(simplifiedTree);
+        Filter1 filter1 = new Filter1(nodes);
+        Filter1.start_return f1Ret = filter1.start();
+        
+        CommonTree f1Tree = (CommonTree) f1Ret.getTree();
+        System.out.println("After filter1...");
+        System.out.println(f1Tree.toStringTree());
+
+        nodes = new CommonTreeNodeStream(f1Tree);
+        VarTable sharedVarTable = new VarTable();
+        
+        Filter2 filter2 = new Filter2(nodes);
+        filter2.setVarTable(sharedVarTable);
+        Filter2.start_return f2Ret = filter2.start();
+        
+        // sharedVarTable will now contain any simple vars that
+        // can be replaced by constants
+        
+        CommonTree f2Tree = (CommonTree) f2Ret.getTree();
+        System.out.println("After filter2...");
+        System.out.println(f2Tree.toStringTree());
+        
+        nodes = new CommonTreeNodeStream(f2Tree);
+        
+        Filter3 filter3 = new Filter3(nodes);
+        filter3.setVarTable(sharedVarTable);
+        Filter3.start_return f3Ret = filter3.start();
+        
+        CommonTree f3Tree = (CommonTree) f3Ret.getTree();
+        System.out.println("After filter3...");
+        System.out.println(f3Tree.toStringTree());
+        
+        System.out.println("-------------------------------");
+        
+        /*
+
         Iterator iter = nodes.iterator();
         
-        int i = 1;
+        int depth = 0;
         String prefix;
         while (iter.hasNext()) {
+            if (depth == 0) {
+                //System.out.print("(");
+            }
             Object o = iter.next();
             int type = ((CommonTree) o).getType();
             switch (type) {
@@ -95,8 +146,19 @@ public class ExpressionSimplifierDemo extends DemoBase {
                     prefix = "";
             }
             
-            System.out.println("" + (i++) + "  " + prefix + o.toString());
+            if (type == TreeParser.DOWN) {
+                depth++ ;
+            } else if (type == TreeParser.UP) {
+                depth-- ;
+                if (depth == 0) {
+                    System.out.println(") ");
+                }
+            } else {
+                System.out.print(prefix + o.toString() + " ");
+            }
         }
+
+        */
     }
     
 }
