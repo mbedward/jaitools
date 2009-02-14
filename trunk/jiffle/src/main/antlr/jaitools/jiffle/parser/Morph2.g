@@ -19,26 +19,33 @@
  */
  
  /** 
-  * Introduces FIXED_VALUE token with FixedValueNode as the tree node.
-  * Replaces INT_LITERAL AND FLOAT_LITERAL with FIXED_VALUE
+  * Classifies variables with VAR tokens into either NON_LOCAL_VAR, if they
+  * depend on image info lookups, or LOCAL_VAR, if they depend only on
+  * local numeric expressions or named constants.
+  * <p>
+  * IMAGE_VAR and POS_VAR variables have already been classified prior to
+  * this step.
   *
   * @author Michael Bedward
   */
 
-tree grammar Filter1;
+tree grammar Morph2;
 
 options {
-    tokenVocab = ExpressionSimplifier;
+    tokenVocab = Morph2;
     ASTLabelType = CommonTree;
     output = AST;
 }
 
 tokens {
-    FIXED_VALUE;
+    LOCAL_VAR;
+    NON_LOCAL_VAR;
 }
 
 @header {
 package jaitools.jiffle.parser;
+
+import jaitools.jiffle.interpreter.JiffleRunner;
 }
 
 @members {
@@ -55,27 +62,33 @@ statement       : image_write
                 | var_assignment
                 ;
 
-image_write     : ^(IMAGE_WRITE IMAGE_VAR typed_expr)
+image_write     : ^(IMAGE_WRITE IMAGE_VAR expr)
                 ;
 
-var_assignment  : ^(ASSIGN assign_op (POS_VAR|SIMPLE_VAR) typed_expr)
+var_assignment  : ^(ASSIGN assign_op VAR expr)
+                  -> {$expr.local}? ^(ASSIGN assign_op LOCAL_VAR expr)
+                  -> ^(ASSIGN assign_op NON_LOCAL_VAR expr)
+                  
+                | ^(ASSIGN assign_op POS_VAR expr)
                 ;
                 
-
-typed_expr      : ^(POS_EXPR expr)
-                | ^(FIXED_EXPR expr)
+expr returns [boolean local]
+@init {
+    $local = true;
+}
+                : calc_expr
+                | POS_VAR {$local = false;}
+                | IMAGE_VAR {$local = false;}
+                | IMAGE_POS_LOOKUP {$local = false;}
+                | IMAGE_INFO_LOOKUP {$local = false;}
+                | VAR
+                | INT_LITERAL 
+                | FLOAT_LITERAL 
                 ;
                 
-expr            : ^(FUNC_CALL ID expr_list)
+calc_expr       : ^(FUNC_CALL ID expr_list)
                 | ^(QUESTION expr expr expr)
                 | ^(expr_op expr expr)
-                
-                | POS_VAR
-                | IMAGE_VAR
-                | SIMPLE_VAR
-                
-                | INT_LITERAL -> FIXED_VALUE<FixedValueNode>[$INT_LITERAL.text]
-                | FLOAT_LITERAL -> FIXED_VALUE<FixedValueNode>[$FLOAT_LITERAL.text]
                 ;
                 
 expr_list       : ^(EXPR_LIST expr*)

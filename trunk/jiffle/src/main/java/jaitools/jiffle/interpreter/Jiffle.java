@@ -20,10 +20,10 @@
 package jaitools.jiffle.interpreter;
 
 import jaitools.jiffle.collection.CollectionFactory;
-import jaitools.jiffle.parser.ExpressionSimplifier;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
-import jaitools.jiffle.parser.TreeRebuilder;
+import jaitools.jiffle.parser.Morph1;
+import jaitools.jiffle.parser.Morph2;
 import jaitools.jiffle.parser.VarClassifier;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -125,7 +125,7 @@ public class Jiffle {
         if (script != null && script.length() > 0) {
             buildAST();
             classifyVars();
-            runtimeAST = simplify(rebuild());
+            runtimeAST = optimizeTree();
         }
     }
 
@@ -185,27 +185,30 @@ public class Jiffle {
         metadata.setVarData(classifier);
     }
 
-
+    private CommonTree optimizeTree() {
+        CommonTree t;
+        
+        t = tree_morph1();
+        t = tree_morph2(t);
+        
+        return t;
+    }
+    
     /**
-     * Takes the preliminary AST built by {@link #buildAST()}, together with the 
-     * classification of script variables from {@link #classifyVars() } and 
-     * prepares it to be optimized by tagging variables by type (image, positional
-     * or simple), replacing image property function calls by special variable
-     * tokens, and separating image writes from variable assignments.
      * 
      * @return the modified AST
      */
-    private CommonTree rebuild() {
+    private CommonTree tree_morph1() {
         
-        TreeRebuilder rebuilder;
+        Morph1 morph;
         try {
             CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
             nodes.setTokenStream(tokens);
-            rebuilder = new TreeRebuilder(nodes);
-            rebuilder.setMetadata(metadata);
-            rebuilder.setPrint(true);
+            morph = new Morph1(nodes);
+            morph.setMetadata(metadata);
+            morph.setPrint(true);
             
-            TreeRebuilder.start_return retVal = rebuilder.start();
+            Morph1.start_return retVal = morph.start();
             
             CommonTree tree = (CommonTree) retVal.getTree();
             System.out.println(tree.toStringTree());
@@ -217,23 +220,19 @@ public class Jiffle {
     }
     
     /**
-     * Takes the AST prepared by {@link #rebuild() } and simplifies it by
-     * identifying any calculated expressions that involve only non-positional
-     * variables and constants. These are tagged so that they are only calculated
-     * once when the jiffle is run.
      * 
-     * @param tree the AST prepared by rebuild()
+     * @param tree the AST prepared by tree_morph1()
      * @return the optimized AST
      */
-    private CommonTree simplify(CommonTree tree) {
+    private CommonTree tree_morph2(CommonTree tree) {
         
-        ExpressionSimplifier simplifier;
+        Morph2 morph;
         try {
             CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
             nodes.setTokenStream(tokens);
-            simplifier = new ExpressionSimplifier(nodes);
-            simplifier.setPrint(true);
-            ExpressionSimplifier.start_return retVal = simplifier.start();
+            morph = new Morph2(nodes);
+            morph.setPrint(true);
+            Morph2.start_return retVal = morph.start();
             
             CommonTree simpleTree = (CommonTree) retVal.getTree();
             System.out.println(simpleTree.toStringTree());

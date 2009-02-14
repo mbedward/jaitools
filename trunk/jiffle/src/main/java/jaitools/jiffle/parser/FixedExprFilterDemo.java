@@ -69,55 +69,54 @@ public class FixedExprFilterDemo extends DemoBase {
         
         System.out.println("metadata pos vars: " + metadata.getPositionalVars());
         
-        TreeRebuilder rebuilder = new TreeRebuilder(getAST(input));
-        rebuilder.setMetadata(metadata);
-        rebuilder.setPrint(true);
+        Morph1 m1 = new Morph1(getAST(input));
+        m1.setMetadata(metadata);
+        m1.setPrint(true);
 
-        TreeRebuilder.start_return rebuilderRet = rebuilder.start();
-        CommonTree tree = (CommonTree) rebuilderRet.getTree();
+        Morph1.start_return m1Ret = m1.start();
+        CommonTree tree = (CommonTree) m1Ret.getTree();
         
-        System.out.println("After rebuilder...");
+        System.out.println("After tree morph 1...");
         System.out.println(tree.toStringTree());
         
         CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
-        ExpressionSimplifier simplifier = new ExpressionSimplifier(nodes);
-        ExpressionSimplifier.start_return simplifierRet = simplifier.start();
+        Morph2 m2 = new Morph2(nodes);
+        Morph2.start_return m2Ret = m2.start();
         
-        CommonTree simplifiedTree = (CommonTree) simplifierRet.getTree();
-        System.out.println("After simplifier...");
-        System.out.println(simplifiedTree.toStringTree());
+        CommonTree m2Tree = (CommonTree) m2Ret.getTree();
+        System.out.println("After tree morph 2...");
+        System.out.println(m2Tree.toStringTree());
         
-        nodes = new CommonTreeNodeStream(simplifiedTree);
-        Filter1 filter1 = new Filter1(nodes);
-        Filter1.start_return f1Ret = filter1.start();
+        nodes = new CommonTreeNodeStream(m2Tree);
+        Morph3 m3 = new Morph3(nodes);
+        Morph3.start_return m3Ret = m3.start();
         
-        CommonTree f1Tree = (CommonTree) f1Ret.getTree();
-        System.out.println("After filter1...");
-        System.out.println(f1Tree.toStringTree());
+        CommonTree m3Tree = (CommonTree) m3Ret.getTree();
+        System.out.println("After tree morph 3...");
+        System.out.println(m3Tree.toStringTree());
 
-        nodes = new CommonTreeNodeStream(f1Tree);
+        nodes = new CommonTreeNodeStream(m3Tree);
         VarTable sharedVarTable = new VarTable();
         
-        Filter2 filter2 = new Filter2(nodes);
-        filter2.setVarTable(sharedVarTable);
-        Filter2.start_return f2Ret = filter2.start();
+        Morph4 m4 = new Morph4(nodes);
+        Morph4.start_return m4Ret = m4.start();
         
         // sharedVarTable will now contain any simple vars that
         // can be replaced by constants
         
-        CommonTree f2Tree = (CommonTree) f2Ret.getTree();
-        System.out.println("After filter2...");
-        System.out.println(f2Tree.toStringTree());
+        CommonTree m4Tree = (CommonTree) m4Ret.getTree();
+        System.out.println("After tree morph 4...");
+        System.out.println(m4Tree.toStringTree());
         
-        nodes = new CommonTreeNodeStream(f2Tree);
+        nodes = new CommonTreeNodeStream(m4Tree);
         
-        Filter3 filter3 = new Filter3(nodes);
-        filter3.setVarTable(sharedVarTable);
-        Filter3.start_return f3Ret = filter3.start();
+        Morph5 m5 = new Morph5(nodes);
+        m5.setVarTable(sharedVarTable);
+        Morph5.start_return m5Ret = m5.start();
         
-        CommonTree f3Tree = (CommonTree) f3Ret.getTree();
-        System.out.println("After filter3...");
-        System.out.println(f3Tree.toStringTree());
+        CommonTree m5Tree = (CommonTree) m5Ret.getTree();
+        System.out.println("After tree morph 5...");
+        System.out.println(m5Tree.toStringTree());
         
         System.out.println("-------------------------------");
         
@@ -134,11 +133,11 @@ public class FixedExprFilterDemo extends DemoBase {
             Object o = iter.next();
             int type = ((CommonTree) o).getType();
             switch (type) {
-                case ExpressionSimplifier.FIXED_EXPR:
+                case Morph2.FIXED_EXPR:
                     prefix = "FIXED_EXPR:";
                     break;
                     
-                case ExpressionSimplifier.POS_EXPR:
+                case Morph2.POS_EXPR:
                     prefix = "POS_EXPR:";
                     break;
                     
