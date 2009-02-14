@@ -28,7 +28,7 @@
 tree grammar ImageCalculator;
 
 options {
-    tokenVocab = FixedExprFilter;
+    tokenVocab = Morph5;
     ASTLabelType = CommonTree;
 }
 

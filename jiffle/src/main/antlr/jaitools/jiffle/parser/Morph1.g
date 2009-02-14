@@ -19,11 +19,18 @@
  */
  
  /** 
+  * Grammar for step 1 in tree morphing: 
+  * <ul>
+  * <li> Converts ASSIGN with image var on rhs to IMAGE_WRITE
+  * <li> Converts FUNC_CALL of image pos function to IMAGE_POS_LOOKUP 
+  *      and image info function to IMAGE_INFO_LOOKUP
+  * <li> Converts ID tokens for variables into POS_VAR, IMAGE_VAR or VAR
+  * </ul>
   *
   * @author Michael Bedward
   */
 
-tree grammar TreeRebuilder;
+tree grammar Morph1;
 
 options {
     tokenVocab = Jiffle;
@@ -34,7 +41,10 @@ options {
 tokens {
     POS_VAR;
     IMAGE_VAR;
-    SIMPLE_VAR;
+    VAR;
+
+    IMAGE_POS_LOOKUP;
+    IMAGE_INFO_LOOKUP;
 
     IMAGE_WRITE;
 }
@@ -42,10 +52,8 @@ tokens {
 @header {
 package jaitools.jiffle.parser;
 
-import jaitools.jiffle.interpreter.FunctionTable;
 import jaitools.jiffle.interpreter.JiffleRunner;
 import jaitools.jiffle.interpreter.Metadata;
-import jaitools.jiffle.interpreter.VarTable;
 }
 
 @members {
@@ -102,8 +110,8 @@ assignment      : ^(ASSIGN assign_op var expr)
                 ;
 
 expr            : ^(FUNC_CALL id=ID expr_list)
-                  -> {isPosFunc($id.text)}? POS_VAR[getProxyVar($id.text)]
-                  -> {isInfoFunc($id.text)}? SIMPLE_VAR[getProxyVar($id.text)]
+                  -> {isPosFunc($id.text)}? IMAGE_POS_LOOKUP[getProxyVar($id.text)]
+                  -> {isInfoFunc($id.text)}? IMAGE_INFO_LOOKUP[getProxyVar($id.text)]
                   -> ^(FUNC_CALL ID expr_list)
                   
                 | ^(QUESTION expr expr expr)
@@ -116,7 +124,7 @@ expr            : ^(FUNC_CALL id=ID expr_list)
 var             :ID
                   -> {isPosVar($ID.text)}? POS_VAR[$ID.text]
                   -> {isImageVar($ID.text)}? IMAGE_VAR[$ID.text]
-                  -> SIMPLE_VAR[$ID.text]
+                  -> VAR[$ID.text]
                 ;
                 
 expr_op         : POW

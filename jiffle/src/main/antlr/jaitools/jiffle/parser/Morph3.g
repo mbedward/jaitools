@@ -19,21 +19,24 @@
  */
  
  /** 
+  * Classifies expressions as either NON_LOCAL_EXPR, if they involve
+  * POS_VAR, XXX_LOOKUP or NON_LOCAL_VAR, or LOCAL_EXPR if they only
+  * involve LOCAL_VAR, local numeric values and named constants.
   *
   * @author Michael Bedward
   */
 
-tree grammar ExpressionSimplifier;
+tree grammar Morph3;
 
 options {
-    tokenVocab = TreeRebuilder;
+    tokenVocab = Morph2;
     ASTLabelType = CommonTree;
     output = AST;
 }
 
 tokens {
-    FIXED_EXPR;
-    POS_EXPR;
+    LOCAL_EXPR;
+    NON_LOCAL_EXPR;
 }
 
 @header {
@@ -43,27 +46,6 @@ import jaitools.jiffle.interpreter.JiffleRunner;
 }
 
 @members {
-public String getErrorMessage(RecognitionException e, String[] tokenNames) 
-{ 
-    List stack = getRuleInvocationStack(e, this.getClass().getName()); 
-    String msg = null; 
-    if ( e instanceof NoViableAltException ) { 
-        NoViableAltException nvae = (NoViableAltException)e; 
-        msg = " no viable alt; token="+e.token+ 
-        " (decision="+nvae.decisionNumber+ 
-        " state "+nvae.stateNumber+")"+ 
-        " decision=<<"+nvae.grammarDecisionDescription+">>"; 
-    } 
-    else { 
-        msg = super.getErrorMessage(e, tokenNames); 
-    } 
-    return stack+" "+msg; 
-} 
-
-public String getTokenErrorDisplay(Token t) { 
-    return t.toString(); 
-} 
-    
     
 private boolean printDebug = false;
 public void setPrint(boolean b) { printDebug = b; }
@@ -85,14 +67,14 @@ var_assignment  : ^(ASSIGN assign_op var[false] term)
                 
 term
 scope {
-    boolean positional;
+    boolean local;
 }
 @init {
-    $term::positional = false;
+    $term::local = true;
 }
                 : expr
-                  -> {$term::positional}? ^(POS_EXPR expr)
-                  -> ^(FIXED_EXPR expr)
+                  -> {$term::local}? ^(LOCAL_EXPR expr)
+                  -> ^(NON_LOCAL_EXPR expr)
                 ;
 
 expr            : calc_expr
@@ -110,9 +92,10 @@ expr_list       : ^(EXPR_LIST expr*)
                 ;
                 
 var[boolean inExpr]             
-                : POS_VAR {if ($inExpr) $term::positional = true;}
-                | IMAGE_VAR {if ($inExpr) $term::positional = true;}
-                | SIMPLE_VAR
+                : (POS_VAR | IMAGE_VAR | IMAGE_POS_LOOKUP | IMAGE_INFO_LOOKUP | NON_LOCAL_VAR)
+                  {if ($inExpr) $term::local = false;}
+              
+                | LOCAL_VAR
                 ;
                 
 expr_op         : POW

@@ -23,7 +23,7 @@
   * parser and does the following; 
   * <ol type="1">
   * <li> performs an check for any user-defined variables that are 
-  *      used before being assigned a value (either an error or an
+  *      used before being assigned a value (either an error or
   *      an image var)
   * <li> identifies positional variables (those that depend directly
   *      or indirectly on image position)
@@ -79,10 +79,10 @@ public Set<String> getPositionalVars() {
  * Use of an unsassigned variable is not necessarily an error
  * as it might (should) be an input image variable.
  */
-private Set<String> defVars = new HashSet<String>();
+private Set<String> userVars = new HashSet<String>();
 
 public Set<String> getUserVars() {
-    return defVars;
+    return userVars;
 }
 
 private Set<String> unassignedVars = new HashSet<String>();
@@ -181,8 +181,9 @@ assignment
                               System.out.println("Output image var: " + $ID.text);
                           }
                           
-                      } else if (!VarTable.isConstant($ID.text)) {
-                          defVars.add($ID.text);
+                      } else if (VarTable.isConstant($ID.text)) {
+                      } else {
+                          userVars.add($ID.text);
                       
                           if (isPositional) {
                               positionalVars.add($ID.text);
@@ -220,7 +221,7 @@ expr            : ^(FUNC_CALL ID expr_list)
                               inImageVars.add($ID.text);
                           }
                           
-                      } else if (!defVars.contains($ID.text) &&     // not assigned yet
+                      } else if (!userVars.contains($ID.text) &&     // not assigned yet
                                  !VarTable.isConstant($ID.text) &&  // not a named constant
                                  !unassignedVars.contains($ID.text))  // not already reported
                       {

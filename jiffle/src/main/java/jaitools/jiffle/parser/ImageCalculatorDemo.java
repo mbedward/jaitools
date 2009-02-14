@@ -58,6 +58,8 @@ public class ImageCalculatorDemo extends DemoBase {
         Metadata metadata = new Metadata(Collections.singletonMap("result", (TiledImage)null));
         metadata.setVarData(classifier);
         
+        /*
+        
         TreeRebuilder rebuilder = new TreeRebuilder(getAST(input));
         rebuilder.setMetadata(metadata);
 
@@ -75,6 +77,7 @@ public class ImageCalculatorDemo extends DemoBase {
         ImageCalculator calc = new ImageCalculator(nodes);
         calc.start();
         System.out.println("calculator finished");
+         */
     }
     
 }

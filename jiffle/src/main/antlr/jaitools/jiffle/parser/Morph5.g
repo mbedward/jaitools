@@ -19,16 +19,17 @@
  */
  
  /** 
-  * Replaces any instances of SIMPLE_VAR = FIXED_VALUE with FIXED_VALUE
-  * to avoid var table lookups.
+  * Replaces any instances of LOCAL_VAR = FIXED_VALUE with FIXED_VALUE
+  * and stores the var's name and value in a VarTable object passed in
+  * by the client code. The table will be used further in subsequent steps.
   *
   * @author Michael Bedward
   */
 
-tree grammar Filter2;
+tree grammar Morph5;
 
 options {
-    tokenVocab = Filter1;
+    tokenVocab = Morph4;
     ASTLabelType = CommonTree;
     output = AST;
 }
@@ -60,27 +61,21 @@ statement       : image_write
                 | var_assignment
                 ;
 
-image_write     : ^(IMAGE_WRITE IMAGE_VAR ^(FIXED_EXPR e=expr))
-                  -> {$e.isFixedValue}? 
-                     ^(IMAGE_WRITE IMAGE_VAR FIXED_VALUE<FixedValueNode>[getFixedValue($e.tree)])
-
-                  -> ^(IMAGE_WRITE IMAGE_VAR ^(FIXED_EXPR expr))
-                     
-
-                | ^(IMAGE_WRITE IMAGE_VAR ^(POS_EXPR expr))
+image_write     : ^(IMAGE_WRITE IMAGE_VAR ^(LOCAL_EXPR e=expr))
+                | ^(IMAGE_WRITE IMAGE_VAR ^(NON_LOCAL_EXPR expr))
                 ;
 
-var_assignment  : ^(ASSIGN op=assign_op SIMPLE_VAR ^(FIXED_EXPR e=expr))
+var_assignment  : ^(ASSIGN op=assign_op assignable_var ^(LOCAL_EXPR e=expr))
                   {
                       if ($e.isFixedValue) {
-                          varTable.assign($SIMPLE_VAR.text, $op.tree.getText(), $e.value);
+                          varTable.assign($assignable_var.varName, $op.tree.getText(), $e.value);
                       }
                   }
                   -> {$e.isFixedValue}?   // node discarded
                      
-                  -> ^(ASSIGN assign_op SIMPLE_VAR ^(FIXED_EXPR expr))
+                  -> ^(ASSIGN assign_op assignable_var ^(LOCAL_EXPR expr))
                   
-                | ^(ASSIGN assign_op POS_VAR ^(POS_EXPR expr))
+                | ^(ASSIGN assign_op assignable_var ^(NON_LOCAL_EXPR expr))
                 ;
                 
 expr returns [boolean isFixedValue, double value]
@@ -90,14 +85,22 @@ expr returns [boolean isFixedValue, double value]
                 : ^(FUNC_CALL ID expr_list)
                 | ^(QUESTION expr expr expr)
                 | ^(expr_op expr expr)
-                
-                | POS_VAR
-                | IMAGE_VAR
-                | SIMPLE_VAR
-                
+                | assignable_var
+                | non_assignable_var
                 | FIXED_VALUE {$isFixedValue = true; $value = getFixedValue($FIXED_VALUE);}
                 ;
                 
+assignable_var returns [String varName]
+                : POS_VAR {$varName = $POS_VAR.text;}
+                | LOCAL_VAR {$varName = $LOCAL_VAR.text;}
+                | NON_LOCAL_VAR {$varName = $NON_LOCAL_VAR.text;}
+                ;
+                
+non_assignable_var : IMAGE_VAR
+                | IMAGE_POS_LOOKUP
+                | IMAGE_INFO_LOOKUP
+                ;
+
 expr_list       : ^(EXPR_LIST expr*)
                 ;
                 
