@@ -21,6 +21,7 @@ public class Metadata {
     private Map<String, TiledImage> imageParams;
     private Rectangle outImgBounds;
     private Set<String> outImgVars;
+    private Set<String> localVars;
     private Set<String> positionalVars;
     private Set<String> userVars;
 
@@ -39,6 +40,7 @@ public class Metadata {
 
     public void setVarData(VarClassifier classifier) {
         outImgVars = classifier.getOutputImageVars();
+        localVars = classifier.getLocalVars();
         positionalVars = classifier.getPositionalVars();
         userVars = classifier.getUserVars();
     }
@@ -51,6 +53,10 @@ public class Metadata {
         return Collections.unmodifiableSet(imageParams.keySet());
     }
     
+    public Set<String> getLocalVars() {
+        return Collections.unmodifiableSet(localVars);
+    }
+
     public Set<String> getOutputImageVars() {
         return Collections.unmodifiableSet(outImgVars);
     }

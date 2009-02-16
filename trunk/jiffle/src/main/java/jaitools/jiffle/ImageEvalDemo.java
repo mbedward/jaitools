@@ -29,11 +29,8 @@ import jaitools.jiffle.interpreter.JiffleEventListener;
 import jaitools.jiffle.interpreter.JiffleInterpreterException;
 import java.awt.BorderLayout;
 import java.awt.image.RenderedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import javax.imageio.ImageIO;
 import javax.media.jai.TiledImage;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
@@ -48,6 +45,9 @@ import javax.swing.JScrollPane;
 public class ImageEvalDemo {
 
     private JiffleInterpreter interp;
+    
+    final int imgWidth = 500;
+    final int imgHeight = 500;
 
     /**
      * Main function - runs the demo
@@ -85,8 +85,8 @@ public class ImageEvalDemo {
      * <p>
      * The jiffle code for this function is:
      * <pre>{@code \u0000
-     * xorigin = width() / 2;
-     * yorigin = height() / 2;
+     * xorigin = imgWidth() / 2;
+     * yorigin = imgHeight() / 2;
      * dx = (x() - xc) / xc;
      * dy = (y() - yc) / yc;
      * d = sqrt(dx^2 + dy^2);
@@ -96,9 +96,6 @@ public class ImageEvalDemo {
      * 
      */
     public void createImageFromCoordExpr() {
-        final int width = 500;
-        final int height = 500;
-
         String cmd =
                 "xc = width() / 2; " +
                 "yc = height() / 2;" +
@@ -107,7 +104,7 @@ public class ImageEvalDemo {
                 "d = sqrt(dx^2 + dy^2);" +
                 "result = sin(8 * PI * d);";
 
-        TiledImage tImg = JiffleUtilities.createDoubleImage(width, height, 1);
+        TiledImage tImg = JiffleUtilities.createDoubleImage(imgWidth, imgHeight, 1);
 
         Jiffle j;
 

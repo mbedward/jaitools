@@ -22,8 +22,12 @@ package jaitools.jiffle.interpreter;
 import jaitools.jiffle.collection.CollectionFactory;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
+import jaitools.jiffle.parser.MakeRuntime;
 import jaitools.jiffle.parser.Morph1;
-import jaitools.jiffle.parser.Morph2;
+import jaitools.jiffle.parser.Morph3;
+import jaitools.jiffle.parser.Morph4;
+import jaitools.jiffle.parser.Morph5;
+import jaitools.jiffle.parser.Morph6;
 import jaitools.jiffle.parser.VarClassifier;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -186,37 +190,50 @@ public class Jiffle {
     }
 
     private CommonTree optimizeTree() {
-        CommonTree t;
+        CommonTree tree;
         
-        t = tree_morph1();
-        t = tree_morph2(t);
-        
-        return t;
-    }
-    
-    /**
-     * 
-     * @return the modified AST
-     */
-    private CommonTree tree_morph1() {
-        
-        Morph1 morph;
         try {
             CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
             nodes.setTokenStream(tokens);
-            morph = new Morph1(nodes);
-            morph.setMetadata(metadata);
-            morph.setPrint(true);
             
-            Morph1.start_return retVal = morph.start();
+            Morph1 m1 = new Morph1(nodes);
+            m1.setMetadata(metadata);
+            Morph1.start_return m1Ret = m1.start();
+            tree = (CommonTree) m1Ret.getTree();
             
-            CommonTree tree = (CommonTree) retVal.getTree();
-            System.out.println(tree.toStringTree());
-            return tree;
+            nodes = new CommonTreeNodeStream(tree);
+            Morph3 m3 = new Morph3(nodes);
+            Morph3.start_return m3Ret = m3.start();
+            tree = (CommonTree) m3Ret.getTree();
+            
+            nodes = new CommonTreeNodeStream(tree);
+            Morph4 m4 = new Morph4(nodes);
+            Morph4.start_return m4Ret = m4.start();
+            tree = (CommonTree) m4Ret.getTree();
+            
+            nodes = new CommonTreeNodeStream(tree);
+            Morph5 m5 = new Morph5(nodes);
+            VarTable varTable = new VarTable();
+            m5.setVarTable(varTable);
+            Morph5.start_return m5Ret = m5.start();
+            tree = (CommonTree) m5Ret.getTree();
+            
+            nodes = new CommonTreeNodeStream(tree);
+            Morph6 m6 = new Morph6(nodes);
+            m6.setVarTable(varTable);
+            Morph6.start_return m6Ret = m6.start();
+            tree = (CommonTree) m6Ret.getTree();
+            
+            nodes = new CommonTreeNodeStream(tree);
+            MakeRuntime rt = new MakeRuntime(nodes);
+            MakeRuntime.start_return rtRet = rt.start();
+            tree = (CommonTree) rtRet.getTree();
             
         } catch (RecognitionException ex) {
             throw new RuntimeException(ex);
         }        
+        
+        return tree;
     }
     
     /**
@@ -224,6 +241,8 @@ public class Jiffle {
      * @param tree the AST prepared by tree_morph1()
      * @return the optimized AST
      */
+    
+    /*
     private CommonTree tree_morph2(CommonTree tree) {
         
         Morph2 morph;
@@ -242,4 +261,5 @@ public class Jiffle {
             throw new RuntimeException(ex);
         }
     }
+     */
 }

@@ -75,7 +75,7 @@ public class VarTable {
     public static boolean isConstant(String varName) {
         return constants.containsKey(varName);
     }
-  
+    
     private HashMap<String, Number> lookup = null;
     
     public VarTable() {

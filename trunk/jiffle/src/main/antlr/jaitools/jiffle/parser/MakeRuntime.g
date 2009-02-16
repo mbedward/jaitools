@@ -19,22 +19,22 @@
  */
  
  /** 
-  * Introduces FIXED_VALUE token with FixedValueNode as the tree node.
-  * Replaces INT_LITERAL AND FLOAT_LITERAL with FIXED_VALUE
+  * Takes a VarTable provided by client code that contains var names and values
+  * for fixed values. Replaces all instances such vars in the AST by their value.
   *
   * @author Michael Bedward
   */
 
-tree grammar Morph4;
+tree grammar MakeRuntime;
 
 options {
-    tokenVocab = Morph3;
+    tokenVocab = Morph6;
     ASTLabelType = CommonTree;
     output = AST;
 }
 
 tokens {
-    FIXED_VALUE;
+    VAR;
 }
 
 @header {
@@ -58,53 +58,50 @@ statement       : image_write
 image_write     : ^(IMAGE_WRITE IMAGE_VAR typed_expr)
                 ;
 
-var_assignment  : ^(ASSIGN assign_op assignable_var typed_expr)
+var_assignment  : ^(ASSIGN op=assign_op assignable_var typed_expr)
                 ;
                 
+typed_expr
+                : ^(LOCAL_EXPR expr)
+                  -> expr
+                  
+                | ^(NON_LOCAL_EXPR expr) 
+                  -> expr
+                ;
 
-typed_expr      : ^(NON_LOCAL_EXPR expr)
-                | ^(LOCAL_EXPR expr)
-                ;
-                
 expr            : ^(FUNC_CALL ID expr_list)
                 | ^(QUESTION expr expr expr)
-                | ^(expr_op expr expr)
+                | ^(POW expr expr) 
+                | ^(TIMES expr expr) 
+                | ^(DIV expr expr) 
+                | ^(MOD expr expr) 
+                | ^(PLUS expr expr) 
+                | ^(MINUS expr expr) 
+                | ^(OR expr expr) 
+                | ^(AND expr expr) 
+                | ^(XOR expr expr) 
+                | ^(GT expr expr) 
+                | ^(GE expr expr) 
+                | ^(LT expr expr) 
+                | ^(LE expr expr) 
+                | ^(LOGICALEQ expr expr) 
+                | ^(NE expr expr) 
+                | FIXED_VALUE 
                 | assignable_var
                 | non_assignable_var
-                | INT_LITERAL -> FIXED_VALUE<FixedValueNode>[$INT_LITERAL.text]
-                | FLOAT_LITERAL -> FIXED_VALUE<FixedValueNode>[$FLOAT_LITERAL.text]
                 ;
                 
-assignable_var  : POS_VAR
-                | LOCAL_VAR
-                | NON_LOCAL_VAR
+expr_list       : ^(EXPR_LIST expr*) 
+                ;                
+                
+assignable_var  : POS_VAR -> VAR[$POS_VAR.getToken()]
+                | NON_LOCAL_VAR -> VAR[$NON_LOCAL_VAR.getToken()]
                 ;
                 
-non_assignable_var :
-                  IMAGE_VAR
-                | IMAGE_POS_LOOKUP
-                | IMAGE_INFO_LOOKUP
-                | CONSTANT
-                ;
-
-expr_list       : ^(EXPR_LIST expr*)
-                ;
-                
-expr_op         : POW
-                | TIMES 
-                | DIV 
-                | MOD
-                | PLUS  
-                | MINUS
-                | OR 
-                | AND 
-                | XOR 
-                | GT 
-                | GE 
-                | LE 
-                | LT 
-                | LOGICALEQ 
-                | NE 
+non_assignable_var 
+                : IMAGE_VAR
+                | IMAGE_POS_LOOKUP -> VAR[$IMAGE_POS_LOOKUP.getToken()]
+                | IMAGE_INFO_LOOKUP -> VAR[$IMAGE_INFO_LOOKUP.getToken()]
                 ;
 
 assign_op	: EQ

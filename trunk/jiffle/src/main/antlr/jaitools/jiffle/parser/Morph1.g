@@ -24,7 +24,8 @@
   * <li> Converts ASSIGN with image var on rhs to IMAGE_WRITE
   * <li> Converts FUNC_CALL of image pos function to IMAGE_POS_LOOKUP 
   *      and image info function to IMAGE_INFO_LOOKUP
-  * <li> Converts ID tokens for variables into POS_VAR, IMAGE_VAR or VAR
+  * <li> Converts ID tokens for variables into POS_VAR, IMAGE_VAR, LOCAL_VAR
+  *      or NON_LOCAL_VAR
   * </ul>
   *
   * @author Michael Bedward
@@ -41,7 +42,10 @@ options {
 tokens {
     POS_VAR;
     IMAGE_VAR;
-    VAR;
+    LOCAL_VAR;
+    NON_LOCAL_VAR;
+
+    CONSTANT;
 
     IMAGE_POS_LOOKUP;
     IMAGE_INFO_LOOKUP;
@@ -54,6 +58,7 @@ package jaitools.jiffle.parser;
 
 import jaitools.jiffle.interpreter.JiffleRunner;
 import jaitools.jiffle.interpreter.Metadata;
+import jaitools.jiffle.interpreter.VarTable;
 }
 
 @members {
@@ -80,6 +85,14 @@ private boolean isPosVar(String varName) {
 
 private boolean isImageVar(String varName) {
     return metadata.getImageVars().contains(varName);
+}
+
+private boolean isLocalVar(String varName) {
+    return metadata.getLocalVars().contains(varName);
+}
+
+private boolean isJiffleConstant(String varName) {
+    return VarTable.isConstant(varName);
 }
 
 private String getProxyVar(String funcName) {
@@ -124,7 +137,9 @@ expr            : ^(FUNC_CALL id=ID expr_list)
 var             :ID
                   -> {isPosVar($ID.text)}? POS_VAR[$ID.text]
                   -> {isImageVar($ID.text)}? IMAGE_VAR[$ID.text]
-                  -> VAR[$ID.text]
+                  -> {isLocalVar($ID.text)}? LOCAL_VAR[$ID.text]
+                  -> {isJiffleConstant($ID.text)}? CONSTANT[$ID.text]
+                  -> NON_LOCAL_VAR[$ID.text]
                 ;
                 
 expr_op         : POW

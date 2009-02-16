@@ -88,7 +88,7 @@ image_write     : ^(IMAGE_WRITE IMAGE_VAR expr)
                    }
                 ;
 
-var_assignment  : ^(ASSIGN assign_op id=(POS_VAR|SIMPLE_VAR) expr)
+var_assignment  : ^(ASSIGN assign_op id=VAR expr)
                    {
                        runner.setVar($id.text, $assign_op.text, $expr.value);
                    }
@@ -117,8 +117,7 @@ expr returns [double value]
                 | ^(LE e1=expr e2=expr) {$value = (dcomp(e1, e2) <= 0) ? 1 : 0;}
                 | ^(LOGICALEQ e1=expr e2=expr) {$value = (dcomp(e1, e2) == 0) ? 1 : 0;}
                 | ^(NE e1=expr e2=expr) {$value = (dcomp(e1, e2) != 0) ? 1 : 0;}
-                | POS_VAR {$value = runner.getVar($POS_VAR.text);}
-                | SIMPLE_VAR {$value = runner.getVar($SIMPLE_VAR.text);}
+                | VAR {$value = runner.getVar($VAR.text);}
                 | IMAGE_VAR {$value = runner.getImageValue($IMAGE_VAR.text);}
                 | FIXED_VALUE {$value = ((FixedValueNode)$FIXED_VALUE).getValue();}
                 ;
@@ -128,8 +127,6 @@ expr_list returns [ List<Double> values ] :
                  { $values = CollectionFactory.newList(); }
                   ^(EXPR_LIST ( e=expr {$values.add($e.value);} )*)
                 ;                
-
-
                 
 assign_op	: EQ
 		| TIMESEQ
