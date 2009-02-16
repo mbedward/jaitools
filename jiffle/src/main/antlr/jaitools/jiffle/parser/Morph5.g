@@ -18,10 +18,13 @@
  * 
  */
  
- /** 
-  * Replaces any instances of LOCAL_VAR = FIXED_VALUE with FIXED_VALUE
-  * and stores the var's name and value in a VarTable object passed in
-  * by the client code. The table will be used further in subsequent steps.
+/** 
+  * For each subtree which of the form LOCAL_VAR = FIXED_VALUE
+  * <ul>
+  * <li> stores the var's name and value in a VarTable object passed in
+  *      by the client code;<br> 
+  * <li> deletes the subtree from the AST
+  * </ul>
   *
   * @author Michael Bedward
   */
@@ -54,40 +57,55 @@ private double getFixedValue(CommonTree t) {
 
 }
 
-start           : statement+ 
+start
+@init {
+    if (varTable == null) {
+        throw new RuntimeException("Must initialize varTable first");
+    }
+}
+                : statement+ 
                 ;
 
-statement       : image_write
+statement
+scope {boolean isFixedValue;
+}
+@init {
+    $statement::isFixedValue = false;
+}
+                : image_write
                 | var_assignment
                 ;
 
-image_write     : ^(IMAGE_WRITE IMAGE_VAR ^(LOCAL_EXPR e=expr))
+image_write     : ^(IMAGE_WRITE IMAGE_VAR ^(LOCAL_EXPR expr))
                 | ^(IMAGE_WRITE IMAGE_VAR ^(NON_LOCAL_EXPR expr))
                 ;
 
 var_assignment  : ^(ASSIGN op=assign_op assignable_var ^(LOCAL_EXPR e=expr))
                   {
-                      if ($e.isFixedValue) {
+                      if ($statement::isFixedValue) {
                           varTable.assign($assignable_var.varName, $op.tree.getText(), $e.value);
                       }
                   }
-                  -> {$e.isFixedValue}?   // node discarded
+                  -> {$statement::isFixedValue}?   // node discarded
                      
                   -> ^(ASSIGN assign_op assignable_var ^(LOCAL_EXPR expr))
                   
                 | ^(ASSIGN assign_op assignable_var ^(NON_LOCAL_EXPR expr))
                 ;
                 
-expr returns [boolean isFixedValue, double value]
-@init {
-    $isFixedValue = false;
-}
+expr returns [double value]
                 : ^(FUNC_CALL ID expr_list)
                 | ^(QUESTION expr expr expr)
                 | ^(expr_op expr expr)
                 | assignable_var
                 | non_assignable_var
-                | FIXED_VALUE {$isFixedValue = true; $value = getFixedValue($FIXED_VALUE);}
+
+                | FIXED_VALUE 
+                  {$statement::isFixedValue = true; $value = getFixedValue($FIXED_VALUE);}
+              
+                | CONSTANT
+                  {$statement::isFixedValue = true; $value = varTable.get($CONSTANT.text);}
+                
                 ;
                 
 assignable_var returns [String varName]

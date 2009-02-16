@@ -32,47 +32,51 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
  * 
  * @author Michael Bedward and Murray Ellis
  */
-public class FixedExprFilterDemo extends DemoBase {
+public class CompileDemo extends DemoBase {
     
     public static void main(String[] args) throws Exception {
-        FixedExprFilterDemo instance = new FixedExprFilterDemo();
+        CompileDemo instance = new CompileDemo();
         instance.demo();
     }
 
     public void demo() throws Exception {
-        String input1 = 
-                "a = 5; \n" +
-                "result = a;\n" ;
+        String[] inputs = {
+            "a = 5; \n" +
+            "result = a;\n",
+            
+            "result = abs(cos(PI) + sin(sqrt(PI)));\n",
+            
+            "result = x() + y();\n",
+            
+            "w = width();\n" +
+            "fw = sqrt(w) + sin(1);\n" +
+            "p = x() + fw;\n" +
+            "c = p + w;\n" +
+            "result = c;\n"
+        };
 
-        String input2 =
-                "w = width();\n" +            // fixed expr form built-in func
-                "fw = sqrt(w) + sin(1);\n" +  // fixed expr from general funcs
-                "p = x() + fw;\n" +           // pos expr because of x()
-                "c = p + w;\n" +              // pos expr because of p
-                "result = c;\n" ;
-
-        compile(input1);
-        compile(input2);
+        for (String input : inputs) {
+            compile(input);
+        }
     }
 
     public void compile(String input) throws Exception {
-        System.out.println("Input program...");
+        System.out.println("\n\nInput program...");
         System.out.println(input);
         
         VarClassifier classifier = new VarClassifier(getAST(input));
         classifier.setImageVars(Collections.singleton("result"));
-        classifier.setPrint(true);
+        //classifier.setPrint(true);
         classifier.start();
         
         Metadata metadata = new Metadata(Collections.singletonMap("result", (TiledImage)null));
         metadata.setVarData(classifier);
         
         System.out.println("metadata pos vars: " + metadata.getPositionalVars());
+        System.out.println("metadata local vars: " + metadata.getLocalVars());
         
         Morph1 m1 = new Morph1(getAST(input));
         m1.setMetadata(metadata);
-        m1.setPrint(true);
-
         Morph1.start_return m1Ret = m1.start();
         CommonTree tree = (CommonTree) m1Ret.getTree();
         
@@ -80,44 +84,52 @@ public class FixedExprFilterDemo extends DemoBase {
         System.out.println(tree.toStringTree());
         
         CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
-        Morph2 m2 = new Morph2(nodes);
-        Morph2.start_return m2Ret = m2.start();
-        
-        CommonTree m2Tree = (CommonTree) m2Ret.getTree();
-        System.out.println("After tree morph 2...");
-        System.out.println(m2Tree.toStringTree());
-        
-        nodes = new CommonTreeNodeStream(m2Tree);
         Morph3 m3 = new Morph3(nodes);
         Morph3.start_return m3Ret = m3.start();
-        
-        CommonTree m3Tree = (CommonTree) m3Ret.getTree();
-        System.out.println("After tree morph 3...");
-        System.out.println(m3Tree.toStringTree());
+        tree = (CommonTree) m3Ret.getTree();
 
-        nodes = new CommonTreeNodeStream(m3Tree);
+        System.out.println("After tree morph 3...");
+        System.out.println(tree.toStringTree());
+
+        nodes = new CommonTreeNodeStream(tree);
         VarTable sharedVarTable = new VarTable();
         
         Morph4 m4 = new Morph4(nodes);
         Morph4.start_return m4Ret = m4.start();
+        tree = (CommonTree) m4Ret.getTree();
         
         // sharedVarTable will now contain any simple vars that
         // can be replaced by constants
-        
-        CommonTree m4Tree = (CommonTree) m4Ret.getTree();
+
         System.out.println("After tree morph 4...");
-        System.out.println(m4Tree.toStringTree());
+        System.out.println(tree.toStringTree());
         
-        nodes = new CommonTreeNodeStream(m4Tree);
-        
+        nodes = new CommonTreeNodeStream(tree);
         Morph5 m5 = new Morph5(nodes);
         m5.setVarTable(sharedVarTable);
         Morph5.start_return m5Ret = m5.start();
         
-        CommonTree m5Tree = (CommonTree) m5Ret.getTree();
+        tree = (CommonTree) m5Ret.getTree();
         System.out.println("After tree morph 5...");
-        System.out.println(m5Tree.toStringTree());
+        System.out.println(tree.toStringTree());
         
+        nodes = new CommonTreeNodeStream(tree);
+        Morph6 m6 = new Morph6(nodes);
+        m6.setVarTable(sharedVarTable);
+        Morph6.start_return m6Ret = m6.start();
+        
+        tree = (CommonTree) m6Ret.getTree();
+        System.out.println("After tree morph 6...");
+        System.out.println(tree.toStringTree());
+
+        nodes = new CommonTreeNodeStream(tree);
+        MakeRuntime rt = new MakeRuntime(nodes);
+        MakeRuntime.start_return rtRet = rt.start();
+        
+        tree = (CommonTree) rtRet.getTree();
+        System.out.println("After MakeRuntime...");
+        System.out.println(tree.toStringTree());
+        /*
         System.out.println("-------------------------------");
         
         /*

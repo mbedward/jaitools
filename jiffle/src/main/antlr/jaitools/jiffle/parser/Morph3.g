@@ -21,7 +21,7 @@
  /** 
   * Classifies expressions as either NON_LOCAL_EXPR, if they involve
   * POS_VAR, XXX_LOOKUP or NON_LOCAL_VAR, or LOCAL_EXPR if they only
-  * involve LOCAL_VAR, local numeric values and named constants.
+  * involve LOCAL_VAR, local constants and named constants.
   *
   * @author Michael Bedward
   */
@@ -29,7 +29,7 @@
 tree grammar Morph3;
 
 options {
-    tokenVocab = Morph2;
+    tokenVocab = Morph1;
     ASTLabelType = CommonTree;
     output = AST;
 }
@@ -96,6 +96,7 @@ var[boolean inExpr]
                   {if ($inExpr) $term::local = false;}
               
                 | LOCAL_VAR
+                | CONSTANT
                 ;
                 
 expr_op         : POW

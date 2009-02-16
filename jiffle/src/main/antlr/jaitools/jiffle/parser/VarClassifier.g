@@ -56,20 +56,34 @@ import jaitools.jiffle.interpreter.VarTable;
 private boolean printDebug = false;
 public void setPrint(boolean b) { printDebug = b; }
 
-/*
- * Positional variables - those that depend directly or indirectly
- * on image position when the jiffle is being run
- */
-private boolean isPositional;
+private boolean isInfoFunc(String funcName) {
+    return JiffleRunner.isInfoFunction(funcName);
+}
 
 private boolean isPositionalFunc(String funcName) {
     return JiffleRunner.isPositionalFunction(funcName);
 }
 
+/*
+ * Positional variables - those that depend directly or indirectly
+ * on image position when the jiffle is being run
+ */
 private Set<String> positionalVars = new HashSet<String>();
 
 public Set<String> getPositionalVars() {
     return positionalVars;
+}
+
+
+/*
+ * Purely local variables - those that depend only on
+ * local numeric values and/or named constants
+ */
+private Set<String> localVars = new HashSet<String>();
+private Set<String> nonLocalVars = new HashSet<String>();
+
+public Set<String> getLocalVars() {
+    return localVars;
 }
 
 
@@ -169,8 +183,13 @@ expr_list       : ^(EXPR_LIST expr*)
                 ;
 
 assignment
+scope {
+    boolean isLocal;
+    boolean isPositional;
+}
 @init {
-    isPositional = false;
+    $assignment::isLocal = true;
+    $assignment::isPositional = false;
 }
                 : ^(ASSIGN assign_op ID expr)
                   {
@@ -181,19 +200,21 @@ assignment
                               System.out.println("Output image var: " + $ID.text);
                           }
                           
-                      } else if (VarTable.isConstant($ID.text)) {
                       } else {
                           userVars.add($ID.text);
                       
-                          if (isPositional) {
+                          if ($assignment::isPositional) {
                               positionalVars.add($ID.text);
                               if (printDebug) {
                                   System.out.println($ID.text + " is positional");
                               }
-                          } else {
+                          } else if ($assignment::isLocal) {
+                              localVars.add($ID.text);
                               if (printDebug) {
-                                  System.out.println($ID.text + " is not positional");
+                                  System.out.println($ID.text + " is local");
                               }
+                          } else {
+                              nonLocalVars.add($ID.text);
                           }
                       }
                   }
@@ -202,7 +223,11 @@ assignment
 expr            : ^(FUNC_CALL ID expr_list)
                   { 
                       if (isPositionalFunc($ID.text)) {
-                          isPositional = true;
+                          $assignment::isPositional = true;
+                          $assignment::isLocal = false;
+
+                      } else if (isInfoFunc($ID.text)) {
+                          $assignment::isLocal = false;
                       }
                   }
 
@@ -219,6 +244,9 @@ expr            : ^(FUNC_CALL ID expr_list)
                               }
                           } else {
                               inImageVars.add($ID.text);
+                          
+                              // input image var so this is a non-local assignment
+                              $assignment::isLocal = false;
                           }
                           
                       } else if (!userVars.contains($ID.text) &&     // not assigned yet
@@ -228,8 +256,12 @@ expr            : ^(FUNC_CALL ID expr_list)
                           unassignedVars.add($ID.text);
                       }
                       
+                      // var dependency tracking
                       if (positionalVars.contains($ID.text)) {
-                          isPositional = true;
+                          $assignment::isPositional = true;
+                          $assignment::isLocal = false;
+                      } else if (nonLocalVars.contains($ID.text)) {
+                          $assignment::isLocal = false;
                       }
                   }
                   
