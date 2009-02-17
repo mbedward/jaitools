@@ -1,0 +1,6 @@
+xc = width() / 2;
+yc = height() / 2;
+dx = (x()-xc)/xc;
+dy = (y()-yc)/yc;
+d = sqrt(dx^2 + dy^2);
+result = sin(8 * PI * d);

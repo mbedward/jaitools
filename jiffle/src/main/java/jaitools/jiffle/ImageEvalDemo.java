@@ -29,6 +29,11 @@ import jaitools.jiffle.interpreter.JiffleEventListener;
 import jaitools.jiffle.interpreter.JiffleInterpreterException;
 import java.awt.BorderLayout;
 import java.awt.image.RenderedImage;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import javax.media.jai.TiledImage;
@@ -53,7 +58,7 @@ public class ImageEvalDemo {
      * Main function - runs the demo
      * @param args ignored
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         ImageEvalDemo demo = new ImageEvalDemo();
         demo.createImageFromCoordExpr();
     }
@@ -95,24 +100,25 @@ public class ImageEvalDemo {
      * where the variable {@code result} is linked to the output {@link javax.media.jai.TiledImage}
      * 
      */
-    public void createImageFromCoordExpr() {
-        String cmd =
-                "xc = width() / 2; " +
-                "yc = height() / 2;" +
-                "dx = (x()-xc)/xc;" +
-                "dy = (y()-yc)/yc;" +
-                "d = sqrt(dx^2 + dy^2);" +
-                "result = sin(8 * PI * d);";
+    public void createImageFromCoordExpr() throws Exception {
+
+        URL url = getClass().getResource("/example/ripple.jfl");
+        File f = new File(url.toURI());
+        BufferedReader reader = new BufferedReader(new FileReader(f));
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            sb.append(line);
+        }
+        String prog = sb.toString();
 
         TiledImage tImg = JiffleUtilities.createDoubleImage(imgWidth, imgHeight, 1);
-
-        Jiffle j;
 
         Map<String, TiledImage> imgParams = new HashMap<String, TiledImage>();
         imgParams.put("result", tImg);
 
         try {
-            j = new Jiffle(cmd, imgParams);
+            Jiffle j = new Jiffle(prog, imgParams);
 
             if (j.isCompiled()) {
                 interp.submit(j);

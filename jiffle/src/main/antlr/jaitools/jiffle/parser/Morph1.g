@@ -110,19 +110,17 @@ start
                 : statement+ 
                 ;
 
-statement       : assignment
-                | expr
+statement       : expr
                 ;
 
 expr_list       : ^(EXPR_LIST expr*)
                 ;
 
-assignment      : ^(ASSIGN assign_op var expr)
+expr            : ^(ASSIGN assign_op var expr)
                   -> {isImageVar($var.text)}? ^(IMAGE_WRITE var expr)
                   -> ^(ASSIGN assign_op var expr)
-                ;
-
-expr            : ^(FUNC_CALL id=ID expr_list)
+                  
+                | ^(FUNC_CALL id=ID expr_list)
                   -> {isPosFunc($id.text)}? IMAGE_POS_LOOKUP[getProxyVar($id.text)]
                   -> {isInfoFunc($id.text)}? IMAGE_INFO_LOOKUP[getProxyVar($id.text)]
                   -> ^(FUNC_CALL ID expr_list)

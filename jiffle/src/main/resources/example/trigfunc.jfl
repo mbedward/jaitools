@@ -1,0 +1,4 @@
+a = b = c = d = e = f = 2.0;
+i = j = k = l = 2.0;
+
+result = e*sin(a*sin(i*x()) + b*cos(j*y())) + f*cos(c*cos(k*x()) + d*sin(l*y));

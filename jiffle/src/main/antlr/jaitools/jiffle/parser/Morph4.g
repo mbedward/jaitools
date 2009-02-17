@@ -28,7 +28,7 @@
 tree grammar Morph4;
 
 options {
-    tokenVocab = Morph3;
+    tokenVocab = Morph1;
     ASTLabelType = CommonTree;
     output = AST;
 }
@@ -52,21 +52,14 @@ start           : statement+
                 ;
 
 statement       : image_write
-                | var_assignment
+                | expr
                 ;
 
-image_write     : ^(IMAGE_WRITE IMAGE_VAR typed_expr)
+image_write     : ^(IMAGE_WRITE IMAGE_VAR expr)
                 ;
 
-var_assignment  : ^(ASSIGN assign_op assignable_var typed_expr)
-                ;
-                
-
-typed_expr      : ^(NON_LOCAL_EXPR expr)
-                | ^(LOCAL_EXPR expr)
-                ;
-                
-expr            : ^(FUNC_CALL ID expr_list)
+expr            : ^(ASSIGN assign_op assignable_var expr)
+                | ^(FUNC_CALL ID expr_list)
                 | ^(QUESTION expr expr expr)
                 | ^(expr_op expr expr)
                 | assignable_var

@@ -175,23 +175,22 @@ start
                 : statement+ 
                 ;
 
-statement       : assignment
-                | expr
+statement       : expr
                 ;
 
-expr_list       : ^(EXPR_LIST expr*)
-                ;
-
-assignment
-scope {
-    boolean isLocal;
-    boolean isPositional;
+expr_list returns [boolean isLocal]
+@init{
+    $isLocal = true;
 }
+                : ^(EXPR_LIST (expr {if (!$expr.isLocal) $isLocal = false;} )*)
+                ;
+
+expr returns [boolean isLocal, boolean isPositional]
 @init {
-    $assignment::isLocal = true;
-    $assignment::isPositional = false;
+    $isLocal = true; 
+    $isPositional = false;
 }
-                : ^(ASSIGN assign_op ID expr)
+                : ^(ASSIGN assign_op ID e1=expr)
                   {
                       if (imageVars.contains($ID.text)) {
                           outImageVars.add($ID.text);
@@ -203,12 +202,12 @@ scope {
                       } else {
                           userVars.add($ID.text);
                       
-                          if ($assignment::isPositional) {
+                          if ($e1.isPositional) {
                               positionalVars.add($ID.text);
                               if (printDebug) {
                                   System.out.println($ID.text + " is positional");
                               }
-                          } else if ($assignment::isLocal) {
+                          } else if ($e1.isLocal) {
                               localVars.add($ID.text);
                               if (printDebug) {
                                   System.out.println($ID.text + " is local");
@@ -218,16 +217,18 @@ scope {
                           }
                       }
                   }
-                ;
 
-expr            : ^(FUNC_CALL ID expr_list)
+
+                | ^(FUNC_CALL ID expr_list)
                   { 
                       if (isPositionalFunc($ID.text)) {
-                          $assignment::isPositional = true;
-                          $assignment::isLocal = false;
+                          $isPositional = true;
+                          $isLocal = false;
 
                       } else if (isInfoFunc($ID.text)) {
-                          $assignment::isLocal = false;
+                          $isLocal = false;
+                      } else {
+                          $isLocal = $expr_list.isLocal;
                       }
                   }
 
@@ -246,7 +247,7 @@ expr            : ^(FUNC_CALL ID expr_list)
                               inImageVars.add($ID.text);
                           
                               // input image var so this is a non-local assignment
-                              $assignment::isLocal = false;
+                              $isLocal = false;
                           }
                           
                       } else if (!userVars.contains($ID.text) &&     // not assigned yet
@@ -258,15 +259,20 @@ expr            : ^(FUNC_CALL ID expr_list)
                       
                       // var dependency tracking
                       if (positionalVars.contains($ID.text)) {
-                          $assignment::isPositional = true;
-                          $assignment::isLocal = false;
+                          $isPositional = true;
+                          $isLocal = false;
                       } else if (nonLocalVars.contains($ID.text)) {
-                          $assignment::isLocal = false;
+                          $isLocal = false;
                       }
                   }
                   
+                | ^(expr_op e1=expr e2=expr)
+                  {
+                      $isLocal = ($e1.isLocal && $e2.isLocal);
+                      $isPositional = ($e1.isPositional || $e2.isPositional);
+                  }
+     
                 | ^(QUESTION expr expr expr)
-                | ^(expr_op expr expr)
                 | INT_LITERAL 
                 | FLOAT_LITERAL 
                 ;
