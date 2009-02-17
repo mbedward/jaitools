@@ -66,47 +66,42 @@ start
                 : statement+ 
                 ;
 
-statement
-scope {boolean isFixedValue;
-}
-@init {
-    $statement::isFixedValue = false;
-}
-                : image_write
-                | var_assignment
+statement       : image_write
+                | expr
                 ;
 
-image_write     : ^(IMAGE_WRITE IMAGE_VAR ^(LOCAL_EXPR expr))
-                | ^(IMAGE_WRITE IMAGE_VAR ^(NON_LOCAL_EXPR expr))
-                ;
-
-var_assignment  : ^(ASSIGN op=assign_op assignable_var ^(LOCAL_EXPR e=expr))
-                  {
-                      if ($statement::isFixedValue) {
-                          varTable.assign($assignable_var.varName, $op.tree.getText(), $e.value);
-                      }
-                  }
-                  -> {$statement::isFixedValue}?   // node discarded
-                     
-                  -> ^(ASSIGN assign_op assignable_var ^(LOCAL_EXPR expr))
-                  
-                | ^(ASSIGN assign_op assignable_var ^(NON_LOCAL_EXPR expr))
+image_write     : ^(IMAGE_WRITE IMAGE_VAR expr)
                 ;
                 
-expr returns [double value]
-                : ^(FUNC_CALL ID expr_list)
+expr returns [Double value]
+@init {
+    $value = null;
+}
+                : ^(ASSIGN op=assign_op assignable_var e=expr)
+                  {
+                      if ($e.value != null) {
+                          varTable.assign($assignable_var.varName, $op.tree.getText(), $e.value);
+                          $value = $e.value;
+                      }
+                  }
+                  -> {$e.value != null}?   // node discarded
+                     
+                  -> ^(ASSIGN assign_op assignable_var expr)
+                  
+                | ^(FUNC_CALL ID expr_list)
                 | ^(QUESTION expr expr expr)
                 | ^(expr_op expr expr)
                 | assignable_var
                 | non_assignable_var
 
                 | FIXED_VALUE 
-                  {$statement::isFixedValue = true; $value = getFixedValue($FIXED_VALUE);}
+                  {$value = getFixedValue($FIXED_VALUE);}
               
                 | CONSTANT
-                  {$statement::isFixedValue = true; $value = varTable.get($CONSTANT.text);}
+                  {$value = varTable.get($CONSTANT.text);}
                 
                 ;
+                
                 
 assignable_var returns [String varName]
                 : POS_VAR {$varName = $POS_VAR.text;}

@@ -19,8 +19,8 @@
  */
  
  /** 
-  * Takes a VarTable provided by client code that contains var names and values
-  * for fixed values. Replaces all instances such vars in the AST by their value.
+  * Replaces all var qualifiers, other than IMAGE_VAR, that were used in the 
+  * optimizing steps with VAR
   *
   * @author Michael Bedward
   */
@@ -52,24 +52,17 @@ start           : statement+
                 ;
 
 statement       : image_write
-                | var_assignment
+                | expr
                 ;
 
-image_write     : ^(IMAGE_WRITE IMAGE_VAR typed_expr)
+image_write     : ^(IMAGE_WRITE IMAGE_VAR expr)
                 ;
 
-var_assignment  : ^(ASSIGN op=assign_op assignable_var typed_expr)
+assignment      : 
                 ;
                 
-typed_expr
-                : ^(LOCAL_EXPR expr)
-                  -> expr
-                  
-                | ^(NON_LOCAL_EXPR expr) 
-                  -> expr
-                ;
-
-expr            : ^(FUNC_CALL ID expr_list)
+expr            : ^(ASSIGN op=assign_op assignable_var expr) 
+                | ^(FUNC_CALL ID expr_list)
                 | ^(QUESTION expr expr expr)
                 | ^(POW expr expr) 
                 | ^(TIMES expr expr) 

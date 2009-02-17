@@ -41,6 +41,10 @@ public class CompileDemo extends DemoBase {
 
     public void demo() throws Exception {
         String[] inputs = {
+            "a = b = 42;\n" +
+            "c = a + x();\n" +
+            "result = c - b;\n",
+            
             "a = 5; \n" +
             "result = a;\n",
             
@@ -84,15 +88,7 @@ public class CompileDemo extends DemoBase {
         System.out.println(tree.toStringTree());
         
         CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
-        Morph3 m3 = new Morph3(nodes);
-        Morph3.start_return m3Ret = m3.start();
-        tree = (CommonTree) m3Ret.getTree();
-
-        System.out.println("After tree morph 3...");
-        System.out.println(tree.toStringTree());
-
         nodes = new CommonTreeNodeStream(tree);
-        VarTable sharedVarTable = new VarTable();
         
         Morph4 m4 = new Morph4(nodes);
         Morph4.start_return m4Ret = m4.start();
@@ -106,6 +102,7 @@ public class CompileDemo extends DemoBase {
         
         nodes = new CommonTreeNodeStream(tree);
         Morph5 m5 = new Morph5(nodes);
+        VarTable sharedVarTable = new VarTable();
         m5.setVarTable(sharedVarTable);
         Morph5.start_return m5Ret = m5.start();
         

@@ -80,18 +80,10 @@ start
                 ;
 
 statement       : image_write
-                | var_assignment
+                | expr
                 ;
 
-image_write     : ^(IMAGE_WRITE IMAGE_VAR typed_expr)
-                ;
-
-var_assignment  : ^(ASSIGN op=assign_op assignable_var typed_expr)
-                ;
-                
-typed_expr
-                : ^(LOCAL_EXPR expr)
-                | ^(NON_LOCAL_EXPR expr) 
+image_write     : ^(IMAGE_WRITE IMAGE_VAR expr)
                 ;
 
 expr returns [boolean hasValue, Double value]
@@ -108,7 +100,9 @@ sub_expr returns [boolean hasValue, Double value]
     $hasValue = false;
     $value = null;
 }
-                : ^(FUNC_CALL ID expr_list)
+                : ^(ASSIGN op=assign_op assignable_var expr)
+                
+                | ^(FUNC_CALL ID expr_list)
                   {
                       if ($expr_list.values != null) {
                           $value = funcTable.invoke($ID.text, $expr_list.values);

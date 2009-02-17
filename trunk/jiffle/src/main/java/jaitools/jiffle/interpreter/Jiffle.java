@@ -24,7 +24,6 @@ import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
 import jaitools.jiffle.parser.MakeRuntime;
 import jaitools.jiffle.parser.Morph1;
-import jaitools.jiffle.parser.Morph3;
 import jaitools.jiffle.parser.Morph4;
 import jaitools.jiffle.parser.Morph5;
 import jaitools.jiffle.parser.Morph6;
@@ -146,8 +145,6 @@ public class Jiffle {
             tokens = new CommonTokenStream(lexer);
 
             JiffleParser parser = new JiffleParser(tokens);
-            parser.setPrint(true);
-
             JiffleParser.prog_return r = parser.prog();
             primaryAST = (CommonTree) r.getTree();
 
@@ -174,7 +171,6 @@ public class Jiffle {
             nodes.setTokenStream(tokens);
             classifier = new VarClassifier(nodes);
             classifier.setImageVars(imageParams.keySet());
-            classifier.setPrint(true);
             classifier.start();
 
         } catch (RecognitionException ex) {
@@ -200,11 +196,6 @@ public class Jiffle {
             m1.setMetadata(metadata);
             Morph1.start_return m1Ret = m1.start();
             tree = (CommonTree) m1Ret.getTree();
-            
-            nodes = new CommonTreeNodeStream(tree);
-            Morph3 m3 = new Morph3(nodes);
-            Morph3.start_return m3Ret = m3.start();
-            tree = (CommonTree) m3Ret.getTree();
             
             nodes = new CommonTreeNodeStream(tree);
             Morph4 m4 = new Morph4(nodes);
