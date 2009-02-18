@@ -15,13 +15,13 @@ Jiffle's preliminary syntax will be familiar to C and Java programmers.  Most ar
 The language is case sensitive. A statement is terminated by a semicolon and/or a newline (or any combination of the two)...
 
 {{{
-    // jiffle will even handle this...
-    a = 3; b = 42
+// jiffle will even handle this...
+a = 3; b = 42
 
-    c = a / b ;;
+c = a / b ;;
     ;;;
 
-    // ...not that we recommend it
+// ...not that we recommend it
 }}}
 
 == Operators ==
@@ -64,7 +64,7 @@ a = b = c = 6 * 7;
 Example:
 {{{
 
-   z = (x > 2.5 ? 1 : 0);
+z = (x > 2.5 ? 1 : 0);
 
 }}}
 
@@ -104,7 +104,26 @@ Local variables can be defined to store double values. Logical values are stored
 
 Variable names are case-sensitive and must start with a letter, optionally followed by letters, numbers and underscores.
 
-Jiffle knows a small number of pre-defined constants: PI, E and NaN. The logical constants true and false are also defined (these are *not* case sensitive, ie. true == TRUE == TruE).
+Jiffle knows a small number of pre-defined constants: PI, E and NaN. 
+
+The logical constants true and false are also defined and are *not* case sensitive...
+
+{{{
+// these are equivalent
+lo = true; up = TRUE; silly = TruE;
+}}}
+
+== Comments ==
+
+{{{
+/* 
+ * C-style block comments
+ * are supported
+ * in jiffle
+ */
+
+// As are line comments
+}}}
 
 = ANTLR grammar for jiffle =
 
