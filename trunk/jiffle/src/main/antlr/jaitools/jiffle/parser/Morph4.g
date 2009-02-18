@@ -20,7 +20,9 @@
  
  /** 
   * Introduces FIXED_VALUE token with FixedValueNode as the tree node.
-  * Replaces INT_LITERAL AND FLOAT_LITERAL with FIXED_VALUE
+  * Replaces INT_LITERAL AND FLOAT_LITERAL with FIXED_VALUE.
+  * Replaces TRUE and FALSE tokens with 1.0 and 0.0 FIXED_VALUE nodes
+  * respectively.
   *
   * @author Michael Bedward
   */
@@ -66,6 +68,8 @@ expr            : ^(ASSIGN assign_op assignable_var expr)
                 | non_assignable_var
                 | INT_LITERAL -> FIXED_VALUE<FixedValueNode>[$INT_LITERAL.text]
                 | FLOAT_LITERAL -> FIXED_VALUE<FixedValueNode>[$FLOAT_LITERAL.text]
+                | TRUE -> FIXED_VALUE<FixedValueNode>[1.0d]
+                | FALSE -> FIXED_VALUE<FixedValueNode>[0.0d]
                 ;
                 
 assignable_var  : POS_VAR

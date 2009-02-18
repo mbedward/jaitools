@@ -275,6 +275,8 @@ expr returns [boolean isLocal, boolean isPositional]
                 | ^(QUESTION expr expr expr)
                 | INT_LITERAL 
                 | FLOAT_LITERAL 
+                | TRUE
+                | FALSE
                 ;
                 
 expr_op         : POW
