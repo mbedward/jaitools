@@ -1,10 +1,10 @@
                             -----------------------------------
                             Jiffle: JAI Image Function Language
                             -----------------------------------
-                            Michael Bedward
                             -----------------------------------
-                            Feb 6, 2009
                             -----------------------------------
+
+Overview
 
     Jiffle is a language and interpreter intended to make it easier to create images
 from mathematical and conditional expressions within Java applications. It works with JAI, the 
@@ -14,19 +14,29 @@ from mathematical and conditional expressions within Java applications. It works
 image operators and other tools.
 
 
-Introduction
+Example
 
-    Jiffle is a great idea that doesn't work yet :-)
-
-* Example
+    A jiffle script to create an image of concentric 'ripples' radiating from the centre
+of the image...
 
 +---
-// A jiffle script to create an image of concentric ripples
     xc = width() / 2;
     yc = height() / 2;
-    d = sqrt((x() - xc)^2 + (y() - yc)^2);
-    result = sin(8 * PI * d);
+    dx = (x()-xc)/xc;
+    dy = (y()-yc)/yc;
+    d = sqrt(dx^2 + dy^2);
+    ripples = sin(8 * PI * d);
 +---
 
+    Notice that there are no explicit loops for image row and col position. The jiffle 
+interpreter will evaluate the expressions in the script, some of which make use of the 
+built-in image position functions x() and y(), and write the result to the output image
+represented by the variable 'ripples'.
 
-    
+    Here is an even simpler script which set all pixels in the output image to a
+constant:
+
++---
+    myImg = 42;
++---
+
