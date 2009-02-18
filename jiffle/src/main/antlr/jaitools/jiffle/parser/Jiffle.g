@@ -160,9 +160,18 @@ eos		: (SEMICOLON | NEWLINE )+
 BLOCK_COMMENT   : '/*' (~'*' | '*' ~'/')* '*/' { $channel = HIDDEN; }
                 ;
 
-LINE_COMMENT    : '//' (~NEWLINE)* NEWLINE { $channel = HIDDEN; }
+LINE_COMMENT    : '//' (~('\n' | '\r'))* NEWLINE { $channel = HIDDEN; }
                 ;
                 
+
+/* true and false keywords are defined using case-insensitive fragments
+ * (see further down)
+ */
+TRUE            : T R U E
+                ;
+                
+FALSE           : F A L S E
+                ;
 
 /* Operators sorted and grouped by precedence order */
 INCR            : '++' ;  /* pre-fix and post-fix operations */
@@ -213,15 +222,6 @@ fragment
 Letter		: 'a'..'z' | 'A'..'Z'
 		;
 
-/* true and false keywords are defined using case-insensitive fragments
- * (see further down)
- */
-TRUE            : T R U E
-                ;
-                
-FALSE           : F A L S E
-                ;
-
 UNDERSCORE      : '_' ;
 
 INT_LITERAL	: '0' | NonZeroDigit Digit*
@@ -244,6 +244,7 @@ FloatExp        : ('e'|'E' (PLUS|MINUS)? '0'..'9'+)
 SEMICOLON	: ';' ;
 
 /* Mac: \r  PC: \r\n  Unix \n */
+fragment
 NEWLINE		: '\r' '\n'?
 		| '\n'
 		;
