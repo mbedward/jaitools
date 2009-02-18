@@ -130,6 +130,8 @@ expr            : ^(ASSIGN assign_op var expr)
                 | var
                 | INT_LITERAL 
                 | FLOAT_LITERAL 
+                | TRUE
+                | FALSE
                 ;
                 
 var             :ID

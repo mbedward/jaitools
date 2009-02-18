@@ -120,6 +120,8 @@ atom_expr	: ID
 
 constant	: INT_LITERAL
 		| FLOAT_LITERAL
+                | TRUE
+                | FALSE
 		;
 
 incdec_op       : INCR
@@ -145,11 +147,22 @@ type_name	: 'int'
 		| 'boolean'
 		;
 
-/* end of statement */
-eos		: SEMICOLON ( NEWLINE )*   /* semicolon, options followed by newline(s) */
-		| NEWLINE ( SEMICOLON ( NEWLINE )* )*  /* newline optionally followed by semicolon and any number of newlines */
+/* End of statement is indicated by semicolon or newline.
+ * Any additional newlines (or even semicolons) are just eaten.
+ * An additional newline is appended to the input jiffle script
+ * by the class driving the parser to ensure that the final statement
+ * is terminated correctly.
+ */
+eos		: (SEMICOLON | NEWLINE )+
 		;
 
+
+BLOCK_COMMENT   : '/*' (~'*' | '*' ~'/')* '*/' { $channel = HIDDEN; }
+                ;
+
+LINE_COMMENT    : '//' (~NEWLINE)* NEWLINE { $channel = HIDDEN; }
+                ;
+                
 
 /* Operators sorted and grouped by precedence order */
 INCR            : '++' ;  /* pre-fix and post-fix operations */
@@ -200,6 +213,15 @@ fragment
 Letter		: 'a'..'z' | 'A'..'Z'
 		;
 
+/* true and false keywords are defined using case-insensitive fragments
+ * (see further down)
+ */
+TRUE            : T R U E
+                ;
+                
+FALSE           : F A L S E
+                ;
+
 UNDERSCORE      : '_' ;
 
 INT_LITERAL	: '0' | NonZeroDigit Digit*
@@ -225,5 +247,33 @@ SEMICOLON	: ';' ;
 NEWLINE		: '\r' '\n'?
 		| '\n'
 		;
+
+/* Fragment tokens for selective case-insensitive matching */
+fragment A:('a'|'A');
+fragment B:('b'|'B');
+fragment C:('c'|'C');
+fragment D:('d'|'D');
+fragment E:('e'|'E');
+fragment F:('f'|'F');
+fragment G:('g'|'G');
+fragment H:('h'|'H');
+fragment I:('i'|'I');
+fragment J:('j'|'J');
+fragment K:('k'|'K');
+fragment L:('l'|'L');
+fragment M:('m'|'M');
+fragment N:('n'|'N');
+fragment O:('o'|'O');
+fragment P:('p'|'P');
+fragment Q:('q'|'Q');
+fragment R:('r'|'R');
+fragment S:('s'|'S');
+fragment T:('t'|'T');
+fragment U:('u'|'U');
+fragment V:('v'|'V');
+fragment W:('w'|'W');
+fragment X:('x'|'X');
+fragment Y:('y'|'Y');
+fragment Z:('z'|'Z');
 
 WS  		:  (' '|'\t'|'\u000C') {$channel=HIDDEN;} ;
