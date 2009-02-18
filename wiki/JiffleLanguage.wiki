@@ -2,83 +2,129 @@
 
 = Introduction =
 
-The jiffle language is intended to make it easier to create images from expressions whose inputs are image location and/or other image values and which may contain mathematical and logical operators.
+The jiffle language is intended to make it easier to create images from expressions 
+consisting of mathematical and logical operators, pre-defined and user-defined constants,
+and data from input images.
 
-<wiki:toc max_depth="2" />
+<wiki:toc max_depth="3" />
 
 = Description of the language =
 
 Jiffle's preliminary syntax will be familiar to C and Java programmers.  Most arithmetic and logical operators are identical, with the exception of `^` for exponentiation and `^|` for exclusive-or. 
 
-The language is case sensitive. Statements are terminated by a newline or (optionally) a semicolon.
+The language is case sensitive. A statement is terminated by a semicolon and/or a newline (or any combination of the two)...
 
-== Arithmetic operators ==
+{{{
+    // jiffle will even handle this...
+    a = 3; b = 42
+
+    c = a / b ;;
+    ;;;
+
+    // ...not that we recommend it
+}}}
+
+== Operators ==
+
+=== Arithmetic operators ===
   `^` Raise to power <br>
   `*` Multiply <br>
   `/` Divide <br>
   `%` Modulo (remainder) <br>
   `+` Add <br>
   `-` Subtract <br>
+  `=` Assignment <br>
+  `+=` Additive assignment <br>
+  `-=` Subtractive assignment <br>
+  `*=` Multiplicative assignment <br>
+  `/=` Divisive assignment <br>
+  `%=` Modulo assignment <br>
 
-== Logical operators ==
-These can be specified using familiar C/Java symbols or capitalized operator names.
-  `&&` *AND* <br>
-  `||` *OR* <br>
-  `^|` *XOR* <br>
-  `==` *EQ* <br>
-  `!=` *NE* <br>
-  `>`  *GT* <br>
-  `>=` *GE* <br>
-  `<=` *LE* <br>
-  `<`  *LT* <br>
-  `!`  *NOT* <br>
+Jiffle supports chained assignments...
 
-== Conditional expressions ==
-Example:
 {{{
-   z = (x > 2.5 ? 1 : 0);
+
+a = b = c = 6 * 7;
+
 }}}
 
-== Function calls ==
+=== Logical operators ===
+  `&&` logical AND <br>
+  `||` logical OR <br>
+  `^|` logical XOR <br>
+  `==` equality test <br>
+  `!=` inequality test <br>
+  `>`  greater than <br>
+  `>=` greater than or equal to <br>
+  `<=` less than <br>
+  `<`  less than or equal to <br>
+  `!`  logical complement <br>
 
-Jiffle presently supports functions taking 1 or 2 *double* arguments and returning a *double* value. The language includes a set of basic functions: log(x), sqrt(x), abs(x), rand(x) random double in the range [0,x), randInt(x) random integer (actually a floored double) in the range [0,x), sin(x), cos(x), tan(x), asin(x), acos(x), atan(x), radToDeg(x), degToRad(x).
+=== Conditional expressions ===
+Example:
+{{{
 
-The next step is to allow users to plug their own functions into the jiffle interpreter and support no-arg and variable arg functions.
+   z = (x > 2.5 ? 1 : 0);
+
+}}}
+
+== Built-in functions ==
+
+=== General functions ===
+
+|| *function* || *description*  || 
+||`log(x)`    || natural log    ||
+||`sqrt(x)`   || square root    ||
+||`abs(x)`    || absolute value ||
+||`sin(x)`    || sine of angle (radians) ||
+||`cos(x)`    || cosine of angle (radians) ||
+||`tan(x)`    || tangent of angle (radians) ||
+||`asin(x)`   || inverse sine of angle (radians) ||
+||`acos(x)`   || inverse cosine of angle (radians) ||
+||`atan(x)`   || inverse tangent of angle (radians) ||
+||`radToDeg(x)`|| convert radians to degrees ||
+||`degToRad(x)`|| convert degrees to radians ||
+||`rand(x)`   || random value in the range [0,x) ||
+||`randInt(x)`|| random integer value in range [0,x)||
+
+All of the above functions take a double argument and return a double value (`randInt`
+returns a floored double).
+
+=== Image functions ===
+
+|| *function* || *description*  || 
+|| x()        || pixel x pos from 0 to image width - 1 ||
+|| y()        || pixel y pos from 0 to image height - 1 ||
+|| width()    || output image width ||
+|| height()   || output image height ||
 
 == Variables ==
 
-Local variables can be defined to store double values. Variable names must start with a letter, optionally followed by letters, numbers and underscores. Names are case-sensitive.
+Local variables can be defined to store double values. Logical values are stored as 1 (true) or 0 (false).
 
-Boolean variables and lists are not catered for yet.
+Variable names are case-sensitive and must start with a letter, optionally followed by letters, numbers and underscores.
 
-Jiffle knows a small number of pre-defined constants: PI, E and NaN.
-
-= What's missing ? =
-
-Inputs !  The next step is to add language elements for input images and image coordinates.
-
-Operators for neighbourhood analyses.
-
+Jiffle knows a small number of pre-defined constants: PI, E and NaN. The logical constants true and false are also defined (these are *not* case sensitive, ie. true == TRUE == TruE).
 
 = ANTLR grammar for jiffle =
 
-*Note:* the complete parser grammar with header sections and tree construction elements can be found in the svn repository [http://code.google.com/p/jai-tools/source/browse/#svn/trunk/jiffle/src/main/antlr/jaitools/jiffle/parser here] (Jiffle.g) as well as a tree parser grammar (!JiffleWalker.g).
+*Note:* the complete parser grammar with header sections and tree construction elements can be found in the svn repository [http://code.google.com/p/jai-tools/source/browse/#svn/trunk/jiffle/src/main/antlr/jaitools/jiffle/parser here]
+
+*Please treat this grammar as preliminary and assume that it contains errors*
 
 {{{
 grammar Jiffle;
 
-jiffle		: statement+
+prog		: statement+
                 ;
 
-statement	: expr EOS
-		| EOS
+statement	: expr eos
 		;
-
-expr		: func_call
-                | assign_expr
+		
+expr		: assign_expr
                 | cond_expr
 		;
-
+                
 func_call       : ID LPAR expr_list RPAR
                 ;
 
@@ -115,12 +161,12 @@ mult_expr	: exp_expr ((TIMES | DIV | MOD) exp_expr)*
 exp_expr        : cast_expr (POW cast_expr)*
                 ;
 		
-cast_expr	: LPAR type_name RPAR cast_expr
+cast_expr	: LPAR type_name RPAR cast_expr -> (CAST cast_expr)
 		| unary_expr
 		;	
 
-unary_expr	: incdec_op postfix_expr
-		| unary_op postfix_expr
+unary_expr	: incdec_op postfix_expr -> (PREFIX incdec_op postfix_expr)
+		| unary_op postfix_expr -> (PREFIX unary_op postfix_expr)
 		| postfix_expr
 		;
 		
@@ -130,6 +176,7 @@ postfix_expr	: a=atom_expr (incdec_op)?
 atom_expr	: ID
 		| constant
 		| LPAR expr RPAR
+                | func_call
 		;
 
 constant	: INT_LITERAL
@@ -157,6 +204,9 @@ type_name	: 'int'
 		| 'float'
 		| 'double'
 		| 'boolean'
+		;
+
+eos		: (SEMICOLON | NEWLINE)+
 		;
 
 
@@ -228,7 +278,13 @@ fragment
 FloatExp        : ('e'|'E' (PLUS|MINUS)? '0'..'9'+)
                 ;
 				
-EOS		: ';' ;
+SEMICOLON	: ';' ;
 
-WS  		:  (' '|'\r'|'\t'|'\u000C'|'\n') ;
+/* Mac: \r  PC: \r\n  Unix \n */
+NEWLINE		: '\r' '\n'?
+		| '\n'
+		;
+
+WS  		:  (' '|'\t'|'\u000C') ;
+
 }}}
