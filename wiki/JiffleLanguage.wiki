@@ -121,6 +121,6 @@ lo = true; up = TRUE; silly = TruE;
 
 = ANTLR grammar for jiffle =
 
-*Note:* the complete parser grammar with header sections and tree construction elements can be found in the svn repository [http://jai-tools.googlecode.com/svn/trunk/jiffle/src/main/antlr/jaitools/jiffle/parser here]
+*Note:* the ANTLR lexer / parser grammar file, Jiffle.g, with header sections and tree construction elements can be found in the svn repository [http://jai-tools.googlecode.com/svn/trunk/jiffle/src/main/antlr/jaitools/jiffle/parser/Jiffle.g here]
 
 *Please treat this grammar as preliminary and assume that it contains errors*
