@@ -38,28 +38,13 @@ package jaitools.jiffle.parser;
 import java.util.List;
 import jaitools.jiffle.collection.CollectionFactory;
 import jaitools.jiffle.interpreter.JiffleRunner;
+
+import static jaitools.jiffle.parser.DoubleComparison.*;
 }
 
 @members {
 private boolean printDebug = false;
 public void setPrint(boolean b) { printDebug = b; }
-
-/*
- * Double value comparison within tolerance methods
- */
-private static final double TOL = 1.0e-8;
-
-private boolean dzero(double x) {
-    return Math.abs(x) < TOL;
-}
-
-private int dcomp(double x1, double x2) {
-    if (dzero(x1 - x2)) {
-        return 0;
-    } else {
-        return Double.compare(x1, x2);
-    }
-}
 
 private JiffleRunner runner = null;
 
@@ -122,6 +107,12 @@ expr returns [double value]
                 | ^(LE e1=expr e2=expr) {$value = (dcomp(e1, e2) <= 0) ? 1 : 0;}
                 | ^(LOGICALEQ e1=expr e2=expr) {$value = (dcomp(e1, e2) == 0) ? 1 : 0;}
                 | ^(NE e1=expr e2=expr) {$value = (dcomp(e1, e2) != 0) ? 1 : 0;}
+                | ^(PREFIX PLUS e1=expr) {$value = +e1;}
+                | ^(PREFIX MINUS e1=expr) {$value = -e1;}
+                
+                /* @todo check that the expr is boolean */
+                | ^(PREFIX NOT e1=expr) {$value = dzero(e1) ? 1 : 0;}
+              
                 | VAR {$value = runner.getVar($VAR.text);}
                 | IMAGE_VAR {$value = runner.getImageValue($IMAGE_VAR.text);}
                 | FIXED_VALUE {$value = ((FixedValueNode)$FIXED_VALUE).getValue();}
@@ -145,11 +136,6 @@ incdec_op       : INCR
                 | DECR
                 ;
 
-unary_op	: PLUS
-		| MINUS
-		| NOT
-		;
-		
 type_name	: 'int'
 		| 'float'
 		| 'double'

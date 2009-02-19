@@ -39,6 +39,8 @@ package jaitools.jiffle.parser;
 import jaitools.jiffle.collection.CollectionFactory;
 import jaitools.jiffle.interpreter.FunctionTable;
 import jaitools.jiffle.interpreter.VarTable;
+
+import static jaitools.jiffle.parser.DoubleComparison.*;
 }
 
 @members {
@@ -50,23 +52,6 @@ private VarTable varTable;
 public void setVarTable(VarTable varTable) { this.varTable = varTable; }
 
 private FunctionTable funcTable = new FunctionTable();
-
-/*
- * Double value comparison within tolerance methods
- */
-private static final double TOL = 1.0e-8;
-
-private boolean dzero(double x) {
-    return Math.abs(x) < TOL;
-}
-
-private int dcomp(double x1, double x2) {
-    if (dzero(x1 - x2)) {
-        return 0;
-    } else {
-        return Double.compare(x1, x2);
-    }
-}
 
 }
 
@@ -240,6 +225,32 @@ sub_expr returns [boolean hasValue, Double value]
                           $hasValue = true;
                       }
                   }
+                  
+                | ^(PREFIX PLUS e1=expr)
+                  {
+                      if (e1.hasValue) {
+                          $value = +e1.value;
+                          $hasValue = true;
+                      }
+                  }
+
+                | ^(PREFIX MINUS e1=expr)
+                  {
+                      if (e1.hasValue) {
+                          $value = -e1.value;
+                          $hasValue = true;
+                      }
+                  }
+                               
+                | ^(PREFIX NOT e1=expr)
+                  {
+                      // @todo check that we are dealing with a
+                      // pseudo logical value here
+                      if (e1.hasValue) {
+                          $value = dzero(e1.value) ? 1d : 0d;
+                          $hasValue = true;
+                      }
+                  }
               
                 | POS_VAR
                 | IMAGE_VAR
@@ -304,11 +315,6 @@ incdec_op       : INCR
                 | DECR
                 ;
 
-unary_op	: PLUS
-		| MINUS
-		| NOT
-		;
-		
 type_name	: 'int'
 		| 'float'
 		| 'double'
