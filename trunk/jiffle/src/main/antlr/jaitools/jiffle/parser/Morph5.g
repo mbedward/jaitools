@@ -25,6 +25,10 @@
   *      by the client code;<br> 
   * <li> deletes the subtree from the AST
   * </ul>
+  * This tree walker is run repeatedly so that disjoint chains of local
+  * vars are processed fully (e.g. a = 42; b = a;). After each run the
+  * number of local vars removed from the AST and stored in the VarTable
+  * can be checked with the getCount() method.
   *
   * @author Michael Bedward
   */
