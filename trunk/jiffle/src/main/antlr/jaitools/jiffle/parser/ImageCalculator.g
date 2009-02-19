@@ -98,8 +98,13 @@ expr returns [double value]
                 : ^(FUNC_CALL ID expr_list)
                   {$value = runner.invokeFunction($ID.text, $expr_list.values);}
                   
-                | ^(QUESTION expr expr expr)
+                | ^(QUESTION econd=expr e1=expr e2=expr)
                   {
+                      if (!dzero(econd)) {
+                          $value = e1;
+                      } else {
+                          $value = e2;
+                      }
                   }
                   
                 | ^(POW e1=expr e2=expr) {$value = Math.pow(e1, e2);}

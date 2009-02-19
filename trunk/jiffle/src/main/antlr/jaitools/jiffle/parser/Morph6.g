@@ -110,8 +110,15 @@ sub_expr returns [boolean hasValue, Double value]
                       }
                   }
                   
-                | ^(QUESTION expr expr expr)
+                | ^(QUESTION econd=expr e1=expr e2=expr)
                   {
+                      if (econd.hasValue && e1.hasValue && e2.hasValue) {
+                          if (!dzero(econd.value)) {
+                              $value = e1.value;
+                          } else {
+                              $value = e2.value;
+                          }
+                      }
                   }
                   
                 | ^(POW e1=expr e2=expr) 
