@@ -20,35 +20,24 @@
 
 package jaitools.jiffle.parser;
 
-import org.antlr.runtime.CommonToken;
-import org.antlr.runtime.tree.CommonTree;
-import org.antlr.runtime.tree.Tree;
-
 /**
- *
- * @author Michael Bedward and Murray Ellis
+ * Double value comparisons within a set tolerance
+ * 
+ * @author Michael Bedward
  */
-public class FixedValueNode extends CommonTree {
-    private double value;
-    
-    public FixedValueNode(int tokType, double value) { 
-        super(new CommonToken(tokType));
-        this.value = value; 
+public class DoubleComparison {
+
+    private static final double TOL = 1.0e-8;
+
+    public static boolean dzero(double x) {
+        return Math.abs(x) < TOL;
     }
-    
-    public FixedValueNode(int tokType, String text) {
-        this(tokType, Double.valueOf(text));
-    }
-    
-    public double getValue() { return value; }
-    
-    @Override
-    public FixedValueNode dupNode() {
-        return new FixedValueNode(getType(), value);
-    }    
-    
-    @Override
-    public String toString() {
-        return "FIX<" + String.valueOf(value) + ">";
+
+    public static int dcomp(double x1, double x2) {
+        if (dzero(x1 - x2)) {
+            return 0;
+        } else {
+            return Double.compare(x1, x2);
+        }
     }
 }

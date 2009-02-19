@@ -273,6 +273,7 @@ expr returns [boolean isLocal, boolean isPositional]
                   }
      
                 | ^(QUESTION expr expr expr)
+                | ^(PREFIX unary_op expr)
                 | INT_LITERAL 
                 | FLOAT_LITERAL 
                 | TRUE

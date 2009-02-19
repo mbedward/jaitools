@@ -63,6 +63,7 @@ image_write     : ^(IMAGE_WRITE IMAGE_VAR expr)
 expr            : ^(ASSIGN assign_op assignable_var expr)
                 | ^(FUNC_CALL ID expr_list)
                 | ^(QUESTION expr expr expr)
+                | ^(PREFIX unary_op expr)
                 | ^(expr_op expr expr)
                 | assignable_var
                 | non_assignable_var

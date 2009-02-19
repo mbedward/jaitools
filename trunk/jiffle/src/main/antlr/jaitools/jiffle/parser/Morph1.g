@@ -126,6 +126,7 @@ expr            : ^(ASSIGN assign_op var expr)
                   -> ^(FUNC_CALL ID expr_list)
                   
                 | ^(QUESTION expr expr expr)
+                | ^(PREFIX unary_op expr)
                 | ^(expr_op expr expr)
                 | var
                 | INT_LITERAL 

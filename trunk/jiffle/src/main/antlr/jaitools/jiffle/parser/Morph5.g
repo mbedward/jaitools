@@ -41,6 +41,8 @@ options {
 package jaitools.jiffle.parser;
 
 import jaitools.jiffle.interpreter.VarTable;
+
+import static jaitools.jiffle.parser.DoubleComparison.*;
 }
 
 @members {
@@ -55,6 +57,8 @@ private double getFixedValue(CommonTree t) {
     return ((FixedValueNode)t).getValue();
 }
 
+private int count = 0;
+public int getCount() { return count; }
 }
 
 start
@@ -81,6 +85,7 @@ expr returns [Double value]
                   {
                       if ($e.value != null) {
                           varTable.assign($assignable_var.varName, $op.tree.getText(), $e.value);
+                          count++ ;
                           $value = $e.value;
                       }
                   }
@@ -90,10 +95,41 @@ expr returns [Double value]
                   
                 | ^(FUNC_CALL ID expr_list)
                 | ^(QUESTION expr expr expr)
+                
+                /* we evalute prefixed expressions here to catch
+                 * prefixed fixed values
+                 */
+                | ^(PREFIX unary_op e=expr)
+                   {
+                       if ($e.value != null) {
+                           switch ($unary_op.type) {
+                               case PLUS:
+                                   $value = +$e.value;
+                                   break;
+                               
+                               case MINUS:
+                                   $value = -$e.value;
+                                   break;
+                               
+                               case NOT:
+                                   // @todo check that we are dealing with a
+                                   // pseudo logical value here
+                                   $value = (dzero($e.value) ? 1.0d : 0.0d);
+                                   break;
+                               
+                               default:
+                                   throw new RuntimeException("unknown unary_op type");
+                           }
+                       }
+                   }
+                   
                 | ^(expr_op expr expr)
+              
                 | assignable_var
+                  {if ($assignable_var.value != null) $value = $assignable_var.value;}
+              
                 | non_assignable_var
-
+                
                 | FIXED_VALUE 
                   {$value = getFixedValue($FIXED_VALUE);}
               
@@ -103,10 +139,18 @@ expr returns [Double value]
                 ;
                 
                 
-assignable_var returns [String varName]
+assignable_var returns [String varName, Double value]
                 : POS_VAR {$varName = $POS_VAR.text;}
-                | LOCAL_VAR {$varName = $LOCAL_VAR.text;}
                 | NON_LOCAL_VAR {$varName = $NON_LOCAL_VAR.text;}
+                | LOCAL_VAR 
+                  {
+                      $varName = $LOCAL_VAR.text;
+                      // if this is a return run we might have this local var
+                      // in variable table
+                      if (varTable.contains($LOCAL_VAR.text)) {
+                          $value = varTable.get($LOCAL_VAR.text);
+                      }
+                  }
                 ;
                 
 non_assignable_var : IMAGE_VAR
@@ -146,9 +190,10 @@ incdec_op       : INCR
                 | DECR
                 ;
 
-unary_op	: PLUS
-		| MINUS
-		| NOT
+unary_op returns [int type]
+                : PLUS {$type = $PLUS.type;}
+		| MINUS {$type = $MINUS.type;}
+		| NOT {$type = $NOT.type;}
 		;
 		
 type_name	: 'int'

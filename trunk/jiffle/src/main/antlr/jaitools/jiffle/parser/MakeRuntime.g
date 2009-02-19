@@ -79,6 +79,7 @@ expr            : ^(ASSIGN op=assign_op assignable_var expr)
                 | ^(LE expr expr) 
                 | ^(LOGICALEQ expr expr) 
                 | ^(NE expr expr) 
+                | ^(PREFIX unary_op expr)
                 | FIXED_VALUE 
                 | assignable_var
                 | non_assignable_var
