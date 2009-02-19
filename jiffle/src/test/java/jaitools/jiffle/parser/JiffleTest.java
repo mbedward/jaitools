@@ -99,14 +99,14 @@ public class JiffleTest {
         System.out.println("Testing conditional expression");
         
         System.out.println("   when true");
-        String input = "5/3 < 2 ? 42 : 0;";
+        String input = "5/3 < 2 ? 1 : 2;";
         double result = eval(input);
-        assertTrue(deq(result, 42));
+        assertTrue(deq(result, 1));
 
         System.out.println("   when false");
-        input = "5/3 > 2 ? 0 : 42;";
+        input = "5/3 > 2 ? 1 : 2;";
         result = eval(input);
-        assertTrue(deq(result, 42));
+        assertTrue(deq(result, 2));
     }
 
     /**

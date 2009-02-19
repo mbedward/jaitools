@@ -47,6 +47,7 @@ public abstract class DemoBase {
         CommonTokenStream tokens = new CommonTokenStream(lexer);
 
         JiffleParser parser = new JiffleParser(tokens);
+        parser.setPrint(true);
         JiffleParser.prog_return r = parser.prog();
         CommonTree tree = (CommonTree) r.getTree();
 
