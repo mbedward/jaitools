@@ -146,16 +146,9 @@ type_name	: 'int'
 		| 'double'
 		| 'boolean'
 		;
-
-/* End of statement is indicated by semicolon or newline.
- * Any additional newlines (or even semicolons) are just eaten.
- * An additional newline is appended to the input jiffle script
- * by the class driving the parser to ensure that the final statement
- * is terminated correctly.
- */
-eos		: (SEMICOLON | NEWLINE )+
-		;
-
+                
+eos             : (SEMICOLON|NEWLINE)+
+                ;
 
 BLOCK_COMMENT   : '/*' (~'*' | '*' ~'/')* '*/' { $channel = HIDDEN; }
                 ;
@@ -241,10 +234,10 @@ fragment
 FloatExp        : ('e'|'E' (PLUS|MINUS)? '0'..'9'+)
                 ;
 				
-SEMICOLON	: ';' ;
+SEMICOLON	: ';'
+                ;
 
 /* Mac: \r  PC: \r\n  Unix \n */
-fragment
 NEWLINE		: '\r' '\n'?
 		| '\n'
 		;
