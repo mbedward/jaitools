@@ -202,13 +202,16 @@ public class Jiffle {
             Morph4.start_return m4Ret = m4.start();
             tree = (CommonTree) m4Ret.getTree();
             
-            nodes = new CommonTreeNodeStream(tree);
-            Morph5 m5 = new Morph5(nodes);
+            Morph5 m5;
             VarTable varTable = new VarTable();
-            m5.setVarTable(varTable);
-            Morph5.start_return m5Ret = m5.start();
-            tree = (CommonTree) m5Ret.getTree();
-            
+            do {
+                nodes = new CommonTreeNodeStream(tree);
+                m5 = new Morph5(nodes);
+                m5.setVarTable(varTable);
+                Morph5.start_return m5Ret = m5.start();
+                tree = (CommonTree) m5Ret.getTree();
+            } while (m5.getCount() > 0);
+
             nodes = new CommonTreeNodeStream(tree);
             Morph6 m6 = new Morph6(nodes);
             m6.setVarTable(varTable);
