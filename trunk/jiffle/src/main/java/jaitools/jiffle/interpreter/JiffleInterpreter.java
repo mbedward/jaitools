@@ -20,7 +20,7 @@
 
 package jaitools.jiffle.interpreter;
 
-import jaitools.jiffle.collection.CollectionFactory;
+import jaitools.jiffle.util.CollectionFactory;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;

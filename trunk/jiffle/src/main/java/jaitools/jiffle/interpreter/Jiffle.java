@@ -19,7 +19,7 @@
  */
 package jaitools.jiffle.interpreter;
 
-import jaitools.jiffle.collection.CollectionFactory;
+import jaitools.jiffle.util.CollectionFactory;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
 import jaitools.jiffle.parser.MakeRuntime;

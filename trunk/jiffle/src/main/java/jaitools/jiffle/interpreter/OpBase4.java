@@ -18,26 +18,23 @@
  * 
  */
 
-package jaitools.jiffle.parser;
+package jaitools.jiffle.interpreter;
 
 /**
- * Double value comparisons within a set tolerance
+ * Class to invoke 4 argument functions
  * 
  * @author Michael Bedward
  */
-public class DoubleComparison {
+public abstract class OpBase4 implements OpBase {
 
-    private static final double TOL = 1.0e-8;
-
-    public static boolean dzero(double x) {
-        return Math.abs(x) < TOL;
+    /**
+     * Invokes a four argument function and returns
+     * a double value
+     */
+    public abstract double call(double x1, double x2, double x3, double x4);
+    
+    public int getNumArgs() {
+        return 3;
     }
 
-    public static int dcomp(double x1, double x2) {
-        if (dzero(x1 - x2)) {
-            return 0;
-        } else {
-            return Double.compare(x1, x2);
-        }
-    }
 }
