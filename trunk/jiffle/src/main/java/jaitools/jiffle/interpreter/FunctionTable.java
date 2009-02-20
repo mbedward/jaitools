@@ -133,6 +133,20 @@ public class FunctionTable {
                     }
                 });
 
+        lookup.put("isinf_1",
+                new OpBase1() {
+                    public double call(double x) {
+                        return Double.isInfinite(x) ? 1d : 0d;
+                    }
+                });
+
+        lookup.put("isnan_1",
+                new OpBase1() {
+                    public double call(double x) {
+                        return Double.isNaN(x) ? 1d : 0d;
+                    }
+                });
+
         lookup.put("log_1",
                 new OpBase1() {
                     public double call(double x) {
@@ -158,13 +172,6 @@ public class FunctionTable {
                 new OpBase1() {
                     public double call(double x) {
                         return rr.nextDouble() * x;
-                    }
-                });
-
-        lookup.put("randInt_1",
-                new OpBase1() {
-                    public double call(double x) {
-                        return rr.nextInt((int) x);
                     }
                 });
 
