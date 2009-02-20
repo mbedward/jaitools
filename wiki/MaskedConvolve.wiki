@@ -1,5 +1,48 @@
 #summary Convolve a subset of pixels in an image
 
-Docs coming real soon now...
+=!MaskedConvolve operator=
 
-Meanwhile [http://jai-tools.googlecode.com/svn/trunk/maskedconvolve/src/main/java/jaitools/media/jai/maskedconvolve/ browse the source code]
+==Description==
+
+Performs kernel-based convolution like JAI's Convolve operator, but adds control over which source image pixels are included in the convolution. This is defined in an 
+[http://java.sun.com/products/java-media/jai/forDevelopers/jai-apidocs/javax/media/jai/ROI.html ROI] object that the user provides with the source image.
+
+Two control options are provided: 
+
+    # *source masking* in which the ROI is used to constrain which source image pixels contribute to the kernel calculation
+
+    # *destination masking* in which the ROI constrains the positioning of the convolution kernel such that a destination image pixel will be given a value of 0 if the corresponding source pixel is not contained in the ROI. 
+
+The two options may be used together. If neither masking option is required it is preferable to use the standard JAI Convolve operator for faster processing.
+
+==Example of use==
+{{{
+RenderedImage img = ...
+
+// a kernel to calculate the sum of values
+// in a (roughly) circular neighbourhood with
+// 2 pixel radius
+float[] kernelData = new float[]{
+     0, 0, 1, 0, 0,
+     0, 1, 1, 1, 0,
+     1, 1, 1, 1, 1,
+     0, 1, 1, 1, 0,
+     0, 0, 1, 0, 0,
+};
+       
+KernelJAI kernel = new KernelJAI(5, 5, kernelData);
+ROI roi = new ROI(img, thresholdValue);
+
+ParameterBlockJAI pb = new ParameterBlockJAI("maskedconvolve");
+pb.setSource("source0", op0);
+pb.setParameter("kernel", kernel);
+pb.setParameter("roi", roi);
+
+// no need to set masksource and maskdest params if we want to
+// use their default values (TRUE)
+
+BorderExtender extender = BorderExtender.createInstance(BorderExtender.BORDER_ZERO);
+RenderingHints hints = new RenderingHints(JAI.KEY_BORDER_EXTENDER, extender);
+
+RenderedOp dest = JAI.create("maskedconvolve", pb, hints);
+}}}
