@@ -1,4 +1,9 @@
 #summary Side-bar items
 
-[http://code.google.com/p/jai-tools/ jai-tools]
+  * [http://code.google.com/p/jai-tools/ jai-tools]
 
+  * Operators
+    * MaskedConvolve
+
+  * Other
+    * [Jiffle Jiffle]
