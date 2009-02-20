@@ -8,12 +8,4 @@
   * [Jiffle Jiffle]
    * [JiffleLanguage Description of the language]
    *
-  *
-
-
- * JAI
-  * [https://jai.dev.java.net/ Project]
-  * [http://java.sun.com/products/java-media/jai/forDevelopers/jai1_0_1guide-unc/JAITOC.fm.html Programming guide]
-  * [http://java.sun.com/products/java-media/jai/forDevelopers/jai-apidocs/index.html API]
-  *
- *
+ * [JAILinks JAI links]
