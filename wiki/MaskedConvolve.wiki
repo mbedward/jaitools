@@ -1,0 +1,5 @@
+#summary Convolve a subset of pixels in an image
+
+Docs coming real soon now...
+
+Meanwhile [http://jai-tools.googlecode.com//svn/trunk/maskedconvolve browse the source code]
