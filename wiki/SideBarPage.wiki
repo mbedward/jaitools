@@ -3,7 +3,7 @@
   * [http://code.google.com/p/jai-tools/ jai-tools]
 
   * Operators
-    * MaskedConvolve
+    * [MaskedConvolve]
 
   * Other
     * [Jiffle Jiffle]
