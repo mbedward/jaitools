@@ -288,6 +288,8 @@ public class JiffleRunner {
                 if (firstImg) {
                     vars.set("_x", h.x);
                     vars.set("_y", h.y);
+                    vars.set("_row", h.x + 1);
+                    vars.set("_col", h.y + 1);
                     firstImg = false;
                 }
             }
