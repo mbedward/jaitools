@@ -6,4 +6,6 @@
     * 
   * Other
     * [Jiffle Jiffle]
+      * [JiffleLanguage Description of the language]
+      *
     *  
