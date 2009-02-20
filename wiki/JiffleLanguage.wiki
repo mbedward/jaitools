@@ -67,9 +67,10 @@ z = (x > 2.5 ? 1 : 0);
 === General functions ===
 
 || *function* || *description*  || 
-||`log(x)`    || natural log    ||
-||`sqrt(x)`   || square root    ||
 ||`abs(x)`    || absolute value ||
+||`log(x)`    || natural log    ||
+||`log(x,b)`    || log of x to base b ||
+||`sqrt(x)`   || square root    ||
 ||`sin(x)`    || sine of angle (radians) ||
 ||`cos(x)`    || cosine of angle (radians) ||
 ||`tan(x)`    || tangent of angle (radians) ||
@@ -80,15 +81,23 @@ z = (x > 2.5 ? 1 : 0);
 ||`degToRad(x)`|| convert degrees to radians ||
 ||`rand(x)`   || random value in the range [0,x) ||
 ||`randInt(x)`|| random integer value in range [0,x)||
+||`if(x)` || returns 1 if x != 0; otherwise 0 ||
+||`if(x,a)` || returns a if x != 0; otherwise 0 ||
+||`if(x,a,b)` || returns a if x != 0; otherwise b ||
+||`if(x,a,b,c)` || returns a if x>0; b if x==0; otherwise c ||
+|| `isnan(x)` || compares x to Double.NaN (Java) ||
+|| `isinf(x)` || compares x to Double.Inf (Java) ||
 
-All of the above functions take a double argument and return a double value (`randInt`
-returns a floored double).
+All of the above functions take double arguments and return a double value (`randInt`
+returns a floored double, logical functions return 1.0d for true and 0.0d for false).
 
 === Image functions ===
 
 || *function* || *description*  || 
 || x()        || pixel x pos from 0 to image width - 1 ||
 || y()        || pixel y pos from 0 to image height - 1 ||
+|| row()      || pixel row from 1 to image height ||
+|| col()      || pixel col from 1 to image width  ||
 || width()    || output image width ||
 || height()   || output image height ||
 
