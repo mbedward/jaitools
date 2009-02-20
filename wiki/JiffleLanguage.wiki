@@ -87,7 +87,9 @@ _See also the if(...) functions below_
 ||`if(x,a,b)` || returns a if x != 0; otherwise b ||
 ||`if(x,a,b,c)` || returns a if x>0; b if x==0; otherwise c ||
 || `isnan(x)` || compares x to Double.NaN (Java) ||
+|| `isnull(x)` || same as isnan(x) ||
 || `isinf(x)` || compares x to Double.Inf (Java) ||
+|| `null()` || returns Double.NaN ||
 
 All of the above functions take double arguments and return a double value (`randInt`
 returns a floored double, logical functions return 1.0d for true and 0.0d for false).
@@ -116,6 +118,8 @@ The logical constants true and false are also defined and are *not* case sensiti
 // these are equivalent
 lo = true; up = TRUE; silly = TruE;
 }}}
+
+NULL is also defined as a constant and is not case sensitive.
 
 == Comments ==
 
