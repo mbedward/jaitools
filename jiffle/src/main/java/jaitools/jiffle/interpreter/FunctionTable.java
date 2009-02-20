@@ -147,6 +147,13 @@ public class FunctionTable {
                     }
                 });
 
+        lookup.put("isnull_1",
+                new OpBase1() {
+                    public double call(double x) {
+                        return Double.isNaN(x) ? 1d : 0d;
+                    }
+                });
+
         lookup.put("log_1",
                 new OpBase1() {
                     public double call(double x) {
@@ -158,6 +165,13 @@ public class FunctionTable {
                 new OpBase2() {
                     public double call(double x, double y) {
                         return Math.log(x) / Math.log(y);
+                    }
+                });
+                
+        lookup.put("null_0",
+                new OpBase0() {
+                    public double call() {
+                        return Double.NaN;
                     }
                 });
 
@@ -194,6 +208,13 @@ public class FunctionTable {
                     public double call(double x, double fac) {
                         int ifac = (int)(fac + 0.5);
                         return Math.round(x / ifac) * ifac;
+                    }
+                });
+
+        lookup.put("sin_1",
+                new OpBase1() {
+                    public double call(double x) {
+                        return Math.sin(x);
                     }
                 });
 

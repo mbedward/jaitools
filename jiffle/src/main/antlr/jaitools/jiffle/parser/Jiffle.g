@@ -122,6 +122,7 @@ constant	: INT_LITERAL
 		| FLOAT_LITERAL
                 | TRUE
                 | FALSE
+                | NULL
 		;
 
 incdec_op       : INCR
@@ -157,13 +158,16 @@ LINE_COMMENT    : '//' (~('\n' | '\r'))* NEWLINE { $channel = HIDDEN; }
                 ;
                 
 
-/* true and false keywords are defined using case-insensitive fragments
+/* these named constants are defined using case-insensitive fragments
  * (see further down)
  */
 TRUE            : T R U E
                 ;
                 
 FALSE           : F A L S E
+                ;
+                
+NULL            : N U L L
                 ;
 
 /* Operators sorted and grouped by precedence order */

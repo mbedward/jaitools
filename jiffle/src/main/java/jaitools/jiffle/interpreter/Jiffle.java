@@ -19,6 +19,7 @@
  */
 package jaitools.jiffle.interpreter;
 
+import jaitools.jiffle.parser.FunctionValidator;
 import jaitools.jiffle.util.CollectionFactory;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
@@ -55,6 +56,7 @@ public class Jiffle {
     private Set<String> outputImageVars;
     
     private Metadata metadata;
+    private Map<String, ErrorCode> errors;
     
     /**
      * Constructor
@@ -127,9 +129,31 @@ public class Jiffle {
 
         if (script != null && script.length() > 0) {
             buildAST();
-            classifyVars();
+            
+            if (!checkFunctionCalls()) {
+                throw new JiffleCompilationException(getErrorString());
+            }
+            
+            if (!classifyVars()) {
+                throw new JiffleCompilationException(getErrorString());
+            }
+            
             runtimeAST = optimizeTree();
         }
+    }
+    
+    /**
+     * Write error messages to a string
+     */
+    private String getErrorString() {
+        StringBuilder sb = new StringBuilder();
+        for (Entry<String, ErrorCode> e : errors.entrySet()) {
+            sb.append(e.getValue().toString());
+            sb.append(": ");
+            sb.append(e.getKey());
+            sb.append("\n");
+        }
+        return sb.toString();
     }
 
     /**
@@ -156,6 +180,31 @@ public class Jiffle {
     }
 
     /**
+     * Examine function calls in the AST built by {@link #buildAST()} and
+     * check that we recognize them all
+     */
+    private boolean checkFunctionCalls() throws JiffleCompilationException {
+        FunctionValidator validator = null;
+        try {
+            CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
+            nodes.setTokenStream(tokens);
+            validator = new FunctionValidator(nodes);
+            validator.start();
+
+            if (validator.hasError()) {
+                errors = validator.getErrors();
+                return false;
+            }
+            
+        } catch (RecognitionException ex) {
+            // anything at this stage is probably programmer error
+            throw new RuntimeException(ex);
+        }
+        
+        return true;
+    }
+
+    /**
      * Examine variables in the AST built by {@link #buildAST()} and
      * do the following:
      * <ul>
@@ -164,7 +213,7 @@ public class Jiffle {
      * (all being well, these will later be tagged as input image vars
      * by {@link #validateImageVars() })
      */
-    private void classifyVars() throws JiffleCompilationException {
+    private boolean classifyVars() throws JiffleCompilationException {
         VarClassifier classifier = null;
         try {
             CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
@@ -172,6 +221,11 @@ public class Jiffle {
             classifier = new VarClassifier(nodes);
             classifier.setImageVars(imageParams.keySet());
             classifier.start();
+            
+            if (classifier.hasError()) {
+                errors = classifier.getErrors();
+                return false;
+            }
 
         } catch (RecognitionException ex) {
             // anything at this stage is probably programmer error
@@ -183,6 +237,8 @@ public class Jiffle {
          */
         metadata = new Metadata(imageParams);
         metadata.setVarData(classifier);
+        
+        return true;
     }
 
     private CommonTree optimizeTree() {
@@ -230,30 +286,4 @@ public class Jiffle {
         return tree;
     }
     
-    /**
-     * 
-     * @param tree the AST prepared by tree_morph1()
-     * @return the optimized AST
-     */
-    
-    /*
-    private CommonTree tree_morph2(CommonTree tree) {
-        
-        Morph2 morph;
-        try {
-            CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
-            nodes.setTokenStream(tokens);
-            morph = new Morph2(nodes);
-            morph.setPrint(true);
-            Morph2.start_return retVal = morph.start();
-            
-            CommonTree simpleTree = (CommonTree) retVal.getTree();
-            System.out.println(simpleTree.toStringTree());
-            return simpleTree;
-            
-        } catch (RecognitionException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-     */
 }

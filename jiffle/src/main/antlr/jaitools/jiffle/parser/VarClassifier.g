@@ -42,14 +42,13 @@ options {
 @header {
 package jaitools.jiffle.parser;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import jaitools.jiffle.interpreter.ErrorCode;
 import jaitools.jiffle.interpreter.JiffleRunner;
 import jaitools.jiffle.interpreter.VarTable;
+import jaitools.jiffle.util.CollectionFactory;
 }
 
 @members {
@@ -68,7 +67,7 @@ private boolean isPositionalFunc(String funcName) {
  * Positional variables - those that depend directly or indirectly
  * on image position when the jiffle is being run
  */
-private Set<String> positionalVars = new HashSet<String>();
+private Set<String> positionalVars = CollectionFactory.newSet();
 
 public Set<String> getPositionalVars() {
     return positionalVars;
@@ -79,8 +78,8 @@ public Set<String> getPositionalVars() {
  * Purely local variables - those that depend only on
  * local numeric values and/or named constants
  */
-private Set<String> localVars = new HashSet<String>();
-private Set<String> nonLocalVars = new HashSet<String>();
+private Set<String> localVars = CollectionFactory.newSet();
+private Set<String> nonLocalVars = CollectionFactory.newSet();
 
 public Set<String> getLocalVars() {
     return localVars;
@@ -93,13 +92,13 @@ public Set<String> getLocalVars() {
  * Use of an unsassigned variable is not necessarily an error
  * as it might (should) be an input image variable.
  */
-private Set<String> userVars = new HashSet<String>();
+private Set<String> userVars = CollectionFactory.newSet();
 
 public Set<String> getUserVars() {
     return userVars;
 }
 
-private Set<String> unassignedVars = new HashSet<String>();
+private Set<String> unassignedVars = CollectionFactory.newSet();
 
 public Set<String> getUnassignedVars() {
     return unassignedVars;
@@ -116,12 +115,12 @@ public boolean hasUnassignedVar() {
 private Set<String> imageVars;
 
 public void setImageVars(Collection<String> varNames) {
-    imageVars = new HashSet<String>();
+    imageVars = CollectionFactory.newSet();
     imageVars.addAll(varNames);
 }
 
-private Set<String> inImageVars = new HashSet<String>();
-private Set<String> outImageVars = new HashSet<String>();
+private Set<String> inImageVars = CollectionFactory.newSet();
+private Set<String> outImageVars = CollectionFactory.newSet();
 
 public Set<String> getOutputImageVars() {
     return outImageVars;
@@ -129,7 +128,7 @@ public Set<String> getOutputImageVars() {
 
 
 /* Table of var name : error code */
-private Map<String, ErrorCode> errorTable = new HashMap<String, ErrorCode>();
+private Map<String, ErrorCode> errorTable = CollectionFactory.newMap();
 
 public Map<String, ErrorCode> getErrors() {
     return errorTable;
@@ -276,10 +275,14 @@ expr returns [boolean isLocal, boolean isPositional]
                 | ^(PREFIX unary_op expr)
                 | INT_LITERAL 
                 | FLOAT_LITERAL 
-                | TRUE
-                | FALSE
+                | constant
                 ;
-                
+
+constant        : TRUE
+                | FALSE
+                | NULL
+                ;
+
 expr_op         : POW
                 | TIMES 
                 | DIV 
