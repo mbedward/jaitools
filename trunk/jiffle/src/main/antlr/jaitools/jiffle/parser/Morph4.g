@@ -71,6 +71,7 @@ expr            : ^(ASSIGN assign_op assignable_var expr)
                 | FLOAT_LITERAL -> FIXED_VALUE<FixedValueNode>[$FLOAT_LITERAL.text]
                 | TRUE -> FIXED_VALUE<FixedValueNode>[1.0d]
                 | FALSE -> FIXED_VALUE<FixedValueNode>[0.0d]
+                | NULL -> FIXED_VALUE<FixedValueNode>[Double.NaN]
                 ;
                 
 assignable_var  : POS_VAR

@@ -16,7 +16,9 @@ public enum ErrorCode {
     
     IMAGE_UNUSED(ErrorLevel.WARNING, "Image var defined but missing from script"),
     
-    VAR_UNDEFINED(ErrorLevel.ERROR, "Variable used before being assigned a value");
+    VAR_UNDEFINED(ErrorLevel.ERROR, "Variable used before being assigned a value"),
+    
+    FUNC_UNDEFINED(ErrorLevel.ERROR, "Undefined function");
     
     private ErrorLevel level;
     private String desc;

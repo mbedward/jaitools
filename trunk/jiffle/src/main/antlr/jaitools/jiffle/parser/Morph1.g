@@ -129,10 +129,9 @@ expr            : ^(ASSIGN assign_op var expr)
                 | ^(PREFIX unary_op expr)
                 | ^(expr_op expr expr)
                 | var
+                | constant
                 | INT_LITERAL 
                 | FLOAT_LITERAL 
-                | TRUE
-                | FALSE
                 ;
                 
 var             :ID
@@ -143,6 +142,11 @@ var             :ID
                   -> NON_LOCAL_VAR[$ID.text]
                 ;
                 
+constant        : TRUE
+                | FALSE
+                | NULL
+                ;
+
 expr_op         : POW
                 | TIMES 
                 | DIV 
