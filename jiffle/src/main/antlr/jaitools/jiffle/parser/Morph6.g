@@ -36,11 +36,11 @@ options {
 @header {
 package jaitools.jiffle.parser;
 
-import jaitools.jiffle.collection.CollectionFactory;
 import jaitools.jiffle.interpreter.FunctionTable;
 import jaitools.jiffle.interpreter.VarTable;
+import jaitools.jiffle.util.CollectionFactory;
 
-import static jaitools.jiffle.parser.DoubleComparison.*;
+import static jaitools.jiffle.util.DoubleComparison.*;
 }
 
 @members {

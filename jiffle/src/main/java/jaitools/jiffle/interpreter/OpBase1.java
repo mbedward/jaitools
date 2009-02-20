@@ -29,9 +29,8 @@ package jaitools.jiffle.interpreter;
 public abstract class OpBase1 implements OpBase {
 
     /**
-     * Invokes the single argument function
-     * @param x arg value as double
-     * @return result as double
+     * Invokes the single argument function and returns
+     * a double value
      */
     public abstract double call(double x);
     

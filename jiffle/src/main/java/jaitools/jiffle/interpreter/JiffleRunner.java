@@ -4,7 +4,7 @@
  */
 package jaitools.jiffle.interpreter;
 
-import jaitools.jiffle.collection.CollectionFactory;
+import jaitools.jiffle.util.CollectionFactory;
 import jaitools.jiffle.parser.ImageCalculator;
 import java.awt.Rectangle;
 import java.util.List;
