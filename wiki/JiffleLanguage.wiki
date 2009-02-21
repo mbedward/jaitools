@@ -86,6 +86,11 @@ _See also the if(...) functions below_
 ||`if(x,a)` || returns a if x != 0; otherwise 0 ||
 ||`if(x,a,b)` || returns a if x != 0; otherwise b ||
 ||`if(x,a,b,c)` || returns a if x>0; b if x==0; otherwise c ||
+|| `min(x1,x2...xn)` || min of values ||
+|| `max(x1, x2...xn)` || max of values ||
+|| `median(x1, x2...xn)` || median of values ||
+|| `mode(x1, x2...xn)` || mode of values ||
+|| `range(x1, x2...xn)` || range (max-min) of values ||
 || `isnan(x)` || compares x to Double.NaN (Java) ||
 || `isnull(x)` || same as isnan(x) ||
 || `isinf(x)` || compares x to Double.Inf (Java) ||
