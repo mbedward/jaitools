@@ -100,6 +100,7 @@ public class SummaryStats {
             } else if (even && k == midLo) {
                 result += val;
             }
+            k++ ;
         }
         
         return 0;  // to suppress compiler warning
@@ -193,8 +194,8 @@ public class SummaryStats {
         
         SortedSet<Double> set = CollectionFactory.newTreeSet();
         set.addAll(Arrays.asList(values));
+        set.remove(Double.NaN);
         return set.last() - set.first();
     }
 
-    
 }
