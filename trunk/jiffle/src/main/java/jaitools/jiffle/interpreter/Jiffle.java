@@ -68,7 +68,8 @@ public class Jiffle {
         this.imageParams = CollectionFactory.newMap();
         this.imageParams.putAll(imgParams);
 
-        this.script = new String(script);
+        // add extra new line just in case last statement hits EOF
+        this.script = new String(script + "\n");
         compile();
     }
 
