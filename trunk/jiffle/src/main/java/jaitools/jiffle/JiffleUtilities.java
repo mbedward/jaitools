@@ -27,7 +27,7 @@ import javax.media.jai.TiledImage;
 
 /**
  *
- * @author Michael Bedward and Murray Ellis
+ * @author Michael Bedward
  */
 public class JiffleUtilities {
 

@@ -27,7 +27,7 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
 
 /**
  *
- * @author Michael Bedward and Murray Ellis
+ * @author Michael Bedward
  */
 public abstract class TreeWalkerTestBase {
     
