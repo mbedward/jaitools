@@ -21,17 +21,17 @@
 package jaitools.jiffle.interpreter;
 
 /**
- * Class to invoke 3 argument functions
+ * Class to invoke 4 argument functions
  * 
  * @author Michael Bedward
  */
-public abstract class OpBase3 implements OpBase {
+public abstract class Op4Arg implements OpBase {
 
     /**
-     * Invokes a three argument function and returns
+     * Invokes a four argument function and returns
      * a double value
      */
-    public abstract double call(double x1, double x2, double x3);
+    public abstract double call(double x1, double x2, double x3, double x4);
     
     public int getNumArgs() {
         return 3;
