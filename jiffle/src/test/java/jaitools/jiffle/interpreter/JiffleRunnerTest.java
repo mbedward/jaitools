@@ -46,17 +46,22 @@ public class JiffleRunnerTest {
     @Test
     public void testRun() throws Exception {
         System.out.println("run");
-        TiledImage inImg = JiffleUtilities.createDoubleImage(100, 100, new double[]{10d});
-        TiledImage outImg = JiffleUtilities.createDoubleImage();
+        TiledImage inImg = JiffleUtilities.createDoubleImage(10, 10, new double[]{10d});
+        TiledImage outImg = JiffleUtilities.createDoubleImage(10, 10, 1);
         
         Map<String, TiledImage> imgParams = new HashMap<String, TiledImage>();
         imgParams.put("out", outImg);
         imgParams.put("in", inImg);
         Jiffle jif = new Jiffle("out = in / 2.0;\n", imgParams);
+        boolean b = false;
         if (jif.isCompiled()) {
             JiffleRunner runner = new JiffleRunner(jif);
-            runner.run();
+            b = runner.run();
         }
+        
+        assertTrue(b);
+        
+        assertEquals(outImg.getSampleDouble(5, 5, 0), 5.0d);
     }
 
 }

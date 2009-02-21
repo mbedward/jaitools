@@ -39,7 +39,7 @@ public class JiffleUtilities {
      * @param numBands number of image bands
      * @return a new TiledImage object
      */
-    static TiledImage createDoubleImage(int width, int height, int numBands) {
+    public static TiledImage createDoubleImage(int width, int height, int numBands) {
         return createDoubleImage(width, height, new double[] {0});
     }
 
