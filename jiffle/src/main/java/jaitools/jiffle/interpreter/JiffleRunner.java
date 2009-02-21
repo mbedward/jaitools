@@ -207,7 +207,7 @@ public class JiffleRunner {
      * 
      * @return success (true) or failure (false)
      */
-    boolean run() throws JiffleInterpreterException {
+    public boolean run() throws JiffleInterpreterException {
         if (finished) {
             throw new JiffleInterpreterException("JiffleRunner.run() can only be called once");
         }

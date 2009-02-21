@@ -22,11 +22,10 @@ package jaitools.jiffle.parser;
 
 import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.tree.CommonTree;
-import org.antlr.runtime.tree.Tree;
 
 /**
  *
- * @author Michael Bedward and Murray Ellis
+ * @author Michael Bedward
  */
 public class FixedValueNode extends CommonTree {
     private double value;

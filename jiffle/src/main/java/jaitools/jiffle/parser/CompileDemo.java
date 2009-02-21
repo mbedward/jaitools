@@ -29,7 +29,7 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
 /**
  * 2todo Turn this into one or more unit tests
  * 
- * @author Michael Bedward and Murray Ellis
+ * @author Michael Bedward
  */
 public class CompileDemo extends DemoBase {
 
