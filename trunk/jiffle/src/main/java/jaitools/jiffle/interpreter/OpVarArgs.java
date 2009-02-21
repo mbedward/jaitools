@@ -22,23 +22,24 @@ package jaitools.jiffle.interpreter;
 
 
 /**
- * Class to invoke no-argument functions
+ * Class to invoke single argument functions
  * 
  * @author Michael Bedward
  */
-public abstract class OpBase0 implements OpBase {
+public abstract class OpVarArgs implements OpBase {
 
     /**
-     * Invokes the function
-     * @return result as double
+     * Invokes a variable argument function and returns
+     * a double value
      */
-    public abstract double call();
-
+    public abstract double call(Double ...args);
+    
     /**
      * Get the number of arguments
      */
     public int getNumArgs() {
-        return 0;
+        return OpBase.VARIABLE_ARGS;
     }
+    
 }
 

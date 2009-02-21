@@ -20,20 +20,25 @@
 
 package jaitools.jiffle.interpreter;
 
+
 /**
- * Empty interface to act as a container for functions
+ * Class to invoke no-argument functions
+ * 
  * @author Michael Bedward
  */
-public interface OpBase {
-    
+public abstract class OpNoArg implements OpBase {
+
     /**
-     * Return value of getNumArgs method for classes that implement
-     * var args functions
+     * Invokes the function
+     * @return result as double
      */
-    public static int VARIABLE_ARGS = -1;
-    
+    public abstract double call();
+
     /**
      * Get the number of arguments
      */
-    public int getNumArgs();
+    public int getNumArgs() {
+        return 0;
+    }
 }
+
