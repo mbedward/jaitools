@@ -84,23 +84,14 @@ public class Jiffle {
     }
 
     /**
-     * Associate a variable name with a rendered image
-     * @param varName
-     * @param image
-     */
-    public void setImageParam(String varName, TiledImage image) {
-        imageParams.put(varName, image);
-    }
-
-    /**
-     * Associate a group of variable names with rendered
-     * images
+     * Set the image parameters to the given Map. Previous
+     * parameters are replaced.
+     * 
      * @param map variable names and their corresponding images
      */
     public void setImageParams(Map<String, TiledImage> map) {
-        for (Entry<String, TiledImage> e : map.entrySet()) {
-            setImageParam(e.getKey(), e.getValue());
-        }
+        imageParams = CollectionFactory.newMap();
+        imageParams.putAll(map);
     }
 
     /**
