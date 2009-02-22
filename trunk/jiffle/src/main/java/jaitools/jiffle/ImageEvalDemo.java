@@ -29,10 +29,7 @@ import jaitools.jiffle.interpreter.JiffleEventListener;
 import jaitools.jiffle.interpreter.JiffleInterpreterException;
 import java.awt.BorderLayout;
 import java.awt.image.RenderedImage;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -104,21 +101,14 @@ public class ImageEvalDemo {
 
         URL url = getClass().getResource("/example/ripple.jfl");
         File f = new File(url.toURI());
-        BufferedReader reader = new BufferedReader(new FileReader(f));
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            sb.append(line);
-        }
-        String prog = sb.toString();
 
-        TiledImage tImg = JiffleUtilities.createDoubleImage(imgWidth, imgHeight, 1);
+        TiledImage tImg = JiffleUtilities.createDoubleImage(imgWidth, imgHeight);
 
         Map<String, TiledImage> imgParams = new HashMap<String, TiledImage>();
         imgParams.put("result", tImg);
 
         try {
-            Jiffle j = new Jiffle(prog, imgParams);
+            Jiffle j = new Jiffle(f, imgParams);
 
             if (j.isCompiled()) {
                 interp.submit(j);
