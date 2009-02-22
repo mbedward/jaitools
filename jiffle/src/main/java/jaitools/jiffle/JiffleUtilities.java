@@ -26,21 +26,39 @@ import javax.media.jai.RenderedOp;
 import javax.media.jai.TiledImage;
 
 /**
- *
+ * Static helper functions for common image tasks.
+ * 
  * @author Michael Bedward
  */
 public class JiffleUtilities {
+    
+    /**
+     * Creates a new TiledImage object with a single band filled with zero
+     * values
+     * @param width image width in pixels
+     * @param height image height in pixels
+     * @return a new TiledImage object
+     */
+    public static TiledImage createDoubleImage(int width, int height) {
+        return createDoubleImage(width, height, new double[] {0});
+    }
 
     /**
      * Creates a new TiledImage object with one or more bands filled with zero
      * values
      * @param width image width in pixels
      * @param height image height in pixels
-     * @param numBands number of image bands
+     * @param numBands number of image bands (must be >= 1)
      * @return a new TiledImage object
      */
     public static TiledImage createDoubleImage(int width, int height, int numBands) {
-        return createDoubleImage(width, height, new double[] {0});
+        if (numBands < 1) {
+            throw new IllegalArgumentException("numBands must be at least 1");
+        }
+        
+        double[] bandValues = new double[numBands];
+        for (int i = 0; i < numBands; i++) { bandValues[i] = 0d; }
+        return createDoubleImage(width, height, bandValues);
     }
 
     
@@ -50,10 +68,13 @@ public class JiffleUtilities {
      * the input values array
      * @param width image width in pixels
      * @param height image height in pixels
-     * @param values array of double values 
+     * @param values array of double values (must contain at least one element)
      * @return a new TiledImage object
      */
     public static TiledImage createDoubleImage(int width, int height, double[] values) {
+        if (values == null || values.length < 1) {
+            throw new IllegalArgumentException("values array must contain at least 1 value");
+        }
         
         Double[] dvalues = new Double[values.length];
         for (int i = 0; i < values.length; i++) {
