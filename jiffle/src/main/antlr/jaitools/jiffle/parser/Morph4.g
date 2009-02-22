@@ -81,10 +81,14 @@ assignable_var  : POS_VAR
                 ;
                 
 non_assignable_var :
-                  IMAGE_VAR
+                  image_input
                 | IMAGE_POS_LOOKUP
                 | IMAGE_INFO_LOOKUP
                 | CONSTANT
+                ;
+                
+image_input     : IMAGE_VAR
+                | ^(NBR_REF IMAGE_VAR expr expr)
                 ;
 
 expr_list       : ^(EXPR_LIST expr*)

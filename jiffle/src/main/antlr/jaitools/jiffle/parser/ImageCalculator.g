@@ -113,9 +113,20 @@ expr returns [double value]
                 /* @todo check that the expr is boolean */
                 | ^(PREFIX NOT e1=expr) {$value = dzero(e1) ? 1 : 0;}
               
-                | VAR {$value = runner.getVar($VAR.text);}
-                | IMAGE_VAR {$value = runner.getImageValue($IMAGE_VAR.text);}
-                | FIXED_VALUE {$value = ((FixedValueNode)$FIXED_VALUE).getValue();}
+                | VAR 
+                  {$value = runner.getVar($VAR.text);}
+              
+                | IMAGE_VAR 
+                  {$value = runner.getImageValue($IMAGE_VAR.text);}
+              
+                | ^(NBR_REF IMAGE_VAR e1=expr e2=expr) 
+                  {
+                      // e1 is x offset, e2 is y offset
+                      $value = runner.getImageValue($IMAGE_VAR.text, e1, e2);
+                  }
+                  
+                | FIXED_VALUE 
+                  {$value = ((FixedValueNode)$FIXED_VALUE).getValue();}
                 ;
                 
                 

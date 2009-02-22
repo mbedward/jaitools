@@ -72,10 +72,15 @@ public class JiffleRunner {
         int y;
         int xmin;
         int xmax;
+        int ymin;
         int ymax;
         int band;
         boolean isOutput;
         RandomIter iter;
+
+        boolean contains(int x, int y) {
+            return (x >= xmin && x <= xmax && y >= ymin && y <= ymax);
+        }
     }
 
     private Map<String, ImageHandler> handlerTable;
@@ -138,6 +143,28 @@ public class JiffleRunner {
 
         return h.iter.getSampleDouble(h.x, h.y, h.band);
     }
+    
+    /**
+     * Get the value of a pixel in an image's neighbourhood.
+     * @param imgName the image variable name
+     * @param xOffset x offset (positive means right, negative left)
+     * @param yOffset y offset (positive means below, negative above)
+     * @return value as a double
+     */
+    public double getImageValue(String imgName, double xOffset, double yOffset) {
+        ImageHandler h = handlerTable.get(imgName);
+        if (h == null) {
+            throw new RuntimeException("unknown image var name: " + imgName);
+        }
+
+        int x = h.x + (int)(xOffset + 0.5);
+        int y = h.y + (int)(yOffset + 0.5);
+        if (!h.contains(x, y)) {
+            return Double.NaN;
+        }
+        
+        return h.iter.getSampleDouble(x, y, h.band);
+    }    
 
     /**
      * Get the current value of a variable
@@ -244,7 +271,7 @@ public class JiffleRunner {
             TiledImage img = e.getValue();
 
             h.x = h.xmin = img.getMinX();
-            h.y = img.getMinY();
+            h.y = h.ymin = img.getMinY();
             h.xmax = img.getMaxX() - 1;
             h.ymax = img.getMaxY() - 1;
             h.band = 0;

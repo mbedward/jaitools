@@ -94,6 +94,7 @@ assignable_var  : POS_VAR -> VAR[$POS_VAR.getToken()]
                 
 non_assignable_var 
                 : IMAGE_VAR
+                | ^(NBR_REF IMAGE_VAR expr expr)
                 | IMAGE_POS_LOOKUP -> VAR[$IMAGE_POS_LOOKUP.getToken()]
                 | IMAGE_INFO_LOOKUP -> VAR[$IMAGE_INFO_LOOKUP.getToken()]
                 ;
