@@ -174,10 +174,10 @@ private void postValidation() {
         }
     }
     
-    // check that any vars used in neighbour ref expressions are image
-    // vars
+    // check that any vars used in neighbour ref expressions are input
+    // image vars
     for (String varName : nbrRefVars) {
-        if (!imageVars.contains(varName)) {
+        if (!inImageVars.contains(varName)) {
             errorTable.put(varName, ErrorCode.INVALID_NBR_REF);
         }
     }
@@ -258,6 +258,9 @@ expr returns [boolean isLocal, boolean isPositional]
                 | ^(NBR_REF ID expr expr)
                   {
                       nbrRefVars.add($ID.text);
+                  
+                      // input image var so non-local expression
+                      $isLocal = false;
                   }
 
                 | ID
@@ -274,7 +277,7 @@ expr returns [boolean isLocal, boolean isPositional]
                           } else {
                               inImageVars.add($ID.text);
                           
-                              // input image var so this is a non-local assignment
+                              // input image var so non-local expression
                               $isLocal = false;
                           }
                           

@@ -98,7 +98,6 @@ expr returns [Double value]
                   -> ^(ASSIGN assign_op assignable_var expr)
                   
                 | ^(FUNC_CALL ID expr_list)
-                | ^(NBR_REF IMAGE_VAR expr expr)
                 | ^(QUESTION expr expr expr)
                 
                 /* we evalute prefixed expressions here to catch
@@ -158,9 +157,13 @@ assignable_var returns [String varName, Double value]
                   }
                 ;
                 
-non_assignable_var : IMAGE_VAR
+non_assignable_var : image_input
                 | IMAGE_POS_LOOKUP
                 | IMAGE_INFO_LOOKUP
+                ;
+
+image_input     : IMAGE_VAR
+                | ^(NBR_REF IMAGE_VAR expr expr)
                 ;
 
 expr_list       : ^(EXPR_LIST expr*)
