@@ -98,6 +98,7 @@ expr returns [Double value]
                   -> ^(ASSIGN assign_op assignable_var expr)
                   
                 | ^(FUNC_CALL ID expr_list)
+                | ^(NBR_REF IMAGE_VAR expr expr)
                 | ^(QUESTION expr expr expr)
                 
                 /* we evalute prefixed expressions here to catch

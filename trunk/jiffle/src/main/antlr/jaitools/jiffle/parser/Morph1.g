@@ -125,6 +125,9 @@ expr            : ^(ASSIGN assign_op var expr)
                   -> {isInfoFunc($id.text)}? IMAGE_INFO_LOOKUP[getProxyVar($id.text)]
                   -> ^(FUNC_CALL ID expr_list)
                   
+                | ^(NBR_REF ID expr expr) 
+                  -> ^(NBR_REF IMAGE_VAR[$ID.text] expr expr)
+                  
                 | ^(QUESTION expr expr expr)
                 | ^(PREFIX unary_op expr)
                 | ^(expr_op expr expr)

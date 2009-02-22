@@ -252,6 +252,7 @@ sub_expr returns [boolean hasValue, Double value]
                       }
                   }
               
+                | ^(NBR_REF IMAGE_VAR expr expr)
                 | POS_VAR
                 | IMAGE_VAR
                 | NON_LOCAL_VAR

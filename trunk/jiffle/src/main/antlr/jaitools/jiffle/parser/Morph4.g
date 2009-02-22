@@ -23,6 +23,7 @@
   * Replaces INT_LITERAL AND FLOAT_LITERAL with FIXED_VALUE.
   * Replaces TRUE and FALSE tokens with 1.0 and 0.0 FIXED_VALUE nodes
   * respectively.
+  * Replaces NULL tokens with Double.NaN FIXED_VALUE nodes.
   *
   * @author Michael Bedward
   */
