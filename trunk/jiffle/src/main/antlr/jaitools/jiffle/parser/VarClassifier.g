@@ -126,6 +126,8 @@ public Set<String> getOutputImageVars() {
     return outImageVars;
 }
 
+private Set<String> nbrRefVars = CollectionFactory.newSet();
+
 
 /* Table of var name : error code */
 private Map<String, ErrorCode> errorTable = CollectionFactory.newMap();
@@ -134,8 +136,22 @@ public Map<String, ErrorCode> getErrors() {
     return errorTable;
 }
 
+/* Check for errors */
 public boolean hasError() {
-    return !errorTable.isEmpty();
+    for (ErrorCode code : errorTable.values()) {
+        if (code.isError()) return true;
+    }
+    
+    return false;
+}
+
+/* Check for warnings */
+public boolean hasWarning() {
+    for (ErrorCode code : errorTable.values()) {
+        if (!code.isError()) return true;
+    }
+    
+    return false;
 }
 
 /*
@@ -155,6 +171,14 @@ private void postValidation() {
     for (String varName : imageVars) {
         if (!inImageVars.contains(varName) && !outImageVars.contains(varName)) {
             errorTable.put(varName, ErrorCode.IMAGE_UNUSED);
+        }
+    }
+    
+    // check that any vars used in neighbour ref expressions are image
+    // vars
+    for (String varName : nbrRefVars) {
+        if (!imageVars.contains(varName)) {
+            errorTable.put(varName, ErrorCode.INVALID_NBR_REF);
         }
     }
 }
@@ -229,6 +253,11 @@ expr returns [boolean isLocal, boolean isPositional]
                       } else {
                           $isLocal = $expr_list.isLocal;
                       }
+                  }
+                  
+                | ^(NBR_REF ID expr expr)
+                  {
+                      nbrRefVars.add($ID.text);
                   }
 
                 | ID

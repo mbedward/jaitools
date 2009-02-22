@@ -32,6 +32,8 @@ public enum ErrorCode {
     
     IMAGE_UNUSED(ErrorLevel.WARNING, "Image var defined but missing from script"),
     
+    INVALID_NBR_REF(ErrorLevel.ERROR, "Neighbourhood reference for non-image variable"),
+    
     VAR_UNDEFINED(ErrorLevel.ERROR, "Variable used before being assigned a value"),
     
     FUNC_UNDEFINED(ErrorLevel.ERROR, "Undefined function");

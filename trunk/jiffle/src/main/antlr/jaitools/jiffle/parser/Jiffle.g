@@ -30,6 +30,7 @@ tokens {
     CAST;
     EXPR_LIST;
     FUNC_CALL;
+    NBR_REF;
     POSTFIX;
     PREFIX;
 }
@@ -65,6 +66,9 @@ expr		: assign_expr
 		;
                 
 func_call       : ID LPAR expr_list RPAR -> ^(FUNC_CALL ID expr_list)
+                ;
+                
+nbr_ref         : ID LSQUARE expr ',' expr RSQUARE -> ^(NBR_REF ID expr expr)
                 ;
 
 expr_list       : (expr (',' expr)* )? -> ^(EXPR_LIST expr*)
@@ -116,8 +120,9 @@ atom_expr	: ID
 		| constant
 		| LPAR! expr RPAR!
                 | func_call
+                | nbr_ref
 		;
-
+                
 constant	: INT_LITERAL
 		| FLOAT_LITERAL
                 | TRUE
@@ -211,6 +216,8 @@ EQ              : '='  ;
 /* General symbols and token rules */
 LPAR            : '(' ;
 RPAR            : ')' ;
+LSQUARE         : '[' ;
+RSQUARE         : ']' ;
 
 ID		: (Letter) (Letter | UNDERSCORE | Digit)*
 		;
