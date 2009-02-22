@@ -21,12 +21,10 @@ package jaitools.jiffle.interpreter;
 
 import jaitools.jiffle.util.CollectionFactory;
 import jaitools.jiffle.util.SummaryStats;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import java.util.SortedSet;
 import static jaitools.jiffle.util.DoubleComparison.*;
 
 /**
@@ -37,28 +35,6 @@ import static jaitools.jiffle.util.DoubleComparison.*;
  */
 public class FunctionTable {
 
-    /**
-     * Type of function
-     */
-    public enum Type {
-
-        /** 
-         * General function such as sqrt, rand
-         */
-        GENERAL,
-        /**
-         * Positional function such as x(), y()
-         */
-        POSITIONAL,
-        /**
-         * Image info functions such as width()
-         */
-        IMAGE_INFO,
-        /**
-         * User-defined function (not supported at present)
-         */
-        USER;
-    }
     private static Random rr = new Random();
     private static Map<String, OpBase> lookup = null;
     
@@ -278,19 +254,38 @@ public class FunctionTable {
     public FunctionTable() {
     }
 
-    public boolean isDefined(String name, int numArgs) {
+    /**
+     * Check if a function with a given number of arguments is defined.
+     * This checks both for functions with a fixed number of arguments
+     * and those with a variable number of arguments.
+     * 
+     * @param name the function name
+     * @param numArgs number of arguments
+     * @return true if the function is defined; false otherwise
+     */
+    public static boolean isDefined(String name, int numArgs) {
         OpBase op = getMethod(name, numArgs);
         return op != null;
     }
 
+    /**
+     * Invokes the named function, passing the list of arguments to it
+     * and returning the function's result.
+     * 
+     * @param name the function name
+     * @param args list of double arguments (may be empty or null)
+     * @return the result of the named function
+     */
     public double invoke(String name, List<Double> args) {
         OpBase op = getMethod(name, args.size());
         if (op == null) {
             throw new RuntimeException("unknown function: " + name + 
                     "with " + args.size() + " args");
         }
+        
+        int numArgs = (args == null ? 0 : args.size());
 
-        switch (args.size()) {
+        switch (numArgs) {
             case 0:
                 return ((OpNoArg) op).call();
 
@@ -312,7 +307,17 @@ public class FunctionTable {
         }
     }
     
-    private OpBase getMethod(String name, int numArgs) {
+    /**
+     * Get a function that matches the given name and number of
+     * arguments. A search is made for a matching variable argument
+     * function first and, if no match is found, the list of 
+     * fixed argument functions with numArgs arguments is searched.
+     * 
+     * @param name the function name
+     * @param numArgs the number of arguments
+     * @return an OpBase reference if a match is found, or null otherwise
+     */
+    private static OpBase getMethod(String name, int numArgs) {
         OpBase op;
         
         // first check for a match with var args functions
