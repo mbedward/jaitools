@@ -111,9 +111,36 @@ returns a floored double, logical functions return 1.0d for true and 0.0d for fa
 
 == Variables ==
 
-Local variables can be defined to store double values. Logical values are stored as 1 (true) or 0 (false).
-
 Variable names are case-sensitive and must start with a letter, optionally followed by letters, numbers and underscores.
+
+===Image variables===
+
+In a script, image objects are represented by variables. The user defines the mappings of variable name -> image object and provides these when compiling the script
+(see [http://jai-tools.googlecode.com/svn/trunk/jiffle/apidocs/index.html API docs] for the Jiffle class).
+
+A reference to an image variable in a script is read as _value of the current pixel in this image_
+
+{{{
+// Image vars on the RHS of an assignment are input images
+x = sqrt(myImg + 1.0);
+
+// An image var on the LHS of an assignment is an output (result) image
+gradientImg = 5.0 + 10.0 * (1.0 - x()/width())
+}}}
+
+You can also access the pixels in the neighbourhood of the current pixel (but only for input images). The syntax for this is
+{{{
+anImage[xOffset, yOffset]
+}}}
+
+{{{
+// look for pixels in an input image which have the same
+// value as left and right hand neighbours
+result = if (inImg == inImg[-1,0] == inImg[1,0], 1, 0)
+}}}
+
+===Non-image variables===
+Local variables can be defined to store double values. Logical values are stored as 1 (true) or 0 (false).
 
 Jiffle knows a small number of pre-defined constants: PI, E and NaN. 
 
