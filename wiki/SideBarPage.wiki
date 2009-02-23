@@ -6,6 +6,6 @@
   * 
  * Other
   * [Jiffle Jiffle]
-   * [JiffleLanguage Description of the language]
+   * [JiffleLanguage Language guide]
    * [http://jai-tools.googlecode.com/svn/trunk/jiffle/apidocs/index.html API]
  * [JAILinks JAI links]
