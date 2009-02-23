@@ -36,7 +36,40 @@ import javax.media.jai.iterator.WritableRandomIter;
 import org.antlr.runtime.RecognitionException;
 
 /**
+ * Executes a compiled script contained within a Jiffle object.
+ * You can run a script directly by creating an instance of this
+ * class and calling its run method as in the following example...
+ * <pre>{@code \u0000
+ *  TiledImage inImg = ...  // get an input image
+ * 
+ *  // create an image to write output values to
+ *  TiledImage outImg = JiffleUtilities.createDoubleImage(100, 100);
+ *       
+ *  // relate variable names in script to image objects
+ *  Map<String, TiledImage> imgParams = new HashMap<String, TiledImage>();
+ *  imgParams.put("result", outImg);
+ *  imgParams.put("img1", inImg);
  *
+ *  // get the script as a string and create a Jiffle object
+ *  String script = ... 
+ *  boolean success = false;
+ *  try {
+ *      Jiffle jif = new Jiffle(script, imgParams);
+ *      if (jif.isCompiled()) {
+ *         JiffleRunner runner = new JiffleRunner(jif);
+ *         success = runner.run();
+ *      }
+ *  } catch (JiffleCompilationException cex) {
+ *      cex.printStackTrace();
+ *  } catch (JiffleInterpeterException iex) {
+ *      iex.printStackTrace();
+ *  }
+ * 
+ *  if (success) {
+ *     // display result ...
+ *  }
+ * }</pre>
+ * 
  * @author Michael Bedward
  */
 public class JiffleRunner {
@@ -63,8 +96,6 @@ public class JiffleRunner {
         proxyTable.put("col", new ImageFnProxy(ImageFnProxy.Type.POS, "_col"));
     }
     
-    public static final String FIXED_EXPR_PREFIX = "@";
-
     private Jiffle jiffle;
     private Metadata metadata;
     private VarTable vars;
@@ -89,7 +120,15 @@ public class JiffleRunner {
     private Map<String, ImageHandler> handlerTable;
 
     private boolean finished;
-    
+
+    /**
+     * Query whether a function name refers to a positional
+     * function, ie. one which returns the current pixel location
+     * such as x().
+     * 
+     * @param name function name
+     * @return true if a positional function; false otherwise
+     */
     public static boolean isPositionalFunction(String name) {
         ImageFnProxy proxy = proxyTable.get(name);
         if (proxy != null  &&  proxy.type == ImageFnProxy.Type.POS) {
@@ -99,6 +138,13 @@ public class JiffleRunner {
         return false;
     }
     
+    /**
+     * Query if a function name refers to an image info function,
+     * e.g. width() which returns image width in pixels
+     * 
+     * @param name function name
+     * @return true if an image info function; false otherwise
+     */
     public static boolean isInfoFunction(String name) {
         ImageFnProxy proxy = proxyTable.get(name);
         if (proxy != null  &&  proxy.type == ImageFnProxy.Type.INFO) {
@@ -108,13 +154,26 @@ public class JiffleRunner {
         return false;
     }
     
+    /**
+     * A function used by the compiler and not intended for client code.
+     * Jiffle creates pfoxy variables for image position and info functions
+     * so that values can be looked up in a symbol table at runtime 
+     * rather than needing a function invocation.
+     * 
+     * @param funcName function name
+     * @return a proxy variable name
+     */
+    
     public static String getImageFunctionProxyVar(String funcName) {
         return proxyTable.get(funcName).varName;
     }
     
     /**
-     * Constructor.
-     * @param jiffle
+     * Constructor. Takes a compiled Jiffle and prepares the runtime
+     * system.
+     * 
+     * @param jiffle a compiled Jiffle
+     * @throws a JiffleInterpreterException if the Jiffle is not compiled
      */
     public JiffleRunner(Jiffle jiffle) throws JiffleInterpreterException {
         if (!jiffle.isCompiled()) {
@@ -235,9 +294,9 @@ public class JiffleRunner {
     }
     
     /**
-     * Package private method called by {@link JiffleRunnable}. Causes
-     * an {@link ImageCalculator} to be created to run the compiled
-     * jiffle program.
+     * Executes the script. This method can only be called once. If the
+     * script is to be re-run a new JiffleRunner instance should be
+     * created.
      * 
      * @return success (true) or failure (false)
      */
