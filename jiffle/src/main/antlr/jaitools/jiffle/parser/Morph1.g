@@ -56,9 +56,9 @@ tokens {
 @header {
 package jaitools.jiffle.parser;
 
-import jaitools.jiffle.interpreter.JiffleRunner;
-import jaitools.jiffle.interpreter.Metadata;
-import jaitools.jiffle.interpreter.VarTable;
+import jaitools.jiffle.runtime.JiffleRunner;
+import jaitools.jiffle.Metadata;
+import jaitools.jiffle.runtime.VarTable;
 }
 
 @members {

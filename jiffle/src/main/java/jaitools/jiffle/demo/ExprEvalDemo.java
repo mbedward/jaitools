@@ -18,7 +18,7 @@
  * 
  */
 
-package jaitools.jiffle;
+package jaitools.jiffle.demo;
 
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;

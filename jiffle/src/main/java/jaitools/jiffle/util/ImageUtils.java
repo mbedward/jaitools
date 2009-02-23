@@ -18,7 +18,7 @@
  * 
  */
 
-package jaitools.jiffle;
+package jaitools.jiffle.util;
 
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
@@ -30,7 +30,7 @@ import javax.media.jai.TiledImage;
  * 
  * @author Michael Bedward
  */
-public class JiffleUtilities {
+public class ImageUtils {
     
     /**
      * Creates a new TiledImage object with a single band filled with zero

@@ -44,7 +44,7 @@ options {
 @header {
 package jaitools.jiffle.parser;
 
-import jaitools.jiffle.interpreter.VarTable;
+import jaitools.jiffle.runtime.VarTable;
 
 import static jaitools.jiffle.util.DoubleComparison.*;
 }

@@ -36,9 +36,9 @@ options {
 package jaitools.jiffle.parser;
 
 import java.util.Map;
-import jaitools.jiffle.interpreter.ErrorCode;
-import jaitools.jiffle.interpreter.FunctionTable;
-import jaitools.jiffle.interpreter.JiffleRunner;
+import jaitools.jiffle.ErrorCode;
+import jaitools.jiffle.runtime.FunctionTable;
+import jaitools.jiffle.runtime.JiffleRunner;
 import jaitools.jiffle.util.CollectionFactory;
 }
 
@@ -106,6 +106,7 @@ expr            : ^(ASSIGN assign_op ID expr)
                 | ^(QUESTION expr expr expr)
                 | ^(PREFIX unary_op expr)
                 | ID
+                | ^(NBR_REF ID expr expr)
                 | INT_LITERAL 
                 | FLOAT_LITERAL 
                 | constant

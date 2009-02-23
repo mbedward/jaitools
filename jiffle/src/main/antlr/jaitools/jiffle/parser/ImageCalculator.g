@@ -36,7 +36,7 @@ options {
 package jaitools.jiffle.parser;
 
 import java.util.List;
-import jaitools.jiffle.interpreter.JiffleRunner;
+import jaitools.jiffle.runtime.JiffleRunner;
 import jaitools.jiffle.util.CollectionFactory;
 
 import static jaitools.jiffle.util.DoubleComparison.*;

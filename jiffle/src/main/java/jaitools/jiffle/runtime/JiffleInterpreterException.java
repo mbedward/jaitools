@@ -18,40 +18,16 @@
  * 
  */
 
-package jaitools.jiffle.util;
+package jaitools.jiffle.runtime;
 
 /**
- * Double value comparisons within a set tolerance
- * 
+ *
  * @author Michael Bedward
  */
-public class DoubleComparison {
+public class JiffleInterpreterException extends Exception {
 
-    private static final double TOL = 1.0e-8;
-
-    public static boolean dzero(double x) {
-        return Math.abs(x) < TOL;
-    }
-
-    public static int dcomp(double x1, double x2) {
-        if (dzero(x1 - x2)) {
-            return 0;
-        } else {
-            return Double.compare(x1, x2);
-        }
+    public JiffleInterpreterException(String msg) {
+        super(msg);
     }
     
-    public static int toInt(double x) {
-        int sign = dcomp(x, 0d);
-        if (sign > 0) { // +ve value
-            return (int)(x + 0.5);
-            
-        } else if (sign < 0) { // -ve value
-            return (int)(x - 0.5);
-            
-        } else {
-            return 0;
-        }
-        
-    }
 }

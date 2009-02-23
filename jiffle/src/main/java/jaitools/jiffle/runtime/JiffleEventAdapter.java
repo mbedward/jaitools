@@ -18,40 +18,20 @@
  * 
  */
 
-package jaitools.jiffle.util;
+package jaitools.jiffle.runtime;
 
 /**
- * Double value comparisons within a set tolerance
+ * Convenience class that can be sub-classed when not all methods
+ * declared in the JiffleEventListener interface are required
  * 
  * @author Michael Bedward
  */
-public class DoubleComparison {
+public class JiffleEventAdapter implements JiffleEventListener {
 
-    private static final double TOL = 1.0e-8;
-
-    public static boolean dzero(double x) {
-        return Math.abs(x) < TOL;
+    public void onCompletionEvent(JiffleCompletionEvent ev) {
     }
 
-    public static int dcomp(double x1, double x2) {
-        if (dzero(x1 - x2)) {
-            return 0;
-        } else {
-            return Double.compare(x1, x2);
-        }
+    public void onFailureEvent(JiffleFailureEvent ev) {
     }
-    
-    public static int toInt(double x) {
-        int sign = dcomp(x, 0d);
-        if (sign > 0) { // +ve value
-            return (int)(x + 0.5);
-            
-        } else if (sign < 0) { // -ve value
-            return (int)(x - 0.5);
-            
-        } else {
-            return 0;
-        }
-        
-    }
+
 }

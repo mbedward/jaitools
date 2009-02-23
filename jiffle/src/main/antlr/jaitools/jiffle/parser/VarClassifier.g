@@ -45,9 +45,9 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import jaitools.jiffle.interpreter.ErrorCode;
-import jaitools.jiffle.interpreter.JiffleRunner;
-import jaitools.jiffle.interpreter.VarTable;
+import jaitools.jiffle.ErrorCode;
+import jaitools.jiffle.runtime.JiffleRunner;
+import jaitools.jiffle.runtime.VarTable;
 import jaitools.jiffle.util.CollectionFactory;
 }
 
@@ -177,7 +177,12 @@ private void postValidation() {
     // check that any vars used in neighbour ref expressions are input
     // image vars
     for (String varName : nbrRefVars) {
-        if (!inImageVars.contains(varName)) {
+        boolean ok = (
+            inImageVars.contains(varName) ||
+            (imageVars.contains(varName) && !outImageVars.contains(varName))
+        );
+            
+        if (!ok) {
             errorTable.put(varName, ErrorCode.INVALID_NBR_REF);
         }
     }
