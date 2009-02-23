@@ -23,36 +23,29 @@ package jaitools.jiffle.runtime;
 import jaitools.jiffle.Jiffle;
 
 /**
- * Base class for events issued by the {@link JiffleInterpreter}
- * 
+ *
  * @author Michael Bedward
  */
-public abstract class JiffleEvent {
-    protected int jobId;
-    protected Jiffle jiffle;
+public class JiffleProgressEvent extends JiffleEvent {
     
+    private float progress;
+
     /**
      * Constructor
      * 
      * @param jobId an integer job ID issued by the controlling JiffleInterpreter
      * @param jiffle the Jiffle object that the event pertains to
+     * @param progress proportion of task completed (0 -> 1)
      */
-    public JiffleEvent(int jobId, Jiffle jiffle) {
-        this.jobId = jobId;
-        this.jiffle = jiffle;
+    public JiffleProgressEvent(int jobId, Jiffle jiffle, float progress) {
+        super(jobId, jiffle);
+        this.progress = progress;
     }
     
     /**
-     * Get the job id for this event
+     * Get the proportion of the run task completed as a value between 0 and 1
      */
-    public int getJobId() {
-        return jobId;
-    }
-    
-    /**
-     * Get the Jiffle object that this event pertains to
-     */
-    public Jiffle getJiffle() {
-        return jiffle;
+    public float getProgress() {
+        return progress;
     }
 }

@@ -23,11 +23,19 @@ package jaitools.jiffle.runtime;
 import jaitools.jiffle.Jiffle;
 
 /**
- *
+ * Used by {@link JiffleInterpreter} to flag that a script has been
+ * successfully executed
+ * 
  * @author Michael Bedward
  */
 public class JiffleCompletionEvent extends JiffleEvent {
 
+    /**
+     * Constructor
+     * 
+     * @param jobId an integer job ID issued by the controlling JiffleInterpreter
+     * @param jiffle the Jiffle object that the event pertains to
+     */
     public JiffleCompletionEvent(int jobId, Jiffle jiffle) {
         super(jobId, jiffle);
     }

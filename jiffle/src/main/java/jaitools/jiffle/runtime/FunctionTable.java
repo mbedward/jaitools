@@ -29,7 +29,7 @@ import static jaitools.jiffle.util.DoubleComparison.*;
 
 /**
  * A symbol table for jiffle functions, pre-loaded with a basic set of 
- * mathematical functions.
+ * mathematical and conditional functions
  *  
  * @author Michael Bedward
  */

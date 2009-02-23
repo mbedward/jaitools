@@ -26,7 +26,7 @@ import com.sun.media.jai.widget.DisplayJAI;
 import jaitools.jiffle.Jiffle;
 import jaitools.jiffle.JiffleCompilationException;
 import jaitools.jiffle.runtime.JiffleCompletionEvent;
-import jaitools.jiffle.runtime.JiffleEventListener;
+import jaitools.jiffle.runtime.JiffleEventAdapter;
 import jaitools.jiffle.runtime.JiffleInterpreterException;
 import java.awt.BorderLayout;
 import java.awt.image.RenderedImage;
@@ -67,12 +67,14 @@ public class ImageEvalDemo {
      */
     public ImageEvalDemo() {
         interp = new JiffleInterpreter();
-        interp.addEventListener(new JiffleEventListener() {
+        interp.addEventListener(new JiffleEventAdapter() {
 
+            @Override
             public void onCompletionEvent(JiffleCompletionEvent ev) {
                 onCompletion(ev);
             }
 
+            @Override
             public void onFailureEvent(JiffleFailureEvent ev) {
                 onFailure(ev);
             }

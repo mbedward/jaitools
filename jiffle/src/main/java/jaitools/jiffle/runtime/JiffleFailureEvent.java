@@ -23,11 +23,19 @@ package jaitools.jiffle.runtime;
 import jaitools.jiffle.Jiffle;
 
 /**
- *
+ * Used by {@link JiffleInterpreter} to flag a problem in
+ * the execution of a Jiffle script
+ * 
  * @author Michael Bedward
  */
 public class JiffleFailureEvent extends JiffleEvent {
     
+    /**
+     * Constructor
+     * 
+     * @param jobId an integer job ID issued by the controlling JiffleInterpreter
+     * @param jiffle the Jiffle object that this event pertains to
+     */
     public JiffleFailureEvent(int jobId, Jiffle jiffle) {
         super(jobId, jiffle);
     }
