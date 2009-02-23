@@ -21,7 +21,10 @@
 package jaitools.jiffle.runtime;
 
 /**
- * Empty interface to act as a container for functions
+ * Base interface implemented by Jiffle function objects.
+ * 
+ * @see jaitools.jiffle.runtime.FunctionTable
+ * 
  * @author Michael Bedward
  */
 public interface OpBase {
@@ -33,7 +36,7 @@ public interface OpBase {
     public static int VARIABLE_ARGS = -1;
     
     /**
-     * Get the number of arguments
+     * Get the number of arguments required by the function
      */
     public int getNumArgs();
 }

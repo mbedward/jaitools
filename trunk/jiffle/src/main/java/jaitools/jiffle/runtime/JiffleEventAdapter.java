@@ -34,4 +34,7 @@ public class JiffleEventAdapter implements JiffleEventListener {
     public void onFailureEvent(JiffleFailureEvent ev) {
     }
 
+    public void onProgressEvent(JiffleProgressEvent ev) {
+    }
+
 }

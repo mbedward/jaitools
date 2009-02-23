@@ -21,13 +21,26 @@
 package jaitools.jiffle.runtime;
 
 /**
- *
+ * Implemented by classes that wish to receive events from a
+ * {@link JiffleInterpreter}
+ * 
  * @author Michael Bedward
  */
 public interface JiffleEventListener {
-    
+   
+    /**
+     * Method called by the interpreter when a {@link JiffleCompletionEvent} is published
+     */
     public void onCompletionEvent(JiffleCompletionEvent ev);
-    
+
+    /**
+     * Method called by the interpreter when a {@link JiffleFailureEvent} is published
+     */
     public void onFailureEvent(JiffleFailureEvent ev);
+    
+    /**
+     * Method called by the interpreter when a {@link JiffleProgressEvent} is published
+     */
+    public void onProgressEvent(JiffleProgressEvent ev);
 }
 
