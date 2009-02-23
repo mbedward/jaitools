@@ -17,16 +17,17 @@
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-package jaitools.jiffle;
+package jaitools.jiffle.demo;
 
-import jaitools.jiffle.interpreter.JiffleFailureEvent;
-import jaitools.jiffle.interpreter.JiffleInterpreter;
+import jaitools.jiffle.util.ImageUtils;
+import jaitools.jiffle.runtime.JiffleFailureEvent;
+import jaitools.jiffle.runtime.JiffleInterpreter;
 import com.sun.media.jai.widget.DisplayJAI;
-import jaitools.jiffle.interpreter.Jiffle;
-import jaitools.jiffle.interpreter.JiffleCompilationException;
-import jaitools.jiffle.interpreter.JiffleCompletionEvent;
-import jaitools.jiffle.interpreter.JiffleEventListener;
-import jaitools.jiffle.interpreter.JiffleInterpreterException;
+import jaitools.jiffle.Jiffle;
+import jaitools.jiffle.JiffleCompilationException;
+import jaitools.jiffle.runtime.JiffleCompletionEvent;
+import jaitools.jiffle.runtime.JiffleEventListener;
+import jaitools.jiffle.runtime.JiffleInterpreterException;
 import java.awt.BorderLayout;
 import java.awt.image.RenderedImage;
 import java.io.File;
@@ -102,7 +103,7 @@ public class ImageEvalDemo {
         URL url = getClass().getResource("/example/ripple.jfl");
         File f = new File(url.toURI());
 
-        TiledImage tImg = JiffleUtilities.createDoubleImage(imgWidth, imgHeight);
+        TiledImage tImg = ImageUtils.createDoubleImage(imgWidth, imgHeight);
 
         Map<String, TiledImage> imgParams = new HashMap<String, TiledImage>();
         imgParams.put("result", tImg);

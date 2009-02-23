@@ -18,40 +18,27 @@
  * 
  */
 
-package jaitools.jiffle.util;
+package jaitools.jiffle.runtime;
+
 
 /**
- * Double value comparisons within a set tolerance
+ * Class to invoke no-argument functions
  * 
  * @author Michael Bedward
  */
-public class DoubleComparison {
+public abstract class OpNoArg implements OpBase {
 
-    private static final double TOL = 1.0e-8;
+    /**
+     * Invokes the function
+     * @return result as double
+     */
+    public abstract double call();
 
-    public static boolean dzero(double x) {
-        return Math.abs(x) < TOL;
-    }
-
-    public static int dcomp(double x1, double x2) {
-        if (dzero(x1 - x2)) {
-            return 0;
-        } else {
-            return Double.compare(x1, x2);
-        }
-    }
-    
-    public static int toInt(double x) {
-        int sign = dcomp(x, 0d);
-        if (sign > 0) { // +ve value
-            return (int)(x + 0.5);
-            
-        } else if (sign < 0) { // -ve value
-            return (int)(x - 0.5);
-            
-        } else {
-            return 0;
-        }
-        
+    /**
+     * Get the number of arguments
+     */
+    public int getNumArgs() {
+        return 0;
     }
 }
+

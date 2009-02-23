@@ -24,28 +24,47 @@ import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.tree.CommonTree;
 
 /**
- *
+ * A custom AST node class which holds a double value. Used
+ * by classes generated from ANTLR grammars.
+ * 
  * @author Michael Bedward
  */
-public class FixedValueNode extends CommonTree {
+class FixedValueNode extends CommonTree {
     private double value;
-    
-    public FixedValueNode(int tokType, double value) { 
+
+    /**
+     * Constructor taking a double value
+     */
+    FixedValueNode(int tokType, double value) { 
         super(new CommonToken(tokType));
         this.value = value; 
     }
-    
-    public FixedValueNode(int tokType, String text) {
+
+    /**
+     * Constructor taking a String representation of a double value
+     */
+    FixedValueNode(int tokType, String text) {
         this(tokType, Double.valueOf(text));
     }
+
+    /**
+     * Get the value stored by this node
+     */
+    double getValue() { return value; }
     
-    public double getValue() { return value; }
-    
+    /**
+     * Used by ANTLR during AST re-writing to create
+     * a copy of this node
+     */
     @Override
     public FixedValueNode dupNode() {
         return new FixedValueNode(getType(), value);
     }    
     
+    /**
+     * Get a formatted string representation of this node.
+     * It takes the form: {@code FIX<value>}
+     */
     @Override
     public String toString() {
         return "FIX<" + String.valueOf(value) + ">";

@@ -20,7 +20,7 @@
 
 package jaitools.jiffle.parser;
 
-import jaitools.jiffle.interpreter.ErrorCode;
+import jaitools.jiffle.ErrorCode;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;

@@ -34,8 +34,8 @@ options {
 package jaitools.jiffle.parser;
 import java.util.HashMap;
 import java.util.Random;
-import jaitools.jiffle.interpreter.FunctionTable;
-import jaitools.jiffle.interpreter.VarTable;
+import jaitools.jiffle.runtime.FunctionTable;
+import jaitools.jiffle.runtime.VarTable;
 }
 
 @members {
