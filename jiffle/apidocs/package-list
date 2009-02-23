@@ -1,4 +1,5 @@
 jaitools.jiffle
-jaitools.jiffle.interpreter
+jaitools.jiffle.demo
 jaitools.jiffle.parser
+jaitools.jiffle.runtime
 jaitools.jiffle.util
