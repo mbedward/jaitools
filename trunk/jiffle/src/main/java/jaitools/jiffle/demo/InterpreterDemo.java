@@ -36,8 +36,24 @@ import javax.media.jai.TiledImage;
 import javax.swing.SwingUtilities;
 
 /**
- * Demonstrates the use of {@link jaitools.jiffle.runtime.JiffleInterpreter}
- * to run a script.
+ * Demonstrates the use of JiffleIterpreter to run a script.
+ * <br>
+ * There are two options for running executing a Jiffle script...
+ * <ol type="1">
+ * <li>Directly, by creating an instance of {@link jaitools.jiffle.runtime.JiffleRunner}
+ * <li>Indirectly, by submitting a Jiffle object to an instance of
+ *     {@link jaitools.jiffle.runtime.JiffleInterpreter}
+ * </ol>
+ * The advantage of the second method, for computationally expensive scripts,
+ * is that execution is carried out in a separate thread. Client code is notified
+ * of progress and completion or failure of the run through event listeners.
+ * <p>
+ * In this example program, the application class listens for progress events
+ * and displays a simple progress bar for the user. When a completion event
+ * is received the application creates an image viewer to display the result.
+ * 
+ * @see jaitools.jiffle.runtime.JiffleInterpreter
+ * @see jaitools.jiffle.runtime.JiffleEvent
  * 
  * @author Michael Bedward
  */
