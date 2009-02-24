@@ -84,6 +84,13 @@ public class FunctionTable {
                     }
                 });
 
+        lookup.put("floor_1",
+                new Op1Arg() {
+                    public double call(double x) {
+                        return Math.floor(x);
+                    }
+                });
+
         lookup.put("if_1",
                 new Op1Arg() {
                     public double call(double x) {

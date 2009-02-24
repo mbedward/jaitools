@@ -29,6 +29,7 @@ import java.awt.Rectangle;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import javax.media.jai.TiledImage;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
@@ -90,6 +91,7 @@ public class JiffleRunner {
         proxyTable = CollectionFactory.newMap();
         proxyTable.put("width", new ImageFnProxy(ImageFnProxy.Type.INFO, "_width"));
         proxyTable.put("height", new ImageFnProxy(ImageFnProxy.Type.INFO, "_height"));
+        proxyTable.put("size", new ImageFnProxy(ImageFnProxy.Type.INFO, "_size"));
         proxyTable.put("x", new ImageFnProxy(ImageFnProxy.Type.POS, "_x"));
         proxyTable.put("y", new ImageFnProxy(ImageFnProxy.Type.POS, "_y"));
         proxyTable.put("row", new ImageFnProxy(ImageFnProxy.Type.POS, "_row"));
@@ -119,8 +121,26 @@ public class JiffleRunner {
 
     private Map<String, ImageHandler> handlerTable;
 
+    private float propComplete;
     private boolean finished;
-
+    
+    private Set<RunProgressListener> progressListeners;
+    private static final float PROGRESS_INCREMENT = 0.01f;
+    
+    /*
+     * TODO: as a hack for development we use first output
+     * image var as a reference - change this later when
+     * allowing images with different bounds
+     */
+    TiledImage refImg;
+    int refImgSize;
+    
+    /*
+     * TODO: better way of tracking progress
+     */
+    int numPixelsProcessed;
+    
+    
     /**
      * Query whether a function name refers to a positional
      * function, ie. one which returns the current pixel location
@@ -189,8 +209,12 @@ public class JiffleRunner {
         setHandlers();
         setSpecialVars();
         finished = false;
+        numPixelsProcessed = 0;
+        propComplete = 0.0f;
+        
+        progressListeners = CollectionFactory.newSet();
     }
-
+    
     /**
      * Get the value of an image at the current location
      * @param imgName the image variable name
@@ -325,6 +349,16 @@ public class JiffleRunner {
     }
 
     /**
+     * Package private method used by the interpreter system to add
+     * a progress listener
+     * 
+     * @param listener
+     */
+    void addProgressListener(RunProgressListener listener) {
+        progressListeners.add(listener);
+    }
+
+    /**
      * Set handlers for each input and output image. A handler keeps track of
      * current image position and owns an iterator to read or write pixel
      * values
@@ -364,14 +398,16 @@ public class JiffleRunner {
         
         List<String> outVars = CollectionFactory.newList();
         outVars.addAll(metadata.getOutputImageVars());
-        TiledImage refImg = metadata.getImageParams().get(outVars.get(0));
+        refImg = metadata.getImageParams().get(outVars.get(0));
         
         Rectangle bounds = refImg.getBounds();
+        refImgSize = bounds.width * bounds.height;
         
         vars.set(proxyTable.get("x").varName, bounds.x);
         vars.set(proxyTable.get("y").varName, bounds.y);
         vars.set(proxyTable.get("width").varName, bounds.width);
         vars.set(proxyTable.get("height").varName, bounds.height);
+        vars.set(proxyTable.get("size").varName, refImgSize);
     }
 
     /**
@@ -392,15 +428,29 @@ public class JiffleRunner {
                         finished = true;
                     }
                 }
+
+                numPixelsProcessed++ ;
                 
                 // @todo remove this hack
                 if (firstImg) {
                     vars.set("_x", h.x);
                     vars.set("_y", h.y);
-                    vars.set("_row", h.x + 1);
-                    vars.set("_col", h.y + 1);
+                    vars.set("_col", h.x + 1);
+                    vars.set("_row", h.y + 1);
                     firstImg = false;
+                    
+                    publishProgress();
                 }
+            }
+        }
+    }
+    
+    private void publishProgress() {
+        float prop = (float)numPixelsProcessed / refImgSize;
+        if (prop - propComplete >= PROGRESS_INCREMENT) {
+            propComplete = prop;
+            for (RunProgressListener listener : progressListeners) {
+                listener.onProgress(propComplete);
             }
         }
     }

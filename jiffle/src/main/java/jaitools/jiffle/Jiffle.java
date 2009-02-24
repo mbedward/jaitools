@@ -189,7 +189,11 @@ public class Jiffle {
         StringBuilder sb = new StringBuilder();
         String line;
         while ((line = reader.readLine()) != null) {
-            sb.append(line);
+            line = line.trim();
+            if (line.length() > 0) {
+                sb.append(line);
+                sb.append('\n');  // put the newline back on for the parser
+            }
         }
         String prog = sb.toString();
         
