@@ -122,12 +122,16 @@ public class JiffleInterpreter {
      * Package private method to receive events from running tasks
      * @param task the task sending the event
      */
-    void onTaskEvent(JiffleTask task) {
+    void onTaskStatusEvent(JiffleTask task) {
         if (task.isCompleted()) {
             fireCompletionEvent(task);
         } else {
             fireFailureEvent(task);
         }
+    }
+    
+    void onTaskProgressEvent(JiffleTask task, float progress) {
+        fireProgressEvent(task, progress);
     }
     
     private void fireCompletionEvent(JiffleTask task) {
@@ -141,6 +145,13 @@ public class JiffleInterpreter {
         JiffleFailureEvent ev = new JiffleFailureEvent(task.getId(), task.getJiffle());
         for (JiffleEventListener el : listeners) {
             el.onFailureEvent(ev);
+        }
+    }
+    
+    private void fireProgressEvent(JiffleTask task, float progress) {
+        JiffleProgressEvent ev = new JiffleProgressEvent(task.getId(), task.getJiffle(), progress);
+        for (JiffleEventListener el : listeners) {
+            el.onProgressEvent(ev);
         }
     }
 }

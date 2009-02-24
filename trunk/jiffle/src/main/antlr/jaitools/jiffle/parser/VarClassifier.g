@@ -308,7 +308,12 @@ expr returns [boolean isLocal, boolean isPositional]
                       $isPositional = ($e1.isPositional || $e2.isPositional);
                   }
      
-                | ^(QUESTION expr expr expr)
+                | ^(QUESTION etest=expr e1=expr e2=expr)
+                  {
+                      $isLocal = ($etest.isLocal && $e1.isLocal && $e2.isLocal);
+                      $isPositional = ($etest.isPositional || $e1.isPositional || $e2.isPositional);
+                  }
+                  
                 | ^(PREFIX unary_op expr)
                 | INT_LITERAL 
                 | FLOAT_LITERAL 

@@ -19,101 +19,93 @@
  */
 package jaitools.jiffle.demo;
 
+import jaitools.jiffle.runtime.JiffleProgressEvent;
 import jaitools.jiffle.util.ImageUtils;
 import jaitools.jiffle.runtime.JiffleFailureEvent;
 import jaitools.jiffle.runtime.JiffleInterpreter;
-import com.sun.media.jai.widget.DisplayJAI;
 import jaitools.jiffle.Jiffle;
 import jaitools.jiffle.JiffleCompilationException;
 import jaitools.jiffle.runtime.JiffleCompletionEvent;
-import jaitools.jiffle.runtime.JiffleEventAdapter;
+import jaitools.jiffle.runtime.JiffleEventListener;
 import jaitools.jiffle.runtime.JiffleInterpreterException;
-import java.awt.BorderLayout;
-import java.awt.image.RenderedImage;
 import java.io.File;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import javax.media.jai.TiledImage;
-import javax.swing.JFrame;
-import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
 
 /**
- * Demonstrates creating an image from a mathematical expression
- * involving pixel position. This is equivalent to plotting a function
- * in the x,y plane.
+ * Demonstrates the use of {@link jaitools.jiffle.runtime.JiffleInterpreter}
+ * to run a script.
  * 
  * @author Michael Bedward
  */
-public class ImageEvalDemo {
-
+public class InterpreterDemo extends DemoBase {
     private JiffleInterpreter interp;
+    private ProgressMeter progMeter;
     
-    final int imgWidth = 500;
-    final int imgHeight = 500;
+    final int imgWidth = 400;
+    final int imgHeight = 400;
 
     /**
-     * Main function - runs the demo
+     * Run the demonstration
+     * 
      * @param args ignored
      */
     public static void main(String[] args) throws Exception {
-        ImageEvalDemo demo = new ImageEvalDemo();
-        demo.createImageFromCoordExpr();
+        InterpreterDemo demo = new InterpreterDemo();
+        
+        URL url = demo.getClass().getResource("/example/ripple.jfl");
+        File f = new File(url.toURI());
+
+        demo.compileAndRun(f);
     }
 
     /**
-     * Constructor. Creates an instance of JiffleInterpeter and 
-     * sets up interpreter event handlers.
+     * Constructor. Creates an instance of {@link jaitools.jiffle.runtime.JiffleInterpeter}
+     * and sets up interpreter event handlers.
      */
-    public ImageEvalDemo() {
+    public InterpreterDemo() {
         interp = new JiffleInterpreter();
-        interp.addEventListener(new JiffleEventAdapter() {
+        interp.addEventListener(new JiffleEventListener() {
 
-            @Override
             public void onCompletionEvent(JiffleCompletionEvent ev) {
                 onCompletion(ev);
             }
 
-            @Override
             public void onFailureEvent(JiffleFailureEvent ev) {
                 onFailure(ev);
             }
+
+            public void onProgressEvent(JiffleProgressEvent ev) {
+                onProgress(ev);
+            }
         });
+        
+        progMeter = new ProgressMeter();
     }
 
     /**
-     * Create an image of concentric ripples calculated as: 
-     * <pre>{@code \u0000 
-     * f(x,y) = sin(8\u03c0d)
-     * }</pre>
-     * where {@code d} is distance from image centre.
-     * <p>
-     * The jiffle code for this function is:
-     * <pre>{@code \u0000
-     * xorigin = imgWidth() / 2;
-     * yorigin = imgHeight() / 2;
-     * dx = (x() - xc) / xc;
-     * dy = (y() - yc) / yc;
-     * d = sqrt(dx^2 + dy^2);
-     * result = sin(8 * PI * d);
-     * }</pre>
-     * where the variable {@code result} is linked to the output {@link javax.media.jai.TiledImage}
+     * Compiles the script in the given text file and submits it to
+     * the interpreter to run
      * 
+     * @param scriptFile a text file containing the Jiffle script
+     * @throws java.lang.Exception
      */
-    public void createImageFromCoordExpr() throws Exception {
-
-        URL url = getClass().getResource("/example/ripple.jfl");
-        File f = new File(url.toURI());
-
+    public void compileAndRun(File scriptFile) throws Exception {
+        // create an image to write results to
         TiledImage tImg = ImageUtils.createDoubleImage(imgWidth, imgHeight);
 
+        // link the variable name used in the script (result) to the image
         Map<String, TiledImage> imgParams = new HashMap<String, TiledImage>();
         imgParams.put("result", tImg);
 
         try {
-            Jiffle j = new Jiffle(f, imgParams);
+            Jiffle j = new Jiffle(scriptFile, imgParams);
 
             if (j.isCompiled()) {
+                progMeter.setVisible(true);
                 interp.submit(j);
             }
 
@@ -126,35 +118,35 @@ public class ImageEvalDemo {
     }
 
     /**
-     * Called when a completion event is received from the jiffle interpreter
+     * Respond to an event signalling that the script has been
+     * executed successfully. In this case we display the output
+     * image.
+     * 
      * @param ev the event
      */
     private void onCompletion(JiffleCompletionEvent ev) {
+        progMeter.setVisible(false);
         TiledImage img = ev.getJiffle().getImage("result");
         displayImage(img);
     }
 
     /**
-     * Called if a failure event is received from the jiffle interpreter
+     * Respond to an event signalling that there was a problem
+     * running the script.
+     * 
      * @param ev the event
      */
     private void onFailure(JiffleFailureEvent ev) {
         System.err.println("Bummer: script failed to run");
+        progMeter.setVisible(false);
     }
-
-    /**
-     * Displays the image in a simple widget
-     * @param img image to be displayed
-     */
-    private void displayImage(RenderedImage img) {
-        JFrame frame = new JFrame("Jiffle image demo");
-
-        DisplayJAI disp = new DisplayJAI(img);
-        frame.getContentPane().add(new JScrollPane(disp), BorderLayout.CENTER);
-
-        frame.setSize(500, 500);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setVisible(true);
+    
+    
+    private void onProgress(final JiffleProgressEvent ev) {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                progMeter.update(ev.getProgress());
+            }
+        });
     }
 }
-

@@ -30,7 +30,7 @@ import jaitools.jiffle.Jiffle;
  */
 class JiffleTask implements Runnable {
     
-    private JiffleInterpreter interpreter;
+    private final JiffleInterpreter interpreter;
     private int id;
     private Jiffle jiffle;
     private JiffleRunner runner;
@@ -47,6 +47,12 @@ class JiffleTask implements Runnable {
         this.interpreter = interpreter;
         this.jiffle = jiffle;
         runner = new JiffleRunner(jiffle);
+        runner.addProgressListener(new RunProgressListener() {
+            public void onProgress(float progress) {
+                JiffleTask.this.interpreter.onTaskProgressEvent(JiffleTask.this, progress);
+            }
+        });
+        
         completed = false;
     }
 
@@ -69,7 +75,7 @@ class JiffleTask implements Runnable {
             
         } finally {
             completed = ok;
-            interpreter.onTaskEvent(this);
+            interpreter.onTaskStatusEvent(this);
         }
     }
     
