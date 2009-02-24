@@ -38,4 +38,31 @@ http://jai-tools.googlecode.com/svn/wiki/demo_ripple.gif
 </tr>
 </table>
 
-[JiffleLanguage Description of the jiffle language]
+This script creates a chessboard pattern. It also demonstrates
+some of Jiffle's conditional operators...
+
+<table>
+<tr valign="top">
+<td>
+{{{
+// creates an 8 x 8 chessboard pattern
+
+len = width() > height() ? width() : height()
+square = floor(len / 8)
+edge_pos = square * 8;
+
+odd_row = floor(y() / square) % 2 == 1
+odd_col = floor(x() / square) % 2 == 1
+inside = x() < edge_pos && y() < edge_pos
+
+result = inside ? (odd_row ^| odd_col) : null
+}}}
+</td>
+<td>
+<pre>      </pre>
+</td>
+<td>
+http://jai-tools.googlecode.com/svn/wiki/demo_chessboard.gif
+</td>
+</tr>
+</table>
