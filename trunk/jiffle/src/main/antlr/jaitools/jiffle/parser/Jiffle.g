@@ -49,16 +49,20 @@ package jaitools.jiffle.parser;
     public void setPrint(boolean b) { printParseTree = b; }
 }
 
+@lexer::members {
+    private boolean onCommentLine = false;
+}
 
-prog		: (statement 
-                    { 
-                        if (printParseTree) {
-                            System.out.println($statement.tree == null ? "null" : $statement.tree.toStringTree());
-                        }
-                    })+ 
+
+prog		: statement+
                 ;
-
+                
 statement	: expr eos!
+                { 
+                    if (printParseTree) {
+                        System.out.println($expr.tree == null ? "null" : $expr.tree.toStringTree());
+                    }
+                }
 		;
 		
 expr		: assign_expr
@@ -156,10 +160,12 @@ type_name	: 'int'
 eos             : (SEMICOLON|NEWLINE)+
                 ;
 
-BLOCK_COMMENT   : '/*' (~'*' | '*' ~'/')* '*/' { $channel = HIDDEN; }
+BLOCK_COMMENT   : '/*' (~'*' | '*' ~'/')* '*/' 
+                  { $channel = HIDDEN; onCommentLine = true; }
                 ;
 
-LINE_COMMENT    : '//' (~('\n' | '\r'))* NEWLINE { $channel = HIDDEN; }
+LINE_COMMENT    : '//' (~('\n' | '\r'))* 
+                  { $channel = HIDDEN; onCommentLine = true; }
                 ;
                 
 
@@ -249,7 +255,16 @@ SEMICOLON	: ';'
                 ;
 
 /* Mac: \r  PC: \r\n  Unix \n */
-NEWLINE		: '\r' '\n'?
+NEWLINE
+@init {
+    if (onCommentLine) {
+        $channel = HIDDEN;
+    }
+}
+@after {
+    onCommentLine = false;
+}
+                : '\r' '\n'?
 		| '\n'
 		;
 
