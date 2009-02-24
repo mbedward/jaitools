@@ -25,6 +25,8 @@ import jaitools.jiffle.Jiffle;
 /**
  * Base class for events issued by the {@link JiffleInterpreter}
  * 
+ * @see JiffleEventListener
+ * 
  * @author Michael Bedward
  */
 public abstract class JiffleEvent {
