@@ -7,6 +7,7 @@
  * Other
   * [Jiffle Jiffle]
    * [JiffleLanguage Language guide]
+   * [JiffleIssues Issues and gotchas]
    * [JiffleFAQ FAQ]
    * [http://jai-tools.googlecode.com/svn/trunk/jiffle/apidocs/index.html API]
  * [JAILinks JAI links]
