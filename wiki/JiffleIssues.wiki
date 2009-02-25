@@ -1,0 +1,23 @@
+#summary Bugs, gotchas and things to look out for with Jiffle
+
+Jiffle is a new project. Please assume that it is full of bugs, surprises and undocumented features.
+
+Some of the known issues are summarized here.  See also the current jai-tools [http://code.google.com/p/jai-tools/issues/list Issues List]
+
+===Image bounds===
+
+Jiffle assumes that input and output images all have the same bounds, ie. same width, height and start/end x and y coordinates. Once the fundamentals of the language are working properly this will be addressed.
+
+===Error reporting===
+
+It's pretty rudimentary at the moment. Many scripting errors will fall through to the underlying ANTLR routines, leading to obscure messages such as "no viable alternative...".
+
+===Output images===
+
+Your output image(s) must exist prior to running the script and be writable. The class !jaitools.jiffle.utils.ImageUtils is a quick way of creating a suitable, double valued image for output.
+
+===Null (NODATA, NaN) values===
+
+Jiffle uses Double.NaN as its NULL flag value. Any expression that includes a NULL value will return NULL. Later on it would be nice to provide options to modify this behaviour.
+
+
