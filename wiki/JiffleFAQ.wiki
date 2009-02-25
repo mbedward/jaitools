@@ -1,0 +1,19 @@
+#summary Jiffle Frequently Asked Questions
+
+<wiki:toc max_depth="3"/>
+
+===Why ?===
+
+Because it wasn't there. Because sometimes you would rather write a simple script than chain together a series of JAI operations explicitly for an image analysis task. 
+
+===Can it deal with large images ?===
+
+Jiffle uses JAI iterators for input and output so you can work with large tiled images.
+
+===What image data types does Jiffle deal with ?===
+
+Internally, Jiffle treats all values as doubles including pseudo-integer values for `true` (1) and `false` (0) in boolean expressions. Input images can be any data type: pixel values will be converted to double when they are read. Output images should be type double.
+
+===Does it deal with multi-band images===
+
+Not yet.
