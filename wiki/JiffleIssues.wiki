@@ -4,6 +4,8 @@ Jiffle is a new project. Please *assume* that it is full of bugs, surprises and 
 
 Some of the known issues are summarized here.  See also the current jai-tools [http://code.google.com/p/jai-tools/issues/list Issues List]
 
+<wiki:toc />
+
 ===Image bounds===
 
 Jiffle assumes that input and output images all have the same bounds, ie. same width, height and start/end x and y coordinates. Once the fundamentals of the language are working properly this will be addressed.
