@@ -4,7 +4,13 @@
 
 ===Why ?===
 
-Because it wasn't there. Because sometimes you would rather write a simple script than chain together a series of JAI operations explicitly for an image analysis task. 
+Because it wasn't there. 
+
+Because I wanted to play with [http://www.antlr.org ANTLR].
+
+Because sometimes you would rather write a simple script than chain together a series of JAI operations explicitly for an image analysis task. 
+
+Because it lends itself to being an easy to learn, application scripting language for your users.
 
 ===Can it deal with large images ?===
 
