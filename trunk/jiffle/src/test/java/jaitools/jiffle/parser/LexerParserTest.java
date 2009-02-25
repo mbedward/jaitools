@@ -20,16 +20,29 @@
 
 package jaitools.jiffle.parser;
 
+import jaitools.jiffle.util.CollectionFactory;
+import java.util.Set;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.Token;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
+/**
+ * Some simple tests for JiffleLexer, directed towards inputs that have
+ * given problems such as block comments, blank lines, end-of-statement
+ * detection.
+ * 
+ * @author Michael Bedward
+ */
 public class LexerParserTest {
 
+    /**
+     * Test tokenizing a block comment with embedded newlines
+     * followed by a newline and an INT literal
+     */
     @Test
-    public void testComments() {
-        System.out.println("testComments");
+    public void testBlockComment() {
+        System.out.println("testBlockComment");
         
         String input = 
                 "/* a block comment \n " +
@@ -55,6 +68,44 @@ public class LexerParserTest {
         assertTrue(tok.getType() == JiffleLexer.INT_LITERAL);
     }
     
+    /**
+     * Test tokenizing block comments used before, within and after
+     * an expression
+     */
+    @Test
+    public void testInlineComment() {
+        System.out.println("testInlineComment");
+        
+        String input = "/* pre-comment */ x = sin(/* inside comment */ PI / 6) /* post-comment */ ";
+        
+        JiffleLexer lexer = lex(input);
+        
+        Set<Integer> okHiddenTypes = CollectionFactory.newSet();
+        okHiddenTypes.add(JiffleLexer.BLOCK_COMMENT);
+        okHiddenTypes.add(JiffleLexer.WS);
+        okHiddenTypes.add(JiffleLexer.NEWLINE);
+        
+        Set<Integer> okVisibleTypes = CollectionFactory.newSet();
+        okVisibleTypes.add(JiffleLexer.ID);
+        okVisibleTypes.add(JiffleLexer.INT_LITERAL);
+        okVisibleTypes.add(JiffleLexer.EQ);
+        okVisibleTypes.add(JiffleLexer.DIV);
+        okVisibleTypes.add(JiffleLexer.LPAR);
+        okVisibleTypes.add(JiffleLexer.RPAR);
+        
+        Token tok;
+        while ((tok = lexer.nextToken()) != Token.EOF_TOKEN) {
+            if (tok.getChannel() == Token.HIDDEN_CHANNEL) {
+                assertTrue(okHiddenTypes.contains(tok.getType()));
+            } else {
+                assertTrue(okVisibleTypes.contains(tok.getType()));
+            }
+        }
+    }
+    
+    /**
+     * Helper method: creates a lexer for the test methods
+     */
     private JiffleLexer lex(String input) {
         ANTLRStringStream strm = new ANTLRStringStream(input);
         JiffleLexer lexer = new JiffleLexer(strm);
