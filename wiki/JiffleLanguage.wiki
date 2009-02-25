@@ -4,14 +4,15 @@
 
 <wiki:toc max_depth="3" />
 
-Jiffle's preliminary syntax will be familiar to C and Java programmers.  Most arithmetic and logical operators are identical, with the exception of `^` for exponentiation and `^|` for exclusive-or. 
+Jiffle's syntax will be familiar to C and Java programmers.  Most arithmetic and logical operators are identical, with the exception of `^` for exponentiation and `^|` for exclusive-or. 
 
-The language is case sensitive. A statement is terminated by a semicolon and/or a newline (or any combination of the two)...
-
+The language is case sensitive. A statement is terminated by a semicolon and/or a newline...
+ 
 {{{
-// jiffle will even handle this...
+// this is ok
 a = 3; b = 42
 
+// and even this
 c = a / b ;;
     ;;;
 
@@ -116,7 +117,7 @@ Variable names are case-sensitive and must start with a letter, optionally follo
 ===Image variables===
 
 In a script, image objects are represented by variables. The user defines the mappings of variable name -> image object and provides these when compiling the script
-(see [http://jai-tools.googlecode.com/svn/trunk/jiffle/apidocs/index.html API docs] for the Jiffle class).
+(for more details see the Jiffle class in the [http://jai-tools.googlecode.com/svn/trunk/jiffle/apidocs/index.html API docs]).
 
 A reference to an image variable in a script is read as _value of the current pixel in this image_
 
@@ -127,6 +128,8 @@ x = sqrt(myImg + 1.0);
 // An image var on the LHS of an assignment is an output (result) image
 gradientImg = 5.0 + 10.0 * (1.0 - x()/width())
 }}}
+
+An image can be used either for input or output but not both.
 
 You can also access the pixels in the neighbourhood of the current pixel (but only for input images). The syntax for this is
 {{{
@@ -146,7 +149,7 @@ result = if (inImg == inImg[-1,0] == inImg[1,0], 1, 0)
 ===Non-image variables===
 Local variables can be defined to store double values. Logical values are stored as 1 (true) or 0 (false).
 
-Jiffle knows a small number of pre-defined constants: PI, E and NaN. 
+Jiffle knows a small number of pre-defined constants: PI, E and NaN.
 
 The logical constants true and false are also defined and are *not* case sensitive...
 
