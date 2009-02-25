@@ -1,6 +1,6 @@
 #summary Bugs, gotchas and things to look out for with Jiffle
 
-Jiffle is a new project. Please assume that it is full of bugs, surprises and undocumented features.
+Jiffle is a new project. Please *assume* that it is full of bugs, surprises and undocumented features.
 
 Some of the known issues are summarized here.  See also the current jai-tools [http://code.google.com/p/jai-tools/issues/list Issues List]
 
@@ -19,5 +19,3 @@ Your output image(s) must exist prior to running the script and be writable. The
 ===Null (NODATA, NaN) values===
 
 Jiffle uses Double.NaN as its NULL flag value. Any expression that includes a NULL value will return NULL. Later on it would be nice to provide options to modify this behaviour.
-
-
