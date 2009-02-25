@@ -14,7 +14,7 @@ It's pretty rudimentary at the moment. Many scripting errors will fall through t
 
 ===Output images===
 
-Your output image(s) must exist prior to running the script and be writable. The class !jaitools.jiffle.utils.ImageUtils is a quick way of creating a suitable, double valued image for output.
+Your output image(s) must exist prior to running the script and be writable. The class jaitools.jiffle.utils.!ImageUtils is a quick way of creating a suitable, double valued image for output.
 
 ===Null (NODATA, NaN) values===
 
