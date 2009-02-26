@@ -2,7 +2,7 @@
 
 = Description of the language =
 
-<wiki:toc max_depth="3" />
+<wiki:toc />
 
 Jiffle's syntax will be familiar to C and Java programmers.  Most arithmetic and logical operators are identical, with the exception of `^` for exponentiation and `^|` for exclusive-or. 
 
