@@ -1,6 +1,6 @@
 #summary Jiffle Frequently Asked Questions
 
-<wiki:toc max_depth="3"/>
+<wiki:toc />
 
 ===Why ?===
 
