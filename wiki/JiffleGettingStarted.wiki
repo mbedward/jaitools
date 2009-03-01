@@ -1,0 +1,32 @@
+#summary Getting started with Jiffle
+
+=Installation=
+
+==Getting the Jiffle source code==
+
+See the [http://code.google.com/p/jai-tools/source/checkout subversion repository page] for instructions on how to download a copy of the latest source code.
+
+The code consists of Java classes and [http://www.antlr.org ANTLR] grammar files.
+
+==Building Jiffle==
+
+The easiest way to build Jiffle is with [http://maven.apache.org/ Maven]. From the command line simply go to the directory where you have installed the source code and where the file pom.xml resides and type...
+{{{
+mvn clean install
+}}}
+Maven will automagically download Jiffle's dependencies for you, run ANTLR to generate Java source code from the ANTLR grammars, and create a jar.
+
+To build the javadocs type...
+{{{
+mvn javadoc:javadoc
+}}}
+
+Easier still is to run maven from within an IDE such as Netbeans which can open Maven projects natively and build them with the same menu commands as a standard Java project. The article [http://wiki.netbeans.org/MavenBestPractices Maven best practices] provides all the information you need.
+
+If you don't want to use Maven it should still be fairly simple to build Jiffle but you will need to install ANTLR to process Jiffle's ANTLR grammar files prior to compiling the Java source.
+
+See [http://swik.net/Peter-Thomas/Incremental+Operations/An+alternative+Maven+plugin+for+Ant+and+NetBeans/ccqce here] for one possible way of creating an Ant build script from the Maven pom.xml file (warning - we haven't tested this).
+
+=Running a first example=
+
+Included in the Jiffle source code is the InterpreterDemo class which runs a simple script and displays the output image. The source code for the demo is `src/main/java/jaitools/jiffle/demo/InterpreterDemo.java`
