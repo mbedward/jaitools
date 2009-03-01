@@ -29,4 +29,4 @@ See [http://swik.net/Peter-Thomas/Incremental+Operations/An+alternative+Maven+pl
 
 =Running a first example=
 
-Included in the Jiffle source code is the InterpreterDemo class which runs a simple script and displays the output image. The source code for the demo is `src/main/java/jaitools/jiffle/demo/InterpreterDemo.java`
+Included in the Jiffle source code is the !InterpreterDemo class which runs a simple script and displays the output image. The source code for the demo is `src/main/java/jaitools/jiffle/demo/InterpreterDemo.java`
