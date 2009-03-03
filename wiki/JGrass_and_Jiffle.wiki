@@ -25,7 +25,7 @@ And that is the tool we will use Jiffle with:
 http://jai-tools.googlecode.com/svn/wiki/jgrass/jgrass_02.png
 
 
-== a simple division ==
+== A simple division ==
 
 Lets' try something easy such as dividing a map by two:
 
@@ -37,13 +37,39 @@ and the result is as expected:
 
 http://jai-tools.googlecode.com/svn/wiki/jgrass/jgrass_03.png
 
-Don't be missleaded by the colormap. That can be changed in anuy moment and when a map is created in JGrass a default rainbow colormap is created.
+Don't be missleaded by the colormap. That can be changed in any moment and when a map is created in JGrass a default rainbow colormap is created.
 
 
+== Cutting of the peaks ==
+
+Let's cut of everything over 1500 meters and make a big nice mall with large parking place:
+
+{{{
+if(elevation.dem > 1500, 1500, elevation.dem )
+}}}
+
+And the result... difficult to state the difference, right?
+
+http://jai-tools.googlecode.com/svn/wiki/jgrass/jgrass_04.png
+
+Well in JGrass there is a very sperimental tool (or better a test) that might help:
+
+http://jai-tools.googlecode.com/svn/wiki/jgrass/jgrass_05.png
+
+Do you see the parking place?
+
+There would be another way to see if everything went well: subtracting start and destination map:
+
+{{{
+elevation.dem - peaks_off
+}}}
+
+Can you tell the result?
 
 
+== Nested if statements ==
 
-
+Ok let's try something more complex.
 
 
 
