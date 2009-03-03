@@ -225,7 +225,7 @@ RPAR            : ')' ;
 LSQUARE         : '[' ;
 RSQUARE         : ']' ;
 
-ID		: (Letter) (Letter | UNDERSCORE | Digit)*
+ID		: (Letter) (Letter | UNDERSCORE | Digit | Dot)*
 		;
 
 fragment
@@ -237,10 +237,14 @@ UNDERSCORE      : '_' ;
 INT_LITERAL	: '0' | NonZeroDigit Digit*
 		;
 
-FLOAT_LITERAL	: ('0' | NonZeroDigit Digit*)? '.' Digit* FloatExp?
+FLOAT_LITERAL	: ('0' | NonZeroDigit Digit*)? Dot Digit* FloatExp?
 		;
 fragment
 Digit           : '0'..'9'
+                ;
+                
+fragment
+Dot             : '.'
                 ;
 
 fragment
