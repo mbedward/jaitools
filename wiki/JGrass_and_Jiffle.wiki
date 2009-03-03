@@ -1,0 +1,23 @@
+#summary page dedicated to the implementation of Jiffle in the development version of JGrass
+
+= JGrass aims to use Jiffle =
+
+This page is dedicated to the results of the integration of Jiffle in [http://www.jgrass.org JGrass], a GIS based on the [http://udig.refractions.nert uDig] framework and dedicated to geomorphological and hydrological terrain analyses.
+As such Jiffle is a mandatory tool for analyses of raster maps.
+
+
+= Introduction =
+
+For testing purposes the spearfish dataset it used, since it is a free dataset and avalable [http://grass.itc.it/download/data6.php here].
+
+As introduction it is good to know that JGrass currently bases on [http://grass.osgeo.org/ GRASS]'s [http://grass.itc.it/grass64/manuals/html64_user/r.mapcalc.html r.mapcalc] tool, and has a nifty gui for that one. For these tests the mapcalc of GRASS has been replaced by Jiffle. *Same gui, a bit different usage (Jiffle has more features), same results.* Important that the author of Jiffle has been so kind to work trying to keep as long as possible backwards compatibility with GRASS's r.mapcalc.
+
+So let's start the fun!
+
+= Tests showcase =
+
+Our starting point will be and elevation model and an aspect map. Here it all starts:
+
+http://jai-tools.googlecode.com/svn/wiki/jgrass/jgrass_01.png
+
+
