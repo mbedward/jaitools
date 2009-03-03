@@ -71,9 +71,14 @@ Can you tell the result?
 
 Ok let's try something more complex.
 
+"I want to see the portions of my map that look north-east to sout-east, have a slope below 10 degrees and are in an elevation rage between 800 and 1200 meters."
 
+Easier to say or to do?
 
+{{{
+if( elevation.dem > 800 && elevation.dem < 1200, if( slope < 10, if( aspect > 45 && aspect < 135, 1.0, null() ), null() ), null() ) 
+}}}
 
-
+...to be continued...
 
 
