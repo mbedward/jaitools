@@ -20,4 +20,34 @@ Our starting point will be and elevation model and an aspect map. Here it all st
 
 http://jai-tools.googlecode.com/svn/wiki/jgrass/jgrass_01.png
 
+And that is the tool we will use Jiffle with:
+
+http://jai-tools.googlecode.com/svn/wiki/jgrass/jgrass_02.png
+
+
+== a simple division ==
+
+Lets' try something easy such as dividing a map by two:
+
+{{{
+elevation.dem / 2.0
+}}}
+
+and the result is as expected:
+
+http://jai-tools.googlecode.com/svn/wiki/jgrass/jgrass_03.png
+
+Don't be missleaded by the colormap. That can be changed in anuy moment and when a map is created in JGrass a default rainbow colormap is created.
+
+
+
+
+
+
+
+
+
+
+
+
 
