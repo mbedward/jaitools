@@ -112,7 +112,25 @@ returns a floored double, logical functions return 1.0d for true and 0.0d for fa
 
 == Variables ==
 
-Variable names are case-sensitive and must start with a letter, optionally followed by letters, numbers and underscores.
+===Variable names===
+
+Variable names are case-sensitive and must start with a letter, optionally followed by any combination of letters, numbers and underscores and dots...
+
+The following are examples of valid variable names...
+{{{
+foo
+foo_bar
+foo.bar
+FOO
+foo42
+}}}
+
+These examples are not valid names...
+{{{
+_startsWithUnderscore
+.startsWithDot
+42_startsWithNumber
+}}}
 
 ===Image variables===
 
