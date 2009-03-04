@@ -127,9 +127,10 @@ foo42
 
 These examples are not valid names...
 {{{
-_startsWithUnderscore
-.startsWithDot
-42_startsWithNumber
+_foo
+.foo
+42Foo
+foo-dash
 }}}
 
 ===Image variables===
