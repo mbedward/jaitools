@@ -98,5 +98,39 @@ public class JiffleRunnerTest {
             iter.startPixels();
         } while (!iter.nextLineDone());
     }
+    
+    @Test
+    public void testNullImageValues() throws Exception {
+        System.out.println("handling null image values");
 
+        TiledImage inImg1 = ImageUtils.createDoubleImage(10, 10, new double[]{Double.NaN});
+        TiledImage inImg2 = ImageUtils.createDoubleImage(10, 10, new double[]{Double.NaN});
+        
+        // out image initially filled with zeroes
+        TiledImage outImg = ImageUtils.createDoubleImage(10, 10);
+        
+        Map<String, TiledImage> imgParams = new HashMap<String, TiledImage>();
+        imgParams.put("in1", inImg1);
+        imgParams.put("in2", inImg2);
+        imgParams.put("out", outImg);
+        
+        Jiffle jiffle = new Jiffle("out = in1 - in2", imgParams);
+        boolean b = false;
+        if (jiffle.isCompiled()) {
+            JiffleRunner runner = new JiffleRunner(jiffle);
+            b = runner.run();
+        }
+        
+        assertTrue(b);
+
+        RectIter iter = RectIterFactory.create(outImg, null);
+        do {
+            do {
+                assertTrue(Double.isNaN(iter.getSampleDouble()));
+            } while (!iter.nextPixelDone());
+            
+            iter.startPixels();
+        } while (!iter.nextLineDone());
+    }
+    
 }

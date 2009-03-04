@@ -1,0 +1,15 @@
+/* Takes the chessboard image and identifies
+ * edge pixels
+ */
+
+horizEdge = chess != chess[0,-1] || chess != chess[0,1]
+vertEdge = chess != chess[-1,0] || chess != chess[1,0]
+
+/* These values will be written to the output image
+ *   0 - non-edge pixel
+ *   1 - vertical edge
+ *   2 - horizontal edge
+ *   3 - vertical and horizontal edge
+ */
+
+edges = horizEdge * 2 + vertEdge

@@ -70,6 +70,8 @@ expr		: assign_expr
 		;
                 
 func_call       : ID LPAR expr_list RPAR -> ^(FUNC_CALL ID expr_list)
+                /* special case for null() */
+                | NULL LPAR expr_list RPAR -> ^(FUNC_CALL ID["null"] expr_list)
                 ;
                 
 nbr_ref         : ID LSQUARE expr ',' expr RSQUARE -> ^(NBR_REF ID expr expr)
@@ -179,6 +181,7 @@ FALSE           : F A L S E
                 ;
                 
 NULL            : N U L L
+                |
                 ;
 
 /* Operators sorted and grouped by precedence order */
