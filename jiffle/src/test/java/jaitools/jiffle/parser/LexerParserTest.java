@@ -20,10 +20,17 @@
 
 package jaitools.jiffle.parser;
 
+import antlr.Parser;
+import jaitools.jiffle.parser.JiffleParser.prog_return;
 import jaitools.jiffle.util.CollectionFactory;
+import java.util.Iterator;
 import java.util.Set;
 import org.antlr.runtime.ANTLRStringStream;
+import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.Token;
+import org.antlr.runtime.tree.CommonTree;
+import org.antlr.runtime.tree.CommonTreeNodeStream;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -42,7 +49,7 @@ public class LexerParserTest {
      */
     @Test
     public void testBlockComment() {
-        System.out.println("testBlockComment");
+        System.out.println("block comments");
         
         String input = 
                 "/* a block comment \n " +
@@ -74,7 +81,7 @@ public class LexerParserTest {
      */
     @Test
     public void testInlineComment() {
-        System.out.println("testInlineComment");
+        System.out.println("inline comments");
         
         String input = "/* pre-comment */ x = sin(/* inside comment */ PI / 6) /* post-comment */ ";
         
@@ -101,6 +108,62 @@ public class LexerParserTest {
                 assertTrue(okVisibleTypes.contains(tok.getType()));
             }
         }
+    }
+    
+    @Test
+    public void testDotNames() {
+        System.out.println("dots in var names");
+        
+        String input = "my.var=5.0";
+        JiffleLexer lexer = lex(input);
+        Token tok;
+
+        tok = lexer.nextToken();
+        assertTrue(tok.getType() == JiffleLexer.ID);
+
+        tok = lexer.nextToken();
+        assertTrue(tok.getType() == JiffleLexer.EQ);
+
+        tok = lexer.nextToken();
+        assertTrue(tok.getType() == JiffleLexer.FLOAT_LITERAL);
+    }
+    
+    @Test
+    public void testNullKeywordAndFunction() throws Exception {
+        System.out.println("recognizing null keyword vs null() function");
+        
+        String input = "a=null; b=null();";
+        JiffleLexer lexer = lex(input);
+        CommonTokenStream tokStrm = new CommonTokenStream(lexer);
+        JiffleParser parser = new JiffleParser(tokStrm);
+
+        CommonTree ast = (CommonTree) parser.prog().getTree();
+        
+        int[] expType = {
+            JiffleParser.ASSIGN,
+            Token.DOWN,
+            JiffleParser.EQ,
+            JiffleParser.ID,
+            JiffleParser.NULL,
+            Token.UP,
+            JiffleParser.ASSIGN,
+            Token.DOWN,
+            JiffleParser.EQ,
+            JiffleParser.ID,
+            JiffleParser.FUNC_CALL,
+            Token.DOWN,
+            JiffleParser.ID
+        };
+        
+        CommonTreeNodeStream nodeStrm = new CommonTreeNodeStream(ast);
+        Iterator iter = nodeStrm.iterator();
+        int k = 0;
+        while (k < expType.length && iter.hasNext()) {
+            CommonTree node = (CommonTree) iter.next();
+            assertEquals(node.getType(), expType[k++]);
+        }
+
+        assertTrue(k == expType.length);
     }
     
     /**
