@@ -1,5 +1,7 @@
 #summary page dedicated to the implementation of Jiffle in the development version of JGrass
 
+<wiki:toc />
+
 = JGrass aims to use Jiffle =
 
 This page is dedicated to the results of the integration of Jiffle in [http://www.jgrass.org JGrass], a GIS based on the [http://udig.refractions.nert uDig] framework and dedicated to geomorphological and hydrological terrain analyses.
@@ -80,5 +82,3 @@ if( elevation.dem > 800 && elevation.dem < 1200, if( slope < 10, if( aspect > 45
 }}}
 
 ...to be continued...
-
-
