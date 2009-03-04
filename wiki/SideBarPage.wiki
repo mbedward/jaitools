@@ -10,5 +10,5 @@
    * [JiffleIssues Issues and gotchas]
    * [JiffleGettingStarted Getting started]
    * [JiffleFAQ FAQ]
-   * [http://jai-tools.googlecode.com/svn/trunk/jiffle/apidocs/index.html API]
+   * [http://www.emilythecamel.com/projects/jai-tools/jiffle/apidocs/index.html API]
  * [JAILinks JAI links]
