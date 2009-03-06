@@ -37,24 +37,18 @@ public class KernelFactory {
 
         /**
          * Simple binary kernel with values of 1 or 0
-         *
-         * @see KeyElementValue
          */
         BINARY,
         /**
          * The value of each kernel element is its distance to the
          * kernel's key element (the element that is placed over
          * image pixels during kernel operations).
-         *
-         * @see KeyElementValue
          */
         DISTANCE,
         /**
          * The value of each kernel element is the inverse distance to the
          * kernel's key element (the element that is placed over
          * image pixels during kernel operations).
-         *
-         * @see KeyElementValue
          */
         INVERSE_DISTANCE;
     };
