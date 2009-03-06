@@ -1,13 +1,23 @@
 #summary a helper class to create KernelJAI objects
 
-= Introduction =
+=KernelFactory=
 
-Add your content here.
+==Description==
 
+KernelFactory is a class with static methods to make it easier to create KernelJAI objects with a variety of configurations...
+ * circle
+ * annulus
+ * _more coming soon_
 
-= Details =
+==Example of use==
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+{{{
+/* 
+ * Create a kernel representing a raster circle
+ * with a radius of 4 pixels. The value of each
+ * element in the kernel will be the inverse
+ * distance to the kernel centre. The centre
+ * element's value is set to 1.0
+ */
+KernelJAI kernel = KernelFactory.createCircle(4, Kernel.ValueType.INVERSE_DISTANCE, 1.0);
+}}}
