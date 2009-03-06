@@ -11,22 +11,16 @@
 
 ==Examples of use==
 
+Here we create a kernel representing a raster circle with a radius of 3 pixels, as set by the first argument. The second argument specifies that elements within the circle will have a value of 1.0 (within the circle) or 0.0 (outside the circle). The third argument sets the value of the centre (key) kernel element.
+
 {{{
-/*
- * Create a kernel representing a raster circle
- * with a radius of 3 pixels. The second arg 
- * specifies that elements within the circle will
- * have a value of 1.0 while other elements will
- * be 0.0. The third arg specifies the value of the
- * centre (key) element.
- */
 KernelJAI circle = KernelFactory.createCircle(3, Kernel.ValueType.BINARY, 1.0);
 
 // Let's have a look at it...
-System.out.println(KernelFactory.kernelToString(circle);
+System.out.println(KernelUtil.kernelToString(circle, true);
 }}}
 
-The call to the kernelToString method will print...
+Which produces this...
 
 {{{
 [[0001000]
@@ -38,17 +32,23 @@ The call to the kernelToString method will print...
  [0001000]]
 }}}
 
-Creating a kernel for distance-weighted operations...
+Next, an example of creating a kernel for distance-weighted operations...
+
+Once again we create a circular kernel, this time with a radius of 3 pixels. The value of each element in the kernel will be the inverse of the distance to the kernel centre. We set the centre element's value is set to 1.0
 
 {{{
-/* 
- * Create a kernel representing a raster circle
- * with a radius of 4 pixels. The value of each
- * element in the kernel will be the inverse
- * distance to the kernel centre. The centre
- * element's value is set to 1.0
- */
-KernelJAI kernel = KernelFactory.createCircle(4, Kernel.ValueType.INVERSE_DISTANCE, 1.0);
+KernelJAI distWt = KernelFactory.createCircle(3, Kernel.ValueType.INVERSE_DISTANCE, 1.0);
+System.out.println(KernelUtil.kernelToString(distWt, true);
+}}}
 
+This is the output...
 
+{{{
+[[0.0000 0.0000 0.0000 0.3333 0.0000 0.0000 0.0000]
+ [0.0000 0.3536 0.4472 0.5000 0.4472 0.3536 0.0000]
+ [0.0000 0.4472 0.7071 1.0000 0.7071 0.4472 0.0000]
+ [0.3333 0.5000 1.0000 1.0000 1.0000 0.5000 0.3333]
+ [0.0000 0.4472 0.7071 1.0000 0.7071 0.4472 0.0000]
+ [0.0000 0.3536 0.4472 0.5000 0.4472 0.3536 0.0000]
+ [0.0000 0.0000 0.0000 0.3333 0.0000 0.0000 0.0000]]
 }}}
