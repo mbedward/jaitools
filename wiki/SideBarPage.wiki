@@ -6,7 +6,7 @@
   * 
  * Utilities
   * [KernelFactory]
-  *
+  * [KernelUtil]
  * Other
   * [Jiffle Jiffle]
    * [JiffleLanguage Language guide]
