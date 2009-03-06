@@ -9,7 +9,36 @@ KernelFactory is a class with static methods to make it easier to create KernelJ
  * annulus
  * _more coming soon_
 
-==Example of use==
+==Examples of use==
+
+{{{
+/*
+ * Create a kernel representing a raster circle
+ * with a radius of 3 pixels. The second arg 
+ * specifies that elements within the circle will
+ * have a value of 1.0 while other elements will
+ * be 0.0. The third arg specifies the value of the
+ * centre (key) element.
+ */
+KernelJAI circle = KernelFactory.createCircle(3, Kernel.ValueType.BINARY, 1.0);
+
+// Let's have a look at it...
+System.out.println(KernelFactory.kernelToString(circle);
+}}}
+
+The call to the kernelToString method will print...
+
+{{{
+[[0001000]
+ [0111110]
+ [0111110]
+ [1111111]
+ [0111110]
+ [0111110]
+ [0001000]]
+}}}
+
+Creating a kernel for distance-weighted operations...
 
 {{{
 /* 
@@ -20,4 +49,6 @@ KernelFactory is a class with static methods to make it easier to create KernelJ
  * element's value is set to 1.0
  */
 KernelJAI kernel = KernelFactory.createCircle(4, Kernel.ValueType.INVERSE_DISTANCE, 1.0);
+
+
 }}}
