@@ -41,7 +41,7 @@ KernelJAI distWt = KernelFactory.createCircle(3, Kernel.ValueType.INVERSE_DISTAN
 System.out.println(KernelUtil.kernelToString(distWt, true);
 }}}
 
-This is the output...
+And this is the output...
 
 {{{
 [[0.0000 0.0000 0.0000 0.3333 0.0000 0.0000 0.0000]
