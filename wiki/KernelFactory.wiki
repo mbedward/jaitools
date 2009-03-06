@@ -52,3 +52,22 @@ And this is the output...
  [0.0000 0.3536 0.4472 0.5000 0.4472 0.3536 0.0000]
  [0.0000 0.0000 0.0000 0.3333 0.0000 0.0000 0.0000]]
 }}}
+
+You can also make an annulus (doughnut) kernel. In this example we create a kernel with an outer radius of 3 pixels, and an inner radius (the hole in the doughnut) of 2 pixels.
+
+{{{
+KernelJAI annulus = KernelFactory.createAnnulus(3, 2, Kernel.ValueType.BINARY, 0.0);
+System.out.println(KernelUtil.kernelToString(annulus, true);
+}}}
+
+Which prints this output...
+
+{{{
+[[0001000]
+ [0110110]
+ [0100010]
+ [1000001]
+ [0100010]
+ [0110110]
+ [0001000]]
+}}}
