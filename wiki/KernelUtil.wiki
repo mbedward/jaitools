@@ -1,0 +1,5 @@
+#summary a class with various utility methods for working with KernelJAI objects
+
+= Introduction =
+
+_call back later_
