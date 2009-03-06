@@ -4,6 +4,9 @@
  * Operators
   * [MaskedConvolve]
   * 
+ * Utilities
+  * [KernelFactory]
+  *
  * Other
   * [Jiffle Jiffle]
    * [JiffleLanguage Language guide]
