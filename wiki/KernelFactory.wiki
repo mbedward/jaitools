@@ -1,10 +1,10 @@
 #summary a helper class to create KernelJAI objects
 
-=KernelFactory=
+=!KernelFactory=
 
 ==Description==
 
-KernelFactory is a class with static methods to make it easier to create KernelJAI objects with a variety of configurations...
+!KernelFactory is a class with static methods to make it easier to create KernelJAI objects with a variety of configurations...
  * circle
  * annulus
  * _more coming soon_
