@@ -2,6 +2,7 @@
 
  * [http://code.google.com/p/jai-tools/ Home]
  * Operators
+  * [KernelStats]
   * [MaskedConvolve]
   * 
  * Utilities
