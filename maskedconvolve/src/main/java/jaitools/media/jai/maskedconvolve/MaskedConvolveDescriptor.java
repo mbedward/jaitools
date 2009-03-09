@@ -85,9 +85,9 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
         super(new String[][]{
                     {"GlobalName", "MaskedConvolve"},
                     {"LocalName", "MaskedConvolve"},
-                    {"Vendor", "org.geotools"},
+                    {"Vendor", "jaitools.media.jai"},
                     {"Description", "Convolve a rendered image masked by an associated ROI"},
-                    {"DocURL", "http://geotools.codehaus.org/"},
+                    {"DocURL", "http://code.google.com/p/jai-tools/"},
                     {"Version", "0.0.1"},
                     {"arg0Desc", "kernel - a JAI Kernel object"},
                     {"arg1Desc", "roi - an ROI object which must have the same pixel bounds" +
