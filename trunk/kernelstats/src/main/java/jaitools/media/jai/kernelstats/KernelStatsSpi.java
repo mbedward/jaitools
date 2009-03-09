@@ -24,10 +24,10 @@ import java.awt.image.renderable.RenderedImageFactory;
 import javax.media.jai.OperationDescriptor;
 import javax.media.jai.OperationRegistry;
 import javax.media.jai.OperationRegistrySpi;
-import javax.media.jai.registry.RenderedRegistryMode;
+import javax.media.jai.registry.CollectionRegistryMode;
 
 /**
- * OperationRegistrySpi implementation to register the "MaskedConvolve"
+ * OperationRegistrySpi implementation to register the "KernelStats"
  * operation and its associated image factories.
  */
 public class KernelStatsSpi implements OperationRegistrySpi {
@@ -39,7 +39,7 @@ public class KernelStatsSpi implements OperationRegistrySpi {
     public KernelStatsSpi() {}
 
     /**
-     * Registers the MaskedConvolve operation and its
+     * Registers the KernelStats operation and its
      * associated image factories across all supported operation modes.
      *
      * @param registry The registry with which to register the operations
@@ -52,7 +52,7 @@ public class KernelStatsSpi implements OperationRegistrySpi {
         
         RenderedImageFactory rif = new KernelStatsRIF();
 
-        registry.registerFactory(RenderedRegistryMode.MODE_NAME,
+        registry.registerFactory(CollectionRegistryMode.MODE_NAME,
                                  descName,
                                  productName,
                                  rif);
