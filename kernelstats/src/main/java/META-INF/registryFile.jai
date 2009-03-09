@@ -5,6 +5,6 @@ descriptor  jaitools.media.jai.kernelstats.KernelStatsDescriptor
 
 
 #
-# "rendered" factory objects
+# "collection" factory objects
 #
-rendered  jaitools.media.jai.kernelstats.KernelStatsRIF  jaitools.media.jai.kernelstats  KernelStats  KernelStats
+collection  jaitools.media.jai.kernelstats.KernelStatsCIF  jaitools.media.jai.kernelstats  KernelStats  KernelStats

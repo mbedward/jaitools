@@ -23,13 +23,10 @@ package jaitools.media.jai.kernelstats;
 import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import javax.media.jai.JAI;
 import javax.media.jai.KernelJAI;
 import javax.media.jai.OperationDescriptorImpl;
 import javax.media.jai.ParameterBlockJAI;
-import javax.media.jai.RenderedOp;
 import javax.media.jai.registry.CollectionRegistryMode;
 
 /**
@@ -39,23 +36,6 @@ import javax.media.jai.registry.CollectionRegistryMode;
  * be calculated for the values in the pixel's neighbourhood, which is defined
  * using a KernelJAI object.
  *
- * <p>
- * Example of use...
- * <pre>{@code \u0000
- * RenderedImage img = ...
- * KernelJAI kernel = KernelFactory.createCircle(5);
- * String[] stats = {"mean", "sdev"};
- *
- * BorderExtender extender = BorderExtender.createInstance(BorderExtender.BORDER_WRAP);
- * RenderingHints hints = new RenderingHints(JAI.KEY_BORDER_EXTENDER, extender);
- *
- * Map<String, RenderedOp> statImages =
- *     KernelStatsDescriptor.createCollection(img, kernel, stats, hints);
- *
- * // output images are keyed by statistic name
- * RenderedImage meanImage = statImages.get("mean");
- *}</pre>
- * 
  * @author Michael Bedward
  */
 public class KernelStatsDescriptor extends OperationDescriptorImpl {
@@ -101,7 +81,7 @@ public class KernelStatsDescriptor extends OperationDescriptorImpl {
      * a requested statistic and the value is the corresponding result image
      * @throws IllegalArgumentException if any args are null
      */
-    public static Map<String, RenderedOp> createCollection(
+    public static Collection createCollection(
             RenderedImage source0,
             KernelJAI kernel,
             String[] stats,
@@ -113,16 +93,7 @@ public class KernelStatsDescriptor extends OperationDescriptorImpl {
         pb.setSource("source0", source0);
         pb.setParameter("kernel", kernel);
         pb.setParameter("stats", stats);
-
-        Collection<Object> coll = JAI.createCollection("KernelStats", pb, hints);
-
-        Map<String, RenderedOp> map = new HashMap<String, RenderedOp>();
-        int k = 0;
-        for (Object o : coll) {
-            map.put(KernelStatsType.get(stats[k++]).toString(), (RenderedOp)o);
-        }
-
-        return map;
+        return JAI.createCollection("KernelStats", pb, hints);
     }
 }
 
