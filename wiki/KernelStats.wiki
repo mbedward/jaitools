@@ -1,0 +1,5 @@
+#summary Calculates one or more statistics for values in a pixel's neighbourhood
+
+=KernelStats=
+
+_docs coming real soon_
