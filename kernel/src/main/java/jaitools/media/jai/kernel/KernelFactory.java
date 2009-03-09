@@ -19,11 +19,15 @@
  */
 package jaitools.media.jai.kernel;
 
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.Shape;
+import java.awt.geom.Point2D;
 import javax.media.jai.KernelJAI;
 
 /**
  * A factory class with static methods to create a variety of
- * KernelJAI configurations
+ * KernelJAI objects with specified geometries
  *
  * @author Michael Bedward
  *
@@ -54,7 +58,32 @@ public class KernelFactory {
     };
 
     /**
-     * Creates a new KernelJAI object with a pseudo-circular configuration.
+     * Create a new KernelJAI object with a circular configuration.
+     * Kernel elements within the circle will have value 1.0f; those
+     * outside will have value 0.0f.
+     * <p>
+     * This is equivalent to, but faster than, calling...
+     * <p>
+     * {@code createCircle(radius, Kernel.ValueType.BINARY, 1.0f) }
+     *
+     * @param radius radius of the circle
+     * @return a new instance of KernelJAI
+     */
+    public static KernelJAI createCircle(int radius) {
+        if (radius <= 0) {
+            throw new IllegalArgumentException(
+                    "Invalid radius (" + radius + "); must be > 0");
+        }
+
+        KernelFactoryHelper kh = new KernelFactoryHelper();
+        float[] weights = kh.makeCircle(radius);
+        int w = 2*radius + 1;
+        kh.rowFill(weights, w, w);
+        return new KernelJAI(w, w, weights);
+    }
+
+    /**
+     * Creates a new KernelJAI object with a circular configuration.
      * The kernel width is 2*radius + 1.
      * The kernel's key element is at position x=radius, y=radius
      *
@@ -76,10 +105,12 @@ public class KernelFactory {
                     "Invalid radius (" + radius + "); must be > 0");
         }
 
+        KernelFactoryHelper kh = new KernelFactoryHelper();
+
         int width = 2 * radius + 1;
         float[] weights = new float[width * width];
 
-        int r2 = radius * radius;
+        float r2 = radius * radius;
         int k0 = 0;
         int k1 = weights.length - 1;
 
@@ -89,7 +120,7 @@ public class KernelFactory {
                 float dist2 = x * x + y2;
                 float value = 0f;
 
-                if (fcomp(r2, dist2) >= 0) {
+                if (kh.fcomp(r2, dist2) >= 0) {
                     if (type == ValueType.DISTANCE) {
                         value = (float) Math.sqrt(dist2);
                     } else if (type == ValueType.INVERSE_DISTANCE) {
@@ -167,11 +198,13 @@ public class KernelFactory {
             return createCircle(outerRadius, type, centreValue);
         }
 
+        KernelFactoryHelper kh = new KernelFactoryHelper();
+
         int width = 2 * outerRadius + 1;
         float[] weights = new float[width * width];
 
         int outer2 = outerRadius * outerRadius;
-        int inner2 = innerRadius * innerRadius;
+        float inner2 = innerRadius * innerRadius;
         int k0 = 0;
         int k1 = weights.length - 1;
 
@@ -181,7 +214,7 @@ public class KernelFactory {
                 float dist2 = x * x + y2;
                 float value = 0f;
 
-                if (fcomp(dist2, outer2) <= 0 && fcomp(dist2, inner2) > 0) {
+                if (kh.fcomp(dist2, outer2) <= 0 && kh.fcomp(dist2, inner2) > 0) {
                     if (type == ValueType.DISTANCE) {
                         value = (float) Math.sqrt(dist2);
                     } else if (type == ValueType.INVERSE_DISTANCE) {
@@ -217,33 +250,144 @@ public class KernelFactory {
         return new KernelJAI(width, width, weights);
     }
 
-    // round-off tolerance: used in the fcomp method below
-    private static final float TOL = 1.0e-8f;
 
     /**
-     * Equivalent to {@linkplain java.lang.Float#compare(float, float) } but
-     * with a round-off tolerance
-     * @param f1 first value
-     * @param f2 second value
-     * @return 0 if f1 and f2 are equal; less than 0 if f1 is less than f2;
-     * greater than 0 if f1 is greater than f2
+     * Creates a new KernelJAI object with a rectangular configuraton.
+     * An IllegalArgumentException will be thrown if width or height are less than 1.
+     * <p>
+     * This is equivalent to calling...
+     * <p>
+     * {@code createRectangle(width, height, Kernel.ValueType.BINARY, width/2, height/2, 1.0f) }
+     *
+     * @param width rectangle width
+     * @param height rectangle height
+     *
+     * @return a new instance of KernelJAI
      */
-    private static int fcomp(float f1, float f2) {
-        if (Math.abs(f1 - f2) < TOL) {
-            return 0;
-        } else {
-            return Float.compare(f1, f2);
-        }
+    public static KernelJAI createRectangle(int width, int height) {
+        float [] weights = (new KernelFactoryHelper()).makeRect(width, height);
+        return new KernelJAI(width, height, weights);
     }
 
     /**
-     * Test if two float values are equal, taking into accont a
-     * round-off tolerance
-     * @param f1 first value
-     * @param f2 second value
-     * @return true if equal, false otherwise
+     * Creates a new KernelJAI object with a rectangular configuration.
+     * <p>
+     * An IllegalArgumentException will be thrown if:
+     * <ul>
+     * <li> width or height are less than 1
+     * <li> keyX is not in the range 0:width-1
+     * <li> keyY is not in the range 0:height-1
+     * </ul>
+     *
+     * @param width rectangle width
+     * @param height rectangle height
+     *
+     * @param type one of
+     * {@linkplain ValueType#BINARY},
+     * {@linkplain ValueType#DISTANCE} or
+     * {@linkplain ValueType#INVERSE_DISTANCE}
+     *
+     * @param keyX x position of the key element
+     * @param keyY y position of the key element (y coords increase downwards)
+     * @param keyValue value of the key element
+     *
+     * @return a new instance of KernelJAI
+     *
      */
-    private static boolean feq(float f1, float f2) {
-        return Math.abs(f1 - f2) < TOL;
+    public static KernelJAI createRectangle(
+            int width, int height, ValueType type, int keyX, int keyY, float keyValue) {
+
+        if (width < 1) {
+            throw new IllegalArgumentException("width must be >= 1");
+        }
+
+        if (height < 1) {
+            throw new IllegalArgumentException("height must be >= 1");
+        }
+
+        if (!(keyX >= 0 && keyX < width) || !(keyY >= 0 && keyY < height)) {
+            throw new IllegalArgumentException("key element position " + keyX + "," + keyY +
+                    " is outside rectangle bounds");
+        }
+        
+        KernelFactoryHelper kh = new KernelFactoryHelper();
+        float weights[];
+
+        if (type == ValueType.BINARY) {
+            weights = kh.makeRect(width, height);
+            weights[keyX + keyY*width] = keyValue;
+            return new KernelJAI(width, height, keyX, keyY, weights);
+        }
+
+        weights = new float[width*height];
+
+        float dist;
+        int k = 0;
+        Point2D p = new Point(keyX, keyY);
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++, k++) {
+                dist = (float) p.distance(x, y);
+                if (type == ValueType.DISTANCE) {
+                    weights[k] = dist;
+                } else {
+                    weights[k] = 1.0f / dist;
+                }
+            }
+        }
+
+        weights[keyX + keyY*width] = keyValue;
+        
+        return new KernelJAI(width, height, keyX, keyY, weights);
+    }
+
+    /**
+     * Create a new KernelJAI object by rasterizing a shape. The shape must be a closed
+     * polygon. The rasterizing process checks whether the centre of each pixel is inside
+     * the polygon.
+     * <p>
+     * This method can cope with arbitrary shape bounds, ie. there is no need to
+     * set the bounding rectangle to have origin x=0, y=0. The values of keyX and keyY,
+     * which specify the position of the kernel's key element, must be within the
+     * bounds of the shape as passed to this method, but do not need to be inside the
+     * shape itself.
+     *
+     * @param shape an object representing a closed polygon
+     *
+     * @param type one of
+     * {@linkplain ValueType#BINARY},
+     * {@linkplain ValueType#DISTANCE} or
+     * {@linkplain ValueType#INVERSE_DISTANCE}
+     *
+     * @param keyX the x coord of the key element
+     * @param keyY the y coord of the key element
+     * @param keyValue the value of the key element
+     *
+     * @return a new instance of KernelJAI
+     */
+    public static KernelJAI createFromShape(Shape shape, ValueType type, int keyX, int keyY, float keyValue) {
+        Rectangle bounds = shape.getBounds();
+        int width = bounds.width + 1;
+        int height = bounds.height + 1;
+        float[] weights = new float[width * height];
+
+        float eps = 1.0e-2f;
+        float eps2 = 2*eps;
+        int k = 0;
+        for (int y = bounds.y, iy = 0; iy < height; y++, iy++) {
+            for (int x = bounds.x, ix = 0; ix < width; x++, ix++, k++) {
+                if (shape.intersects(x+eps, y+eps, eps2, eps2)) {
+                    if (type == ValueType.BINARY) {
+                        weights[k] = 1.0f;
+                    } else if (type == ValueType.DISTANCE) {
+                        weights[k] = (float) Point2D.distance(keyX, keyY, x, y);
+                    } else if (type == ValueType.INVERSE_DISTANCE) {
+                        weights[k] = 1.0f / (float) Point2D.distance(keyX, keyY, x, y);
+                    }
+                }
+            }
+        }
+
+        weights[keyX - bounds.x + (keyY - bounds.y)*width] = keyValue;
+        return new KernelJAI(width, height, keyX-bounds.x, keyY-bounds.y, weights);
     }
 }
