@@ -7,8 +7,8 @@
   <version>1.0-SNAPSHOT</version>
   <name>JAI-tools - MaskedConvolve operator</name>
   <description>Adds selectivity to the JAI convolve operation. An ROI can
-      be used to control which source image pixels are convolved and/or
-      which neighbourhood pixels are included in the convolution.</description>
+be used to control which source image pixels are convolved and/or
+which neighbourhood pixels are included in the convolution.</description>
   <url>http://code.google.com/p/jai-tools/</url>
   <build>
         <plugins>
