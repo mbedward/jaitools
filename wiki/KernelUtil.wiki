@@ -2,4 +2,16 @@
 
 = Introduction =
 
-_docs coming soon_
+This class contains some handy, time-saving methods to manipulate and examine kernels.
+
+= Examples of use =
+
+{{{
+// create a copy of a kernel with the element values
+// standardized such that they sum to 1.0
+KernelJAI newKernel = KernelUtil.standardize(existingKernel);
+
+// now print the element values to the console (the boolean
+// arg specifies whether we want a multiline string returned
+KernelUtil.kernelToString(newKernel, true);
+}}}
