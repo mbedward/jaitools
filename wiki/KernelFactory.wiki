@@ -2,6 +2,8 @@
 
 =!KernelFactory=
 
+[http://code.google.com/p/jai-tools/source/browse/trunk/kernel/src/main/java/jaitools/media/jai/kernel/KernelFactory.java jaitools.media.jai.kernel.KernelFactory]
+
 ==Description==
 
 !KernelFactory is a class with static methods to make it easier to create KernelJAI objects with the non-zero kernel elements arranged as one of:
