@@ -19,10 +19,18 @@
  */
 package jaitools.media.jai.kernel;
 
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.MultiPoint;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.Shape;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.List;
 import javax.media.jai.KernelJAI;
 
 /**
@@ -352,6 +360,9 @@ public class KernelFactory {
      * shape itself.
      *
      * @param shape an object representing a closed polygon
+     * @param transform an optional AffineTransform to relate shape coordinates to
+     * kernel element coordinates. May be null. This is useful to scale and/or rotate
+     * the shape.
      *
      * @param type one of
      * {@linkplain ValueType#BINARY},
@@ -364,30 +375,78 @@ public class KernelFactory {
      *
      * @return a new instance of KernelJAI
      */
-    public static KernelJAI createFromShape(Shape shape, ValueType type, int keyX, int keyY, float keyValue) {
-        Rectangle bounds = shape.getBounds();
-        int width = bounds.width + 1;
-        int height = bounds.height + 1;
-        float[] weights = new float[width * height];
+    public static KernelJAI createFromShape(Shape shape, AffineTransform transform, ValueType type, int keyX, int keyY, float keyValue) {
+        /*
+         * First we transform the shape to a JTS Polygon object
+         * so we can take advantage of the JTS intersects method
+         * and avoid rasterizing artefacts which can arise when
+         * using Shape.contains
+         */
+        PathIterator iter = shape.getPathIterator(transform, 0.05);
+        float[] buf = new float[6];
+        List<Coordinate> coords = new ArrayList<Coordinate>();
+        while (!iter.isDone()) {
+            iter.currentSegment(buf);
+            coords.add(new Coordinate(buf[0], buf[1]));
+            iter.next();
+        }
 
-        float eps = 1.0e-2f;
-        float eps2 = 2*eps;
-        int k = 0;
-        for (int y = bounds.y, iy = 0; iy < height; y++, iy++) {
-            for (int x = bounds.x, ix = 0; ix < width; x++, ix++, k++) {
-                if (shape.intersects(x+eps, y+eps, eps2, eps2)) {
-                    if (type == ValueType.BINARY) {
-                        weights[k] = 1.0f;
-                    } else if (type == ValueType.DISTANCE) {
-                        weights[k] = (float) Point2D.distance(keyX, keyY, x, y);
-                    } else if (type == ValueType.INVERSE_DISTANCE) {
-                        weights[k] = 1.0f / (float) Point2D.distance(keyX, keyY, x, y);
-                    }
-                }
+        GeometryFactory gf = new GeometryFactory();
+        Coordinate[] coordsAr = coords.toArray(new Coordinate[coords.size()]);
+        Geometry poly = gf.createPolygon(gf.createLinearRing(coordsAr), null);
+
+        Envelope env = poly.getEnvelopeInternal();
+
+        int left = (int) Math.floor(env.getMinX());
+        int right = (int) Math.ceil(env.getMaxX());
+        int top = (int) Math.ceil(env.getMaxY());
+        int bottom = (int) Math.floor(env.getMinY());
+
+        int width = right - left + 1;
+        int height = top - bottom + 1;
+
+        float[] weights = new float[width * height];
+        int[] offset = new int[height];
+        for (int i = 0, o=0; i < offset.length; i++, o+=width) offset[i] = o;
+
+        coords.clear();
+        double y = top;
+        for (int iy = 0; iy < height; y--, iy++) {
+            double x = left;
+            for (int ix = 0; ix < width; x++, ix++) {
+                coords.add(new Coordinate(x, y));
             }
         }
 
-        weights[keyX - bounds.x + (keyY - bounds.y)*width] = keyValue;
-        return new KernelJAI(width, height, keyX-bounds.x, keyY-bounds.y, weights);
+        /*
+         * Now we buffer the polygon by a small amount to avoid
+         * rejection points that lie exactly on the boundary
+         * and the points that intersect with the poly
+         */
+        MultiPoint mp = gf.createMultiPoint(coords.toArray(new Coordinate[coords.size()]));
+        Geometry inside = mp.intersection(poly.buffer(0.05, Math.max(width/2, 10)));
+
+        /*
+         * For each intersecting point we set a kernel element
+         */
+        int n = inside.getNumGeometries();
+        for (int i = 0; i < n; i++) {
+            Geometry g = inside.getGeometryN(i);
+            Coordinate c = g.getCoordinate();
+            int index = (int) c.x - left + offset[(int) c.y - bottom];
+
+            if (type == ValueType.BINARY) {
+                weights[index] = 1.0f;
+            } else if (type == ValueType.DISTANCE) {
+                weights[index] = (float) Point2D.distance(keyX, keyY, (int)c.x, (int)c.y);
+            } else if (type == ValueType.INVERSE_DISTANCE) {
+                weights[index] = 1.0f / (float) Point2D.distance(keyX, keyY, (int)c.x, (int)c.y);
+            }
+        }
+
+        // set the key element to the requested value
+        weights[keyX + offset[keyY]] = keyValue;
+
+        return new KernelJAI(width, height, keyX, keyY, weights);
     }
 }

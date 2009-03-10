@@ -134,4 +134,23 @@ public class KernelFactoryTest {
         }
     }
 
+    @Test
+    public void testCreateFromShape() {
+        System.out.println("createFromShape");
+
+        int radius = 5;
+        Shape shape = new Ellipse2D.Float(100, 200, 2*radius, 2*radius);
+        KernelJAI shpKernel = KernelFactory.createFromShape(shape, null, KernelFactory.ValueType.BINARY, radius, radius, 1.0f);
+        KernelJAI circleKernel = KernelFactory.createCircle(radius);
+
+        float[] shpData = shpKernel.getKernelData();
+        float[] circleData = circleKernel.getKernelData();
+
+        assertTrue(shpData.length == circleData.length);
+
+        KernelFactoryHelper kh = new KernelFactoryHelper();
+        for (int i = 0; i < shpData.length; i++) {
+            assertTrue(kh.feq(shpData[i], circleData[i]));
+        }
+    }
 }
