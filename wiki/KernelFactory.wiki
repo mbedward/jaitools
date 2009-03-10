@@ -36,6 +36,8 @@ Which produces this...
  [0001000]]
 }}}
 
+----
+
 Next, an example of creating a kernel for distance-weighted operations...
 
 Once again we create a circular kernel, this time with a radius of 3 pixels. The value of each element in the kernel will be the inverse of the distance to the kernel centre. We set the centre element's value is set to 1.0
@@ -57,6 +59,8 @@ And this is the output...
  [0.0000 0.0000 0.0000 0.3333 0.0000 0.0000 0.0000]]
 }}}
 
+----
+
 You can also make an annulus (doughnut) kernel. In this example we create a kernel with an outer radius of 3 pixels, and an inner radius (the hole in the doughnut) of 2 pixels.
 
 {{{
@@ -75,6 +79,8 @@ Which prints this output...
  [0110110]
  [0001000]]
 }}}
+
+----
 
 You can create a kernel from any closed, polygonal object that implements java.awt.Shape. In this example we create a narrow elliptical kernel, with the long axis of the ellipse having an upper-left to lower-right (NW - SE) orientation. Such a kernel might be part of a landscape fire model...
 
