@@ -4,10 +4,12 @@
 
 ==Description==
 
-!KernelFactory is a class with static methods to make it easier to create KernelJAI objects with a variety of configurations...
+!KernelFactory is a class with static methods to make it easier to create KernelJAI objects with the non-zero kernel elements arranged as one of:
  * circle
  * annulus
- * _more coming soon_
+ * rectangle
+
+Kernels representing more complex shapes can also be created from java.awt.Shape objects.
 
 ==Examples of use==
 
@@ -70,4 +72,18 @@ Which prints this output...
  [0100010]
  [0110110]
  [0001000]]
+}}}
+
+You can create a kernel from any closed, polygonal object that implements java.awt.Shape. In this example we create an narrow elliptical kernel, with the long axis of the ellipse having an upper-left to lower-right (NW - SE) orientation (such a kernel could be used for modelling fire spread in a landscape).
+
+{{{
+// create an ellipse with a horizontal long axis
+Shape ell = new Ellipse2D.Float(0, 0, 10, 5);
+
+// create an AffineTransform to rotate the ellipse 45 degrees clock-wise
+AffineTransform at = AffineTransform.getRotateInstance(-Math.PI/4);
+
+// create the kernel with its key element at the upper-left corner (0,0)
+KernelJAI ellKern = KernelFactory.createFromShape(
+    ell, at, KernelFactory.ValueType.BINARY, 0, 0, 1.0f);    
 }}}
