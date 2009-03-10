@@ -81,9 +81,27 @@ You can create a kernel from any closed, polygonal object that implements java.a
 Shape ell = new Ellipse2D.Float(0, 0, 10, 5);
 
 // create an AffineTransform to rotate the ellipse 45 degrees clock-wise
-AffineTransform at = AffineTransform.getRotateInstance(-Math.PI/4);
+AffineTransform at = AffineTransform.getRotateInstance(Math.PI/4);
 
 // create the kernel with its key element at the upper-left corner (0,0)
 KernelJAI ellKern = KernelFactory.createFromShape(
-    ell, at, KernelFactory.ValueType.BINARY, 0, 0, 1.0f);    
+    ell, at, KernelFactory.ValueType.BINARY, 0, 0, 1.0f);
+
+// now print it to convince ourselves that we have what we want
+System.out.println(KernelUtil.kernelToString(ellKern, true));
+}}}
+
+And here is the thing of beauty that results...
+
+{{{
+[[1000000000]
+ [0011100000]
+ [0111111000]
+ [0111111100]
+ [0011111100]
+ [0001111110]
+ [0001111110]
+ [0000011110]
+ [0000001110]
+ [0000000000]]
 }}}
