@@ -1,10 +1,12 @@
 #summary a class with various utility methods for working with KernelJAI objects
 
-= Introduction =
+=KernelUtils=
+
+==Description==
 
 This class contains some handy, time-saving methods to manipulate and examine kernels.
 
-= Examples of use =
+==Examples of use==
 
 {{{
 // create a copy of a kernel with the element values
