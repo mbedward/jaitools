@@ -1,6 +1,6 @@
 #summary a class with various utility methods for working with KernelJAI objects
 
-=KernelUtils=
+=!KernelUtil=
 
 ==Description==
 
