@@ -74,7 +74,7 @@ Which prints this output...
  [0001000]]
 }}}
 
-You can create a kernel from any closed, polygonal object that implements java.awt.Shape. In this example we create an narrow elliptical kernel, with the long axis of the ellipse having an upper-left to lower-right (NW - SE) orientation (such a kernel could be used for modelling fire spread in a landscape).
+You can create a kernel from any closed, polygonal object that implements java.awt.Shape. In this example we create a narrow elliptical kernel, with the long axis of the ellipse having an upper-left to lower-right (NW - SE) orientation. Such a kernel might be part of a landscape fire model...
 
 {{{
 // create an ellipse with a horizontal long axis
