@@ -13,5 +13,5 @@ KernelJAI newKernel = KernelUtil.standardize(existingKernel);
 
 // now print the element values to the console (the boolean
 // arg specifies whether we want a multiline string returned
-KernelUtil.kernelToString(newKernel, true);
+System.out.println(KernelUtil.kernelToString(newKernel, true));
 }}}
