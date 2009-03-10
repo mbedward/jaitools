@@ -2,7 +2,7 @@
 
 =!MaskedConvolve operator=
 
-[http://code.google.com/p/jai-tools/source/browse/trunk/maskedconvolve/src/main/java/jaitools/media/jai/maskedconvolve/MaskedConvolveDescriptor.java jaitools.media.jai.maskedconvolve.MaskedConvolveDescriptor]
+*package:* jaitools.media.jai.maskedconvolve
 
 ==Description==
 
