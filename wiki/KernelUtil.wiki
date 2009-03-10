@@ -2,6 +2,8 @@
 
 =!KernelUtil=
 
+[http://jai-tools.googlecode.com/svn/trunk/kernel/src/main/java/jaitools/media/jai/kernel/KernelUtil.java jaitools.media.jai.kernel.KernelUtil]
+
 ==Description==
 
 This class contains some handy, time-saving methods to manipulate and examine kernels.
