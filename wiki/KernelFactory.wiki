@@ -85,7 +85,7 @@ AffineTransform at = AffineTransform.getRotateInstance(Math.PI/4);
 
 // create the kernel with its key element at the upper-left corner (0,0)
 KernelJAI ellKern = KernelFactory.createFromShape(
-    ell, at, KernelFactory.ValueType.BINARY, 0, 0, 1.0f);
+    ell, at, KernelFactory.ValueType.BINARY, 0, 0, 0f);
 
 // now print it to convince ourselves that we have what we want
 System.out.println(KernelUtil.kernelToString(ellKern, true));
@@ -94,7 +94,7 @@ System.out.println(KernelUtil.kernelToString(ellKern, true));
 And here is the thing of beauty that results...
 
 {{{
-[[1000000000]
+[[0000000000]
  [0011100000]
  [0111111000]
  [0111111100]
@@ -105,3 +105,5 @@ And here is the thing of beauty that results...
  [0000001110]
  [0000000000]]
 }}}
+
+Note that the kernel's key element, which we set as the upper-left corner, is disjoint from the elements within the ellipse. This is perfectly valid (and hopefully what we wanted).
