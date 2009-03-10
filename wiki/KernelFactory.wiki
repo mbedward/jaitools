@@ -2,7 +2,7 @@
 
 =!KernelFactory=
 
-[http://code.google.com/p/jai-tools/source/browse/trunk/kernel/src/main/java/jaitools/media/jai/kernel/KernelFactory.java jaitools.media.jai.kernel.KernelFactory]
+*package:* jaitools.media.jai.kernel
 
 ==Description==
 
