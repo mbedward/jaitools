@@ -2,6 +2,8 @@
 
 =!MaskedConvolve operator=
 
+[http://code.google.com/p/jai-tools/source/browse/trunk/maskedconvolve/src/main/java/jaitools/media/jai/maskedconvolve/MaskedConvolveDescriptor.java jaitools.media.jai.maskedconvolve.MaskedConvolveDescriptor]
+
 ==Description==
 
 Performs kernel-based convolution like JAI's Convolve operator, but adds control over which source image pixels are included in the convolution. This is defined in an 
