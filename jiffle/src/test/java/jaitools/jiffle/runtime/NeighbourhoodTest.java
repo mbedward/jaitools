@@ -21,8 +21,8 @@
 package jaitools.jiffle.runtime;
 
 import jaitools.jiffle.Jiffle;
-import jaitools.jiffle.util.CollectionFactory;
-import jaitools.jiffle.util.ImageUtils;
+import jaitools.utils.CollectionFactory;
+import jaitools.utils.ImageUtils;
 import java.util.Map;
 import javax.media.jai.TiledImage;
 import org.junit.Ignore;

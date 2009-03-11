@@ -20,7 +20,7 @@
 package jaitools.jiffle.demo;
 
 import jaitools.jiffle.runtime.JiffleProgressEvent;
-import jaitools.jiffle.util.ImageUtils;
+import jaitools.utils.ImageUtils;
 import jaitools.jiffle.runtime.JiffleFailureEvent;
 import jaitools.jiffle.runtime.JiffleInterpreter;
 import jaitools.jiffle.Jiffle;

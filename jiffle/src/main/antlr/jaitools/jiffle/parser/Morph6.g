@@ -38,9 +38,9 @@ package jaitools.jiffle.parser;
 
 import jaitools.jiffle.runtime.FunctionTable;
 import jaitools.jiffle.runtime.VarTable;
-import jaitools.jiffle.util.CollectionFactory;
+import jaitools.utils.CollectionFactory;
 
-import static jaitools.jiffle.util.DoubleComparison.*;
+import static jaitools.utils.DoubleComparison.*;
 }
 
 @members {

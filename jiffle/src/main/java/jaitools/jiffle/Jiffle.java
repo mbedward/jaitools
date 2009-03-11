@@ -31,7 +31,7 @@ import jaitools.jiffle.parser.VarClassifier;
 import jaitools.jiffle.runtime.JiffleInterpreter;
 import jaitools.jiffle.runtime.JiffleRunner;
 import jaitools.jiffle.runtime.VarTable;
-import jaitools.jiffle.util.CollectionFactory;
+import jaitools.utils.CollectionFactory;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
