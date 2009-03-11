@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>jaitools</groupId>
+    <artifactId>jaitools</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>JAI-tools - Extends the Java Advanced Imaging library</name>
+    <description>Additional operators, utility classes and the Jiffle scripting language 
+to work with the Java Advanced Imaging library</description>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.0.2</version>
+                <configuration>
+                    <source>1.5</source>
+                    <target>1.5</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.2</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <modules>
+        <module>jiffle</module>
+        <module>kernel</module>
+        <module>kernelstats</module>
+        <module>maskedconvolve</module>
+        <module>jaitools-utils</module>
+    <module>jaitools-utils</module>
+  </modules>
+</project>
