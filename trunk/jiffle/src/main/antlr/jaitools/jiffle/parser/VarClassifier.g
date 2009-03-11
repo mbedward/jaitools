@@ -48,7 +48,7 @@ import java.util.Set;
 import jaitools.jiffle.ErrorCode;
 import jaitools.jiffle.runtime.JiffleRunner;
 import jaitools.jiffle.runtime.VarTable;
-import jaitools.jiffle.util.CollectionFactory;
+import jaitools.utils.CollectionFactory;
 }
 
 @members {

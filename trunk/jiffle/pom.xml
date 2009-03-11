@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>jaitools</groupId>
+    <parent>
+        <groupId>jaitools</groupId>
+        <artifactId>jaitools</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
     <artifactId>jiffle</artifactId>
     <packaging>jar</packaging>
-    <version>0.0.1</version>
     <name>Jiffle: JAI Image Function Language</name>
     <url>http://code.google.com/p/jai-tools</url>
     <description>Jiffle is a language and interpreter intended to make it easier to create
-        images from mathematical functions.</description>
+        images from mathematical functions.
+    </description>
     <developers>
         <developer>
             <id>michael</id>
@@ -84,6 +88,11 @@
             <artifactId>junit</artifactId>
             <version>4.0</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>jaitools</groupId>
+            <artifactId>jaitools-utils</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.antlr</groupId>

@@ -19,13 +19,13 @@
  */
 package jaitools.jiffle.runtime;
 
-import jaitools.jiffle.util.CollectionFactory;
-import jaitools.jiffle.util.SummaryStats;
+import jaitools.utils.CollectionFactory;
+import jaitools.utils.SummaryStats;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import static jaitools.jiffle.util.DoubleComparison.*;
+import static jaitools.utils.DoubleComparison.*;
 
 /**
  * A symbol table for jiffle functions, pre-loaded with a basic set of 
@@ -157,28 +157,35 @@ public class FunctionTable {
         lookup.put("max_v",
                 new OpVarArgs() {
                     public double call(Double ...values) {
-                        return SummaryStats.max(values);
+                        return SummaryStats.max(values, true);
                     }
                 });
-                
+
+        lookup.put("mean_v",
+                new OpVarArgs() {
+                    public double call(Double ...values) {
+                        return SummaryStats.mean(values, true);
+                    }
+        });
+        
         lookup.put("median_v",
                 new OpVarArgs() {
                     public double call(Double ...values) {
-                        return SummaryStats.median(values);
+                        return SummaryStats.median(values, true);
                     }
                 });
                 
         lookup.put("min_v",
                 new OpVarArgs() {
                     public double call(Double ...values) {
-                        return SummaryStats.min(values);
+                        return SummaryStats.min(values, true);
                     }
                 });
                 
         lookup.put("mode_v",
                 new OpVarArgs() {
                     public double call(Double ...values) {
-                        return SummaryStats.mode(values);
+                        return SummaryStats.mode(values, true);
                     }
                 });
                 
@@ -213,7 +220,7 @@ public class FunctionTable {
         lookup.put("range_v",
                 new OpVarArgs() {
                     public double call(Double ...values) {
-                        return SummaryStats.range(values);
+                        return SummaryStats.range(values, true);
                     }
                 });
                 
@@ -229,6 +236,13 @@ public class FunctionTable {
                     public double call(double x, double fac) {
                         int ifac = (int)(fac + 0.5);
                         return Math.round(x / ifac) * ifac;
+                    }
+                });
+
+        lookup.put("sdev_v",
+                new OpVarArgs() {
+                    public double call(Double ...values) {
+                        return SummaryStats.sdev(values, true);
                     }
                 });
 
@@ -250,6 +264,13 @@ public class FunctionTable {
                 new Op1Arg() {
                     public double call(double x) {
                         return Math.tan(x);
+                    }
+                });
+
+        lookup.put("variance_v",
+                new OpVarArgs() {
+                    public double call(Double ...values) {
+                        return SummaryStats.variance(values, true);
                     }
                 });
 

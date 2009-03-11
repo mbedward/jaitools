@@ -39,7 +39,7 @@ import java.util.Map;
 import jaitools.jiffle.ErrorCode;
 import jaitools.jiffle.runtime.FunctionTable;
 import jaitools.jiffle.runtime.JiffleRunner;
-import jaitools.jiffle.util.CollectionFactory;
+import jaitools.utils.CollectionFactory;
 }
 
 @members {

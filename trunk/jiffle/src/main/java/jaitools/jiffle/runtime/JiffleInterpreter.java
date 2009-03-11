@@ -21,7 +21,7 @@
 package jaitools.jiffle.runtime;
 
 import jaitools.jiffle.Jiffle;
-import jaitools.jiffle.util.CollectionFactory;
+import jaitools.utils.CollectionFactory;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;

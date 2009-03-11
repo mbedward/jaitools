@@ -22,7 +22,7 @@ package jaitools.jiffle.parser;
 
 import antlr.Parser;
 import jaitools.jiffle.parser.JiffleParser.prog_return;
-import jaitools.jiffle.util.CollectionFactory;
+import jaitools.utils.CollectionFactory;
 import java.util.Iterator;
 import java.util.Set;
 import org.antlr.runtime.ANTLRStringStream;

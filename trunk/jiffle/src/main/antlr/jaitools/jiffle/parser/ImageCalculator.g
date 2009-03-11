@@ -37,9 +37,9 @@ package jaitools.jiffle.parser;
 
 import java.util.List;
 import jaitools.jiffle.runtime.JiffleRunner;
-import jaitools.jiffle.util.CollectionFactory;
+import jaitools.utils.CollectionFactory;
 
-import static jaitools.jiffle.util.DoubleComparison.*;
+import static jaitools.utils.DoubleComparison.*;
 }
 
 @members {
