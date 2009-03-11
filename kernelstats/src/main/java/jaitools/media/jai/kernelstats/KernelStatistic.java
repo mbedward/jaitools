@@ -28,7 +28,7 @@ import java.util.Map;
  * 
  * @author Michael Bedward
  */
-public enum KernelStatsType {
+public enum KernelStatistic {
 
     /** Arithmetic mean */
     MEAN("mean", "arithmetic mean"),
@@ -48,10 +48,10 @@ public enum KernelStatsType {
     /** Sample standard deviation */
     SDEV("sdev", "sample standard deviation");
 
-    private static Map<String, KernelStatsType> lookup;
+    private static Map<String, KernelStatistic> lookup;
     static {
-        lookup = new HashMap<String, KernelStatsType>();
-        for (KernelStatsType type : KernelStatsType.values()) {
+        lookup = new HashMap<String, KernelStatistic>();
+        for (KernelStatistic type : KernelStatistic.values()) {
             lookup.put(type.name, type);
         }
     }
@@ -62,7 +62,7 @@ public enum KernelStatsType {
     /**
      * Private constructor
      */
-    private KernelStatsType(String name, String desc) {
+    private KernelStatistic(String name, String desc) {
         this.name = name;
         this.desc = desc;
     }
@@ -83,13 +83,13 @@ public enum KernelStatsType {
     }
 
     /**
-     * Get a KernelStatsType constant by name. A case-insensitive
+     * Get a KernelStatistic constant by name. A case-insensitive
      * lookup is performed.
      * @param name the statistic name
-     * @return a KernelStatsType instance or null if the name was
+     * @return a KernelStatistic instance or null if the name was
      * not recognized
      */
-    public static KernelStatsType get(String name) {
+    public static KernelStatistic get(String name) {
         return lookup.get(name.toLowerCase());
     }
 }
