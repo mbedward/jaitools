@@ -8,7 +8,7 @@
     </parent>
     <artifactId>kernelstats</artifactId>
     <packaging>jar</packaging>
-    <name>kernelstats</name>
+    <name>JAI-tools - KernelStats operator</name>
     <url>http://maven.apache.org</url>
     <build>
         <plugins>
@@ -21,6 +21,24 @@
                 </configuration>
             </plugin>
         </plugins>
+        <resources>
+            <resource>
+                <targetPath>META-INF</targetPath>
+                <filtering>false</filtering>
+                <directory>src/main/java/META-INF</directory>
+                <includes>
+                    <include>*</include>
+                </includes>
+            </resource>
+            <resource>
+                <targetPath>META-INF/services</targetPath>
+                <filtering>false</filtering>
+                <directory>src/main/java/META-INF/services</directory>
+                <includes>
+                    <include>*</include>
+                </includes>
+            </resource>
+        </resources>
     </build>
     <dependencies>
         <dependency>
