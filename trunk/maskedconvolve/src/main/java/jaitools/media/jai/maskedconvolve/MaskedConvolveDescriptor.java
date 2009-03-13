@@ -80,12 +80,35 @@ import javax.media.jai.registry.RenderedRegistryMode;
  */
 public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
 
+    static final int KERNEL_ARG_INDEX = 0;
+    static final int ROI_ARG_INDEX = 1;
+    static final int MASKSRC_ARG_INDEX = 2;
+    static final int MASKDEST_ARG_INDEX = 3;
+
+    private static final String[] paramNames =
+        {"kernel",
+         "roi",
+         "masksource",
+         "maskdest"};
+
+    private static final Class[] paramClasses =
+        {javax.media.jai.KernelJAI.class,
+         javax.media.jai.ROI.class,
+         Boolean.class,
+         Boolean.class};
+
+    private static final Object[] paramDefaults =
+        {NO_PARAMETER_DEFAULT,
+         NO_PARAMETER_DEFAULT,
+         Boolean.TRUE,
+         Boolean.TRUE};
+
     /** Constructor. */
     public MaskedConvolveDescriptor() {
         super(new String[][]{
                     {"GlobalName", "MaskedConvolve"},
                     {"LocalName", "MaskedConvolve"},
-                    {"Vendor", "jaitools.media.jai"},
+                    {"Vendor", "jaitools"},
                     {"Description", "Convolve a rendered image masked by an associated ROI"},
                     {"DocURL", "http://code.google.com/p/jai-tools/"},
                     {"Version", "0.0.1"},
@@ -103,19 +126,9 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
                 
                 1,                                              // number of sources
                 
-                new String[]{"kernel", "roi", "masksource", "maskdest"}, // parameter names
-                
-                new Class[]{                                    // param classes
-                    javax.media.jai.KernelJAI.class,
-                    javax.media.jai.ROI.class,
-                    Boolean.class,
-                    Boolean.class},
-                    
-                new Object[]{                                   // param defaults
-                    NO_PARAMETER_DEFAULT, 
-                    NO_PARAMETER_DEFAULT,
-                    Boolean.TRUE,
-                    Boolean.TRUE},
+                paramNames,
+                paramClasses,
+                paramDefaults,
                     
                 null                                            // valid values (none defined)
                 );
