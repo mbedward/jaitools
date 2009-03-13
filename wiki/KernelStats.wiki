@@ -1,5 +1,15 @@
 #summary Calculates one or more statistics for values in a pixel's neighbourhood
 
-=KernelStats=
+=!KernelStats=
 
-_docs coming real soon_
+==Description==
+
+This operator calculates neighbourhood statistics for an input image. In JAI parlance it is a Collection mode operator because it can produce multiple output images, one for each statistic requested, from a single invocation.
+
+You define the neighbourhood to use with a !KernelJAI object (see the KernelFactory class). The operator will place this kernel over each source image pixel, collect the values in the pixel neighbourhood, and calculates each requested statistic.
+
+<i><font color="blue">
+Note: the above describes what we're aiming to happen. What actually happens in
+the current code is that the kernel is passed over the input image for each
+statistic which is obviously inefficient.
+</font></i>
