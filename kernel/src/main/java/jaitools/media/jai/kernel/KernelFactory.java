@@ -24,12 +24,12 @@ import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.MultiPoint;
+import jaitools.utils.CollectionFactory;
 import java.awt.Point;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
 import java.util.List;
 import javax.media.jai.KernelJAI;
 
@@ -384,7 +384,7 @@ public class KernelFactory {
          */
         PathIterator iter = shape.getPathIterator(transform, 0.05);
         float[] buf = new float[6];
-        List<Coordinate> coords = new ArrayList<Coordinate>();
+        List<Coordinate> coords = CollectionFactory.newList();
         while (!iter.isDone()) {
             iter.currentSegment(buf);
             coords.add(new Coordinate(buf[0], buf[1]));
