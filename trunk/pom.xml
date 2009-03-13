@@ -6,8 +6,10 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>JAI-tools - Extends the Java Advanced Imaging library</name>
-    <description>Additional operators, utility classes and the Jiffle scripting language 
-to work with the Java Advanced Imaging library</description>
+    <description>Additional operators, utility classes and the Jiffle scripting language
+to work with the Java Advanced Imaging library
+    </description>
+    <url>http://code.google.com/p/jai-tools/</url>
     <build>
         <plugins>
             <plugin>
@@ -61,12 +63,21 @@ to work with the Java Advanced Imaging library</description>
             <url>file://${basedir}/website</url>
         </site>
     </distributionManagement>
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.0</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
     <modules>
+        <module>demo</module>
+        <module>jaitools-utils</module>
         <module>jiffle</module>
         <module>kernel</module>
         <module>kernelstats</module>
         <module>maskedconvolve</module>
-        <module>jaitools-utils</module>
-        <module>demo</module>
-  </modules>
+        <module>regionalize</module>
+    </modules>
 </project>

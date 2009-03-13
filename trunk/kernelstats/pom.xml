@@ -9,17 +9,8 @@
     <artifactId>kernelstats</artifactId>
     <packaging>jar</packaging>
     <name>JAI-tools - KernelStats operator</name>
-    <url>http://maven.apache.org</url>
     <build>
         <plugins>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.0.2</version>
-                <configuration>
-                    <source>1.5</source>
-                    <target>1.5</target>
-                </configuration>
-            </plugin>
         </plugins>
         <resources>
             <resource>
@@ -41,12 +32,6 @@
         </resources>
     </build>
     <dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.0</version>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>jaitools</groupId>
             <artifactId>jaitools-utils</artifactId>
