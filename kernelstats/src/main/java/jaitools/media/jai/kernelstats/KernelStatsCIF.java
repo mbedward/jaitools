@@ -60,8 +60,8 @@ public class KernelStatsCIF implements CollectionImageFactory {
                 (KernelJAI) paramBlock.getObjectParameter(KernelStatsDescriptor.KERNEL_ARG_INDEX);
         KernelJAI kJAI = unRotatedKernel.getRotatedKernel();
 
-        String[] stats =
-                (String[]) paramBlock.getObjectParameter(KernelStatsDescriptor.STATS_ARG_INDEX);
+        KernelStatistic[] stats =
+                (KernelStatistic[]) paramBlock.getObjectParameter(KernelStatsDescriptor.STATS_ARG_INDEX);
 
         ROI roi = (ROI) paramBlock.getObjectParameter(KernelStatsDescriptor.ROI_ARG_INDEX);
 
