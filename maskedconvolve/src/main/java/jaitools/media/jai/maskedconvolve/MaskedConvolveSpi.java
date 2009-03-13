@@ -33,7 +33,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
 public class MaskedConvolveSpi implements OperationRegistrySpi {
 
     /** The name of the product to which these operations belong. */
-    private String productName = "jaitools.media.jai";
+    private String productName = "jaitools.media.jai.maskedconvolve";
  
     /** Default constructor. */
     public MaskedConvolveSpi() {}
