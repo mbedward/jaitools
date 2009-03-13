@@ -8,8 +8,34 @@ This operator calculates neighbourhood statistics for an input image. In JAI par
 
 You define the neighbourhood to use with a !KernelJAI object (see the KernelFactory class). The operator will place this kernel over each source image pixel, collect the values in the pixel neighbourhood, and calculates each requested statistic.
 
+<ul>
 <i><font color="blue">
 Note: the above describes what we're aiming to happen. What actually happens in
 the current code is that the kernel is passed over the input image for each
 statistic which is obviously inefficient.
 </font></i>
+</ul>
+
+==Example of use==
+
+Here we define a circular neighbourhood with a simple binary kernel (value=1 for included elements, 0 for outside elements) and calculate mean and sample standard deviation...
+
+{{{
+KernelJAI kernel = KernelFactory.createCircle(10);
+ParameterBlockJAI pb = new ParameterBlockJAI("KernelStats");
+
+pb.setSource("source0", img);
+pb.setParameter("kernel", kernel);
+
+KernelStatistic[] stats = new KernelStatistic[]
+{
+    KernelStatistic.MEAN,
+    KernelStatistic.SDEV,
+};
+pb.setParameter("stats", stats);
+
+BorderExtender extender = BorderExtender.createInstance(BorderExtender.BORDER_REFLECT);
+RenderingHints hints = new RenderingHints(JAI.KEY_BORDER_EXTENDER, extender);
+
+Collection<RenderedImage> statsImages = JAI.createCollection("KernelStats", pb, hints);
+}}}
