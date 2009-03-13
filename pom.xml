@@ -26,8 +26,41 @@ to work with the Java Advanced Imaging library</description>
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <!--archive>
+                        <manifest>
+                            <mainClass>jaitools.jiffle.ImageEvalDemo</mainClass>
+                        </manifest>
+                    </archive-->
+                </configuration>
+            </plugin>
         </plugins>
     </build>
+    <reporting>
+        <plugins>
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>jxr-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-report-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </reporting>
+    <distributionManagement>
+        <site>
+            <id>website</id>
+            <url>file://${basedir}/website</url>
+        </site>
+    </distributionManagement>
     <modules>
         <module>jiffle</module>
         <module>kernel</module>
