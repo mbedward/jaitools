@@ -23,3 +23,34 @@ Internally, Jiffle treats all values as doubles including pseudo-integer values 
 ===Does it deal with multi-band images===
 
 Not yet.
+
+===How do I track multiple scripts running in a single interpreter ?===
+
+The `JiffleInterpreter.submit` method returns a integer job ID. Use this in your event handling methods to distinguish individual jobs. 
+
+In a simple example, where you know in advance how many jobs will be submitted, define some int fields in your class...
+
+{{{
+int job1ID = -1, job2ID = -1;
+}}}
+
+When submitting each compiled Jiffle object to the interpreter, get the job ID...
+
+{{{
+job1ID = myInterpreter.submit(jiffle1);
+}}}
+
+Then in an event handling method...
+{{{
+public void onCompletion(JiffleCompletionEvent ev) {
+    if (ev.getJobID() == job1ID) {
+        // do something
+
+    } else if (ev.getJobID == job2ID) {
+        // do something else
+        
+    }
+}
+}}}
+
+For more flexibility, you might use a Map with Integer job IDs as keys and associated data, instructions, objects etc. as values
