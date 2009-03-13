@@ -68,7 +68,7 @@ public class KernelStatsDescriptor extends OperationDescriptorImpl {
 
     private static final Class[] paramClasses =
         {javax.media.jai.KernelJAI.class,
-         String[].class,
+         KernelStatistic[].class,
          javax.media.jai.ROI.class,
          Boolean.class,
          Boolean.class,
@@ -78,9 +78,9 @@ public class KernelStatsDescriptor extends OperationDescriptorImpl {
     private static final Object[] paramDefaults =
         {NO_PARAMETER_DEFAULT,
          NO_PARAMETER_DEFAULT,
-         NO_PARAMETER_DEFAULT,
-         Boolean.TRUE,
-         Boolean.TRUE,
+         (ROI) null,
+         Boolean.FALSE,
+         Boolean.FALSE,
          Boolean.TRUE};
 
     /** Constructor. */
@@ -93,8 +93,9 @@ public class KernelStatsDescriptor extends OperationDescriptorImpl {
                     {"DocURL", "http://code.google.com/p/jai-tools/"},
                     {"Version", "1.0-SHAPSHOT"},
                     {"arg0Desc", "kernel - a JAI Kernel object"},
-                    {"arg1Desc", "stats - an array of Strings specifying the statistics required"},
-                    {"arg2Desc", "roi - an ROI object which must have the same pixel bounds" +
+                    {"arg1Desc", "stats - an array of KernelStatistic constants specifying the " +
+                             "statistics required"},
+                    {"arg2Desc", "roi - an optional ROI object which must have the same pixel bounds" +
                         "as the source iamge"},
                     {"arg3Desc", "masksource (Boolean, default=true):" +
                              "if TRUE (default) only the values of source pixels where" +
@@ -143,7 +144,7 @@ public class KernelStatsDescriptor extends OperationDescriptorImpl {
     public static Collection<RenderedImage> createCollection(
             RenderedImage source0,
             KernelJAI kernel,
-            String[] stats,
+            KernelStatistic[] stats,
             ROI roi,
             Boolean maskSource,
             Boolean maskDest,
@@ -162,6 +163,18 @@ public class KernelStatsDescriptor extends OperationDescriptorImpl {
         pb.setParameter("ignorenan", ignoreNaN);
 
         return JAI.createCollection("KernelStats", pb, hints);
+    }
+
+    /**
+     * This method is not for client code use.
+     * We override it to change the valid source class from Collection
+     * (the default) to RenderedImage
+     *
+     * @param modeName
+     */
+    @Override
+    public Class<?>[] getSourceClasses(String modeName) {
+        return new Class<?>[] { RenderedImage.class };
     }
 }
 

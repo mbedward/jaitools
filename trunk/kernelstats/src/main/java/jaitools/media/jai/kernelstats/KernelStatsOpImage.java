@@ -22,9 +22,8 @@ package jaitools.media.jai.kernelstats;
 
 import java.awt.Rectangle;
 import java.awt.image.RenderedImage;
+import java.util.ArrayList;
 import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import javax.media.jai.AreaOpImage;
 import javax.media.jai.BorderExtender;
 import javax.media.jai.CollectionImage;
@@ -48,7 +47,7 @@ final class KernelStatsOpImage extends CollectionImage {
      * @param layout an ImageLayout optionally containing the tile grid layout,
      *        SampleModel, and ColorModel, or null.
      * @param kernel the convolution kernel
-     * @param stats an array of Strings naming the statistics required
+     * @param stats an array of KernelStatistic constants naming the statistics required
      * @throws IllegalArgumentException if the roi's bounds do not contain the entire
      * source image
      * @see KernelStatsDescriptor
@@ -59,33 +58,33 @@ final class KernelStatsOpImage extends CollectionImage {
             Map config,
             ImageLayout layout,
             KernelJAI kernel,
-            String[] stats,
+            KernelStatistic[] stats,
             ROI roi,
             boolean maskSrc,
             boolean maskDest,
             boolean ignoreNaN) {
 
-        // check that the ROI contains the source image bounds
-        Rectangle sourceBounds = new Rectangle(
-                source.getMinX(), source.getMinY(), source.getWidth(), source.getHeight());
+        if (roi == null) {
+            maskSrc = maskDest = false;
 
-        if (!roi.getBounds().contains(sourceBounds)) {
-            throw new IllegalArgumentException("The bounds of the ROI must contain the source image");
-        }
+        } else {
+            // check that the ROI contains the source image bounds
+            Rectangle sourceBounds = new Rectangle(
+                    source.getMinX(), source.getMinY(), source.getWidth(), source.getHeight());
 
-        // check that all of the input statistic names are valid
-        SortedSet<KernelStatistic> requestedStats = new TreeSet<KernelStatistic>();
-        for (String name : stats) {
-            KernelStatistic type = KernelStatistic.get(name);
-            if (type == null) {
-                throw new IllegalArgumentException("unsupported statistic: " + name);
+            if (!roi.getBounds().contains(sourceBounds)) {
+                throw new IllegalArgumentException("The bounds of the ROI must contain the source image");
             }
-            requestedStats.add(type);
         }
 
-        for (KernelStatistic ks : requestedStats) {
+        for (KernelStatistic ks : stats) {
+            System.out.println("adding " + ks.toString());
             RenderedImage image = new KernelStatsWorker(source, extender, config, layout,
                     kernel, ks, roi, maskSrc, maskDest, ignoreNaN);
+
+            if (imageCollection == null) {
+                imageCollection = new ArrayList<RenderedImage>();
+            }
             imageCollection.add(image);
         }
     }
