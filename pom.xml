@@ -34,5 +34,6 @@ to work with the Java Advanced Imaging library</description>
         <module>kernelstats</module>
         <module>maskedconvolve</module>
         <module>jaitools-utils</module>
+        <module>demo</module>
   </modules>
 </project>
