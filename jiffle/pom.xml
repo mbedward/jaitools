@@ -9,7 +9,6 @@
     <artifactId>jiffle</artifactId>
     <packaging>jar</packaging>
     <name>Jiffle: JAI Image Function Language</name>
-    <url>http://code.google.com/p/jai-tools</url>
     <description>Jiffle is a language and interpreter intended to make it easier to create
         images from mathematical functions.
     </description>
@@ -39,23 +38,9 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.0.2</version>
-                <configuration>
-                    <source>1.5</source>
-                    <target>1.5</target>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
     <dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.0</version>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>jaitools</groupId>
             <artifactId>jaitools-utils</artifactId>
