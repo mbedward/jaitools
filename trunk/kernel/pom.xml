@@ -10,7 +10,6 @@
     <packaging>jar</packaging>
     <name>JAI-tools - Kernel</name>
     <description>Factory and utility classes to work with KernelJAI objects</description>
-    <url>http://maven.apache.org</url>
     <build>
         <plugins>
             <plugin>
