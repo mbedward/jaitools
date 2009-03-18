@@ -52,18 +52,17 @@ public class RegionalizeRIF implements RenderedImageFactory {
     public RenderedImage create(ParameterBlock paramBlock,
             RenderingHints renderHints) {
         
-        // Get ImageLayout from renderHints if any.
         ImageLayout layout = RIFUtil.getImageLayoutHint(renderHints);
-
-        // Get BorderExtender from renderHints if any.
-        BorderExtender extender = RIFUtil.getBorderExtenderHint(renderHints);
-
-        Boolean diagonal = (Boolean) paramBlock.getObjectParameter(RegionalizeDescriptor.DIAGONAL_ARG_INDEX);
+        
+        int band = paramBlock.getIntParameter(RegionalizeDescriptor.BAND_ARG_INDEX);
+        double tolerance = paramBlock.getDoubleParameter(RegionalizeDescriptor.TOLERANCE_ARG_INDEX);
+        boolean diagonal = (Boolean) paramBlock.getObjectParameter(RegionalizeDescriptor.DIAGONAL_ARG_INDEX);
 
         return new RegionalizeOpImage(paramBlock.getRenderedSource(0),
-                extender,
                 renderHints,
                 layout,
+                band,
+                tolerance,
                 diagonal);
     }
 }

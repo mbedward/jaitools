@@ -17,21 +17,20 @@
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-
 package jaitools.media.jai.regionalize;
 
+import jaitools.utils.CollectionFactory;
 import java.awt.Rectangle;
-import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.awt.image.WritableRaster;
+import java.util.List;
 import java.util.Map;
 import javax.media.jai.AreaOpImage;
-import javax.media.jai.BorderExtender;
 import javax.media.jai.ImageLayout;
-import javax.media.jai.KernelJAI;
-import javax.media.jai.RasterAccessor;
-import javax.media.jai.RasterFormatTag;
+import javax.media.jai.PointOpImage;
+import javax.media.jai.iterator.RectIter;
+import javax.media.jai.iterator.RectIterFactory;
 
 /**
  * An operator to perform masked convolution on a source image.
@@ -41,48 +40,42 @@ import javax.media.jai.RasterFormatTag;
  *
  * @author Michael Bedward
  */
-final class RegionalizeOpImage extends AreaOpImage {
+final class RegionalizeOpImage extends PointOpImage {
 
-    /* Source image variables */
-    private int[] srcBandOffsets;
-    private int srcPixelStride;
-    private int srcScanlineStride;
+    private boolean singleBand;
+    private int band;
+    private List<Region> regions;
+    private double tolerance;
 
-    /* Destination image variables */
-    private int destWidth;
-    private int destHeight;
-    private int destBands;
-    private int[] dstBandOffsets;
-    private int dstPixelStride;
-    private int dstScanlineStride;
-    
-    /* Kernel variables. */
-    private KernelJAI kernel;
-    private float[] kernelData;
-    private int kw,  kh;
-    
     /**
      * Constructor
      * @param source a RenderedImage.
-     * @param extender a BorderExtender, or null.
      * @param config configurable attributes of the image (see {@link AreaOpImage})
      * @param layout an ImageLayout optionally containing the tile grid layout,
      *        SampleModel, and ColorModel, or null.
-     * @param kernel the convolution kernel
+     * @param band the band to process
+     * @param tolerance max absolute difference in value between the starting pixel for
+     * a region and any pixel added to that region
+     * @param diagonal true to include sub-regions with only diagonal connectedness;
+     * false to require orthogonal connectedness
+     * 
      * @see RegionalizeDescriptor
      */
     public RegionalizeOpImage(RenderedImage source,
-            BorderExtender extender,
             Map config,
             ImageLayout layout,
+            int band,
+            double tolerance,
             boolean diagonal) {
-        
-        super(source,
-                layout,
-                config,
-                true,
-                extender,
-                1, 1, 1, 1);
+
+        super(source, layout, config, true);
+
+        // @TODO this is just for testing
+        singleBand = true;
+        this.band = band;
+        this.tolerance = tolerance;
+
+        regions = CollectionFactory.newList();
     }
 
     /**
@@ -98,70 +91,58 @@ final class RegionalizeOpImage extends AreaOpImage {
             WritableRaster dest,
             Rectangle destRect) {
 
-        RasterFormatTag[] formatTags = getFormatTags();
+        Raster src = sources[0];
 
-        Raster source = sources[0];
-        Rectangle srcRect = mapDestRect(destRect, 0);
+        RectIter iter = RectIterFactory.create(src, destRect);
+        FloodFiller ff = new FloodFiller(src, dest);
 
+        if (singleBand) {
+            for (int i = band; i > 0; i--) {
+                iter.nextBand();
+            }
+        } else {
+            band = 0;
+        }
 
-        RasterAccessor srcAcc =
-                new RasterAccessor(source, srcRect,
-                formatTags[0], getSourceImage(0).getColorModel());
-        
-        RasterAccessor destAcc =
-                new RasterAccessor(dest, destRect,
-                formatTags[1], getColorModel());
-        
-        doOperation(srcAcc, destAcc);
+        int x = src.getMinX();
+        int y = src.getMinY();
+        do {
+            do {
+                do {
+                    if (!pixelDone(x, y)) {
+                        double value = iter.getSampleDouble();
+                        int id = regions.size() + 1;
+                        List<ScanSegment> segments = ff.floodFill(band, x, y, value, tolerance);
+                        regions.add(new Region(id, value, segments));
+                    }
+                    x++;
+
+                } while (!iter.nextPixelDone());
+                iter.startPixels();
+                x = src.getMinX();
+                y++;
+
+            } while (!iter.nextLineDone());
+            iter.startLines();
+            y = src.getMinY();
+            band++;
+
+        } while (!(singleBand || iter.nextBandDone()));
     }
 
     /**
-     * Initialize common variables then delegate the convolution to
-     * one of the data-type-specific methods
-     * 
-     * @param srcAcc source raster accessor
-     * @param destAcc dest raster accessor
+     * Check if the given pixel has already been processed by
+     * seeing if it is contained within the regions collected
+     * so far
      */
-    private void doOperation(RasterAccessor srcAcc, RasterAccessor destAcc) {
-        destWidth = destAcc.getWidth();
-        destHeight = destAcc.getHeight();
-        destBands = destAcc.getNumBands();
-
-        kernelData = kernel.getKernelData();
-
-        dstBandOffsets = destAcc.getBandOffsets();
-        dstPixelStride = destAcc.getPixelStride();
-        dstScanlineStride = destAcc.getScanlineStride();
-
-        srcBandOffsets = srcAcc.getBandOffsets();
-        srcPixelStride = srcAcc.getPixelStride();
-        srcScanlineStride = srcAcc.getScanlineStride();
-
-        switch (destAcc.getDataType()) {
-            case DataBuffer.TYPE_BYTE:
-                break;
-
-            case DataBuffer.TYPE_INT:
-                break;
-
-            case DataBuffer.TYPE_SHORT:
-                break;
-
-            case DataBuffer.TYPE_USHORT:
-                break;
-
-            case DataBuffer.TYPE_FLOAT:
-                break;
-                
-            case DataBuffer.TYPE_DOUBLE:
-                break;
+    private boolean pixelDone(int x, int y) {
+        for (Region reg : regions) {
+            if (reg.contains(x, y)) {
+                return true;
+            }
         }
 
-        if (destAcc.isDataCopy()) {
-            destAcc.clampDataArrays();
-            destAcc.copyDataToRaster();
-        }
+        return false;
     }
-  
 }
 
