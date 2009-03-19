@@ -30,8 +30,6 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * OperationRegistrySpi implementation to register the "Regionalize"
  * operation and its associated image factories.
  *
- * NOT FUNCTIONAL YET
- *
  */
 public class RegionalizeSpi implements OperationRegistrySpi {
 

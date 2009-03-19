@@ -30,12 +30,55 @@ import javax.media.jai.registry.RenderedRegistryMode;
 
 /**
  * Describes the "Regionalize" operation.
+ * <p>
+ * This operation takes a single source image and identifies regions
+ * of connected pixels with uniform value, where value comparisons
+ * take into account a user-specified tolerance.
+ * <p>
+ * <b>Note: At present, this operator only deals with a single
+ * specified band.</b>
+ * <p>
+ * A pixel is connected to another pixel if a path can be defined
+ * between them that only passes through pixels with the same value,
+ * taking unit steps horizontally, vertically and, optionally,
+ * diagonally.
+ * <p>
+ * Each region that is identified in the source image is allocated
+ * a unique integer ID. The product of the operation is an image
+ * with data of TYPE_INT, where each pixel has its region ID as its
+ * value. A {@linkplain RegionData} object is also returned as 
+ * a property of the output image.  It can be retrieved by calling
+ * the {@code getProperty} method on this operator with "regiondata"
+ * as the property name (this name can also be referred to with
+ * {@linkplain RegionalizeDescriptor#REGION_DATA_PROPERTY}).
+ * <p>
  *
- * NOT FUNCTIONAL YET
+ * <b>Parameters</b>
+ * <table border="1">
+ * <tr align="right">
+ * <td>Name</td><td>Type</td><td>Default value</td>
+ * </tr>
+ * <tr align="right">
+ * <td>band</td><td>int</td><td>0</td>
+ * </tr>
+ * <tr align="right">
+ * <td>tolerance</td><td>double</td><td>0d</td>
+ * </tr>
+ * <tr align="right">
+ * <td>diagonal</td><td>boolean</td><td>false</td>
+ * </tr>
+ * </table>
  * 
  * @author Michael Bedward
  */
 public class RegionalizeDescriptor extends OperationDescriptorImpl {
+
+    /**
+     * The propoerty name to retrieve the {@linkplain RegionData}
+     * object which holds summary data for regions identified in
+     * the source image and depicted in the destination image
+     */
+    public static final String REGION_DATA_PROPERTY = "regiondata";
 
     static final int BAND_ARG_INDEX = 0;
     static final int TOLERANCE_ARG_INDEX = 1;
@@ -75,11 +118,23 @@ public class RegionalizeDescriptor extends OperationDescriptorImpl {
                     
                 null                                            // valid values (none defined)
                 );
+
+
+    }
+
+    @Override
+    public boolean arePropertiesSupported() {
+        return true;
     }
 
     /**
      * Convenience method which constructs a {@link ParameterBlockJAI} and
-     * invokes {@code JAI.create("regionalize", params) }
+     * invokes {@code JAI.create("regionalize", params) }.
+     * If an ImageLayout object is included in the RenderingHints passed to
+     * this method, any specification of the SampleModel for the destination
+     * image will be overridden such that the destination will always be
+     * TYPE_INT.
+     *
      * @param source0 the image to be regionalized
      * @param band the band to process
      * @param tolerance tolerance for pixel value comparisons
@@ -87,7 +142,6 @@ public class RegionalizeDescriptor extends OperationDescriptorImpl {
      * orthogonal connections
      * @param hints rendering hints (may be null)
      * @return the RenderedOp destination
-     * @throws IllegalArgumentException if any args are null
      */
     public static RenderedOp create(
             RenderedImage source0,

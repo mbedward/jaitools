@@ -27,7 +27,7 @@ import java.util.ListIterator;
 import java.util.Map;
 
 /**
- * Data class for a single region extracted from the source image
+ * Holds data for a single region extracted from the source image
  *
  * @author Michael Bedward
  */
@@ -38,6 +38,7 @@ class Region {
 
     private List<ScanSegment> segments;
     private Map<Integer, List<Integer>> index;
+    private int numPixels;
 
     /**
      * Constructor. Takes ownership of the list of segments.
@@ -59,6 +60,8 @@ class Region {
         miny = segment.y;
         maxy = segment.y;
 
+        numPixels = segment.endX - segment.startX + 1;
+
         addToIndex(segment, 0);
 
         if (segments.size() > 1) {
@@ -70,6 +73,7 @@ class Region {
                 if (segment.startX < minx) minx = segment.startX;
                 if (segment.endX > maxx) maxx = segment.endX;
 
+                numPixels += (segment.endX - segment.startX + 1);
                 addToIndex(segment, k++);
             }
         }
@@ -92,6 +96,57 @@ class Region {
         }
 
         return false;
+    }
+
+    /**
+     * Package-private method. Get the ID of this region.
+     */
+    int getID() {
+        return id;
+    }
+
+    /**
+     * Package-private method. Get the max x coordinate within this region.
+     */
+    int getMaxX() {
+        return maxx;
+    }
+
+    /**
+     * Package-private method. Get the max y coordinate of this region.
+     */
+    int getMaxY() {
+        return maxy;
+    }
+
+    /**
+     * Package-private method. Get the min x coordinate of this region.
+     */
+    int getMinX() {
+        return minx;
+    }
+
+    /**
+     * Package-private method. Get the min y coordinate of this region.
+     */
+    int getMinY() {
+        return miny;
+    }
+
+    /**
+     * Package-private method. Get the number of pixels within this region.
+     */
+    int getNumPixels() {
+        return numPixels;
+    }
+
+    /**
+     * Package-private method. Get the reference value of this region.
+     * This is the value of the start pixel used in the regionalize
+     * operation.
+     */
+    double getValue() {
+        return value;
     }
 
     /**

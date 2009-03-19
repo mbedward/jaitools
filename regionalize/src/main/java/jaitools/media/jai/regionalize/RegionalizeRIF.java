@@ -22,17 +22,21 @@ package jaitools.media.jai.regionalize;
 
 import com.sun.media.jai.opimage.RIFUtil;
 import java.awt.RenderingHints;
+import java.awt.image.ComponentSampleModel;
+import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
+import java.awt.image.SampleModel;
 import java.awt.image.renderable.ParameterBlock;
 import java.awt.image.renderable.RenderedImageFactory;
 import javax.media.jai.BorderExtender;
 import javax.media.jai.ImageLayout;
 
 /**
- * The image factory for the {@link RegionalizeOpImage} operation.
+ * The image factory for the Regionalize operation.
  *
- * NOT FUNCTIONAL YET
- *
+ * @see RegionalizeDescriptor
+ * @see RegionData
+ * 
  * @author Michael Bedward
  */
 public class RegionalizeRIF implements RenderedImageFactory {
@@ -51,14 +55,28 @@ public class RegionalizeRIF implements RenderedImageFactory {
      */
     public RenderedImage create(ParameterBlock paramBlock,
             RenderingHints renderHints) {
-        
+
+        RenderedImage src = paramBlock.getRenderedSource(0);
         ImageLayout layout = RIFUtil.getImageLayoutHint(renderHints);
-        
+
+        if (layout == null) {
+            layout = new ImageLayout();
+        }
+
+        SampleModel sm = new ComponentSampleModel(
+                DataBuffer.TYPE_INT, 
+                src.getWidth(), 
+                src.getHeight(), 
+                1, src.getWidth(),  // pixel stride and scan-line stride
+                new int[]{0});  // band offset
+
+        layout.setSampleModel(sm);
+
         int band = paramBlock.getIntParameter(RegionalizeDescriptor.BAND_ARG_INDEX);
         double tolerance = paramBlock.getDoubleParameter(RegionalizeDescriptor.TOLERANCE_ARG_INDEX);
         boolean diagonal = (Boolean) paramBlock.getObjectParameter(RegionalizeDescriptor.DIAGONAL_ARG_INDEX);
 
-        return new RegionalizeOpImage(paramBlock.getRenderedSource(0),
+        return new RegionalizeOpImage(src,
                 renderHints,
                 layout,
                 band,
