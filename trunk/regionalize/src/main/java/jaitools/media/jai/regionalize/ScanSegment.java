@@ -21,7 +21,9 @@
 package jaitools.media.jai.regionalize;
 
 /**
- * A range of contiguous pixels on a single scan line
+ * Used by the FloodFiller and Region classes.
+ * Describes a range of contiguous pixels on a single scan line
+ * that form part of a region.
  */
 class ScanSegment implements Comparable<ScanSegment> {
 
@@ -29,6 +31,9 @@ class ScanSegment implements Comparable<ScanSegment> {
     int endX;
     int y;
 
+    /**
+     * Constructor
+     */
     ScanSegment(int startX, int endX, int y) {
         super();
         this.startX = startX;
@@ -36,10 +41,17 @@ class ScanSegment implements Comparable<ScanSegment> {
         this.y = y;
     }
 
+    /**
+     * Check if the given pixel location lies within this segment
+     */
     boolean contains(int x, int y) {
         return this.y == y && startX <= x && endX >= x;
     }
 
+    /**
+     * Compare to another segment. Comparison is done first by
+     * y coord, then by left x coord, then by right x coord.
+     */
     public int compareTo(ScanSegment other) {
         if (y < other.y) {
             return -1;

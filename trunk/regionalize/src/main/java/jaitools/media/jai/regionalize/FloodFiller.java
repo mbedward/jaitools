@@ -20,21 +20,6 @@
 
 package jaitools.media.jai.regionalize;
 
-/**
- * Implements a flood-fill algorithm.
- * 
- * Highly adapted from an algorithm published by J. Dunlap at
- * http://www.codeproject.com/KB/GDI-plus/queuelinearfloodfill.aspx
- * and subsequently ported to Java by Owen Kaluza. Any bugs are not
- * their fault.
- *
- * This version has been adapated to work with JAI iterators and has
- * the added option of including sub-regions that are only
- * diagonally connected.
- *
- * @author Michael Bedward
- */
-
 import jaitools.utils.DoubleComparison;
 import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
@@ -46,20 +31,30 @@ import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 import javax.media.jai.iterator.WritableRandomIter;
 
+/**
+ * Implements a flood-fill algorithm to work with Rasters.
+ * <p>
+ * The code is adapted (pretty much out of all recognition) from an
+ * algorithm published in C# by J. Dunlap at:
+ * <pre>   http://www.codeproject.com/KB/GDI-plus/queuelinearfloodfill.aspx</pre>
+ * which was subsequently ported to Java by Owen Kaluza.
+ * <b>Any bugs in the present code are not their fault</b>.
+ * <p>
+ * The version works with source and destination data in the form of Raster objects
+ * which are accessed using JAI iterators.
+ *
+ * @author Michael Bedward
+ */
 class FloodFiller {
 
-    static final int FILL_4WAY = 0;
-    static final int FILL_8WAY = 1;
-
-    private double fillValue;
+    private int fillValue;
     private double tolerance;
     private double startCellValue;
     private int band;
 
-    private Queue<ScanSegment> pending;
-    private List<ScanSegment> filled;
+    private Queue<ScanSegment> segmentsPending;
+    private List<ScanSegment> segmentsFilled;
     private ScanSegment lastSegmentChecked;
-    private int totalNumFilled;
 
     private int minSrcX;
     private int maxSrcX;
@@ -70,9 +65,9 @@ class FloodFiller {
     private WritableRandomIter destIter;
 
     /**
-     * Create a RegionFiller to work with the given source and destination rasters
-     * @param src accessor for the source
-     * @param dest accessor for the destination
+     * Create a FloodFiller to work with the given source and destination rasters
+     * @param src source Raster
+     * @param dest destination Raster
      */
     FloodFiller(Raster src, WritableRaster dest) {
 
@@ -87,53 +82,63 @@ class FloodFiller {
 
 
     /**
-     * Fill the region connected to the specified pixel. A pixel belongs to
-     * this region if a path can be formed from it to the starting pixel,
-     * passing only through pixels with values {@code v} within the range
-     * {@code v.start - tolerance <= v <= v.start + tolerance} by taking
-     * unit steps vertically or horizontally
+     * Fill the region connected to the specified start pixel.
+     * A pixel belongs to this region if there is a path between it and the starting
+     * pixel which passes only through pixels of value {@code v} within the range
+     * {@code v.start - tolerance <= v <= v.start + tolerance}.
      *
      * @param x start pixel x coordinate
      * @param y start pixel y coordinate
-     * @param value value to flood the region with
-     * @param tolerance max absolute difference in value for a pixel to be
+     * @param fillValue the value to write to the destination image for this region
+     * @param tolerance the maximum absolute difference in value for a pixel to be
      * included in the region
-     * @return the number of pixels filled
+     * @param diagonal set to true to include sub-regions that are only connected
+     * diagonally; set to false to require orthogonal connections
+     * @return a list of the {@linkplain ScanSegment}s that define the region
      */
-    List<ScanSegment> floodFill(int band, int x, int y, double value, double tolerance) {
+    List<ScanSegment> floodFill(int band, int x, int y, int fillValue, double tolerance, boolean diagonal) {
         this.band = band;
-        this.fillValue = value;
+        this.fillValue = fillValue;
         this.tolerance = tolerance;
         this.startCellValue = srcIter.getSampleDouble(x, y, band);
 
-        pending = new LinkedList<ScanSegment>();
-        filled = new ArrayList<ScanSegment>();
+        segmentsPending = new LinkedList<ScanSegment>();
+        segmentsFilled = new ArrayList<ScanSegment>();
 
-        totalNumFilled = 0;
         fillSegment(x, y);
 
         ScanSegment segment;
         ScanSegment newSegment;
-        while ((segment = pending.poll()) != null) {
-            
+        while ((segment = segmentsPending.poll()) != null) {
+
+            int startX, endX;
+            if (diagonal) {
+                startX = segment.startX-1;
+                endX = segment.endX + 1;
+            } else {
+                startX = segment.startX;
+                endX = segment.endX;
+            }
+
             if (segment.y > minSrcY) {
-                int xi = segment.startX;
-                while (xi <= segment.endX) {
+                int xi = startX;
+                while (xi <= endX) {
                     newSegment = fillSegment(xi, segment.y - 1);
                     xi = newSegment != null ? newSegment.endX+1 : xi+1;
                 }
             }
+            
             if (segment.y < maxSrcY) {
-                int xi = segment.startX; 
-                while (xi <= segment.endX) {
+                int xi = startX;
+                while (xi <= endX) {
                     newSegment = fillSegment(xi, segment.y + 1);
                     xi = newSegment != null ? newSegment.endX+1 : xi+1;
                 }
             }
         }
 
-        List<ScanSegment> newRef = filled;
-        filled = null;
+        List<ScanSegment> newRef = segmentsFilled;
+        segmentsFilled = null;
 
         return newRef;
     }
@@ -151,39 +156,47 @@ class FloodFiller {
      * @return the new ScanSegment created, or null if no pixels were filled
      */
     private ScanSegment fillSegment(int x, int y) {
-        int numFilled = 0;
-        int left = x, right = x + 1;
+
+        // we rely on the y coord being checked prior to getting here
+        if (x < minSrcX || x > maxSrcX) {
+            return null;
+        }
+
+        boolean fill = false;
         ScanSegment segment = null;
 
-        while (left >= minSrcX) {
-            if (checkPixel(left, y) && !pixelDone(left, y)) {
-                destIter.setSample(left, y, band, fillValue);
-                numFilled++;
-                left--;
+        int left = x, xi = x;
+        while (xi >= minSrcX) {
+            if (checkPixel(xi, y) && !pixelDone(xi, y)) {
+                destIter.setSample(xi, y, band, fillValue);
+                fill = true;
+                left = xi;
+                xi-- ;
             } else {
                 break;
             }
         }
-        left++;
 
-        while (right <= maxSrcX) {
-            if (checkPixel(right, y) && !pixelDone(right, y)) {
-                destIter.setSample(right, y, band, fillValue);
-                numFilled++;
-                right++;
+        if (!fill) {
+            return null;
+        }
+
+        int right = x;
+        xi = x+1;
+        while (xi <= maxSrcX) {
+            if (checkPixel(xi, y) && !pixelDone(xi, y)) {
+                destIter.setSample(xi, y, band, fillValue);
+                right = xi;
+                xi++ ;
             } else {
                 break;
             }
         }
-        right--;
 
-        if (numFilled > 0) {
-            segment = new ScanSegment(left, right, y);
-            filled.add(segment);
-            pending.offer(segment);
-        }
+        segment = new ScanSegment(left, right, y);
+        segmentsFilled.add(segment);
+        segmentsPending.offer(segment);
 
-        totalNumFilled += numFilled;
         return segment;
     }
 
@@ -211,7 +224,7 @@ class FloodFiller {
             }
         }
 
-        for (ScanSegment segment : filled) {
+        for (ScanSegment segment : segmentsFilled) {
             if (segment.contains(x, y)) {
                 lastSegmentChecked = segment;
                 return true;

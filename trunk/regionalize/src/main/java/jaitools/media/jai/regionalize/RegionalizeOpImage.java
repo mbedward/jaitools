@@ -24,6 +24,7 @@ import java.awt.Rectangle;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.awt.image.WritableRaster;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import javax.media.jai.AreaOpImage;
@@ -33,21 +34,25 @@ import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 
 /**
- * An operator to identify regions of (sufficiently) uniform value in
- * the source image and allocate an integer ID to each.
+ * An operator to identify regions of uniform value, within
+ * a user-specified tolerance, in the source image. Produces a
+ * destination image of these regions where pixel values are equal
+ * to region ID.
  *
- * @see RegionalizeDescriptor Description of the algorithm and example
+ * @see RegionalizeDescriptor
+ * @see RegionData
  * 
- * NOT FUNCTIONAL YET
- *
  * @author Michael Bedward
  */
 final class RegionalizeOpImage extends PointOpImage {
 
     private boolean singleBand;
     private int band;
-    private List<Region> regions;
     private double tolerance;
+    private boolean diagonal;
+
+    private List<Region> regions;
+    private RegionData regionData;
 
     /**
      * Constructor
@@ -76,9 +81,75 @@ final class RegionalizeOpImage extends PointOpImage {
         singleBand = true;
         this.band = band;
         this.tolerance = tolerance;
+        this.diagonal = diagonal;
 
         regions = CollectionFactory.newList();
+        regionData = new RegionData();
     }
+
+    /**
+     * Get a property associated with this operator. Use this
+     * to retrieve the {@linkplain RegionData} object with the
+     * property name {@linkplain RegionalizeDescriptor#REGION_DATA_PROPERTY}
+     *
+     * @param name property name
+     * @return the matching object or null if there was no match
+     */
+    @Override
+    public Object getProperty(String name) {
+        if (RegionalizeDescriptor.REGION_DATA_PROPERTY.equalsIgnoreCase(name)) {
+            return regionData;
+        } else {
+            return super.getProperty(name);
+        }
+    }
+
+    /**
+     * Get the properties for this operator. These will
+     * include the {@linkplain RegionData} object
+     */
+    @Override
+    public Hashtable getProperties() {
+        Hashtable props = super.getProperties();
+        if (props == null) {
+            props = new Hashtable();
+        }
+        props.put(RegionalizeDescriptor.REGION_DATA_PROPERTY, regionData);
+        return props;
+    }
+
+    /**
+     * For internal use
+     */
+    @Override
+    public Class<?> getPropertyClass(String name) {
+        if (RegionalizeDescriptor.REGION_DATA_PROPERTY.equalsIgnoreCase(name)) {
+            return RegionData.class;
+        } else {
+            return super.getPropertyClass(name);
+        }
+    }
+
+    /**
+     * For internal use
+     */
+    @Override
+    public String[] getPropertyNames() {
+        String[] superNames = super.getPropertyNames();
+        int len = superNames != null ? superNames.length + 1 : 1;
+        String[] names = new String[len];
+
+        int k = 0;
+        if (len > 1) {
+            for (String name : superNames) {
+                names[k++] = name;
+            }
+        }
+        names[k] = RegionalizeDescriptor.REGION_DATA_PROPERTY;
+
+        return names;
+    }
+
 
     /**
      * Performs regionalization on a specified rectangle.
@@ -114,7 +185,7 @@ final class RegionalizeOpImage extends PointOpImage {
                     if (!pixelDone(x, y)) {
                         double value = iter.getSampleDouble();
                         int id = regions.size() + 1;
-                        List<ScanSegment> segments = ff.floodFill(band, x, y, id, tolerance);
+                        List<ScanSegment> segments = ff.floodFill(band, x, y, id, tolerance, diagonal);
                         regions.add(new Region(id, value, segments));
                     }
                     x++;
@@ -130,6 +201,10 @@ final class RegionalizeOpImage extends PointOpImage {
             band++;
 
         } while (!(singleBand || iter.nextBandDone()));
+
+        for (Region r : regions) {
+            regionData.addRegion(r);
+        }
     }
 
     /**
