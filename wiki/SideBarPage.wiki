@@ -5,10 +5,10 @@
   * [KernelStats]
   * [MaskedConvolve]
   * [Regionalize]
- * Utilities
+ * Utility classes
   * [KernelFactory]
   * [KernelUtil]
- * Other
+ * Image scripting
   * [Jiffle Jiffle]
    * [JiffleLanguage Language guide]
    * [JiffleIssues Issues and gotchas]
