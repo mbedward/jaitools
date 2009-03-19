@@ -1,0 +1,5 @@
+#summary Identifies regions of uniform value within a user-specified tolerance
+
+=Regionalize=
+
+This operator identifies regions of uniform value in a source image, allocates each region a unique ID value, and produces an output image within which the value of each pixel is the ID of its region.
