@@ -33,7 +33,9 @@ import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 
 /**
- * An operator to perform masked convolution on a source image.
+ * An operator to identify regions of (sufficiently) uniform value in
+ * the source image and allocate an integer ID to each.
+ *
  * @see RegionalizeDescriptor Description of the algorithm and example
  * 
  * NOT FUNCTIONAL YET
@@ -112,7 +114,7 @@ final class RegionalizeOpImage extends PointOpImage {
                     if (!pixelDone(x, y)) {
                         double value = iter.getSampleDouble();
                         int id = regions.size() + 1;
-                        List<ScanSegment> segments = ff.floodFill(band, x, y, value, tolerance);
+                        List<ScanSegment> segments = ff.floodFill(band, x, y, id, tolerance);
                         regions.add(new Region(id, value, segments));
                     }
                     x++;

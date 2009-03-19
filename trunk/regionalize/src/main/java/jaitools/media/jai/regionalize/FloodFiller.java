@@ -66,11 +66,6 @@ class FloodFiller {
     private int minSrcY;
     private int maxSrcY;
 
-    private int minFilledX;
-    private int maxFilledX;
-    private int minFilledY;
-    private int maxFilledY;
-
     private RandomIter srcIter;
     private WritableRandomIter destIter;
 
@@ -81,21 +76,13 @@ class FloodFiller {
      */
     FloodFiller(Raster src, WritableRaster dest) {
 
-        pending = new LinkedList<ScanSegment>();
-        filled = new ArrayList<ScanSegment>();
-
         srcIter = RandomIterFactory.create(src, null);
         destIter = RandomIterFactory.createWritable(dest, null);
 
         minSrcX = src.getMinX();
-        maxSrcX = minSrcX + src.getWidth();
+        maxSrcX = minSrcX + src.getWidth() - 1;
         minSrcY = src.getMinY();
-        maxSrcY = minSrcY + src.getHeight();
-
-        minFilledX = maxSrcX + 1;
-        maxFilledX = minSrcX - 1;
-        minFilledY = maxSrcY + 1;
-        maxFilledY = minSrcY - 1;
+        maxSrcY = minSrcY + src.getHeight() - 1;
     }
 
 
@@ -117,16 +104,31 @@ class FloodFiller {
         this.band = band;
         this.fillValue = value;
         this.tolerance = tolerance;
-        this.startCellValue = destIter.getSampleDouble(band, x, y);
+        this.startCellValue = srcIter.getSampleDouble(x, y, band);
+
+        pending = new LinkedList<ScanSegment>();
+        filled = new ArrayList<ScanSegment>();
 
         totalNumFilled = 0;
-        linearFill(x, y);
+        fillSegment(x, y);
 
-        ScanSegment range;
-        while ((range = pending.poll()) != null) {
-            for (int xi = range.startX; xi <= range.endX; xi++) {
-                linearFill(xi, range.y - 1);
-                linearFill(xi, range.y + 1);
+        ScanSegment segment;
+        ScanSegment newSegment;
+        while ((segment = pending.poll()) != null) {
+            
+            if (segment.y > minSrcY) {
+                int xi = segment.startX;
+                while (xi <= segment.endX) {
+                    newSegment = fillSegment(xi, segment.y - 1);
+                    xi = newSegment != null ? newSegment.endX+1 : xi+1;
+                }
+            }
+            if (segment.y < maxSrcY) {
+                int xi = segment.startX; 
+                while (xi <= segment.endX) {
+                    newSegment = fillSegment(xi, segment.y + 1);
+                    xi = newSegment != null ? newSegment.endX+1 : xi+1;
+                }
             }
         }
 
@@ -136,44 +138,53 @@ class FloodFiller {
         return newRef;
     }
 
-    private int linearFill(int x, int y) {
+    /**
+     * Fill pixels that:
+     * <ul>
+     * <li>are on the same horizontal scan line as the start pixel
+     * <li>have the same value (plus or minus tolerance) as the start pixel
+     * <li>have no intervening pixels with other values between them and
+     * the start pixel
+     * </ul>
+     * @param x start pixel x coord
+     * @param y start pixel y coord
+     * @return the new ScanSegment created, or null if no pixels were filled
+     */
+    private ScanSegment fillSegment(int x, int y) {
         int numFilled = 0;
+        int left = x, right = x + 1;
+        ScanSegment segment = null;
 
-        int left = x;
-        do {
-            if (checkPixel(left, y)) {
-                destIter.setSample(band, left, y, fillValue);
+        while (left >= minSrcX) {
+            if (checkPixel(left, y) && !pixelDone(left, y)) {
+                destIter.setSample(left, y, band, fillValue);
                 numFilled++;
                 left--;
             } else {
                 break;
             }
-        } while (left >= minSrcX && !pixelDone(left, y));
+        }
+        left++;
 
-        int right = x + 1;
-        do {
-            if (checkPixel(right, y)) {
-                destIter.setSample(band, right, y, fillValue);
+        while (right <= maxSrcX) {
+            if (checkPixel(right, y) && !pixelDone(right, y)) {
+                destIter.setSample(right, y, band, fillValue);
                 numFilled++;
                 right++;
             } else {
                 break;
             }
-        } while (right <= maxSrcX && !pixelDone(right, y));
+        }
+        right--;
 
         if (numFilled > 0) {
-            ScanSegment segment = new ScanSegment(left, right, y);
+            segment = new ScanSegment(left, right, y);
             filled.add(segment);
             pending.offer(segment);
-
-            if (left < minFilledX) minFilledX = left;
-            if (right > maxFilledX) maxFilledX = right;
-            if (y < minFilledY) minFilledY = y;
-            if (y > maxFilledY) maxFilledY = y;
         }
 
         totalNumFilled += numFilled;
-        return numFilled;
+        return segment;
     }
 
     /**
@@ -183,7 +194,7 @@ class FloodFiller {
      * @return true if within tolerance; false otherwise
      */
     private boolean checkPixel(int x, int y) {
-        double val = destIter.getSampleDouble(band, x, y);
+        double val = srcIter.getSampleDouble(x, y, band);
         return DoubleComparison.dcomp(Math.abs(val - startCellValue), tolerance) <= 0;
     }
 
