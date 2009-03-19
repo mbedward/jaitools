@@ -100,7 +100,9 @@ public class RegionalizeDescriptor extends OperationDescriptorImpl {
                 RenderedRegistryMode.MODE_NAME);
 
         pb.setSource("source0", source0);
-        pb.setParameter(paramNames[0], diagonal);
+        pb.setParameter(paramNames[BAND_ARG_INDEX], band);
+        pb.setParameter(paramNames[TOLERANCE_ARG_INDEX], tolerance);
+        pb.setParameter(paramNames[DIAGONAL_ARG_INDEX], diagonal);
 
         return JAI.create("Regionalize", pb, hints);
     }
