@@ -1,0 +1,15 @@
+#summary Overview of JAI-tools components
+
+=Tools=
+
+==Operators==
+ * KernelStats - calculates one or more statistics for a pixel's neighbourhood
+ * MaskedConvolve - convolution of a subset of image pixels
+ * [Regionalize] - identifies regions of uniform value with user-specified tolerance
+
+==Utilities==
+ * KernelFactory - creates KernelJAI objects with a variety of configurations
+ * KernelUtil - various methods to modify and examine kernel objects
+
+==Other==
+ * [Jiffle Jiffle] - a scripting language and interpreter for image creation and analysis
