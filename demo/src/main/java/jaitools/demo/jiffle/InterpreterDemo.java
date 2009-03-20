@@ -19,8 +19,8 @@
  */
 package jaitools.demo.jiffle;
 
-import jaitools.demo.utils.ImageFrame;
-import jaitools.demo.utils.ProgressMeter;
+import jaitools.utils.ImageFrame;
+import jaitools.utils.ProgressMeter;
 import jaitools.jiffle.runtime.JiffleProgressEvent;
 import jaitools.utils.ImageUtils;
 import jaitools.jiffle.runtime.JiffleFailureEvent;
