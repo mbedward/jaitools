@@ -28,6 +28,8 @@ At present this operator can only deal with a single band (the default is band 0
 
 Because JAI uses deferred execution, the summary data in the !RegionData object will not be created until the destination has been rendered, example by displaying the image or iterating through pixels.
 
+The regions identified by this operator are not guaranteed to be optimal in any sense. If different starting points were used, rather than those found with the present row-col scan, and the tolerance parameter was greater than 0, then a different distribution of regions could result. It may be worth extending the operator to allow for different starting points (e.g. random, evenly spaced, specified).
+
 ==Example of use==
 
 {{{
