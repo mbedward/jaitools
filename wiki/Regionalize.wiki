@@ -20,7 +20,13 @@ The search continues until no further pixels can be added to the region. The reg
 
 The operator produces an output image of TYPE_INT with the value of each pixel being the ID of the region that it belongs to.  Summary data for the regions, in the form of a !RegionData object, is stored as a property of this image and can be retrieved using !RegionalizeDescriptor.REGION_DATA_PROPERTY as the property name.
 
-The !RegionData object has a single public method, getData(), which returns an unmodifiable List of !RegionRecs objects.
+The !RegionData object has a single public method, getData(), which returns an unmodifiable List of !RegionRec objects (see the example below).
+
+==Limitations==
+
+At present this operator can only deal with a single band (the default is band 0).
+
+Because JAI uses deferred execution, the summary data in the !RegionData object will not be created until the destination has been rendered, example by displaying the image or iterating through pixels.
 
 ==Example of use==
 
