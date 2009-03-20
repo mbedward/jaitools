@@ -18,18 +18,22 @@
  *
  */
 
-/*
- * This script creates an 8 x 8 chessboard pattern
+package jaitools.demo;
+
+import java.awt.image.RenderedImage;
+
+/**
+ * Interface for classes that request images created by
+ * the DemoImageBuilder utility class
  *
- * Author: Michael Bedward
+ * @author Michael Bedward
  */
+public interface ImageReceiver {
 
-len = width() > height() ? width() : height()
-square = floor(len / 8)
-edge_pos = square * 8;
+    /**
+     * Receive an image created by DemoImageBuilder
+     * @param image the image
+     */
+    public void receiveImage(RenderedImage image);
+}
 
-odd_row = floor(y() / square) % 2 == 1
-odd_col = floor(x() / square) % 2 == 1
-inside = x() < edge_pos && y() < edge_pos
-
-result = inside ? (odd_row ^| odd_col) : null
