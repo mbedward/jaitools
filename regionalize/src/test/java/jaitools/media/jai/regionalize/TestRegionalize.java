@@ -19,7 +19,7 @@
  */
 package jaitools.media.jai.regionalize;
 
-import jaitools.media.jai.regionalize.RegionData.RegionRec;
+import jaitools.media.jai.regionalize.RegionRec;
 import java.util.Iterator;
 import java.util.List;
 import javax.media.jai.ImageFunction;
