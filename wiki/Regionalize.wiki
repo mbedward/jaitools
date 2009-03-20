@@ -18,9 +18,9 @@ The search continues until no further pixels can be added to the region. The reg
 
 ==Outputs==
 
-The operator produces an output image of TYPE_INT with the value of each pixel being the ID of the region that it belongs to.  Summary data for the regions, in the form of a RegionData object, is stored as a property of this image and can be retrieved using RegionalizeDescriptor.REGION_DATA_PROPERTY as the property name.
+The operator produces an output image of TYPE_INT with the value of each pixel being the ID of the region that it belongs to.  Summary data for the regions, in the form of a !RegionData object, is stored as a property of this image and can be retrieved using !RegionalizeDescriptor.REGION_DATA_PROPERTY as the property name.
 
-The RegionData object has a single public method, getData(), which returns an unmodifiable List of RegionRecs objects.
+The !RegionData object has a single public method, getData(), which returns an unmodifiable List of !RegionRecs objects.
 
 ==Example of use==
 
