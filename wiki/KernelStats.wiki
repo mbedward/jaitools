@@ -2,6 +2,8 @@
 
 =!KernelStats=
 
+*package:* jaitools.media.jai.kernelstats
+
 ==Description==
 
 This operator calculates neighbourhood statistics for an input image. In JAI parlance it is a Collection mode operator because it can produce multiple output images, one for each statistic requested, from a single invocation.
