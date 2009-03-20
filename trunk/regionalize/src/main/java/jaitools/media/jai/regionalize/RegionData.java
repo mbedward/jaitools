@@ -33,84 +33,12 @@ import java.util.List;
  */
 public class RegionData {
 
-    /**
-     * Holds data for a single region
-     */
-    public static class RegionRec {
-        private int id;
-        private int numPixels;
-        private double value;
-        private int minx;
-        private int maxx;
-        private int miny;
-        private int maxy;
-        
-        /**
-         * Package-private constructor
-         */
-        RegionRec(Region region) {
-            this.id = region.getID();
-            this.value = region.getValue();
-            this.minx = region.getMinX();
-            this.miny = region.getMinY();
-            this.maxx = region.getMaxX();
-            this.maxy = region.getMaxY();
-            this.numPixels = region.getNumPixels();
-        }
-
-        /**
-         * Get the region ID
-         */
-        public int getId() {
-            return id;
-        }
-
-        /**
-         * Get the max x coordinate of pixels within this region
-         */
-        public int getMaxx() {
-            return maxx;
-        }
-
-        /**
-         * Get the max y coordinate of pixels within this region
-         */
-        public int getMaxy() {
-            return maxy;
-        }
-
-        /**
-         * Get the min x coordinate of pixels within this region
-         */
-        public int getMinx() {
-            return minx;
-        }
-
-        /**
-         * Get the min y coordinate of pixels within this region
-         */
-        public int getMiny() {
-            return miny;
-        }
-
-        /**
-         * Get the number of pixels within this region
-         */
-        public int getNumPixels() {
-            return numPixels;
-        }
-
-        /**
-         * Get the reference value for this region as a double.
-         * This is the value of the first pixel that was identified
-         * within the region.
-         */
-        public double getValue() {
-            return value;
-        }
-    }
-
     private List<RegionRec> recs = CollectionFactory.newList();
+
+    /**
+     * Constructor. Defined just to make it package-private.
+     */
+    RegionData() {}
 
     /**
      * Package private method to add data for a region
