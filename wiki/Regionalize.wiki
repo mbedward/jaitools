@@ -2,7 +2,7 @@
 
 =Regionalize=
 
-*package: jaitools.media.jai.regionalize*
+*package:* jaitools.media.jai.regionalize
 
 ==Description==
 
