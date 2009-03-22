@@ -61,7 +61,6 @@ class Region {
         maxy = segment.y;
 
         numPixels = segment.endX - segment.startX + 1;
-
         addToIndex(segment, 0);
 
         if (segments.size() > 1) {
@@ -96,6 +95,27 @@ class Region {
         }
 
         return false;
+    }
+
+    /**
+     * Package-private method. Merge the given region into this region.
+     * At present, this method doesn't bother about merging scan segments,
+     * it just addes the other region's segments and updates the index
+     * and bounds as necessary.
+     */
+    void expand(Region cor) {
+        for (ScanSegment otherSeg : cor.segments) {
+            if (otherSeg.startX < minx) minx = otherSeg.startX;
+            if (otherSeg.endX > maxx) maxx = otherSeg.endX;
+            if (otherSeg.y < miny) {
+                miny = otherSeg.y;
+            } else if (otherSeg.y > maxy) {
+                maxy = otherSeg.y;
+            }
+
+            segments.add(otherSeg);
+            addToIndex(otherSeg, segments.size()-1);
+        }
     }
 
     /**

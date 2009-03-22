@@ -29,6 +29,7 @@ import javax.media.jai.PlanarImage;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
