@@ -21,7 +21,6 @@ package jaitools.media.jai.regionalize;
 
 import jaitools.utils.CollectionFactory;
 import java.awt.Rectangle;
-import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.awt.image.WritableRaster;
 import java.util.Hashtable;
@@ -29,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import javax.media.jai.AreaOpImage;
 import javax.media.jai.ImageLayout;
+import javax.media.jai.PlanarImage;
 import javax.media.jai.PointOpImage;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
@@ -48,11 +48,13 @@ final class RegionalizeOpImage extends PointOpImage {
 
     private boolean singleBand;
     private int band;
-    private double tolerance;
-    private boolean diagonal;
 
+    private RectIter srcIter;
+    private int srcX;
+    private int srcY;
+
+    private FloodFiller filler;
     private List<Region> regions;
-    private RegionData regionData;
 
     /**
      * Constructor
@@ -75,16 +77,19 @@ final class RegionalizeOpImage extends PointOpImage {
             double tolerance,
             boolean diagonal) {
 
-        super(source, layout, config, true);
+        super(source, layout, config, false);
 
-        // @TODO this is just for testing
-        singleBand = true;
         this.band = band;
-        this.tolerance = tolerance;
-        this.diagonal = diagonal;
+
+        /*
+         * @TODO remove later if we expand the operator to
+         * deal with multiple bands
+         */
+        singleBand = true;
+
+        filler = new FloodFiller(this, source, band, tolerance, diagonal);
 
         regions = CollectionFactory.newList();
-        regionData = new RegionData();
     }
 
     /**
@@ -98,7 +103,7 @@ final class RegionalizeOpImage extends PointOpImage {
     @Override
     public Object getProperty(String name) {
         if (RegionalizeDescriptor.REGION_DATA_PROPERTY.equalsIgnoreCase(name)) {
-            return regionData;
+            return getRegionData();
         } else {
             return super.getProperty(name);
         }
@@ -114,7 +119,7 @@ final class RegionalizeOpImage extends PointOpImage {
         if (props == null) {
             props = new Hashtable();
         }
-        props.put(RegionalizeDescriptor.REGION_DATA_PROPERTY, regionData);
+        props.put(RegionalizeDescriptor.REGION_DATA_PROPERTY, getRegionData());
         return props;
     }
 
@@ -160,51 +165,50 @@ final class RegionalizeOpImage extends PointOpImage {
      * @param destRect the rectangle within dest to be processed.
      */
     @Override
-    protected void computeRect(Raster[] sources,
-            WritableRaster dest,
-            Rectangle destRect) {
+    protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
 
-        Raster src = sources[0];
-
-        RectIter iter = RectIterFactory.create(src, destRect);
-        FloodFiller ff = new FloodFiller(src, dest);
-
+        srcIter = RectIterFactory.create(sources[0], destRect);
         if (singleBand) {
             for (int i = band; i > 0; i--) {
-                iter.nextBand();
+                srcIter.nextBand();
             }
-        } else {
-            band = 0;
         }
 
-        int x = src.getMinX();
-        int y = src.getMinY();
+        srcX = destRect.x;
+        srcY = destRect.y;
+
+        filler.setDestination(dest, destRect);
+        List<Region> carryOverRegions = filler.getCarryOverRegions();
+        for (Region cor : carryOverRegions) {
+            boolean found = false;
+            for (Region r : regions) {
+                if (r.getID() == cor.getID()) {
+                    r.expand(cor);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                throw new IllegalStateException("carry-over region does not match any existing region");
+            }
+        }
+
         do {
             do {
-                do {
-                    if (!pixelDone(x, y)) {
-                        double value = iter.getSampleDouble();
-                        int id = regions.size() + 1;
-                        List<ScanSegment> segments = ff.floodFill(band, x, y, id, tolerance, diagonal);
-                        regions.add(new Region(id, value, segments));
-                    }
-                    x++;
+                if (!pixelDone(srcX, srcY)) {
+                    double value = srcIter.getSampleDouble();
+                    int id = regions.size() + 1;
+                    Region r = filler.fill(srcX, srcY, id, value);
+                    regions.add(r);
+                }
+                srcX++;
 
-                } while (!iter.nextPixelDone());
-                iter.startPixels();
-                x = src.getMinX();
-                y++;
+            } while (!srcIter.nextPixelDone());
+            srcIter.startPixels();
+            srcX = destRect.x;
+            srcY++;
 
-            } while (!iter.nextLineDone());
-            iter.startLines();
-            y = src.getMinY();
-            band++;
-
-        } while (!(singleBand || iter.nextBandDone()));
-
-        for (Region r : regions) {
-            regionData.addRegion(r);
-        }
+        } while (!srcIter.nextLineDone());
     }
 
     /**
@@ -220,6 +224,16 @@ final class RegionalizeOpImage extends PointOpImage {
         }
 
         return false;
+    }
+
+    private RegionData getRegionData() {
+        RegionData regionData = new RegionData();
+        
+        for (Region r : regions) {
+            regionData.addRegion(r);
+        }
+
+        return regionData;
     }
 }
 
