@@ -20,27 +20,29 @@
 
 package jaitools.utils;
 
-import com.sun.media.jai.widget.DisplayJAI;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.event.MouseEvent;
-import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
-import javax.media.jai.iterator.RandomIter;
-import javax.media.jai.iterator.RandomIterFactory;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
 
 /**
- * Simple display widget
+ * A simple display widget with an image pane and a status bar that
+ * shows the image location and data value(s) of the mouse cursor.
+ * <p>
+ * Typical use is:
+ *
+ * <pre>{@code \u0000
+ * ImageFrame frame = new ImageFrame();
+ * frame.displayImage(imageToLookAt, imageWithData, "My beautiful image");
+ * }</pre>
  * 
  * @author Michael Bedward
  */
-public class ImageFrame extends JFrame {
+public class ImageFrame extends JFrame implements FrameWithStatusBar {
 
     private JTextField statusBar;
 
@@ -54,17 +56,37 @@ public class ImageFrame extends JFrame {
     }
 
     /**
-     * Displays an image in a scrolling panel
+     * Sets the image and title for this frame, then shows the frame.
+     * Data reported in the status line will be drawn from this image.
      * 
      * @param img image to be displayed
      * @param title title for the frame
      */
     public void displayImage(RenderedImage img, String title) {
+        displayImage(img, null, title);
+    }
 
+
+    /**
+     * Sets the image to display, the image to draw data from,
+     * and title for this frame, then shows the frame.
+     *
+     * Data reported in the status line will be drawn from dataImg unless
+     * it is null, in which case the data will be drawn from displayImg.
+     *
+     * @param displayImg image to be displayed
+     *
+     * @param dataImg an image with bounds equal to, or enclosing, those of
+     * displayImg and which contains data that will be reported in the status
+     * bar.
+     *
+     * @param title title for the frame
+     */
+    public void displayImage(RenderedImage displayImg, RenderedImage dataImg, String title) {
         setTitle(title);
 
-        ImagePane pane = new ImagePane(this, img);
-        getContentPane().add(pane, BorderLayout.CENTER);
+        ImagePane pane = new ImagePane(this, displayImg, dataImg);
+        getContentPane().add(new JScrollPane(pane), BorderLayout.CENTER);
 
         statusBar = new JTextField();
         statusBar.setEditable(false);
@@ -80,88 +102,12 @@ public class ImageFrame extends JFrame {
         setVisible(true);
     }
 
-    void setStatusText(String s) {
-        statusBar.setText(s);
-    }
-
-}
-class ImagePane extends DisplayJAI {
-    private ImageFrame frame;
-    private RenderedImage image;
-    private Rectangle imageDisplayBounds;
-    private Point imageOrigin;
-    private RandomIter imageIter;
-
-    private int[] intData;
-    private double[] doubleData;
-
-    private enum ImageDataType {
-        INTEGRAL, FLOAT;
-    }
-    private ImageDataType imageDataType;
-
-
-    ImagePane(ImageFrame frame, RenderedImage image) {
-        super(image);
-
-        this.frame = frame;
-        this.image = image;
-        this.imageDisplayBounds = new Rectangle(0, 0, image.getWidth(), image.getHeight());
-        this.imageOrigin = new Point(image.getMinX(), image.getMinY());
-        this.imageIter = RandomIterFactory.create(image, imageDisplayBounds);
-
-        switch (image.getSampleModel().getDataType()) {
-            case DataBuffer.TYPE_BYTE:
-            case DataBuffer.TYPE_SHORT:
-            case DataBuffer.TYPE_USHORT:
-            case DataBuffer.TYPE_INT:
-                imageDataType = ImageDataType.INTEGRAL;
-                intData = new int[image.getSampleModel().getNumBands()];
-                break;
-
-            case DataBuffer.TYPE_FLOAT:
-            case DataBuffer.TYPE_DOUBLE:
-                imageDataType = ImageDataType.FLOAT;
-                doubleData = new double[image.getSampleModel().getNumBands()];
-                break;
-        }
-
-        addMouseMotionListener(this);
-    }
-
     /**
-     * If the mouse cursor is over the image, get the value of the image
-     * pixel from band 0
+     * Set the status bar contents. This is used by {@linkplain ImagePane}
+     * @param text the text to display
      */
-    @Override
-    public void mouseMoved(MouseEvent ev) {
-        if (image != null) {
-            Point pos = ev.getPoint();
-            if (imageDisplayBounds.contains(pos)) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("x:");
-                sb.append(pos.x);
-                sb.append(" y:");
-                sb.append(pos.y);
-                sb.append(" band data:");
-
-                if (imageDataType == ImageDataType.INTEGRAL) {
-                    imageIter.getPixel(pos.x, pos.y, intData);
-                    for (int i = 0; i < intData.length; i++) {
-                        sb.append(" ");
-                        sb.append(intData[i]);
-                    }
-
-                } else {
-                    imageIter.getPixel(pos.x, pos.y, doubleData);
-                    for (int i = 0; i < doubleData.length; i++) {
-                        sb.append(String.format(" %.4f", doubleData[i]));
-                    }
-                }
-
-                frame.setStatusText(sb.toString());
-            }
-        }
+    public void setStatusText(String text) {
+        statusBar.setText(text);
     }
 
 }
