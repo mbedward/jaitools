@@ -39,6 +39,8 @@ import javax.swing.JTextField;
  * ImageFrame frame = new ImageFrame();
  * frame.displayImage(imageToLookAt, imageWithData, "My beautiful image");
  * }</pre>
+ *
+ * Note: the default close operation for the frame is JFrame.EXIT_ON_CLOSE.
  * 
  * @author Michael Bedward
  */
@@ -47,43 +49,30 @@ public class ImageFrame extends JFrame implements FrameWithStatusBar {
     private JTextField statusBar;
 
     /**
-     * Constructor. Sets the default close operation to
-     * EXIT_ON_CLOSE but this can be changed by the client code
-     * after construction.
-     */
-    public ImageFrame() {
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    }
-
-    /**
-     * Sets the image and title for this frame, then shows the frame.
-     * Data reported in the status line will be drawn from this image.
-     * 
-     * @param img image to be displayed
+     * Constructor to display and draw data from a single image
+     *
+     * @param img the image to display
      * @param title title for the frame
      */
-    public void displayImage(RenderedImage img, String title) {
-        displayImage(img, null, title);
+    public ImageFrame(RenderedImage img, String title) {
+        this(img, null, title);
     }
 
-
     /**
-     * Sets the image to display, the image to draw data from,
-     * and title for this frame, then shows the frame.
-     *
-     * Data reported in the status line will be drawn from dataImg unless
-     * it is null, in which case the data will be drawn from displayImg.
+     * Constructor for separate display and data images.
      *
      * @param displayImg image to be displayed
      *
      * @param dataImg an image with bounds equal to, or enclosing, those of
      * displayImg and which contains data that will be reported in the status
-     * bar.
+     * bar; if null data will be drawn from the display image
      *
      * @param title title for the frame
      */
-    public void displayImage(RenderedImage displayImg, RenderedImage dataImg, String title) {
+    public ImageFrame(RenderedImage displayImg, RenderedImage dataImg, String title) {
         setTitle(title);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationByPlatform(true);
 
         ImagePane pane = new ImagePane(this, displayImg, dataImg);
         getContentPane().add(new JScrollPane(pane), BorderLayout.CENTER);
@@ -97,9 +86,6 @@ public class ImageFrame extends JFrame implements FrameWithStatusBar {
 
         setSize(500, 500);
         pack();
-
-        setLocationByPlatform(true);
-        setVisible(true);
     }
 
     /**

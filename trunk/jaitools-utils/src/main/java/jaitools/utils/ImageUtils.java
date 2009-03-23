@@ -20,7 +20,10 @@
 
 package jaitools.utils;
 
+import java.awt.Color;
+import java.awt.image.RenderedImage;
 import javax.media.jai.JAI;
+import javax.media.jai.LookupTableJAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.TiledImage;
@@ -31,7 +34,7 @@ import javax.media.jai.TiledImage;
  * @author Michael Bedward
  */
 public class ImageUtils {
-    
+
     /**
      * Creates a new TiledImage object with a single band filled with zero
      * values
@@ -88,6 +91,41 @@ public class ImageUtils {
         
         RenderedOp op = JAI.create("constant", pb);
         return new TiledImage(op, false);
+    }
+
+    /**
+     * A helper method that creates a 3-band colour image, using a colour ramp,
+     * for a data image with integral data type and pixel values between 0 and ncol.
+     * <p>
+     * This method is only preliminary and, presently, very limited in the
+     * input images that it will deal with.
+     *
+     * @param dataImg the data image: presently assumed to be single-band with
+     * an integral data type
+     *
+     * @param ncol number of colours to be created using a colour ramp
+     *
+     * @return a three band image with an RGB ColorModel
+     */
+    public static RenderedImage createDisplayImage(RenderedImage dataImg, int ncol) {
+
+        byte[][] lookup = new byte[3][ncol];
+
+        float hue = 0f;
+        float hueIncr = 1f / (float)ncol;
+        for (int i = 0; i < ncol; i++) {
+            int colour = Color.HSBtoRGB(hue, 0.7f, 0.7f);
+            lookup[0][i] = (byte) ((colour & 0x00ff0000) >> 16);
+            lookup[1][i] = (byte) ((colour & 0x0000ff00) >> 8);
+            lookup[2][i] = (byte) (colour & 0x000000ff);
+            hue += hueIncr;
+        }
+
+        ParameterBlockJAI pb = new ParameterBlockJAI("lookup");
+        pb.setSource("source0", dataImg);
+        pb.setParameter("table", new LookupTableJAI(lookup, 1));
+        RenderedOp displayImg = JAI.create("lookup", pb);
+        return displayImg;
     }
 
 }
