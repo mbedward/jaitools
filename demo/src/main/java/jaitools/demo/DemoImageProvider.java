@@ -95,6 +95,17 @@ public class DemoImageProvider {
         return instance;
     }
 
+    /**
+     * Request one of the available iamges to be constructed. When the image is
+     * ready it will be sent to the ImageReciever object via that object's
+     * receiveImage method.
+     *
+     * @param choice one of CHESSBOARD, INTERFERENCE, RIPPLES
+     * @param width image width
+     * @param height image height
+     * @param receiver the object that is requesting the image
+     * @throws java.lang.Exception
+     */
     public void requestImage(int choice, int width, int height, ImageReceiver receiver)
             throws Exception {
 
@@ -102,7 +113,7 @@ public class DemoImageProvider {
         URL url = getClass().getResource(name);
         File file = new File(url.toURI());
 
-        image = ImageUtils.createDoubleImage(400, 400);
+        image = ImageUtils.createDoubleImage(width, height);
 
         Map<String, TiledImage> imgParams = CollectionFactory.newMap();
         imgParams.put("result", image);
@@ -122,12 +133,19 @@ public class DemoImageProvider {
         }
     }
 
+    /**
+     * Handle completion events from the Jiffle interpreter
+     */
     private void onCompletion(JiffleCompletionEvent ev) {
         Job job = jobs.get(ev.getJobId());
         job.progMeter.setVisible(false);
         job.receiver.receiveImage(ev.getJiffle().getImage("result"));
     }
 
+    /**
+     * Updates a progress bar to show proportion of the image
+     * creation done so far
+     */
     private void showProgress(final JiffleProgressEvent ev) {
         final Job job = jobs.get(ev.getJobId());
 

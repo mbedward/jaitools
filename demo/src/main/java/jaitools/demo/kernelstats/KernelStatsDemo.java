@@ -33,7 +33,6 @@ import javax.media.jai.BorderExtender;
 import javax.media.jai.JAI;
 import javax.media.jai.KernelJAI;
 import javax.media.jai.ParameterBlockJAI;
-import javax.swing.JFrame;
 
 /**
  * Demonstrates using the KernelStats operator to calculate summary
@@ -42,8 +41,6 @@ import javax.swing.JFrame;
  * @author Michael Bedward
  */
 public class KernelStatsDemo implements ImageReceiver {
-
-    private static final String INPUT_IMAGE = "img";
 
     public static void main(String[] args) {
         KernelStatsDemo me = new KernelStatsDemo();
@@ -64,10 +61,8 @@ public class KernelStatsDemo implements ImageReceiver {
     }
 
     public void receiveImage(RenderedImage image) {
-        ImageFrame frame;
-        frame = new ImageFrame();
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.displayImage(image, "KernelStats demo");
+        ImageFrame frame = new ImageFrame(image, "KernelStats demo");
+        frame.setVisible(true);
 
         calculateStats(image);
     }
@@ -97,9 +92,8 @@ public class KernelStatsDemo implements ImageReceiver {
 
         int k = 0;
         while (iter.hasNext()) {
-            ImageFrame frame = new ImageFrame();
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.displayImage(iter.next(), "Neighbourhood statistic: " + stats[k++].toString());
+            ImageFrame frame = new ImageFrame(iter.next(), "Neighbourhood statistic: " + stats[k++].toString());
+            frame.setVisible(true);
         }
 
     }
