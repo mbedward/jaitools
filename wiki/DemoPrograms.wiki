@@ -2,6 +2,14 @@
 
 =Demo programs=
 
-...Beautiful words coming to this page sometime real soon...
+These are short programs that illustrate the use of the JAI-tools operators, utility classes and the Jiffle language.
 
-Meanwhile, download or browse the source of the demos [http://code.google.com/p/jai-tools/source/checkout here]
+You can download or browse the source of the demos [http://code.google.com/p/jai-tools/source/checkout here].
+
+The following pages describe each of the demo programs...
+
+* [KernelStatsDemo KernelStats] operator
+
+* [RegionalizeDemo Regionalize] operator
+
+* [JiffleDemo Jiffle] language
