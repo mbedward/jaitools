@@ -146,8 +146,8 @@ public class InterpreterDemo {
         progMeter.setVisible(false);
         TiledImage img = ev.getJiffle().getImage("result");
 
-        ImageFrame frame = new ImageFrame();
-        frame.displayImage(img, "Jiffle image demo");
+        ImageFrame frame = new ImageFrame(img, "Jiffle image demo");
+        frame.setVisible(true);
     }
 
     /**
