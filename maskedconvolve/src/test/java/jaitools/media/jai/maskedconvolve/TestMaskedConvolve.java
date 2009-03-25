@@ -17,7 +17,6 @@
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 package jaitools.media.jai.maskedconvolve;
 
 import java.awt.Dimension;
@@ -38,9 +37,10 @@ import static org.junit.Assert.*;
  * @author Michael Bedward
  */
 public class TestMaskedConvolve {
-    
+
     // round off tolerance for float comparisons
     private static final float FTOL = 1.0e-8f;
+    private static RenderedImage theImage = null;
 
     /**
      * Test operator with no masking - should get the same results as
@@ -48,30 +48,51 @@ public class TestMaskedConvolve {
      */
     @Test
     public void testConvolve() {
-        RenderedImage testImg = createTestImage();
-        
-        ParameterBlockJAI pb = new ParameterBlockJAI("convolve");
+        System.out.println("   testing symmetric kernel");
+        RenderedImage testImg = getTestImage();
+
         KernelJAI kernel = new KernelJAI(3, 3,
                 new float[]{
-                    1f,1f,1f,
-                    1f,0f,1f,
-                    1f,1f,1f}
-        );
+                    1f, 1f, 1f,
+                    1f, 0f, 1f,
+                    1f, 1f, 1f});
 
+        compareStandardToMasked(testImg, kernel);
+    }
+
+    @Test
+    public void testAsymmetricKernel() {
+        System.out.println("   testing asymmetric kernel");
+        RenderedImage testImg = getTestImage();
+        KernelJAI kernel = new KernelJAI(3, 3, 0, 0, new float[]{
+            0f,1f,1f,
+            1f,1f,1f,
+            1f,1f,1f
+        });
+
+        compareStandardToMasked(testImg, kernel);
+    }
+
+    /**
+     * Run a comparison of results between standard convolution and
+     * mssked convolution with masking disabled
+     */
+    private void compareStandardToMasked(RenderedImage testImg, KernelJAI kernel) {
+        ParameterBlockJAI pb = new ParameterBlockJAI("convolve");
         pb.setSource("source0", testImg);
         pb.setParameter("kernel", kernel);
         RenderingHints hints = new RenderingHints(
-                JAI.KEY_BORDER_EXTENDER, 
+                JAI.KEY_BORDER_EXTENDER,
                 BorderExtender.createInstance(BorderExtender.BORDER_ZERO));
         RenderedOp stdConvImg = JAI.create("convolve", pb, hints);
-        
+
         pb = new ParameterBlockJAI("maskedconvolve");
         pb.setSource("source0", testImg);
         pb.setParameter("kernel", kernel);
         ROI roi = new ROI(testImg, -1);
         pb.setParameter("roi", roi);
         RenderedOp maskedConvImg = JAI.create("maskedconvolve", pb, hints);
-        
+
         RectIter stdIter = RectIterFactory.create(stdConvImg, null);
         RectIter maskedIter = RectIterFactory.create(maskedConvImg, null);
 
@@ -96,7 +117,7 @@ public class TestMaskedConvolve {
             stdDone = stdIter.nextLineDone();
             maskedDone = maskedIter.nextLineDone();
         } while (!stdDone && !maskedDone);
-        
+
         if (!(stdDone && maskedDone)) {
             // images out of sync
             fail("images out of sync");
@@ -107,33 +128,35 @@ public class TestMaskedConvolve {
      * Create a test image two tiles wide, one tile high, with edge
      * pixels having value 0 and inner pixels having value 1
      */
-    private RenderedImage createTestImage() {
-        int tileW = 128;
+    private RenderedImage getTestImage() {
+        if (theImage == null) {
+            int tileW = 128;
 
-        JAI.setDefaultTileSize(new Dimension(tileW, tileW));
-        ParameterBlockJAI pb = new ParameterBlockJAI("constant");
-        pb.setParameter("width", 2f * tileW);
-        pb.setParameter("height", (float)tileW);
-        pb.setParameter("bandvalues", new Integer[]{0});
-        RenderedOp zeroImg = JAI.create("constant", pb);
+            JAI.setDefaultTileSize(new Dimension(tileW, tileW));
+            ParameterBlockJAI pb = new ParameterBlockJAI("constant");
+            pb.setParameter("width", 2f * tileW);
+            pb.setParameter("height", (float) tileW);
+            pb.setParameter("bandvalues", new Integer[]{0});
+            RenderedOp zeroImg = JAI.create("constant", pb);
 
-        pb= new ParameterBlockJAI("constant");
-        pb.setParameter("width", 2f * tileW - 2);
-        pb.setParameter("height", (float)tileW - 2);
-        pb.setParameter("bandvalues", new Integer[]{1});
-        RenderedOp oneImg = JAI.create("constant", pb);
+            pb = new ParameterBlockJAI("constant");
+            pb.setParameter("width", 2f * tileW - 2);
+            pb.setParameter("height", (float) tileW - 2);
+            pb.setParameter("bandvalues", new Integer[]{1});
+            RenderedOp oneImg = JAI.create("constant", pb);
 
-        pb = new ParameterBlockJAI("translate");
-        pb.setSource("source0", oneImg);
-        pb.setParameter("xtrans", 1.0f);
-        pb.setParameter("ytrans", 1.0f);
-        RenderedOp oneImgT = JAI.create("translate", pb);
+            pb = new ParameterBlockJAI("translate");
+            pb.setSource("source0", oneImg);
+            pb.setParameter("xtrans", 1.0f);
+            pb.setParameter("ytrans", 1.0f);
+            RenderedOp oneImgT = JAI.create("translate", pb);
 
-        pb = new ParameterBlockJAI("overlay");
-        pb.setSource("source0", zeroImg);
-        pb.setSource("source1", oneImgT);
-        RenderedOp overlay = JAI.create("overlay", pb);
+            pb = new ParameterBlockJAI("overlay");
+            pb.setSource("source0", zeroImg);
+            pb.setSource("source1", oneImgT);
+            theImage = JAI.create("overlay", pb);
+        }
 
-        return overlay;
+        return theImage;
     }
 }
