@@ -56,9 +56,9 @@ final class MaskedConvolveOpImage extends AreaOpImage {
     private int dstScanlineStride;
     
     /* Kernel variables. */
-    private KernelJAI kernel;
     private float[] kernelData;
-    private int kw,  kh;
+    private int kernelW,  kernelH;
+    private int kernelKeyX, kernelKeyY;
     
     /* ROI and options */
     private ROI roi;
@@ -108,12 +108,15 @@ final class MaskedConvolveOpImage extends AreaOpImage {
             throw new IllegalArgumentException("The bounds of the ROI must contain the source image");
         }
 
-        this.kernel = kernel;
         this.roi = roi;
         this.maskSrc = (maskSrc == null ? false : maskSrc.booleanValue());
         this.maskDest = (maskDest == null ? false : maskDest.booleanValue());
-        kw = kernel.getWidth();
-        kh = kernel.getHeight();
+
+        kernelData = kernel.getKernelData();
+        kernelW = kernel.getWidth();
+        kernelH = kernel.getHeight();
+        kernelKeyX = kernel.getXOrigin();
+        kernelKeyY = kernel.getYOrigin();
     }
 
     /**
@@ -158,7 +161,6 @@ final class MaskedConvolveOpImage extends AreaOpImage {
         destHeight = destAcc.getHeight();
         destBands = destAcc.getNumBands();
 
-        kernelData = kernel.getKernelData();
 
         dstBandOffsets = destAcc.getBandOffsets();
         dstPixelStride = destAcc.getPixelStride();
@@ -201,33 +203,33 @@ final class MaskedConvolveOpImage extends AreaOpImage {
         byte destData[][] = destAcc.getByteDataArrays();
         
         for (int k = 0; k < destBands; k++) {
-            int y = destAcc.getY();
+            int destY = destAcc.getY();
             byte destBandData[] = destData[k];
             byte srcBandDat[] = srcData[k];
             int srcScanlineOffset = srcBandOffsets[k];
             int dstScanlineOffset = dstBandOffsets[k];
-            for (int j = 0; j < destHeight; j++, y++) {
-                int x = destAcc.getX();
+            for (int j = 0; j < destHeight; j++, destY++) {
+                int destX = destAcc.getX();
                 int srcPixelOffset = srcScanlineOffset;
                 int dstPixelOffset = dstScanlineOffset;
 
-                for (int i = 0; i < destWidth; i++, x++) {
+                for (int i = 0; i < destWidth; i++, destX++) {
                     int val = 0;
-                    if (!maskDest || roi.contains(x, y)) {
-                        int ky = y - kh / 2;
+                    if (!maskDest || roi.contains(destX, destY)) {
+                        int srcY = destY - kernelKeyY;
                         float f = 0.5F;
                         int kernelVerticalOffset = 0;
                         int imageVerticalOffset = srcPixelOffset;
-                        for (int u = 0; u < kh; u++, ky++) {
-                            int kx = x - kw / 2;
+                        for (int u = 0; u < kernelH; u++, srcY++) {
+                            int srcX = destX - kernelKeyX;
                             int imageOffset = imageVerticalOffset;
-                            for (int v = 0; v < kw; v++, kx++) {
-                                if (!maskSrc || roi.contains(kx, ky)) {
+                            for (int v = 0; v < kernelW; v++, srcX++) {
+                                if (!maskSrc || roi.contains(srcX, srcY)) {
                                     f += ((int) srcBandDat[imageOffset] & 0xff) * kernelData[kernelVerticalOffset + v];
                                 }
                                 imageOffset += srcPixelStride;
                             }
-                            kernelVerticalOffset += kw;
+                            kernelVerticalOffset += kernelW;
                             imageVerticalOffset += srcScanlineStride;
                         }
 
@@ -267,20 +269,20 @@ final class MaskedConvolveOpImage extends AreaOpImage {
                 for (int i = 0; i < destWidth; i++, x++) {
                     int val = 0;
                     if (!maskDest || roi.contains(x, y)) {
-                        int ky = y - kh / 2;
+                        int srcY = y - kernelKeyY;
                         float f = 0.5F;
                         int kernelVerticalOffset = 0;
                         int imageVerticalOffset = srcPixelOffset;
-                        for (int u = 0; u < kh; u++, ky++) {
-                            int kx = x - kw / 2;
+                        for (int u = 0; u < kernelH; u++, srcY++) {
+                            int srcX = x - kernelKeyX;
                             int imageOffset = imageVerticalOffset;
-                            for (int v = 0; v < kw; v++, kx++) {
-                                if (!maskSrc || roi.contains(kx, ky)) {
+                            for (int v = 0; v < kernelW; v++, srcX++) {
+                                if (!maskSrc || roi.contains(srcX, srcY)) {
                                     f += (srcBand[imageOffset]) * kernelData[kernelVerticalOffset + v];
                                 }
                                 imageOffset += srcPixelStride;
                             }
-                            kernelVerticalOffset += kw;
+                            kernelVerticalOffset += kernelW;
                             imageVerticalOffset += srcScanlineStride;
                         }
 
@@ -320,20 +322,20 @@ final class MaskedConvolveOpImage extends AreaOpImage {
                 for (int i = 0; i < destWidth; i++, x++) {
                     int val = 0;
                     if (!maskDest || roi.contains(x, y)) {
-                        int ky = y - kh / 2;
+                        int srcY = y - kernelKeyY;
                         float f = 0.5F;
                         int kernelVerticalOffset = 0;
                         int imageVerticalOffset = srcPixelOffset;
-                        for (int u = 0; u < kh; u++, ky++) {
-                            int kx = x - kw / 2;
+                        for (int u = 0; u < kernelH; u++, srcY++) {
+                            int srcX = x - kernelKeyX;
                             int imageOffset = imageVerticalOffset;
-                            for (int v = 0; v < kw; v++, kx++) {
-                                if (!maskSrc || roi.contains(kx, ky)) {
+                            for (int v = 0; v < kernelW; v++, srcX++) {
+                                if (!maskSrc || roi.contains(srcX, srcY)) {
                                     f += (srcBand[imageOffset] & 0xffff) * kernelData[kernelVerticalOffset + v];
                                 }
                                 imageOffset += srcPixelStride;
                             }
-                            kernelVerticalOffset += kw;
+                            kernelVerticalOffset += kernelW;
                             imageVerticalOffset += srcScanlineStride;
                         }
                         val = (int) f;
@@ -372,19 +374,19 @@ final class MaskedConvolveOpImage extends AreaOpImage {
                 for (int i = 0; i < destWidth; i++, x++) {
                     float f = 0.5F;
                     if (!maskDest || roi.contains(x, y)) {
-                        int ky = y - kh / 2;
+                        int srcY = y - kernelKeyY;
                         int kernelVerticalOffset = 0;
                         int imageVerticalOffset = srcPixelOffset;
-                        for (int u = 0; u < kh; u++, ky++) {
-                            int kx = x - kw / 2;
+                        for (int u = 0; u < kernelH; u++, srcY++) {
+                            int srcX = x - kernelKeyX;
                             int imageOffset = imageVerticalOffset;
-                            for (int v = 0; v < kw; v++, kx++) {
-                                if (!maskSrc || roi.contains(kx, ky)) {
+                            for (int v = 0; v < kernelW; v++, srcX++) {
+                                if (!maskSrc || roi.contains(srcX, srcY)) {
                                     f += (srcBand[imageOffset]) * kernelData[kernelVerticalOffset + v];
                                 }
                                 imageOffset += srcPixelStride;
                             }
-                            kernelVerticalOffset += kw;
+                            kernelVerticalOffset += kernelW;
                             imageVerticalOffset += srcScanlineStride;
                         }
                     }
@@ -417,19 +419,19 @@ final class MaskedConvolveOpImage extends AreaOpImage {
                 for (int i = 0; i < destWidth; i++, x++) {
                     float f = 0.0F;
                     if (!maskDest || roi.contains(x, y)) {
-                        int ky = y - kh / 2;
+                        int srcY = y - kernelKeyY;
                         int kernelVerticalOffset = 0;
                         int imageVerticalOffset = srcPixelOffset;
-                        for (int u = 0; u < kh; u++, ky++) {
-                            int kx = x - kw / 2;
+                        for (int u = 0; u < kernelH; u++, srcY++) {
+                            int srcX = x - kernelKeyX;
                             int imageOffset = imageVerticalOffset;
-                            for (int v = 0; v < kw; v++, kx++) {
-                                if (!maskSrc || roi.contains(kx, ky)) {
+                            for (int v = 0; v < kernelW; v++, srcX++) {
+                                if (!maskSrc || roi.contains(srcX, srcY)) {
                                     f += (srcBand[imageOffset]) * kernelData[kernelVerticalOffset + v];
                                 }
                                 imageOffset += srcPixelStride;
                             }
-                            kernelVerticalOffset += kw;
+                            kernelVerticalOffset += kernelW;
                             imageVerticalOffset += srcScanlineStride;
                         }
                     }
@@ -462,19 +464,19 @@ final class MaskedConvolveOpImage extends AreaOpImage {
                 for (int i = 0; i < destWidth; i++, x++) {
                     double f = 0.0D;
                     if (!maskDest || roi.contains(x, y)) {
-                        int ky = y - kh / 2;
+                        int srcY = y - kernelKeyY;
                         int kernelVerticalOffset = 0;
                         int imageVerticalOffset = srcPixelOffset;
-                        for (int u = 0; u < kh; u++, ky++) {
-                            int kx = x - kw / 2;
+                        for (int u = 0; u < kernelH; u++, srcY++) {
+                            int srcX = x - kernelKeyX;
                             int imageOffset = imageVerticalOffset;
-                            for (int v = 0; v < kw; v++, kx++) {
-                                if (!maskSrc || roi.contains(kx, ky)) {
+                            for (int v = 0; v < kernelW; v++, srcX++) {
+                                if (!maskSrc || roi.contains(srcX, srcY)) {
                                     f += (srcBand[imageOffset]) * kernelData[kernelVerticalOffset + v];
                                 }
                                 imageOffset += srcPixelStride;
                             }
-                            kernelVerticalOffset += kw;
+                            kernelVerticalOffset += kernelW;
                             imageVerticalOffset += srcScanlineStride;
                         }
                     }
