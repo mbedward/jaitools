@@ -57,8 +57,11 @@ class KernelStatsWorker extends AreaOpImage {
 
     /* Kernel variables. */
     private float[] kernelData;
-    private int kw;
-    private int kh;
+    private int kernelW;
+    private int kernelH;
+    private int kernelKeyX;
+    private int kernelKeyY;
+
     /* Mask variables */
     private ROI roi;
     private boolean maskSrc;
@@ -102,8 +105,10 @@ class KernelStatsWorker extends AreaOpImage {
                 kernel.getBottomPadding());
 
         this.kernelData = kernel.getKernelData();
-        kw = kernel.getWidth();
-        kh = kernel.getHeight();
+        kernelW = kernel.getWidth();
+        kernelH = kernel.getHeight();
+        kernelKeyX = kernel.getXOrigin();
+        kernelKeyY = kernel.getYOrigin();
 
         this.sampleData = new Double[kernelData.length];
 
@@ -203,32 +208,35 @@ class KernelStatsWorker extends AreaOpImage {
         int val = 0;
 
         for (int b = 0; b < destBands; b++) {
-            int y = destAcc.getY();
+            int destY = destAcc.getY();
             byte destBandData[] = destData[b];
             byte srcBandData[] = srcData[b];
             int srcScanlineOffset = srcBandOffsets[b];
             int dstScanlineOffset = dstBandOffsets[b];
-            for (int j = 0; j < destHeight; j++, y++) {
-                int x = destAcc.getX();
+
+            for (int j = 0; j < destHeight; j++, destY++) {
+                int destX = destAcc.getX();
                 int srcPixelOffset = srcScanlineOffset;
                 int dstPixelOffset = dstScanlineOffset;
 
-                for (int i = 0; i < destWidth; i++, x++) {
-                    if (!maskDest || roi.contains(x, y)) {
-                        int ky = y - kh / 2;
+                for (int i = 0; i < destWidth; i++, destX++) {
+                    if (!maskDest || roi.contains(destX, destY)) {
+                        int srcY = destY - kernelKeyY;
                         int kernelVerticalOffset = 0;
                         int imageVerticalOffset = srcPixelOffset;
                         int numSamples = 0;
-                        for (int u = 0; u < kh; u++, ky++) {
-                            int kx = x - kw / 2;
+
+                        for (int u = 0; u < kernelH; u++, srcY++) {
+                            int srcX = destX - kernelKeyX;
                             int imageOffset = imageVerticalOffset;
-                            for (int v = 0; v < kw; v++, kx++) {
-                                if (!maskSrc || roi.contains(kx, ky)) {
+
+                            for (int v = 0; v < kernelW; v++, srcX++) {
+                                if (!maskSrc || roi.contains(srcX, srcY)) {
                                     sampleData[numSamples++] = (double)((srcBandData[imageOffset] & 0xff) * kernelData[kernelVerticalOffset + v]);
                                 }
                                 imageOffset += srcPixelStride;
                             }
-                            kernelVerticalOffset += kw;
+                            kernelVerticalOffset += kernelW;
                             imageVerticalOffset += srcScanlineStride;
                         }
 
@@ -266,32 +274,35 @@ class KernelStatsWorker extends AreaOpImage {
         int val = 0;
 
         for (int b = 0; b < destBands; b++) {
-            int y = destAcc.getY();
+            int destY = destAcc.getY();
             short destBandData[] = destData[b];
             short srcBandData[] = srcData[b];
             int srcScanlineOffset = srcBandOffsets[b];
             int dstScanlineOffset = dstBandOffsets[b];
-            for (int j = 0; j < destHeight; j++, y++) {
-                int x = destAcc.getX();
+
+            for (int j = 0; j < destHeight; j++, destY++) {
+                int destX = destAcc.getX();
                 int srcPixelOffset = srcScanlineOffset;
                 int dstPixelOffset = dstScanlineOffset;
 
-                for (int i = 0; i < destWidth; i++, x++) {
-                    if (!maskDest || roi.contains(x, y)) {
-                        int ky = y - kh / 2;
+                for (int i = 0; i < destWidth; i++, destX++) {
+                    if (!maskDest || roi.contains(destX, destY)) {
+                        int srcY = destY - kernelKeyY;
                         int kernelVerticalOffset = 0;
                         int imageVerticalOffset = srcPixelOffset;
                         int numSamples = 0;
-                        for (int u = 0; u < kh; u++, ky++) {
-                            int kx = x - kw / 2;
+
+                        for (int u = 0; u < kernelH; u++, srcY++) {
+                            int srcX = destX - kernelKeyX;
                             int imageOffset = imageVerticalOffset;
-                            for (int v = 0; v < kw; v++, kx++) {
-                                if (!maskSrc || roi.contains(kx, ky)) {
+                            
+                            for (int v = 0; v < kernelW; v++, srcX++) {
+                                if (!maskSrc || roi.contains(srcX, srcY)) {
                                     sampleData[numSamples++] = (double)(srcBandData[imageOffset] * kernelData[kernelVerticalOffset + v]);
                                 }
                                 imageOffset += srcPixelStride;
                             }
-                            kernelVerticalOffset += kw;
+                            kernelVerticalOffset += kernelW;
                             imageVerticalOffset += srcScanlineStride;
                         }
 
@@ -329,33 +340,35 @@ class KernelStatsWorker extends AreaOpImage {
         int val = 0;
 
         for (int b = 0; b < destBands; b++) {
-            int y = destAcc.getY();
+            int destY = destAcc.getY();
             short destBandData[] = destData[b];
             short srcBandData[] = srcData[b];
             int srcScanlineOffset = srcBandOffsets[b];
             int dstScanlineOffset = dstBandOffsets[b];
-            for (int j = 0; j < destHeight; j++, y++) {
-                int x = destAcc.getX();
+
+            for (int j = 0; j < destHeight; j++, destY++) {
+                int destX = destAcc.getX();
                 int srcPixelOffset = srcScanlineOffset;
                 int dstPixelOffset = dstScanlineOffset;
 
-                for (int i = 0; i < destWidth; i++, x++) {
-                    if (!maskDest || roi.contains(x, y)) {
-                        int ky = y - kh / 2;
+                for (int i = 0; i < destWidth; i++, destX++) {
+                    if (!maskDest || roi.contains(destX, destY)) {
+                        int srcY = destY - kernelKeyY;
                         int kernelVerticalOffset = 0;
                         int imageVerticalOffset = srcPixelOffset;
                         int numSamples = 0;
 
-                        for (int u = 0; u < kh; u++, ky++) {
-                            int kx = x - kw / 2;
+                        for (int u = 0; u < kernelH; u++, srcY++) {
+                            int srcX = destX - kernelKeyX;
                             int imageOffset = imageVerticalOffset;
-                            for (int v = 0; v < kw; v++, kx++) {
-                                if (!maskSrc || roi.contains(kx, ky)) {
+                            
+                            for (int v = 0; v < kernelW; v++, srcX++) {
+                                if (!maskSrc || roi.contains(srcX, srcY)) {
                                     sampleData[numSamples++] = (double)((srcBandData[imageOffset] & 0xffff) * kernelData[kernelVerticalOffset + v]);
                                 }
                                 imageOffset += srcPixelStride;
                             }
-                            kernelVerticalOffset += kw;
+                            kernelVerticalOffset += kernelW;
                             imageVerticalOffset += srcScanlineStride;
                         }
 
@@ -393,33 +406,35 @@ class KernelStatsWorker extends AreaOpImage {
         int val = 0;
 
         for (int b = 0; b < destBands; b++) {
-            int y = destAcc.getY();
+            int destY = destAcc.getY();
             int destBandData[] = destData[b];
             int srcBandData[] = srcData[b];
             int srcScanlineOffset = srcBandOffsets[b];
             int dstScanlineOffset = dstBandOffsets[b];
-            for (int j = 0; j < destHeight; j++, y++) {
-                int x = destAcc.getX();
+
+            for (int j = 0; j < destHeight; j++, destY++) {
+                int destX = destAcc.getX();
                 int srcPixelOffset = srcScanlineOffset;
                 int dstPixelOffset = dstScanlineOffset;
 
-                for (int i = 0; i < destWidth; i++, x++) {
-                    if (!maskDest || roi.contains(x, y)) {
-                        int ky = y - kh / 2;
+                for (int i = 0; i < destWidth; i++, destX++) {
+                    if (!maskDest || roi.contains(destX, destY)) {
+                        int srcY = destY - kernelKeyY;
                         int kernelVerticalOffset = 0;
                         int imageVerticalOffset = srcPixelOffset;
                         int numSamples = 0;
 
-                        for (int u = 0; u < kh; u++, ky++) {
-                            int kx = x - kw / 2;
+                        for (int u = 0; u < kernelH; u++, srcY++) {
+                            int srcX = destX - kernelKeyX;
                             int imageOffset = imageVerticalOffset;
-                            for (int v = 0; v < kw; v++, kx++) {
-                                if (!maskSrc || roi.contains(kx, ky)) {
+                            
+                            for (int v = 0; v < kernelW; v++, srcX++) {
+                                if (!maskSrc || roi.contains(srcX, srcY)) {
                                     sampleData[numSamples++] = (double)(srcBandData[imageOffset] * kernelData[kernelVerticalOffset + v]);
                                 }
                                 imageOffset += srcPixelStride;
                             }
-                            kernelVerticalOffset += kw;
+                            kernelVerticalOffset += kernelW;
                             imageVerticalOffset += srcScanlineStride;
                         }
 
@@ -451,33 +466,35 @@ class KernelStatsWorker extends AreaOpImage {
         float val = 0f;
 
         for (int k = 0; k < destBands; k++) {
-            int y = destAcc.getY();
+            int destY = destAcc.getY();
             float destBandData[] = destData[k];
             float srcBandData[] = srcData[k];
             int srcScanlineOffset = srcBandOffsets[k];
             int dstScanlineOffset = dstBandOffsets[k];
-            for (int j = 0; j < destHeight; j++, y++) {
-                int x = destAcc.getX();
+
+            for (int j = 0; j < destHeight; j++, destY++) {
+                int destX = destAcc.getX();
                 int srcPixelOffset = srcScanlineOffset;
                 int dstPixelOffset = dstScanlineOffset;
 
-                for (int i = 0; i < destWidth; i++, x++) {
-                    if (!maskDest || roi.contains(x, y)) {
-                        int ky = y - kh / 2;
+                for (int i = 0; i < destWidth; i++, destX++) {
+                    if (!maskDest || roi.contains(destX, destY)) {
+                        int srcY = destY - kernelKeyY;
                         int kernelVerticalOffset = 0;
                         int imageVerticalOffset = srcPixelOffset;
                         int numSamples = 0;
 
-                        for (int u = 0; u < kh; u++, ky++) {
-                            int kx = x - kw / 2;
+                        for (int u = 0; u < kernelH; u++, srcY++) {
+                            int srcX = destX - kernelKeyX;
                             int imageOffset = imageVerticalOffset;
-                            for (int v = 0; v < kw; v++, kx++) {
-                                if (!maskSrc || roi.contains(kx, ky)) {
+                            
+                            for (int v = 0; v < kernelW; v++, srcX++) {
+                                if (!maskSrc || roi.contains(srcX, srcY)) {
                                     sampleData[numSamples++] = (double)(srcBandData[imageOffset] * kernelData[kernelVerticalOffset + v]);
                                 }
                                 imageOffset += srcPixelStride;
                             }
-                            kernelVerticalOffset += kw;
+                            kernelVerticalOffset += kernelW;
                             imageVerticalOffset += srcScanlineStride;
                         }
 
@@ -509,33 +526,35 @@ class KernelStatsWorker extends AreaOpImage {
         double val;
 
         for (int k = 0; k < destBands; k++) {
-            int y = destAcc.getY();
+            int destY = destAcc.getY();
             double destBandData[] = destData[k];
             double srcBandData[] = srcData[k];
             int srcScanlineOffset = srcBandOffsets[k];
             int dstScanlineOffset = dstBandOffsets[k];
-            for (int j = 0; j < destHeight; j++, y++) {
-                int x = destAcc.getX();
+
+            for (int j = 0; j < destHeight; j++, destY++) {
+                int destX = destAcc.getX();
                 int srcPixelOffset = srcScanlineOffset;
                 int dstPixelOffset = dstScanlineOffset;
 
-                for (int i = 0; i < destWidth; i++, x++) {
-                    if (!maskDest || roi.contains(x, y)) {
-                        int ky = y - kh / 2;
+                for (int i = 0; i < destWidth; i++, destX++) {
+                    if (!maskDest || roi.contains(destX, destY)) {
+                        int srcY = destY - kernelKeyY;
                         int kernelVerticalOffset = 0;
                         int imageVerticalOffset = srcPixelOffset;
                         int numSamples = 0;
 
-                        for (int u = 0; u < kh; u++, ky++) {
-                            int kx = x - kw / 2;
+                        for (int u = 0; u < kernelH; u++, srcY++) {
+                            int srcX = destX - kernelKeyX;
                             int imageOffset = imageVerticalOffset;
-                            for (int v = 0; v < kw; v++, kx++) {
-                                if (!maskSrc || roi.contains(kx, ky)) {
+                            
+                            for (int v = 0; v < kernelW; v++, srcX++) {
+                                if (!maskSrc || roi.contains(srcX, srcY)) {
                                     sampleData[numSamples++] = srcBandData[imageOffset] * kernelData[kernelVerticalOffset + v];
                                 }
                                 imageOffset += srcPixelStride;
                             }
-                            kernelVerticalOffset += kw;
+                            kernelVerticalOffset += kernelW;
                             imageVerticalOffset += srcScanlineStride;
                         }
 
