@@ -20,7 +20,7 @@ The search continues until no further pixels can be added to the region. The reg
 
 The operator produces an output image of TYPE_INT with the value of each pixel being the ID of the region that it belongs to.  Summary data for the regions, in the form of a !RegionData object, is stored as a property of this image and can be retrieved using !RegionalizeDescriptor.REGION_DATA_PROPERTY as the property name.
 
-The !RegionData object has a single public method, getData(), which returns an unmodifiable List of !RegionRec objects (see the example below).
+The !RegionData object has a single public method, getData(), which returns an unmodifiable List of Region objects (see the example below).
 
 ==Limitations==
 
@@ -53,20 +53,20 @@ frame.displayImage(op, "Regions");
 RegionData regData =
    (RegionData)op.getProperty(RegionalizeDescriptor.REGION_DATA_PROPERTY);
 
-List<RegionRec> recs = regData.getData();
-Iterator<RegionRec> iter = recs.iterator();
+List<Region> recs = regData.getData();
+Iterator<Region> iter = recs.iterator();
 System.out.println("ID\tValue\tSize\tMin X\tMax X\tMin Y\tMax Y");
 
 while (iter.hasNext()) {
-    RegionRec rec = iter.next();
+    Region r = iter.next();
     System.out.println( String.format("%d\t%.2f\t%d\t%d\t%d\t%d\t%d",
-        rec.getId(),
-        rec.getRefValue(),
-        rec.getNumPixels(),
-        rec.getMinX(),
-        rec.getMaxX(),
-        rec.getMinY(),
-        rec.getMaxY() ));
+        r.getId(),
+        r.getRefValue(),
+        r.getNumPixels(),
+        r.getMinX(),
+        r.getMaxX(),
+        r.getMinY(),
+        r.getMaxY() ));
 }
 
 }}}
