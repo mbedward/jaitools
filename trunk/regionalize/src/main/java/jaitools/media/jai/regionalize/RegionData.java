@@ -33,7 +33,7 @@ import java.util.List;
  */
 public class RegionData {
 
-    private List<RegionRec> recs = CollectionFactory.newList();
+    private List<Region> recs = CollectionFactory.newList();
 
     /**
      * Constructor. Defined just to make it package-private.
@@ -44,15 +44,15 @@ public class RegionData {
      * Package private method to add data for a region
      */
     void addRegion(RegionZZZ region) {
-        recs.add(new RegionRec(region));
+        recs.add(new Region(region));
     }
 
     /**
      * Get the data for regions as an unmodifiable List of
-     * {@linkplain RegionRec} objects.
+     * {@linkplain Region} objects.
      * @return
      */
-    public List<RegionRec> getData() {
+    public List<Region> getData() {
         return Collections.unmodifiableList(recs);
     }
 }
