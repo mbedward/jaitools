@@ -27,11 +27,16 @@ import java.util.ListIterator;
 import java.util.Map;
 
 /**
- * Holds data for a single region extracted from the source image
+ * Holds data for a single region sa it is extracted from the source image.
+ * The data may come in several batches depending on whether the region
+ * crosses image tile boundaries.
+ * <p>
+ * Note: the class name is intended to emphasize the difference between this
+ * package-private class and the public Region and RegionData classes.
  *
  * @author Michael Bedward
  */
-class RegionZZZ {
+class WorkingRegion {
     private int id;
     private double value;
     private int minx, maxx, miny, maxy;
@@ -46,7 +51,7 @@ class RegionZZZ {
      * @param value representative value of pixels in this region
      * @param segments list of line segments making up this region
      */
-    RegionZZZ(int id, double value, List<ScanSegment> segments) {
+    WorkingRegion(int id, double value, List<ScanSegment> segments) {
         this.id = id;
         this.value = value;
         this.segments = segments;
@@ -103,7 +108,7 @@ class RegionZZZ {
      * it just addes the other region's segments and updates the index
      * and bounds as necessary.
      */
-    void expand(RegionZZZ cor) {
+    void expand(WorkingRegion cor) {
         for (ScanSegment otherSeg : cor.segments) {
             if (otherSeg.startX < minx) minx = otherSeg.startX;
             if (otherSeg.endX > maxx) maxx = otherSeg.endX;

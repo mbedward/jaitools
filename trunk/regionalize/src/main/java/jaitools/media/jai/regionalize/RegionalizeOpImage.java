@@ -54,7 +54,7 @@ final class RegionalizeOpImage extends PointOpImage {
     private int srcY;
 
     private FloodFiller filler;
-    private List<RegionZZZ> regions;
+    private List<WorkingRegion> regions;
 
     /**
      * Constructor
@@ -178,10 +178,10 @@ final class RegionalizeOpImage extends PointOpImage {
         srcY = destRect.y;
 
         filler.setDestination(dest, destRect);
-        List<RegionZZZ> carryOverRegions = filler.getCarryOverRegions();
-        for (RegionZZZ cor : carryOverRegions) {
+        List<WorkingRegion> carryOverRegions = filler.getCarryOverRegions();
+        for (WorkingRegion cor : carryOverRegions) {
             boolean found = false;
-            for (RegionZZZ r : regions) {
+            for (WorkingRegion r : regions) {
                 if (r.getID() == cor.getID()) {
                     r.expand(cor);
                     found = true;
@@ -198,7 +198,7 @@ final class RegionalizeOpImage extends PointOpImage {
                 if (!pixelDone(srcX, srcY)) {
                     double value = srcIter.getSampleDouble();
                     int id = regions.size() + 1;
-                    RegionZZZ r = filler.fill(srcX, srcY, id, value);
+                    WorkingRegion r = filler.fill(srcX, srcY, id, value);
                     regions.add(r);
                 }
                 srcX++;
@@ -217,7 +217,7 @@ final class RegionalizeOpImage extends PointOpImage {
      * so far
      */
     private boolean pixelDone(int x, int y) {
-        for (RegionZZZ reg : regions) {
+        for (WorkingRegion reg : regions) {
             if (reg.contains(x, y)) {
                 return true;
             }
@@ -229,7 +229,7 @@ final class RegionalizeOpImage extends PointOpImage {
     private RegionData getRegionData() {
         RegionData regionData = new RegionData();
         
-        for (RegionZZZ r : regions) {
+        for (WorkingRegion r : regions) {
             regionData.addRegion(r);
         }
 
