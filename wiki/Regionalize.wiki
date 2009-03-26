@@ -53,8 +53,8 @@ frame.displayImage(op, "Regions");
 RegionData regData =
    (RegionData)op.getProperty(RegionalizeDescriptor.REGION_DATA_PROPERTY);
 
-List<Region> recs = regData.getData();
-Iterator<Region> iter = recs.iterator();
+List<Region> regions = regData.getData();
+Iterator<Region> iter = regions.iterator();
 System.out.println("ID\tValue\tSize\tMin X\tMax X\tMin Y\tMax Y");
 
 while (iter.hasNext()) {
