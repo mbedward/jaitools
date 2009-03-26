@@ -43,7 +43,7 @@ public class RegionData {
     /**
      * Package private method to add data for a region
      */
-    void addRegion(Region region) {
+    void addRegion(RegionZZZ region) {
         recs.add(new RegionRec(region));
     }
 

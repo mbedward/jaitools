@@ -36,7 +36,7 @@ public class RegionRec {
     /**
      * Constructor is package-private.
      */
-    RegionRec(Region region) {
+    RegionRec(RegionZZZ region) {
         this.id = region.getID();
         this.value = region.getValue();
         this.minx = region.getMinX();
