@@ -23,7 +23,7 @@ package jaitools.media.jai.regionalize;
 /**
  * Holds summary data for a single region
  */
-public class RegionRec {
+public class Region {
 
     private int id;
     private int numPixels;
@@ -36,7 +36,7 @@ public class RegionRec {
     /**
      * Constructor is package-private.
      */
-    RegionRec(RegionZZZ region) {
+    Region(RegionZZZ region) {
         this.id = region.getID();
         this.value = region.getValue();
         this.minx = region.getMinX();
