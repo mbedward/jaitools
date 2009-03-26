@@ -2,6 +2,8 @@
 
 =Tools=
 
+http://jai-tools.googlecode.com/svn/wiki/images/toolbox_200.gif
+
 ==Operators==
  * KernelStats - calculates one or more statistics for a pixel's neighbourhood
  * MaskedConvolve - convolution of a subset of image pixels
