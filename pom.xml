@@ -79,5 +79,6 @@ to work with the Java Advanced Imaging library
         <module>kernelstats</module>
         <module>maskedconvolve</module>
         <module>regionalize</module>
-    </modules>
+    <module>SBMInterpolate</module>
+  </modules>
 </project>

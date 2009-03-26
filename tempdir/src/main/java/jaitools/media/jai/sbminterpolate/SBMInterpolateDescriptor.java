@@ -39,20 +39,23 @@ import javax.media.jai.registry.RenderedRegistryMode;
  */
 public class SBMInterpolateDescriptor extends OperationDescriptorImpl {
 
+    public static int DEFAULT_AV_NUM_SAMPLES = 100;
+
     static final int ROI_ARG_INDEX = 0;
     static final int KERNEL_ARG_INDEX = 1;
+    static final int SAMPLES_ARG_INDEX = 2;
 
     private static final String[] paramNames =
-        {"roi", "kernel"};
+        {"roi", "kernel", "numSamples"};
 
     private static final Class[] paramClasses =
-        {ROI.class, KernelJAI.class};
+        {ROI.class, KernelJAI.class, Integer.class};
 
     private static final KernelJAI defaultKernel =
             new KernelJAI(3, 3, new float[]{1f,1f,1f,1f,0f,1f,1f,1f,1f});
 
     private static final Object[] paramDefaults =
-        {NO_PARAMETER_DEFAULT, defaultKernel};
+        {NO_PARAMETER_DEFAULT, defaultKernel, Integer.valueOf(DEFAULT_AV_NUM_SAMPLES)};
 
     /** Constructor. */
     public SBMInterpolateDescriptor() {
@@ -66,7 +69,8 @@ public class SBMInterpolateDescriptor extends OperationDescriptorImpl {
                     {"Version", "1.0-SHAPSHOT"},
                     {"arg0Desc", "roi (ROI) - the ROI defining areas of missing data"},
                     {"arg1Desc", "kernel (KernelJAI) - the kernel that defines a pixel's " +
-                             "sampling neighbourhood; default is the 8 nearest neighbours"}
+                             "sampling neighbourhood; default is the 8 nearest neighbours"},
+                    {"arg2Desc", "numSamples (Integer) - average number of samples per missing data pixel"}
                 },
 
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
@@ -98,17 +102,26 @@ public class SBMInterpolateDescriptor extends OperationDescriptorImpl {
      * invokes {@code JAI.create("SBMInterpolate", params) }.
      *
      * @param source0 the single source image
+     *
      * @param roi an ROI object which defines the areas of missing data in the source image
+     *
      * @param kernel a KernelJAI object that defines the sampling neighbourhood to use; if
      * null a default kernel is used that samples values from the 8 nearest neighbours
+     *
+     * @param numSamples the average number of samples per missing data pixel; if null
+     * or a value less than 1 it is set to {@linkplain #DEFAULT_AV_NUM_SAMPLES}
+     *
      * @param hints rendering hints (may be null); useful to specify a BorderExtender
+     *
      * @return the RenderedOp destination
      */
     public static RenderedOp create(
             RenderedImage source0,
             ROI roi,
             KernelJAI kernel,
+            Integer numSamples,
             RenderingHints hints) {
+
         ParameterBlockJAI pb =
                 new ParameterBlockJAI("SBMInterpolate",
                 RenderedRegistryMode.MODE_NAME);
@@ -116,6 +129,7 @@ public class SBMInterpolateDescriptor extends OperationDescriptorImpl {
         pb.setSource("source0", source0);
         pb.setParameter(paramNames[ROI_ARG_INDEX], roi);
         pb.setParameter(paramNames[KERNEL_ARG_INDEX], kernel);
+        pb.setParameter(paramNames[SAMPLES_ARG_INDEX], numSamples);
 
         return JAI.create("SBMInterpolate", pb, hints);
     }
