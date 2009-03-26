@@ -19,7 +19,6 @@
  */
 package jaitools.media.jai.regionalize;
 
-import jaitools.media.jai.regionalize.RegionRec;
 import java.util.Iterator;
 import java.util.List;
 import javax.media.jai.ImageFunction;
@@ -29,7 +28,6 @@ import javax.media.jai.PlanarImage;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -152,10 +150,10 @@ public class TestRegionalize {
 
         RegionData regData = (RegionData) op.getProperty(RegionalizeDescriptor.REGION_DATA_PROPERTY);
 
-        List<RegionRec> recs = regData.getData();
+        List<Region> recs = regData.getData();
         assertTrue(recs.size() == numRegions);
 
-        Iterator<RegionRec> iter = recs.iterator();
+        Iterator<Region> iter = recs.iterator();
         for (int id = 1; id <= recs.size(); id++) {
             assertTrue(iter.hasNext());
             assertTrue(iter.next().getId() == id);
