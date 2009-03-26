@@ -10,7 +10,7 @@ and data from input images.
 
 This jiffle script creates concentric sinusoidal ripples radiating from the centre of the image...
 
-<table>
+<table cellpadding="10">
 <tr valign="top">
 <td>
 {{{
@@ -30,9 +30,6 @@ d = sqrt(dx^2 + dy^2);
 // the current pixel (note: no explicit loop required)
 result = sin(8 * PI * d);
 }}}
-</td>
-<td>
-<pre>      </pre>
 </td>
 <td>
 http://jai-tools.googlecode.com/svn/wiki/images/demo_ripple.gif
@@ -64,9 +61,6 @@ inside = x() < edge_pos && y() < edge_pos
 // ^| is the XOR operator
 result = inside ? (odd_row ^| odd_col) : null
 }}}
-</td>
-<td>
-<pre>      </pre>
 </td>
 <td>
 http://jai-tools.googlecode.com/svn/wiki/images/demo_chessboard.gif
