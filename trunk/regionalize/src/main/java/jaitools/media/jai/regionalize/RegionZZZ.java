@@ -31,7 +31,7 @@ import java.util.Map;
  *
  * @author Michael Bedward
  */
-class Region {
+class RegionZZZ {
     private int id;
     private double value;
     private int minx, maxx, miny, maxy;
@@ -46,7 +46,7 @@ class Region {
      * @param value representative value of pixels in this region
      * @param segments list of line segments making up this region
      */
-    Region(int id, double value, List<ScanSegment> segments) {
+    RegionZZZ(int id, double value, List<ScanSegment> segments) {
         this.id = id;
         this.value = value;
         this.segments = segments;
@@ -103,7 +103,7 @@ class Region {
      * it just addes the other region's segments and updates the index
      * and bounds as necessary.
      */
-    void expand(Region cor) {
+    void expand(RegionZZZ cor) {
         for (ScanSegment otherSeg : cor.segments) {
             if (otherSeg.startX < minx) minx = otherSeg.startX;
             if (otherSeg.endX > maxx) maxx = otherSeg.endX;
