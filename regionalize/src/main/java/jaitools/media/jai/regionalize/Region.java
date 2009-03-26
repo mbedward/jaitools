@@ -36,7 +36,7 @@ public class Region {
     /**
      * Constructor is package-private.
      */
-    Region(RegionZZZ region) {
+    Region(WorkingRegion region) {
         this.id = region.getID();
         this.value = region.getValue();
         this.minx = region.getMinX();

@@ -144,8 +144,8 @@ class FloodFiller {
      *
      * @return a List of (part) Regions
      */
-    List<RegionZZZ> getCarryOverRegions() {
-        List<RegionZZZ> regions = new ArrayList<RegionZZZ>();
+    List<WorkingRegion> getCarryOverRegions() {
+        List<WorkingRegion> regions = new ArrayList<WorkingRegion>();
         if (edgePixels.isEmpty()) return regions;
 
         Collections.sort(edgePixels);
@@ -182,7 +182,7 @@ class FloodFiller {
                  * that also belong to it (corner pixels are transferred to the
                  * cachedPixels list rather than being discarded)
                  */
-                regions.add(new RegionZZZ(ep.fillValue, ep.refValue, segmentsFilled));
+                regions.add(new WorkingRegion(ep.fillValue, ep.refValue, segmentsFilled));
 
                 ListIterator<EdgePixel> iter = edgePixels.listIterator();
                 while (iter.hasNext()) {
@@ -217,15 +217,15 @@ class FloodFiller {
      * @param y start pixel y coordinate
      * @param fillValue the value to write to the destination image for this region
      * @param refValue the reference value for this region
-     * @return a new {@linkplain RegionZZZ}
+     * @return a new {@linkplain WorkingRegion}
      */
-    RegionZZZ fill(int x, int y, int fillValue, double refValue) {
+    WorkingRegion fill(int x, int y, int fillValue, double refValue) {
         if (destIter == null) {
             throw new RuntimeException("need to initialize destination iterator first");
         }
 
         doFill(x, y, fillValue, refValue);
-        return new RegionZZZ(fillValue, refValue, segmentsFilled);
+        return new WorkingRegion(fillValue, refValue, segmentsFilled);
     }
 
     /**
