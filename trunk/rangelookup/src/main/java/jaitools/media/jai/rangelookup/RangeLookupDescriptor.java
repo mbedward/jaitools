@@ -1,21 +1,21 @@
 /*
  * Copyright 2009 Michael Bedward
- * 
+ *
  * This file is part of jai-tools.
-
+ *
  * jai-tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of the 
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
-
+ *
  * jai-tools is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
-
- * You should have received a copy of the GNU Lesser General Public 
+ *
+ * You should have received a copy of the GNU Lesser General Public
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 
 package jaitools.media.jai.rangelookup;
@@ -29,13 +29,44 @@ import javax.media.jai.RenderedOp;
 import javax.media.jai.registry.RenderedRegistryMode;
 
 /**
- *         *** THIS OPERATION IS NOT FUNCTIONAL YET ***
- *
  * Describes the "RangeLookup" operation.
  * <p>
  * This is a variation on the JAI {@linkplain javax.media.jai.LookupDescriptor}.
  * It works with a {@linkplain RangeLookupTable} object in which each entry maps
  * a source image value range to a destination image value.
+ * <p>
+ * Example of use...
+ * <pre>{@code \u0000
+ *
+ * /*
+ *  * Perform a lookup as follows:
+ *  *   Src Value     Dest Value
+ *  *     x < 5            1
+ *  *   5 <= x < 10        2
+ *  *  10 <= x <= 20       3
+ *  *  any other value    99
+ *  *\\/
+ * RenderedImage myIntImg = ...
+ *
+ * RangeLookupTable<Integer> table = new RangeLookupTable<Integer>(99);
+ *
+ * Range<Integer> r = new Range<Integer>(null, true, 5, false);  // x < 5
+ * table.add(r, 1);
+ *
+ * r = new Range<Integer>(5, true, 10, false);  // 5 <= x < 10
+ * table.add(r, 2);
+ *
+ * r = new Range<Integer>(10, true, 20, true);  // 10 <= x <= 20
+ * table.add(r, 2);
+ *
+ * ParameterBlockJAI pb = new ParameterBlockJAI("rangelookup");
+ * pb.setSource("source0", myIntImg);
+ * pb.setParameter("table", table);
+ * RenderedImage luImg = JAI.create("rangelookup", pb);
+ * }</pre>
+ *
+ * @see Range
+ * @see RangeLookupTable
  * 
  * @author Michael Bedward
  */

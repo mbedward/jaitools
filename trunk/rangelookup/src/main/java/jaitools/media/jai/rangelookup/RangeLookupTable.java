@@ -64,6 +64,7 @@ public class RangeLookupTable<T extends Number & Comparable> {
      */
     public RangeLookupTable(T defaultValue) {
         items = new ArrayList<Item<T>>();
+        this.defaultValue = defaultValue;
     }
 
     /**

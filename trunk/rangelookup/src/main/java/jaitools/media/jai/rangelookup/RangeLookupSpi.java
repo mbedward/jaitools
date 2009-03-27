@@ -27,8 +27,6 @@ import javax.media.jai.OperationRegistrySpi;
 import javax.media.jai.registry.RenderedRegistryMode;
 
 /**
- *         *** THIS OPERATION IS NOT FUNCTIONAL YET ***
- *
  * OperationRegistrySpi implementation to register the "RangeLookup"
  * operation and its associated image factories.
  *
