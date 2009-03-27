@@ -1,6 +1,6 @@
 #summary A lookup transformation based on source image value ranges
 
-=RangeLookup operator=
+=!RangeLookup operator=
 
 *package:* jaitools.media.jai.rangelookup
 
@@ -39,5 +39,3 @@ pb.setSource("source0", myIntImg);
 pb.setParameter("table", table);
 RenderedImage luImg = JAI.create("rangelookup", pb);
 }}}
-
-
