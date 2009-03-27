@@ -4,6 +4,7 @@
  * Operators
   * [KernelStats]
   * [MaskedConvolve]
+  * [RangeLookup]
   * [Regionalize]
  * Utility classes
   * [KernelFactory]
