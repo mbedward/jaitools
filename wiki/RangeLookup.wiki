@@ -7,7 +7,7 @@
 ==Description==
 
 This is a variation on the JAI Lookup operation.
-It works with a RangeLookupTable object in which each entry maps
+It works with a !RangeLookupTable object in which each entry maps
 a source image value range to a destination image value.
 
 ==Example of use==
