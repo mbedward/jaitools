@@ -28,7 +28,7 @@ import static org.junit.Assert.*;
  *
  * @author Michael Bedward
  */
-public class RangeTest {
+public class TestRange {
 
     @Test
     public void testOpenBothEnds() {

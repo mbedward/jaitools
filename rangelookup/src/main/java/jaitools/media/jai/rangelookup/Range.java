@@ -60,7 +60,7 @@ public class Range<T extends Number & Comparable> {
     public Range(T minValue, boolean minIncluded, T maxValue, boolean maxIncluded) {
 
         if (minValue != null && maxValue != null &&
-            Double.compare(minValue.doubleValue(), maxValue.doubleValue()) < 0) {
+            Double.compare(minValue.doubleValue(), maxValue.doubleValue()) > 0) {
             throw new IllegalArgumentException("minValue greater than maxValue");
         }
 
