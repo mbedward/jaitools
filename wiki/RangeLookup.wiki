@@ -27,7 +27,7 @@ The Range class used by the !RangeLookup operator allows you to define a point r
 
 ==Limitations==
 
-RangeLookup doesn't handle TYPE_USHORT: an UnsupportedOperationException will be thrown.
+!RangeLookup doesn't handle TYPE_USHORT: an !UnsupportedOperationException will be thrown.
 
 Presently, !RangeLookup simply performs the same source-range `->` destination value lookups on all bands of the source image. It also doesn't support the transformation between single and multi-band images that can be done with Lookup.
 
