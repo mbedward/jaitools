@@ -60,6 +60,9 @@ public class SBMInterpolateRIF implements RenderedImageFactory {
         RenderedImage src = paramBlock.getRenderedSource(0);
         ImageLayout layout = RIFUtil.getImageLayoutHint(renderHints);
         BorderExtender extender = RIFUtil.getBorderExtenderHint(renderHints);
+        if (extender == null) {
+            extender = BorderExtender.createInstance(BorderExtender.BORDER_ZERO);
+        }
 
         ROI roi = (ROI) paramBlock.getObjectParameter(SBMInterpolateDescriptor.ROI_ARG_INDEX);
         if (roi == null) {
@@ -69,16 +72,8 @@ public class SBMInterpolateRIF implements RenderedImageFactory {
         KernelJAI kernel =
                 (KernelJAI) paramBlock.getObjectParameter(SBMInterpolateDescriptor.KERNEL_ARG_INDEX);
 
-        if (kernel == null) {
-            kernel = SBMInterpolateDescriptor.getDefaultKernel();
-        }
-
         Integer avNumSamples = (Integer) paramBlock.getObjectParameter(
                 SBMInterpolateDescriptor.SAMPLES_ARG_INDEX);
-
-        if (avNumSamples == null || avNumSamples < 1) {
-            avNumSamples = SBMInterpolateDescriptor.DEFAULT_AV_NUM_SAMPLES;
-        }
 
         return new SBMInterpolateOpImage(src,
                 extender,

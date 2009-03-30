@@ -71,8 +71,8 @@ final class SBMInterpolateOpImage extends AreaOpImage {
     private int destHeight;
     private int destBands;
     private int[] dstBandOffsets;
-    private int dstPixelStride;
-    private int dstScanlineStride;
+    private int destPixelStride;
+    private int destScanlineStride;
     
     /* Kernel variables. */
     private boolean[] inKernel;
@@ -207,8 +207,8 @@ final class SBMInterpolateOpImage extends AreaOpImage {
         destBands = destAcc.getNumBands();
 
         dstBandOffsets = destAcc.getBandOffsets();
-        dstPixelStride = destAcc.getPixelStride();
-        dstScanlineStride = destAcc.getScanlineStride();
+        destPixelStride = destAcc.getPixelStride();
+        destScanlineStride = destAcc.getScanlineStride();
 
         srcBandOffsets = srcAcc.getBandOffsets();
         srcPixelStride = srcAcc.getPixelStride();
@@ -257,115 +257,150 @@ final class SBMInterpolateOpImage extends AreaOpImage {
 
         byte[] sampleData = new byte[kernelN];
         int numSamples;
-        int val;
+        int val = 0;
+        boolean valExists;
+
+        boolean[][] destFilled = new boolean[destBands][];
+        for (int band = 0; band < destBands; band++) {
+            destFilled[band] = new boolean[destWidth * destHeight];
+            Arrays.fill(destFilled[band], false);
+        }
 
         /*
          * We begin by generating some initial data for the missing data
-         * regions. Since we are scanning by row then col, we will be getting
-         * an edge pixel first on each row so there will be some non-missing
-         * data to sample
+         * regions.
          */
+        int pass = 1;
+        while (true) {
+            System.out.println("Preliminary fill pass " + pass++);
+            
+            boolean finishedInitialFill = true;
+            boolean firstPass = true;
+            for (int band = 0; band < destBands; band++) {
+                int destY = destAcc.getY();
+                byte destBandData[] = destData[band];
+                byte srcBandData[] = srcData[band];
+                int srcScanlineOffset = srcBandOffsets[band];
+                int dstScanlineOffset = dstBandOffsets[band];
+                int destFilledOffset = 0;
 
-        boolean firstBand = true;
-        for (int band = 0; band < destBands; band++) {
-            int destY = destAcc.getY();
-            byte destBandData[] = destData[band];
-            byte srcBandData[] = srcData[band];
-            int srcScanlineOffset = srcBandOffsets[band];
-            int dstScanlineOffset = dstBandOffsets[band];
+                for (int j = 0; j < destHeight; j++, destY++) {
+                    int destX = destAcc.getX();
+                    int srcPixelOffset = srcScanlineOffset;
+                    int destPixelOffset = dstScanlineOffset;
 
-            boolean[] destFilled = new boolean[destBandData.length];
-            Arrays.fill(destFilled, false);
-            int destFilledIndex = 0;
-
-            for (int j = 0; j < destHeight; j++, destY++) {
-                int destX = destAcc.getX();
-                int srcPixelOffset = srcScanlineOffset;
-                int dstPixelOffset = dstScanlineOffset;
-
-                for (int i = 0; i < destWidth; i++, destX++, destFilledIndex++) {
-                    if (roi.contains(destX, destY)) {
-                        if (firstBand) {
-                            missingDataOffsets.add(dstPixelOffset);
-                        }
-
-                        int imageVerticalOffset = srcPixelOffset;
-                        numSamples = 0;
-                        int srcY = destY - kernelKeyY;
-
-                        for (int u = 0, k = 0; u < kernelH; u++, srcY++) {
-                            int imageOffset = imageVerticalOffset;
-                            int srcX = destX - kernelKeyX;
-
-                            for (int v = 0; v < kernelW; v++, k++, srcX++) {
-                                if (inKernel[k]) {
-                                    if (!roi.contains(srcX, srcY)) {
-                                        sampleData[numSamples++] = (byte) (srcBandData[imageOffset] & 0xff);
-                                    } else if (/* destination filled*/) {
-                                        sampleData[numSamples++] = destBandData[???];
-                                    }
-                                }
-                                imageOffset += srcPixelStride;
+                    for (int i = 0; i < destWidth; i++, destX++) {
+                        valExists = false;
+                        if (roi.contains(destX, destY)) {
+                            if (firstPass) {
+                                missingDataOffsets.add(destPixelOffset);
                             }
-                            imageVerticalOffset += srcScanlineStride;
+
+                            int srcImgVerticalOffset = srcPixelOffset;
+                            int destImgVerticalOffset = destPixelOffset;
+                            int flagVerticalOffset = destFilledOffset;
+                            numSamples = 0;
+                            int srcY = destY - kernelKeyY;
+
+                            for (int ky = 0, k = 0; ky < kernelH; ky++, srcY++) {
+                                int srcImgOffset = srcImgVerticalOffset;
+                                int destImgOffset = destImgVerticalOffset;
+                                int flagOffset = flagVerticalOffset;
+                                int srcX = destX - kernelKeyX;
+
+                                for (int kx = 0; kx < kernelW; kx++, k++, srcX++) {
+                                    if (inKernel[k]) {
+                                        if (roi.contains(srcX, srcY)) {  // missing data in source
+                                            if (destFilled[band][flagOffset]) {
+                                                // sample previously generated destination data
+                                                sampleData[numSamples++] = (byte) (destBandData[destImgOffset] & 0xff);
+                                            }
+                                        } else {
+                                            // non-missing source data
+                                            sampleData[numSamples++] = (byte) (srcBandData[srcImgOffset] & 0xff);
+                                        }
+                                    }
+                                    srcImgOffset += srcPixelStride;
+                                    destImgOffset += destPixelStride;
+                                    flagOffset++;
+                                }
+                                srcImgVerticalOffset += srcScanlineStride;
+                                destImgVerticalOffset += destScanlineStride;
+                                flagVerticalOffset += destWidth;
+                            }
+
+                            if (numSamples > 0) {
+                                val = sampleData[rand.nextInt(numSamples)] & 0xff;
+                                destFilled[band][destFilledOffset] = true;
+                                valExists = true;
+
+                            } else {
+                                // no sample data available for this kernel element yet
+                                finishedInitialFill = false;
+                            }
+
+                        } else { // this pixel is not in a missing data region
+                            val = srcBandData[srcPixelOffset] & 0xff;
+                            valExists = true;
                         }
 
-                        val = sampleData[rand.nextInt(numSamples)] & 0xff;
-                        destFilled[destFilledIndex] = true;
+                        if (valExists) {
+                            if (val < 0) {
+                                val = 0;
+                            } else if (val > 255) {
+                                val = 255;
+                            }
 
-                    } else { // this pixel is not in a missing data region
-                        val = srcBandData[srcPixelOffset] & 0xff;
+                            destBandData[destPixelOffset] = (byte) val;
+                        }
+                        srcPixelOffset += srcPixelStride;
+                        destPixelOffset += destPixelStride;
+                        destFilledOffset++ ;
                     }
 
-                    if (val < 0) {
-                        val = 0;
-                    } else if (val > 255) {
-                        val = 255;
-                    }
-
-                    destBandData[dstPixelOffset] = (byte) val;
-                    srcPixelOffset += srcPixelStride;
-                    dstPixelOffset += dstPixelStride;
+                    srcScanlineOffset += srcScanlineStride;
+                    dstScanlineOffset += destScanlineStride;
                 }
 
-                srcScanlineOffset += srcScanlineStride;
-                dstScanlineOffset += dstScanlineStride;
+                firstPass = false;
             }
 
-            firstBand = false;
+            if (finishedInitialFill) {
+                break;
+            }
         }
 
         /*
          * Now we do the voter model sampling within the missing data areas
          */
         int N = avNumSamples * missingDataOffsets.size();
-        for (int band = 0; band < destBands; band++) {
-            byte destBandData[] = destData[band];
 
-            for (int n = 0; n < N; n++) {
-                int index = rand.nextInt(missingDataOffsets.size());
-                int destOffset = missingDataOffsets.get(index);
+        for (int n = 0; n < N; n++) {
+            int index = rand.nextInt(missingDataOffsets.size());
+            int destOffset = missingDataOffsets.get(index);
+
+            for (int band = 0; band < destBands; band++) {
+                byte destBandData[] = destData[band];
                 numSamples = 0;
 
-                int destSampleOffset = destOffset - (kernelKeyY * dstScanlineStride) - (kernelKeyX * dstPixelStride);
-                int kernelLineStride = kernelW * dstPixelStride;
+                int destSampleOffset = destOffset - (kernelKeyY * destScanlineStride) - (kernelKeyX * destPixelStride);
+                int kernelLineStride = kernelW * destPixelStride;
 
                 for (int u = 0, k = 0; u < kernelH; u++) {
                     for (int v = 0; v < kernelW; v++, k++) {
                         if (inKernel[k]) {
-                            sampleData[numSamples++] = destBandData[destSampleOffset];
+                            sampleData[numSamples++] = (byte) (destBandData[destSampleOffset] & 0xff);
                         }
-                        destSampleOffset += dstPixelStride;
+                        destSampleOffset += destPixelStride;
                     }
-                    destSampleOffset += (dstScanlineStride - kernelLineStride);
+                    destSampleOffset += (destScanlineStride - kernelLineStride);
                 }
 
-                val = sampleData[rand.nextInt(numSamples)];
+                val = sampleData[rand.nextInt(numSamples)] & 0xff;
                 destBandData[destOffset] = (byte) val;
             }
         }
     }
-
 
 }
 
