@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>jaitools</groupId>
+        <artifactId>jaitools</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>jiffle</artifactId>
+    <packaging>jar</packaging>
+    <name>Jiffle: JAI Image Function Language</name>
+    <description>Jiffle is a language and interpreter intended to make it easier to create
+        images from mathematical functions.
+    </description>
+    <developers>
+        <developer>
+            <id>michael</id>
+            <name>Michael Bedward</name>
+            <email>michael.bedward@gmail.com</email>
+            <timezone>+10</timezone>
+        </developer>
+    </developers>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr3-maven-plugin</artifactId>
+                <version>3.1.1.2</version>
+                <configuration>
+                    <libDirectory>target/generated-sources/antlr/jaitools/jiffle/parser</libDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <!--phase>generate-sources</phase-->
+                        <goals>
+                            <goal>antlr</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>jaitools</groupId>
+            <artifactId>jaitools-utils</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr</artifactId>
+            <version>3.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr-runtime</artifactId>
+            <version>3.1.1</version>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+    <repositories>
+        <repository>
+            <id>aussiehq</id>
+            <name>Australian mirror for Ibiblio</name>
+            <url>http://apache.mirror.aussiehq.net.au/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+    <properties>
+        <netbeans.hint.useExternalMaven>true</netbeans.hint.useExternalMaven>
+    </properties>
+</project>
