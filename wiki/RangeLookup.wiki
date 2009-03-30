@@ -19,6 +19,18 @@ The first takes no arguments: a table created with this constructor will throw a
 
 The second takes an argument for default value: if set to a non-null value, this value will be written to the destination image whenever a source image value is not contained within any of the ranges in the table. If set to null, the table will behave as if created with the no-argument constructor.
 
+==!RangeLookup vs Lookup==
+
+The per-band offset values that can be defined for Lookup do not exist for !RangeLookup.
+
+The Range class used by the !RangeLookup operator allows you to define a point range, ie. one where the lower and upper bounds are the same. With this, you can peform Lookup-style single value lookups with float and double source image data. 
+
+==Limitations==
+
+RangeLookup doesn't handle TYPE_USHORT: an UnsupportedOperationException will be thrown.
+
+Presently, !RangeLookup simply performs the same source-range `->` destination value lookups on all bands of the source image. It also doesn't support the transformation between single and multi-band images that can be done with Lookup.
+
 ==Example of use==
 
 {{{
