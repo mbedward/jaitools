@@ -20,11 +20,11 @@
 
 package jaitools.media.jai.kernelstats;
 
-import javax.media.jai.CollectionImageFactory;
+import java.awt.image.renderable.RenderedImageFactory;
 import javax.media.jai.OperationDescriptor;
 import javax.media.jai.OperationRegistry;
 import javax.media.jai.OperationRegistrySpi;
-import javax.media.jai.registry.CollectionRegistryMode;
+import javax.media.jai.registry.RenderedRegistryMode;
 
 /**
  * OperationRegistrySpi implementation to register the "KernelStats"
@@ -50,12 +50,12 @@ public class KernelStatsSpi implements OperationRegistrySpi {
         registry.registerDescriptor(op);
         String descName = op.getName();
         
-        CollectionImageFactory cif = new KernelStatsCIF();
+        RenderedImageFactory rif = new KernelStatsRIF();
 
-        registry.registerFactory(CollectionRegistryMode.MODE_NAME,
+        registry.registerFactory(RenderedRegistryMode.MODE_NAME,
                                  descName,
                                  productName,
-                                 cif);
+                                 rif);
 
     }
 }

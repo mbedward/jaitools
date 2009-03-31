@@ -43,12 +43,11 @@ public class MaskedConvolveRIF implements RenderedImageFactory {
 
     /**
      * Create a new instance of MaskedConvolveOpImage in the rendered layer.
-     * This method satisfies the implementation of RIF.
      *
      * @param paramBlock specifies the source image and the parameters
      * "kernel", "roi", "masksource" and "maskdest"
-     * @param renderHints useful to specify a {@link BorderExtender} and
-     * {@link ImageLayout}
+     *
+     * @param renderHints useful to specify a {@linkplain javax.media.jai.BorderExtender}
      */
     public RenderedImage create(ParameterBlock paramBlock,
             RenderingHints renderHints) {

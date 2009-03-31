@@ -278,7 +278,7 @@ final class MaskedConvolveOpImage extends AreaOpImage {
                             int imageOffset = imageVerticalOffset;
                             for (int v = 0; v < kernelW; v++, srcX++) {
                                 if (!maskSrc || roi.contains(srcX, srcY)) {
-                                    f += (srcBand[imageOffset]) * kernelData[kernelVerticalOffset + v];
+                                    f += srcBand[imageOffset] * kernelData[kernelVerticalOffset + v];
                                 }
                                 imageOffset += srcPixelStride;
                             }
