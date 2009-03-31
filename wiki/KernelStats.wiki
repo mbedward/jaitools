@@ -38,11 +38,11 @@ The reason that median generates a TYPE_DOUBLE image, even when working with a s
 
 ==Masking==
 
-KernelStats offers the same masking options as MaskedConvolve.
+!KernelStats offers the same masking options as MaskedConvolve.
 
 ==Limitations==
 
-KernelStats only deals with a single source image band.
+!KernelStats only deals with a single source image band. This can be specified with the "band" parameter (the default is band 0).
 
 ==Example of use==
 
