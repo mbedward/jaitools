@@ -25,10 +25,10 @@ import jaitools.demo.ImageReceiver;
 import jaitools.utils.ImageFrame;
 import jaitools.media.jai.kernel.KernelFactory;
 import jaitools.media.jai.kernelstats.KernelStatistic;
+import jaitools.utils.ImageUtils;
 import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.List;
 import javax.media.jai.BorderExtender;
 import javax.media.jai.JAI;
 import javax.media.jai.KernelJAI;
@@ -67,14 +67,14 @@ public class KernelStatsDemo implements ImageReceiver {
         calculateStats(image);
     }
 
-    private void calculateStats(RenderedImage img) {
+    private void calculateStats(RenderedImage dataImage) {
         /**
          * now generate summary statistics for the base image
          */
         KernelJAI kernel = KernelFactory.createCircle(10);
         ParameterBlockJAI pb = new ParameterBlockJAI("KernelStats");
 
-        pb.setSource("source0", img);
+        pb.setSource("source0", dataImage);
         pb.setParameter("kernel", kernel);
         KernelStatistic[] stats = new KernelStatistic[]
         {
@@ -87,12 +87,16 @@ public class KernelStatsDemo implements ImageReceiver {
         BorderExtender extender = BorderExtender.createInstance(BorderExtender.BORDER_REFLECT);
         RenderingHints hints = new RenderingHints(JAI.KEY_BORDER_EXTENDER, extender);
 
-        Collection<RenderedImage> statsImages = JAI.createCollection("KernelStats", pb, hints);
-        Iterator<RenderedImage> iter = statsImages.iterator();
-
+        RenderedImage multibandImg = JAI.create("KernelStats", pb, hints);
+        /*
+         * The bands of statsImg correspond to each of the statistics
+         * that we requested. We can use the handy ImageUtils.getBandsAsImages
+         * method to convert them to a list of separate images
+         */
+        List<RenderedImage> statImages = ImageUtils.getBandsAsImages(multibandImg);
         int k = 0;
-        while (iter.hasNext()) {
-            ImageFrame frame = new ImageFrame(iter.next(), "Neighbourhood statistic: " + stats[k++].toString());
+        for (RenderedImage statImg : statImages) {
+            ImageFrame frame = new ImageFrame(statImg, stats[k++].toString());
             frame.setVisible(true);
         }
 

@@ -22,6 +22,9 @@ package jaitools.utils;
 
 import java.awt.Color;
 import java.awt.image.RenderedImage;
+import java.util.Collection;
+import java.util.List;
+import java.util.SortedSet;
 import javax.media.jai.JAI;
 import javax.media.jai.LookupTableJAI;
 import javax.media.jai.ParameterBlockJAI;
@@ -128,4 +131,57 @@ public class ImageUtils {
         return displayImg;
     }
 
+    /**
+     * Get the bands of a multi-band image as a List of single-band images.
+     *
+     * @param img the multi-band image
+     * @return a List of new single-band images
+     */
+    public static List<RenderedImage> getBandsAsImages(RenderedImage img) {
+        List<RenderedImage> images = CollectionFactory.newList();
+
+        if (img != null) {
+            int numBands = img.getSampleModel().getNumBands();
+            for (int band = 0; band < numBands; band++) {
+                ParameterBlockJAI pb = new ParameterBlockJAI("BandSelect");
+                pb.setSource("source0", img);
+                pb.setParameter("bandindices", new int[]{band});
+                RenderedImage bandImg = JAI.create("BandSelect", pb);
+                images.add(bandImg);
+            }
+        }
+
+        return images;
+    }
+
+    /**
+     * Get the specified bands of a multi-band image as a List of single-band images.
+     *
+     * @param img the multi-band image
+     * @param bandIndices a Collection of Integer indices in the range 0 <= i < number of bands
+     * @return a List of new single-band images
+     */
+    public static List<RenderedImage> getBandsAsImages(RenderedImage img, Collection<Integer> bandIndices) {
+        List<RenderedImage> images = CollectionFactory.newList();
+
+        if (img != null) {
+            int numBands = img.getSampleModel().getNumBands();
+            SortedSet<Integer> sortedIndices = CollectionFactory.newTreeSet();
+            sortedIndices.addAll(bandIndices);
+
+            if (sortedIndices.first() < 0 || sortedIndices.last() >= numBands) {
+                throw new IllegalArgumentException("band index out of bounds");
+            }
+
+            for (Integer band : sortedIndices) {
+                ParameterBlockJAI pb = new ParameterBlockJAI("BandSelect");
+                pb.setSource("source0", img);
+                pb.setParameter("bandindices", new int[]{band});
+                RenderedImage bandImg = JAI.create("BandSelect", pb);
+                images.add(bandImg);
+            }
+        }
+
+        return images;
+    }
 }

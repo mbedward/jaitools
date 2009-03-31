@@ -22,13 +22,13 @@ package jaitools.media.jai.kernelstats;
 
 import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
-import java.util.Collection;
+import java.awt.image.renderable.ParameterBlock;
 import javax.media.jai.JAI;
 import javax.media.jai.KernelJAI;
 import javax.media.jai.OperationDescriptorImpl;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.ROI;
-import javax.media.jai.registry.CollectionRegistryMode;
+import javax.media.jai.registry.RenderedRegistryMode;
 
 /**
  * An {@code OperationDescriptor} for the "KernelStats" operation.
@@ -51,37 +51,46 @@ import javax.media.jai.registry.CollectionRegistryMode;
  */
 public class KernelStatsDescriptor extends OperationDescriptorImpl {
 
-    static final int KERNEL_ARG_INDEX = 0;
-    static final int STATS_ARG_INDEX = 1;
-    static final int ROI_ARG_INDEX = 2;
-    static final int MASKSRC_ARG_INDEX = 3;
-    static final int MASKDEST_ARG_INDEX = 4;
-    static final int NAN_ARG_INDEX = 5;
+    static final int STATS_ARG_INDEX = 0;
+    static final int KERNEL_ARG_INDEX = 1;
+    static final int BAND_ARG_INDEX = 2;
+    static final int ROI_ARG_INDEX = 3;
+    static final int MASKSRC_ARG_INDEX = 4;
+    static final int MASKDEST_ARG_INDEX = 5;
+    static final int NAN_ARG_INDEX = 6;
+    static final int NO_RESULT_VALUE_ARG_INDEX = 7;
 
     private static final String[] paramNames =
-        {"kernel",
-         "stats",
+        {"stats",
+         "kernel",
+         "band",
          "roi",
-         "masksource",
-         "maskdest",
-         "ignorenan"};
+         "maskSource",
+         "maskDest",
+         "ignoreNaN",
+         "nilValue"
+        };
 
     private static final Class[] paramClasses =
-        {javax.media.jai.KernelJAI.class,
-         KernelStatistic[].class,
+        {KernelStatistic[].class,
+         javax.media.jai.KernelJAI.class,
+         Integer.class,
          javax.media.jai.ROI.class,
          Boolean.class,
          Boolean.class,
          Boolean.class,
+         Number.class
         };
 
     private static final Object[] paramDefaults =
         {NO_PARAMETER_DEFAULT,
          NO_PARAMETER_DEFAULT,
+         Integer.valueOf(0),
          (ROI) null,
          Boolean.FALSE,
          Boolean.FALSE,
-         Boolean.TRUE};
+         Boolean.TRUE,
+         Integer.valueOf(0)};
 
     /** Constructor. */
     public KernelStatsDescriptor() {
@@ -92,24 +101,30 @@ public class KernelStatsDescriptor extends OperationDescriptorImpl {
                     {"Description", "Calculate neighbourhood statistics"},
                     {"DocURL", "http://code.google.com/p/jai-tools/"},
                     {"Version", "1.0-SHAPSHOT"},
-                    {"arg0Desc", "kernel - a JAI Kernel object"},
-                    {"arg1Desc", "stats - an array of KernelStatistic constants specifying the " +
+                    {"arg0Desc", "stats - an array of KernelStatistic constants specifying the " +
                              "statistics required"},
-                    {"arg2Desc", "roi - an optional ROI object which must have the same pixel bounds" +
-                        "as the source iamge"},
-                    {"arg3Desc", "masksource (Boolean, default=true):" +
-                             "if TRUE (default) only the values of source pixels where" +
+                    {"arg1Desc", "kernel - a JAI Kernel object"},
+                    {"arg2Desc", "band (Integer, default 0) - the source image band to process"},
+                    {"arg3Desc", "roi (default null) - an optional ROI object for source and/or" +
+                             "destination masking"},
+                    {"arg4Desc", "maskSource (Boolean, default TRUE) -" +
+                             "if TRUE only the values of source pixels where" +
                              "roi.contains is true contribute to the statistic"},
-                    {"arg4Desc", "maskdest (Boolean): " +
-                             "if TRUE (default) calculation is only performed" +
+                    {"arg5Desc", "maskdest (Boolean, default TRUE) - " +
+                             "if TRUE calculation is only performed" +
                              "for pixels where roi.contains is true; when false" +
                              "the destination pixel is set to NaN"},
-                    {"arg5Desc", "ignorenan (Boolean): " +
-                             "if TRUE (default) NaN values in source float or double images" +
-                             "are ignored"}
+                    {"arg6Desc", "ignorenan (Boolean, default TRUE) - " +
+                             "if TRUE, NaN values in source float or double images" +
+                             "are ignored; if FALSE any NaN values in a pixel's neighbourhood" +
+                             "will result in nilValue for the destination pixel"},
+                    {"arg7Desc", "nilValue (Number, default 0) - the nil value for destination" +
+                             "pixels that are outside the ROI (if destMask == TRUE), or that have" +
+                             "no neighbourhood values as a result of source masking, or NaN values" +
+                             "in the neighbourhood and ignoreNaN == FALSE"}
                 },
 
-                new String[]{CollectionRegistryMode.MODE_NAME},   // supported modes
+                new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
                 
                 1,                                              // number of sources
                 
@@ -125,10 +140,11 @@ public class KernelStatsDescriptor extends OperationDescriptorImpl {
      * Convenience method which constructs a {@link ParameterBlockJAI} and
      * invokes {@code JAI.create("kernelstats", params) }
      * @param source0 the image for which neighbourhood statistics are required
-     * @param kernel a kernel defining the neighbourhood
      * @param stats an array specifying the statistics required
-     * @param roi the roi controlling calculations (must have the same pixel bounds
-     * as the source image)
+     * @param kernel a kernel defining the neighbourhood
+     * @param band the source image band to process (default 0)
+     * @param roi optional roi (default is null) used for source and/or destination
+     * masking
      * @param maskSource if TRUE only the values of source pixels where
      * {@code roi.contains} is true contribute to the calculation
      * @param maskDest if TRUE the statistic is only calculated for pixels where
@@ -136,45 +152,56 @@ public class KernelStatsDescriptor extends OperationDescriptorImpl {
      * to NaN
      * @param ignoreNaN if TRUE, NaN values in input float or double images
      * are ignored in calculations
+     * @param nilValue value to write to destination when there is no calculated
+     * statistic for a pixel (e.g. due to destination masking or NaNs in neighbourhood)
      * @param hints useful for specifying a border extender; may be null
-     * @return a Collection of RenderedImages corresponding to the
-     * array of requested statistics
+     * @return a RenderedImages a band for each requested statistic
      * @throws IllegalArgumentException if any args are null
      */
-    public static Collection<RenderedImage> createCollection(
+    public static RenderedImage create(
             RenderedImage source0,
-            KernelJAI kernel,
             KernelStatistic[] stats,
+            KernelJAI kernel,
+            int band,
             ROI roi,
             Boolean maskSource,
             Boolean maskDest,
             Boolean ignoreNaN,
+            Number nilValue,
             RenderingHints hints) {
+
         ParameterBlockJAI pb =
                 new ParameterBlockJAI("KernelStats",
-                CollectionRegistryMode.MODE_NAME);
+                RenderedRegistryMode.MODE_NAME);
 
         pb.setSource("source0", source0);
-        pb.setParameter("kernel", kernel);
         pb.setParameter("stats", stats);
+        pb.setParameter("kernel", kernel);
+        pb.setParameter("band", band);
         pb.setParameter("roi", roi);
-        pb.setParameter("masksource", maskSource);
-        pb.setParameter("maskdest", maskDest);
-        pb.setParameter("ignorenan", ignoreNaN);
+        pb.setParameter("maskSource", maskSource);
+        pb.setParameter("maskDest", maskDest);
+        pb.setParameter("ignoreNaN", ignoreNaN);
+        pb.setParameter("nilValue", nilValue);
 
-        return JAI.createCollection("KernelStats", pb, hints);
+        return JAI.create("KernelStats", pb, hints);
     }
 
-    /**
-     * This method is not for client code use.
-     * We override it to change the valid source class from Collection
-     * (the default) to RenderedImage
-     *
-     * @param modeName
-     */
     @Override
-    public Class<?>[] getSourceClasses(String modeName) {
-        return new Class<?>[] { RenderedImage.class };
+    public boolean validateArguments(String modeName, ParameterBlock pb, StringBuffer msg) {
+        if (!super.validateArguments(modeName, pb, msg)) {
+            return false;
+        }
+
+        int band = pb.getIntParameter(BAND_ARG_INDEX);
+        if (band < 0 || band >= pb.getNumSources()) {
+            msg.append("band arg out of bounds for source image: " + band);
+            return false;
+        }
+
+        return true;
     }
+
+
 }
 
