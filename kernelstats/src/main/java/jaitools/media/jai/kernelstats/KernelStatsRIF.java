@@ -73,9 +73,20 @@ public class KernelStatsRIF implements RenderedImageFactory {
 
         SampleModel sm = layout.getSampleModel(null);
         if (sm == null || sm.getNumBands() != stats.length) {
+
+            int dataType = source.getSampleModel().getDataType();
+            if (dataType != DataBuffer.TYPE_FLOAT && dataType != DataBuffer.TYPE_DOUBLE) {
+                for (KernelStatistic stat : stats) {
+                    if (!stat.supportsIntegralResult()) {
+                        dataType = DataBuffer.TYPE_DOUBLE;
+                        break;
+                    }
+                }
+            }
+
             sm = RasterFactory.createComponentSampleModel(
                     source.getSampleModel(),
-                    DataBuffer.TYPE_DOUBLE,
+                    dataType,
                     source.getWidth(), source.getHeight(), stats.length);
 
             layout.setSampleModel(sm);

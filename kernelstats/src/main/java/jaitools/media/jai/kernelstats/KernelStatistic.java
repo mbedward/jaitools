@@ -31,25 +31,25 @@ import java.util.Map;
 public enum KernelStatistic {
 
     /** Arithmetic mean */
-    MEAN("mean", "arithmetic mean"),
+    MEAN("mean", "arithmetic mean", false),
 
     /** Median sample value */
-    MEDIAN("median", "median sample value"),
+    MEDIAN("median", "median sample value", false),
 
     /** Minimum sample value */
-    MIN("min", "minimum value"),
+    MIN("min", "minimum value", true),
 
     /** Maximum sample value */
-    MAX("max", "maximum value"),
+    MAX("max", "maximum value", true),
             
     /** Range (maximum - minimum) */
-    RANGE("range", "sample range"),
+    RANGE("range", "sample range", true),
 
     /** Sample standard deviation */
-    SDEV("sdev", "sample standard deviation"),
+    SDEV("sdev", "sample standard deviation", false),
 
     /** Sample variance */
-    VARIANCE("variance", "sample variance");
+    VARIANCE("variance", "sample variance", false);
 
     private static Map<String, KernelStatistic> lookup;
     static {
@@ -61,13 +61,15 @@ public enum KernelStatistic {
 
     private String name;
     private String desc;
+    private boolean supportsIntResult;
 
     /**
      * Private constructor
      */
-    private KernelStatistic(String name, String desc) {
+    private KernelStatistic(String name, String desc, boolean supportsIntResult) {
         this.name = name;
         this.desc = desc;
+        this.supportsIntResult = supportsIntResult;
     }
 
     /**
@@ -83,6 +85,14 @@ public enum KernelStatistic {
      */
     public String getDescription() {
         return desc;
+    }
+
+    /**
+     * Query whether this statistic is can return an integral result
+     * when working with integral sample data.
+     */
+    public boolean supportsIntegralResult() {
+        return supportsIntResult;
     }
 
     /**
