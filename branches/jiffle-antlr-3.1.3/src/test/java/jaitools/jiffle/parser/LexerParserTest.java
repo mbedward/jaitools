@@ -20,17 +20,13 @@
 
 package jaitools.jiffle.parser;
 
-import antlr.Parser;
-import jaitools.jiffle.parser.JiffleParser.prog_return;
 import jaitools.utils.CollectionFactory;
-import java.util.Iterator;
 import java.util.Set;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.Token;
 import org.antlr.runtime.tree.CommonTree;
 import org.antlr.runtime.tree.CommonTreeNodeStream;
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -156,10 +152,9 @@ public class LexerParserTest {
         };
         
         CommonTreeNodeStream nodeStrm = new CommonTreeNodeStream(ast);
-        Iterator iter = nodeStrm.iterator();
         int k = 0;
-        while (k < expType.length && iter.hasNext()) {
-            CommonTree node = (CommonTree) iter.next();
+        while (k < expType.length) {
+            CommonTree node = (CommonTree) nodeStrm.nextElement();
             assertEquals(node.getType(), expType[k++]);
         }
 

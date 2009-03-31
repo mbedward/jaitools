@@ -35,6 +35,7 @@ import static org.junit.Assert.*;
  */
 public class NeighbourhoodTest {
 
+    @Ignore
     @Test
     public void testNeighbourhood() throws Exception {
         int width = 10, height = 10;
