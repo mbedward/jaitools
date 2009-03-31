@@ -634,25 +634,29 @@ final class KernelStatsOpImage extends AreaOpImage {
                 System.arraycopy(data, 0, values, 0, n);
             }
 
-            if (stat == KernelStatistic.MAX) {
-                return SummaryStats.max(values, ignoreNaN);
+            switch (stat) {
+                case MAX:
+                    return SummaryStats.max(values, ignoreNaN);
 
-            } else if (stat == KernelStatistic.MEAN) {
-                return SummaryStats.mean(values, ignoreNaN);
+                case MEAN:
+                    return SummaryStats.mean(values, ignoreNaN);
 
-            } else if (stat == KernelStatistic.MEDIAN) {
-                return SummaryStats.median(values, ignoreNaN);
+                case MEDIAN:
+                    return SummaryStats.median(values, ignoreNaN);
 
-            } else if (stat == KernelStatistic.MIN) {
-                return SummaryStats.min(values, ignoreNaN);
+                case MIN:
+                    return SummaryStats.min(values, ignoreNaN);
 
-            } else if (stat == KernelStatistic.RANGE) {
-                return SummaryStats.range(values, ignoreNaN);
+                case RANGE:
+                    return SummaryStats.range(values, ignoreNaN);
 
-            } else if (stat == KernelStatistic.SDEV) {
-                return SummaryStats.sdev(values, ignoreNaN);
+                case SDEV:
+                    return SummaryStats.sdev(values, ignoreNaN);
+                
+                case VARIANCE:
+                    return SummaryStats.variance(values, ignoreNaN);
 
-            } else {
+                default:
                 throw new IllegalArgumentException("Unrecognized KernelStatstic arg");
             }
         }

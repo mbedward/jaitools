@@ -26,6 +26,9 @@ import java.util.List;
 import java.util.SortedSet;
 
 /**
+ * A collection of static methods to calculate summary statistics for
+ * a sample of double-valued data. This class is used by both Jiffle
+ * and the KernelStats operator.
  *
  * @author Michael Bedward
  */

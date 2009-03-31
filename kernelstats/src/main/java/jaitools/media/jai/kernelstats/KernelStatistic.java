@@ -46,13 +46,16 @@ public enum KernelStatistic {
     RANGE("range", "sample range"),
 
     /** Sample standard deviation */
-    SDEV("sdev", "sample standard deviation");
+    SDEV("sdev", "sample standard deviation"),
+
+    /** Sample variance */
+    VARIANCE("variance", "sample variance");
 
     private static Map<String, KernelStatistic> lookup;
     static {
         lookup = new HashMap<String, KernelStatistic>();
-        for (KernelStatistic type : KernelStatistic.values()) {
-            lookup.put(type.name, type);
+        for (KernelStatistic stat : KernelStatistic.values()) {
+            lookup.put(stat.name, stat);
         }
     }
 
