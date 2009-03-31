@@ -58,7 +58,8 @@ final class KernelStatsOpImage extends AreaOpImage {
     private int srcBand;
 
     /* Kernel variables. */
-    private float[] kernelData;
+    private boolean[] inKernel;
+    private int kernelN;
     private int kernelW;
     private int kernelH;
     private int kernelKeyX;
@@ -115,12 +116,30 @@ final class KernelStatsOpImage extends AreaOpImage {
               kernel.getBottomPadding());
 
         this.srcBand = band;
-        
-        this.kernelData = kernel.getKernelData();
+
         kernelW = kernel.getWidth();
         kernelH = kernel.getHeight();
         kernelKeyX = kernel.getXOrigin();
         kernelKeyY = kernel.getYOrigin();
+
+        /*
+         * Convert the kernel data to boolean values such
+         * that all non-zero values -> true; all zero
+         * values -> false
+         */
+        final float FTOL = 1.0e-8f;
+        inKernel = new boolean[kernelW * kernelH];
+        float[] data = kernel.getKernelData();
+
+        kernelN = 0;
+        for (int i = 0; i < inKernel.length; i++) {
+            if (Math.abs(data[i]) > FTOL) {
+                inKernel[i] = true;
+                kernelN++ ;
+            } else {
+                inKernel[i] = false;
+            }
+        }
 
         this.stats = stats;
 
@@ -145,7 +164,7 @@ final class KernelStatsOpImage extends AreaOpImage {
 
         this.nilValue = nilValue;
 
-        this.sampleData = new Double[kernelData.length];
+        this.sampleData = new Double[kernelN];
     }
 
     /**
@@ -246,7 +265,9 @@ final class KernelStatsOpImage extends AreaOpImage {
 
                         for (int v = 0; v < kernelW; v++, srcX++) {
                             if (!maskSrc || roi.contains(srcX, srcY)) {
-                                sampleData[numSamples++] = (double) ((srcBandData[imageOffset] & 0xff) * kernelData[kernelVerticalOffset + v]);
+                                if (inKernel[kernelVerticalOffset + v]) {
+                                    sampleData[numSamples++] = (double) (srcBandData[imageOffset] & 0xff);
+                                }
                             }
                             imageOffset += srcPixelStride;
                         }
@@ -313,7 +334,9 @@ final class KernelStatsOpImage extends AreaOpImage {
 
                         for (int v = 0; v < kernelW; v++, srcX++) {
                             if (!maskSrc || roi.contains(srcX, srcY)) {
-                                sampleData[numSamples++] = (double) (srcBandData[imageOffset] * kernelData[kernelVerticalOffset + v]);
+                                if (inKernel[kernelVerticalOffset + v]) {
+                                    sampleData[numSamples++] = (double) srcBandData[imageOffset];
+                                }
                             }
                             imageOffset += srcPixelStride;
                         }
@@ -380,7 +403,9 @@ final class KernelStatsOpImage extends AreaOpImage {
 
                         for (int v = 0; v < kernelW; v++, srcX++) {
                             if (!maskSrc || roi.contains(srcX, srcY)) {
-                                sampleData[numSamples++] = (double) ((srcBandData[imageOffset] & 0xffff) * kernelData[kernelVerticalOffset + v]);
+                                if (inKernel[kernelVerticalOffset + v]) {
+                                    sampleData[numSamples++] = (double) (srcBandData[imageOffset] & 0xffff);
+                                }
                             }
                             imageOffset += srcPixelStride;
                         }
@@ -446,7 +471,9 @@ final class KernelStatsOpImage extends AreaOpImage {
 
                         for (int v = 0; v < kernelW; v++, srcX++) {
                             if (!maskSrc || roi.contains(srcX, srcY)) {
-                                sampleData[numSamples++] = (double) (srcBandData[imageOffset] * kernelData[kernelVerticalOffset + v]);
+                                if (inKernel[kernelVerticalOffset + v]) {
+                                    sampleData[numSamples++] = (double) srcBandData[imageOffset];
+                                }
                             }
                             imageOffset += srcPixelStride;
                         }
@@ -507,7 +534,9 @@ final class KernelStatsOpImage extends AreaOpImage {
 
                         for (int v = 0; v < kernelW; v++, srcX++) {
                             if (!maskSrc || roi.contains(srcX, srcY)) {
-                                sampleData[numSamples++] = (double) (srcBandData[imageOffset] * kernelData[kernelVerticalOffset + v]);
+                                if (inKernel[kernelVerticalOffset + v]) {
+                                    sampleData[numSamples++] = (double) srcBandData[imageOffset];
+                                }
                             }
                             imageOffset += srcPixelStride;
                         }
@@ -568,7 +597,9 @@ final class KernelStatsOpImage extends AreaOpImage {
 
                         for (int v = 0; v < kernelW; v++, srcX++) {
                             if (!maskSrc || roi.contains(srcX, srcY)) {
-                                sampleData[numSamples++] = srcBandData[imageOffset] * kernelData[kernelVerticalOffset + v];
+                                if (inKernel[kernelVerticalOffset + v]) {
+                                    sampleData[numSamples++] = srcBandData[imageOffset];
+                                }
                             }
                             imageOffset += srcPixelStride;
                         }
