@@ -6,17 +6,43 @@
 
 ==Description==
 
-This operator calculates neighbourhood statistics for an input image. In JAI parlance it is a Collection mode operator because it can produce multiple output images, one for each statistic requested, from a single invocation.
+This operator calculates summary statistics for pixel neighbourhoods in a single band of the source image. The neighbourhood is defined with a !KernelJAI object (see also KernelFactory). 
 
-You define the neighbourhood to use with a !KernelJAI object (see the KernelFactory class). The operator will place this kernel over each source image pixel, collect the values in the pixel neighbourhood, and calculates each requested statistic.
+The following statistics can be calculated:
 
-<ul>
-<i><font color="blue">
-Note: the above describes what we're aiming to happen. What actually happens in
-the current code is that the kernel is passed over the input image for each
-statistic which is obviously inefficient.
-</font></i>
-</ul>
+ * Mean
+
+ * Median
+
+ * Minimum
+
+ * Maximum
+
+ * Range (max - min)
+
+ * Sample standard deviation
+
+ * Sample variance
+
+Multiple statistics can be requested in a single invocation of the operator. Each statistic is returned as a band in the destination image.
+
+==Kernel values and the neighbourhood==
+
+In this operator, the kernel values are converted to boolean such that non-zero values (regardless of sign) are true and zero values are false. The resulting boolean kernel defines which pixels in a source pixel's neighbourhood are included. The data for summary statistics calculations is the untransformed source image values of the neighbourhood pixels. This differs from convolution (e.g. JAI Convolve; JAI-tools MaskedConvolve) where source image values are multiplied with the corresponding kernel element values.
+
+==Data type of the result image==
+
+The data type of the result depends upon the source image data type and the requested statistics. If any of mean, median, sdev or variance are requested the destination image will be TYPE_DOUBLE. If only min, max or range are requested the destination image will have the same data type as the source image.
+
+The reason that median generates a TYPE_DOUBLE image, even when working with a source image with integral data, is because of the tie-breaking rule implemented for this statistic. Where there are an even number of sample values and the mid-point of the sorted data falls between two differing values, the median is defined as the mean of these two values.
+
+==Masking==
+
+KernelStats offers the same masking options as MaskedConvolve.
+
+==Limitations==
+
+KernelStats only deals with a single source image band.
 
 ==Example of use==
 
@@ -39,5 +65,8 @@ pb.setParameter("stats", stats);
 BorderExtender extender = BorderExtender.createInstance(BorderExtender.BORDER_REFLECT);
 RenderingHints hints = new RenderingHints(JAI.KEY_BORDER_EXTENDER, extender);
 
-Collection<RenderedImage> statsImages = JAI.createCollection("KernelStats", pb, hints);
+RenderedImage multibandImg = JAI.create("KernelStats", pb, hints);
+
+// if we require one image per statistic we can use ImageUtils.getBandsAsImages
+List<RenderedImage> statsImages = ImageUtils.getBandsAsImages(multibandImg);
 }}}
