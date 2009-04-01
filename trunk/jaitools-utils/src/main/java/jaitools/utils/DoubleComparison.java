@@ -27,12 +27,35 @@ package jaitools.utils;
  */
 public class DoubleComparison {
 
-    private static final double TOL = 1.0e-8;
+    /** Default tolerance for comparisons: 1.0e-8 */
+    public static final double TOL = 1.0e-8;
 
+    /**
+     * Check if the given value is 0 within the default tolerance
+     * @param x the value
+     * @return true if zero; false otherwise
+     */
     public static boolean dzero(double x) {
         return Math.abs(x) < TOL;
     }
 
+    /**
+     * Check if the given value is 0 within the user-specified tolerance
+     * @param x the value
+     * @param tol the user-specified tolerance (<b>assumed</b> to be positive)
+     * @return true if zero; false otherwise
+     */
+    public static boolean dzero(double x, double tol) {
+        return Math.abs(x) < tol;
+    }
+
+    /**
+     * Compare two values using the default tolerance
+     * @param x1 first value
+     * @param x2 second value
+     * @return a value less than 0 if x1 is less than x2; 0 if x1 is equal to x2;
+     * a value greater than 0 if x1 is greater than x2
+     */
     public static int dcomp(double x1, double x2) {
         if (dzero(x1 - x2)) {
             return 0;
@@ -40,7 +63,31 @@ public class DoubleComparison {
             return Double.compare(x1, x2);
         }
     }
-    
+
+    /**
+     * Compare two values using the user-specified tolerance
+     * @param x1 first value
+     * @param x2 second value
+     * @param the user-specified tolerance (<b>assumed</b> to be positive)
+     * @return a value less than 0 if x1 is less than x2; 0 if x1 is equal to x2;
+     * a value greater than 0 if x1 is greater than x2
+     */
+    public static int dcomp(double x1, double x2, double tol) {
+        if (dzero(x1 - x2, tol)) {
+            return 0;
+        } else {
+            return Double.compare(x1, x2);
+        }
+    }
+
+    /**
+     * Convert a double value to integer taking into account the
+     * default tolerance when checking if it is zero, ie. values
+     * within TOL either side of 0 will produce a 0 return value
+     *
+     * @param x the value to convert
+     * @return the equivalent integer value
+     */
     public static int toInt(double x) {
         int sign = dcomp(x, 0d);
         if (sign > 0) { // +ve value
