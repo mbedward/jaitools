@@ -21,6 +21,7 @@
 package jaitools.jiffle.runtime;
 
 import jaitools.jiffle.Jiffle;
+import jaitools.utils.DoubleComparison;
 import jaitools.utils.ImageUtils;
 import java.util.HashMap;
 import java.util.Map;
@@ -93,12 +94,12 @@ public class JiffleRunnerTest {
         RectIter iter = RectIterFactory.create(outImg, null);
         do {
             do {
-                assertEquals(iter.getSampleDouble(), expValue);
+                assertTrue(DoubleComparison.dzero(iter.getSampleDouble() - expValue));
             } while (!iter.nextPixelDone());
             iter.startPixels();
         } while (!iter.nextLineDone());
     }
-    
+
     @Test
     public void testNullImageValues() throws Exception {
         System.out.println("handling null image values");
