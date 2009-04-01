@@ -43,6 +43,7 @@ import javax.media.jai.TiledImage;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
+import org.antlr.runtime.tree.BufferedTreeNodeStream;
 import org.antlr.runtime.tree.CommonTree;
 import org.antlr.runtime.tree.CommonTreeNodeStream;
 
@@ -257,8 +258,8 @@ public class Jiffle {
      * Returns the executable form of the Jiffle program as a stram of Abstract
      * Syntax Tree nodes
      */
-    public CommonTreeNodeStream getRuntimeAST() {
-        CommonTreeNodeStream nodes = new CommonTreeNodeStream(runtimeAST);
+    public BufferedTreeNodeStream getRuntimeAST() {
+        BufferedTreeNodeStream nodes = new BufferedTreeNodeStream(runtimeAST);
         nodes.setTokenStream(tokens);
         return nodes;
     }
