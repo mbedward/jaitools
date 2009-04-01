@@ -22,10 +22,10 @@ package jaitools.jiffle.runtime;
 
 import jaitools.jiffle.Jiffle;
 import jaitools.utils.CollectionFactory;
+import jaitools.utils.DoubleComparison;
 import jaitools.utils.ImageUtils;
 import java.util.Map;
 import javax.media.jai.TiledImage;
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -68,7 +68,7 @@ public class NeighbourhoodTest {
                 double left = (x == 0 ? Double.NaN : y);
                 double right = (x == width-1 ? Double.NaN : y);
                 //System.out.println("" + val + " " + above + " " + below + " " + left + " " + right);
-                assertEquals(val, above + below + left + right);
+                assertTrue(DoubleComparison.dcomp(val, above + below + left + right) == 0);
             }
         }
     }
