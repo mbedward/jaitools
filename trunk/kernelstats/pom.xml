@@ -9,6 +9,14 @@
     <artifactId>kernelstats</artifactId>
     <packaging>jar</packaging>
     <name>JAI-tools - KernelStats operator</name>
+    <developers>
+        <developer>
+            <id>michael</id>
+            <name>Michael Bedward</name>
+            <email>michael.bedward@gmail.com</email>
+            <timezone>+10</timezone>
+        </developer>
+    </developers>
     <build>
         <plugins>
         </plugins>
