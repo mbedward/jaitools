@@ -65,7 +65,7 @@ r1 is strictly enclosed by r2
 r3 is a point at max of r2
 }}}
 
-As well as these fine-grain comparisons the Range class also provides higher-level comparisons as illustrated in this example...
+As well as these fine-grain comparisons the Range class also provides higher-level comparison methods *contains* and *intersects* as illustrated in this example...
 
 {{{
 // the interval [-5.0, 5.0)
@@ -76,10 +76,22 @@ float[] testValues = {-5.0f, 0f, 5.0f};
 for (float val : testValues) {
     String s;
     if (r1.contains(val)) {
-        s = String.format("%.1f is within the range", val);
+        s = String.format("%.1f is within r1", val);
     } else {
-        s = String.format("%.1f is outside the range", val);
+        s = String.format("%.1f is outside r1", val);
     }
+    System.out.println(s);
+}
+
+// test for intersection of r1 and the intervals 
+// [0.0, &infin;) and [5.0, &infin;)
+float[] lowerBounds = {0f, 5.0f};
+for (float lower : lowerBounds) {
+    String s = String.format("r1 %s with [%.1f, inf)",
+        (r1.intersects(Range.create(lower, true, null, false)) ? 
+            "intersects" : "does not intersect"),
+        lower);
+
     System.out.println(s);
 }
 
@@ -88,9 +100,11 @@ for (float val : testValues) {
 The output is...
 
 {{{
--5.0 is within the range
-0.0 is within the range
-5.0 is outside the range
+-5.0 is within r1
+0.0 is within r1
+5.0 is outside r1
+r1 intersects with [0.0, inf)
+r1 does not intersect with [5.0, inf)
 }}}
 
 ==Reference==
