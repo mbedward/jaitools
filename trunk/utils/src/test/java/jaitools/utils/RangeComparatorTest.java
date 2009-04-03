@@ -338,6 +338,9 @@ public class RangeComparatorTest {
         Range<Integer> r2 = Range.create(0, true, 10, true);
         assertTrue(r1.compareTo(r2) == expType);
 
+        r2 = Range.create(null, false, 10, true);
+        assertTrue(r1.compareTo(r2) == expType);
+
         r2 = Range.create(0, true, 10, false);
         assertFalse(r1.compareTo(r2) == expType);
 
