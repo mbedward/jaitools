@@ -413,7 +413,7 @@ public class RangeComparator<T extends Number & Comparable> {
                 }
             } else {
                 if (r2.isMaxInf()) {
-                    compFlags[0] = LT;
+                    compFlags[0] = compFlags[2] = LT;
                 } else {
                     int flag = validFlag(r1.getMin().compareTo(r2.getMax()));
                     if (flag == EQ) {
@@ -425,8 +425,12 @@ public class RangeComparator<T extends Number & Comparable> {
                     } else {
                         compFlags[0] = compFlags[2] = flag;
                     }
-
-                    flag = validFlag(r1.getMin().compareTo(r2.getMin()));
+                }
+                
+                if (r2.isMinNegInf()) {
+                    compFlags[1] = compFlags[3] = GT;
+                } else {
+                    int flag = validFlag(r1.getMin().compareTo(r2.getMin()));
                     if (flag == EQ) {
                         if (r2.isMinIncluded()) {
                             compFlags[1] = compFlags[3] = EQ;
