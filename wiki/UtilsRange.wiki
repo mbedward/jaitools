@@ -10,11 +10,11 @@ Yet another numeric Range class. It is used with the RangeLookup operator but is
 
 Range is a generic class that can be used with types that extend Number and implement Comparable. A Range is defined by its endpoints. If the min (lower bound) end-point is the same as the max (upper-bound) end-point then the Range represents a point, also referred to as a degenerate interval.
 
-An end-point can be positioned at a finite value, in which case it is said to be _closed_, or at positive or negative infinity, in which case it is said to be _open_. For finite end-points, a Range can include or exclude the end-point. Included end-points correspond to [ and ] in interval notation, while excluded end-points correspond to ( and ).
+An end-point can be positioned at a finite value, in which case it is said to be _closed_, or at positive or negative infinity, in which case it is said to be _open_. For finite end-points, a Range can include or exclude the end-point. Included end-points correspond to square-brackets in interval notation, while excluded end-points correspond to round brackets.
 
 ==Comparisons==
 
-Comparisons between a pair of Range objects are handled by the !RangeComparator class. Hayes (2003) describes 18 possible pair-wise comparisons between intervals (see his Fig. 3). The !RangeComparator.Result enum has a constant for each of these possible relationships...
+Comparisons between Range objects are handled by the !RangeComparator class. Hayes (2003) describes 18 possible pair-wise comparisons between intervals (see his Fig. 3). The !RangeComparator.Result enum has a constant for each of these possible relationships...
 
 ||*Name*||*Notation*||*Description*||
 ||LLLL||<<<<||completely less than||
