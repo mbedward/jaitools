@@ -67,13 +67,13 @@ to work with the Java Advanced Imaging library
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.0</version>
+            <version>4.5</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
     <modules>
         <module>demo</module>
-        <module>jaitools-utils</module>
+        <module>utils</module>
         <module>jiffle</module>
         <module>kernel</module>
         <module>kernelstats</module>
