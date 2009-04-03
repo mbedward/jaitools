@@ -6,7 +6,7 @@
   * [MaskedConvolve]
   * [RangeLookup]
   * [Regionalize]
- * Utility classes
+ * Operator helper classes
   * [KernelFactory]
   * [KernelUtil]
  * Image scripting
@@ -16,5 +16,10 @@
    * [JiffleGettingStarted Getting started]
    * [JiffleFAQ FAQ]
    * [http://www.emilythecamel.com/projects/jai-tools/jiffle/apidocs/index.html API]
+ * [UtilsOverview Support and utility classes]
+   * [UtilsCollectionFactory CollectionFactory]
+   * [UtilsImageFrame ImageFrame]
+   * [UtilsRange Range]
+   * [UtilsSummaryStats SummaryStats]
  * [DemoPrograms Demo programs]
  * [JAILinks JAI links]
