@@ -34,11 +34,6 @@ to work with the Java Advanced Imaging library
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-                    <!--archive>
-                        <manifest>
-                            <mainClass>jaitools.jiffle.ImageEvalDemo</mainClass>
-                        </manifest>
-                    </archive-->
                 </configuration>
             </plugin>
         </plugins>
@@ -59,7 +54,8 @@ to work with the Java Advanced Imaging library
     </reporting>
     <distributionManagement>
         <site>
-            <id>website</id>
+            <id>site.docs</id>
+            <name>Site Documentation</name>
             <url>file://${basedir}/website</url>
         </site>
     </distributionManagement>
