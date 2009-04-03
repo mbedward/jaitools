@@ -16,7 +16,7 @@
    * [JiffleGettingStarted Getting started]
    * [JiffleFAQ FAQ]
    * [http://www.emilythecamel.com/projects/jai-tools/jiffle/apidocs/index.html API]
- * [UtilsOverview Support and utility classes]
+ * Support and utility classes
    * [UtilsCollectionFactory CollectionFactory]
    * [UtilsImageFrame ImageFrame]
    * [UtilsRange Range]
