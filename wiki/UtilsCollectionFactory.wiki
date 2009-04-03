@@ -1,10 +1,9 @@
 #summary create generic collections with less typing tedium
 
-=CollectionFactory=
+=!CollectionFactory=
 
 *package:* jaitools.utils
 
 ==Description==
 
 Docs coming soon
-
