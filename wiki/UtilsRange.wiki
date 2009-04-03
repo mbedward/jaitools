@@ -59,14 +59,41 @@ System.out.println(String.format("r3 %s r2", comp.getDesc()));
 
 }}}
 
-The output from this code is...
+The output from the above code is...
 {{{
 r1 is strictly enclosed by r2
 r3 is a point at max of r2
 }}}
 
+As well as these fine-grain comparisons the Range class also provides higher-level comparisons as illustrated in this example...
+
+{{{
+// the interval [-5.0, 5.0)
+Range<Float> r1 = Range.create(-5.0f, true, 5.0f, false);
+
+float[] testValues = {-5.0f, 0f, 5.0f};
+
+for (float val : testValues) {
+    String s;
+    if (r1.contains(val)) {
+        s = String.format("%.1f is within the range", val);
+    } else {
+        s = String.format("%.1f is outside the range", val);
+    }
+    System.out.println(s);
+}
+
+}}}
+
+The output is...
+
+{{{
+-5.0 is within the range
+0.0 is within the range
+5.0 is outside the range
+}}}
+
 ==Reference==
 Brian Hayes (2003) A lucid interval. _American Scientist_ *91*(6):484-488.
+
 Available at: http://www.cs.utep.edu/interval-comp/hayes.pdf
-
-
