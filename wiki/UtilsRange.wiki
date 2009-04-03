@@ -14,7 +14,7 @@ An end-point can be positioned at a finite value, in which case it is said to be
 
 ==Comparisons==
 
-Comparisons between a pair of Range objects are handled by the !RangeComparator class. Hayes (2003) describes 18 possible pair-wise comparisons between intervals (see his Fig. 3). The RangeComparator.Result enum represents each of these possible relationships...
+Comparisons between a pair of Range objects are handled by the !RangeComparator class. Hayes (2003) describes 18 possible pair-wise comparisons between intervals (see his Fig. 3). The !RangeComparator.Result enum has a constant for each of these possible relationships...
 
 ||*Name*||*Notation*||*Description*||
 ||LLLL||<<<<||completely less than||
@@ -38,14 +38,35 @@ Comparisons between a pair of Range objects are handled by the !RangeComparator 
 
 
 ==Examples of use==
-
 {{{
+// Create a range representing the interval [5, 10)
+// ie. 5 is included in the range, 10 is excluded
+Range<Integer> r1 = new Range<Integer>(5, true, 10, false);
+
+// Create a range representing the interval (&infin;, 10]
+// this time using the static create function
+Range<Integer> r2 = Range.create(null, false, 10, true);
+
+// Get the relationship between these two intervals from the
+// 'point of view' of r1
+RangeComparator.Result comp = r1.compareTo(r2);
+System.out.println(String.format("r1 %s r2", comp.getDesc()));
+
+// A point (degenerate) interval
+Range<Integer> r3 = Range.create(10);
+comp = r3.compareTo(r2);
+System.out.println(String.format("r3 %s r2", comp.getDesc()));
+
+}}}
+
+The output from this code is...
+{{{
+r1 is strictly enclosed by r2
+r3 is a point at max of r2
 }}}
 
 ==Reference==
 Brian Hayes (2003) A lucid interval. _American Scientist_ *91*(6):484-488.
 Available at: http://www.cs.utep.edu/interval-comp/hayes.pdf
-
-
 
 
