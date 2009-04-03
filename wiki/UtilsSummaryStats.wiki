@@ -1,0 +1,10 @@
+#summary methods to calculate summary statistics on a sample of double values
+
+=SummaryStats=
+
+*package:* jaitools.utils
+
+==Description==
+
+Docs coming soon
+

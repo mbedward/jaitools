@@ -1,0 +1,10 @@
+#summary A simple display widget
+
+=ImageFrame==
+
+*package:* jaitools.utils
+
+==Description==
+
+Docs coming soon
+
