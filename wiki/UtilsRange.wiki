@@ -1,0 +1,51 @@
+#summary implements numeric intervals and comparisons
+
+=Range=
+
+*package:* jaitools.utils
+
+==Description==
+
+Yet another numeric Range class. It is used with the RangeLookup operator but is also available for general use.
+
+Range is a generic class that can be used with types that extend Number and implement Comparable. A Range is defined by its endpoints. If the min (lower bound) end-point is the same as the max (upper-bound) end-point then the Range represents a point, also referred to as a degenerate interval.
+
+An end-point can be positioned at a finite value, in which case it is said to be _closed_, or at positive or negative infinity, in which case it is said to be _open_. For finite end-points, a Range can include or exclude the end-point. Included end-points correspond to `[` and `]` in interval notation, while excluded end-points correspond to `(` and `)`.
+
+==Comparisons==
+
+Comparisons between a pair of Range objects are handled by the !RangeComparator class. Hayes (2003) describes 18 possible pair-wise comparisons between intervals (see his Fig. 3). The RangeComparator.Result enum represents each of these possible relationships...
+
+||*Name*||*Notation*||*Description*||
+||LLLL||<<<<||completely less than||
+||LLLE||<<<=||extends to min of||
+||LLLG||<<<>||starts below and extends within||
+||LLEG||<<=>||starts below and extends to max of||
+||LEGG||<=>>||starts with and extends beyond||
+||LLEE||<<==||starts below and has max at point location of||
+||EEGG||==>>||extends from point location of||
+||LEEG||<==>||is exactly equal to finite interval||
+||EEEE||====||is exactly equal to point||
+||LLGG||<<>>||strictly encloses||
+||LGLG||<><>||is strictly enclosed by||
+||LGGG||<>>>||starts within and extends beyond||
+||LGEG||<>=>||starts within and extends to max of||
+||LELG||<=<>||starts with and ends within||
+||EGEG||=>=>||is a point at max of||
+||LELE||<=<=||is a point at min of||
+||EGGG||=>>>||extends from max of||
+||GGGG||>>>>||is completely greater than||
+
+
+==Examples of use==
+
+{{{
+}}}
+
+==Reference==
+Brian Hayes (2003) A lucid interval. _American Scientist_ *91*(6):484-488.
+Available at: http://www.cs.utep.edu/interval-comp/hayes.pdf
+
+
+
+
