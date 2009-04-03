@@ -20,6 +20,7 @@
 
 package jaitools.media.jai.rangelookup;
 
+import jaitools.utils.Range;
 import java.util.ArrayList;
 import java.util.List;
 

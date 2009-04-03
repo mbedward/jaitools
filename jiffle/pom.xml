@@ -39,7 +39,7 @@
     <dependencies>
         <dependency>
             <groupId>jaitools</groupId>
-            <artifactId>jaitools-utils</artifactId>
+            <artifactId>utils</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
