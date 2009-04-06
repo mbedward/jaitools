@@ -73,13 +73,13 @@ to work with the Java Advanced Imaging library
     </dependencies>
     <modules>
         <module>demo</module>
-        <module>jaitools-utils</module>
         <module>jiffle</module>
         <module>kernel</module>
         <module>kernelstats</module>
         <module>maskedconvolve</module>
         <module>rangelookup</module>
         <module>regionalize</module>
+        <module>utils</module>
 
         <!--module>SBMInterpolate</module-->
 
