@@ -8,13 +8,12 @@
     </parent>
     <artifactId>rangelookup</artifactId>
     <packaging>jar</packaging>
-    <name>JAI-tools - RangeLookup</name>
-    <description>A Lookup operation that handles continuos data types</description>
+    <name>RangeLookup operator</name>
+    <description>A Lookup operation that can handle both integral and continuous data types</description>
     <build>
         <resources>
             <resource>
                 <targetPath>META-INF</targetPath>
-                <filtering>false</filtering>
                 <directory>src/main/java/META-INF</directory>
                 <includes>
                     <include>*</include>
@@ -22,7 +21,6 @@
             </resource>
             <resource>
                 <targetPath>META-INF/services</targetPath>
-                <filtering>false</filtering>
                 <directory>src/main/java/META-INF/services</directory>
                 <includes>
                     <include>*</include>
@@ -30,7 +28,6 @@
             </resource>
             <resource>
                 <targetPath>images</targetPath>
-                <filtering>false</filtering>
                 <directory>src/main/resources/images</directory>
                 <includes>
                     <include>*</include>

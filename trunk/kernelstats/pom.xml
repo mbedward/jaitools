@@ -8,7 +8,7 @@
     </parent>
     <artifactId>kernelstats</artifactId>
     <packaging>jar</packaging>
-    <name>JAI-tools - KernelStats operator</name>
+    <name>KernelStats operator</name>
     <developers>
         <developer>
             <id>michael</id>
@@ -18,12 +18,9 @@
         </developer>
     </developers>
     <build>
-        <plugins>
-        </plugins>
         <resources>
             <resource>
                 <targetPath>META-INF</targetPath>
-                <filtering>false</filtering>
                 <directory>src/main/java/META-INF</directory>
                 <includes>
                     <include>*</include>
@@ -31,7 +28,6 @@
             </resource>
             <resource>
                 <targetPath>META-INF/services</targetPath>
-                <filtering>false</filtering>
                 <directory>src/main/java/META-INF/services</directory>
                 <includes>
                     <include>*</include>

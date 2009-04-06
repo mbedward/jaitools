@@ -8,13 +8,12 @@
     </parent>
     <artifactId>kernel</artifactId>
     <packaging>jar</packaging>
-    <name>JAI-tools - Kernel</name>
+    <name>Kernel utilities</name>
     <description>Factory and utility classes to work with KernelJAI objects</description>
     <build>
         <resources>
             <resource>
                 <targetPath>META-INF</targetPath>
-                <filtering>false</filtering>
                 <directory>src/main/java/META-INF</directory>
                 <includes>
                     <include>*</include>
@@ -22,7 +21,6 @@
             </resource>
             <resource>
                 <targetPath>META-INF/services</targetPath>
-                <filtering>false</filtering>
                 <directory>src/main/java/META-INF/services</directory>
                 <includes>
                     <include>*</include>
