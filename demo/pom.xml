@@ -8,7 +8,7 @@
     </parent>
     <artifactId>demo</artifactId>
     <packaging>jar</packaging>
-    <name>JAI-tools - Demo programs</name>
+    <name>Demo programs</name>
     <description>Small apps to demonstrate use of JAI-tools components</description>
     <build>
     </build>
