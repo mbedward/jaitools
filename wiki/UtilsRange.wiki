@@ -2,7 +2,7 @@
 
 =Range=
 
-*package:* jaitools.utils
+*package:* jaitools.numeric
 
 ==Description==
 
