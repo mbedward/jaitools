@@ -1,8 +1,8 @@
 #summary methods to calculate summary statistics on a sample of double values
 
-=!SummaryStats=
+=!SampleStats=
 
-*package:* jaitools.utils
+*package:* jaitools.numeric
 
 ==Description==
 
