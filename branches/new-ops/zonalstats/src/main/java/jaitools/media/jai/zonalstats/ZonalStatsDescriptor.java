@@ -20,6 +20,7 @@
 
 package jaitools.media.jai.zonalstats;
 
+import jaitools.numeric.Statistic;
 import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
@@ -70,7 +71,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
         };
 
     private static final Class[] paramClasses =
-        {ZonalStatistic[].class,
+        {Statistic[].class,
          Integer.class,
          javax.media.jai.ROI.class,
          Boolean.class,
@@ -137,7 +138,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
     public static RenderedImage create(
             RenderedImage dataImage,
             RenderedImage zoneImage,
-            ZonalStatistic[] stats,
+            Statistic[] stats,
             Integer band,
             ROI roi,
             Boolean ignoreNaN,

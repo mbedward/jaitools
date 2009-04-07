@@ -22,6 +22,7 @@ package jaitools.media.jai.zonalstats;
 
 import com.sun.media.jai.opimage.RIFUtil;
 import com.sun.media.jai.util.ImageUtil;
+import jaitools.numeric.Statistic;
 import java.awt.RenderingHints;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBuffer;
@@ -59,8 +60,8 @@ public class ZonalStatsRIF implements RenderedImageFactory {
         ImageLayout layout = RIFUtil.getImageLayoutHint(renderHints);
         if (layout == null) layout = new ImageLayout();
 
-        ZonalStatistic[] stats =
-                (ZonalStatistic[]) paramBlock.getObjectParameter(ZonalStatsDescriptor.STATS_ARG_INDEX);
+        Statistic[] stats =
+                (Statistic[]) paramBlock.getObjectParameter(ZonalStatsDescriptor.STATS_ARG_INDEX);
 
         int band = paramBlock.getIntParameter(ZonalStatsDescriptor.BAND_ARG_INDEX);
 
@@ -69,7 +70,7 @@ public class ZonalStatsRIF implements RenderedImageFactory {
 
             int dataType = source.getSampleModel().getDataType();
             if (dataType != DataBuffer.TYPE_FLOAT && dataType != DataBuffer.TYPE_DOUBLE) {
-                for (ZonalStatistic stat : stats) {
+                for (Statistic stat : stats) {
                     if (!stat.supportsIntegralResult()) {
                         dataType = DataBuffer.TYPE_DOUBLE;
                         break;

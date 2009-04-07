@@ -20,6 +20,7 @@
 
 package jaitools.media.jai.zonalstats;
 
+import jaitools.numeric.Statistic;
 import jaitools.utils.CollectionFactory;
 import java.awt.Rectangle;
 import java.awt.image.RenderedImage;
@@ -45,7 +46,7 @@ final class ZonalStatsOpImage extends NullOpImage {
 
     private ROI roi;
 
-    private ZonalStatistic[] stats;
+    private Statistic[] stats;
     private Number nilValue;
 
     private SortedSet<Integer> zones;
@@ -59,18 +60,18 @@ final class ZonalStatsOpImage extends NullOpImage {
      * @param layout an optional ImageLayout object; if the layout specifies a SampleModel
      * and / or ColorModel that are not valid for the requested statistics (e.g. wrong number
      * of bands) these will be overridden.
-     * @param stats an array of ZonalStatistic constants naming the statistics required
+     * @param stats an array of Statistic constants naming the statistics required
      * @param band the data image band to process
      * @param roi an optional ROI for data image masking
      * @param ignoreNaN boolean flag for whether to ignore NaN values in the data image
      * @param nilValue value to write to the destination image if no statistic can be calculated
      * @see ZonalStatsDescriptor
-     * @see ZonalStatistic
+     * @see Statistic
      */
     public ZonalStatsOpImage(RenderedImage dataImage, RenderedImage zoneImage,
             Map config,
             ImageLayout layout,
-            ZonalStatistic[] stats,
+            Statistic[] stats,
             int band,
             ROI roi,
             boolean ignoreNaN,
