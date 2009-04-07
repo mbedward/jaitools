@@ -39,7 +39,7 @@ import java.util.List;
 import jaitools.jiffle.runtime.JiffleRunner;
 import jaitools.utils.CollectionFactory;
 
-import static jaitools.utils.DoubleComparison.*;
+import static jaitools.numeric.DoubleComparison.*;
 }
 
 @members {

@@ -46,7 +46,7 @@ package jaitools.jiffle.parser;
 
 import jaitools.jiffle.runtime.VarTable;
 
-import static jaitools.utils.DoubleComparison.*;
+import static jaitools.numeric.DoubleComparison.*;
 }
 
 @members {

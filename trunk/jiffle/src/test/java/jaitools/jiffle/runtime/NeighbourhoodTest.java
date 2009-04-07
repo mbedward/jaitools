@@ -22,7 +22,7 @@ package jaitools.jiffle.runtime;
 
 import jaitools.jiffle.Jiffle;
 import jaitools.utils.CollectionFactory;
-import jaitools.utils.DoubleComparison;
+import jaitools.numeric.DoubleComparison;
 import jaitools.utils.ImageUtils;
 import java.util.Map;
 import javax.media.jai.TiledImage;

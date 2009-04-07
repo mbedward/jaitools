@@ -20,12 +20,12 @@
 package jaitools.jiffle.runtime;
 
 import jaitools.utils.CollectionFactory;
-import jaitools.utils.SummaryStats;
+import jaitools.numeric.SampleStats;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import static jaitools.utils.DoubleComparison.*;
+import static jaitools.numeric.DoubleComparison.*;
 
 /**
  * A symbol table for jiffle functions, pre-loaded with a basic set of 
@@ -157,35 +157,35 @@ public class FunctionTable {
         lookup.put("max_v",
                 new OpVarArgs() {
                     public double call(Double ...values) {
-                        return SummaryStats.max(values, true);
+                        return SampleStats.max(values, true);
                     }
                 });
 
         lookup.put("mean_v",
                 new OpVarArgs() {
                     public double call(Double ...values) {
-                        return SummaryStats.mean(values, true);
+                        return SampleStats.mean(values, true);
                     }
         });
         
         lookup.put("median_v",
                 new OpVarArgs() {
                     public double call(Double ...values) {
-                        return SummaryStats.median(values, true);
+                        return SampleStats.median(values, true);
                     }
                 });
                 
         lookup.put("min_v",
                 new OpVarArgs() {
                     public double call(Double ...values) {
-                        return SummaryStats.min(values, true);
+                        return SampleStats.min(values, true);
                     }
                 });
                 
         lookup.put("mode_v",
                 new OpVarArgs() {
                     public double call(Double ...values) {
-                        return SummaryStats.mode(values, true);
+                        return SampleStats.mode(values, true);
                     }
                 });
                 
@@ -220,7 +220,7 @@ public class FunctionTable {
         lookup.put("range_v",
                 new OpVarArgs() {
                     public double call(Double ...values) {
-                        return SummaryStats.range(values, true);
+                        return SampleStats.range(values, true);
                     }
                 });
                 
@@ -242,7 +242,7 @@ public class FunctionTable {
         lookup.put("sdev_v",
                 new OpVarArgs() {
                     public double call(Double ...values) {
-                        return SummaryStats.sdev(values, true);
+                        return SampleStats.sdev(values, true);
                     }
                 });
 
@@ -270,7 +270,7 @@ public class FunctionTable {
         lookup.put("variance_v",
                 new OpVarArgs() {
                     public double call(Double ...values) {
-                        return SummaryStats.variance(values, true);
+                        return SampleStats.variance(values, true);
                     }
                 });
 

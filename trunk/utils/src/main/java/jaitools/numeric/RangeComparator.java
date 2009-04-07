@@ -17,8 +17,9 @@
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package jaitools.utils;
+package jaitools.numeric;
 
+import jaitools.utils.CollectionFactory;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;

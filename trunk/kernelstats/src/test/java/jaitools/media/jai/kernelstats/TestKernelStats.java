@@ -20,7 +20,8 @@
 
 package jaitools.media.jai.kernelstats;
 
-import jaitools.utils.SummaryStats;
+import jaitools.numeric.Statistic;
+import jaitools.numeric.SampleStats;
 import java.awt.RenderingHints;
 import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
@@ -35,7 +36,7 @@ import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import static jaitools.utils.DoubleComparison.*;
+import static jaitools.numeric.DoubleComparison.*;
 
 /**
  * Unit test for the KernelStats operator
@@ -58,10 +59,10 @@ public class TestKernelStats {
         ParameterBlockJAI pb = new ParameterBlockJAI("kernelstats");
         pb.setSource("source0", getConstIntImage(value, width, height));
 
-        KernelStatistic[] stats = {
-            KernelStatistic.MAX,
-            KernelStatistic.MIN,
-            KernelStatistic.RANGE
+        Statistic[] stats = {
+            Statistic.MAX,
+            Statistic.MIN,
+            Statistic.RANGE
         };
         pb.setParameter("stats", stats);
 
@@ -86,11 +87,11 @@ public class TestKernelStats {
         ParameterBlockJAI pb = new ParameterBlockJAI("kernelstats");
         pb.setSource("source0", getConstIntImage(value, width, height));
 
-        KernelStatistic[] stats = {
-            KernelStatistic.MAX,
-            KernelStatistic.MIN,
-            KernelStatistic.RANGE,
-            KernelStatistic.MEAN
+        Statistic[] stats = {
+            Statistic.MAX,
+            Statistic.MIN,
+            Statistic.RANGE,
+            Statistic.MEAN
         };
 
         pb.setParameter("stats", stats);
@@ -107,7 +108,7 @@ public class TestKernelStats {
      */
     @Test
     public void testStatisticsWithConstImage() {
-        for (KernelStatistic stat : KernelStatistic.values()) {
+        for (Statistic stat : Statistic.values()) {
             System.out.println("   test " + stat.toString() + " with const image");
             testWithConstImage(stat);
         }
@@ -127,7 +128,7 @@ public class TestKernelStats {
 
         RenderedImage testImg = op.getAsBufferedImage();
 
-        for (KernelStatistic stat : KernelStatistic.values()) {
+        for (Statistic stat : Statistic.values()) {
             System.out.println("   test " + stat.toString() + " with float image");
             testWithFloatImage(stat, testImg);
         }
@@ -137,13 +138,13 @@ public class TestKernelStats {
     /**
      * Helper function for testStatisticsWithConstImage method
      */
-    private void testWithConstImage(KernelStatistic stat) {
+    private void testWithConstImage(Statistic stat) {
         int value = 1;
         int width = 10, height = 10;
 
         ParameterBlockJAI pb = new ParameterBlockJAI("kernelstats");
         pb.setSource("source0", getConstIntImage(value, width, height));
-        pb.setParameter("stats", new KernelStatistic[]{stat});
+        pb.setParameter("stats", new Statistic[]{stat});
 
         KernelJAI kernel = new KernelJAI(3, 3, new float[]{1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f});
         pb.setParameter("kernel", kernel);
@@ -182,7 +183,7 @@ public class TestKernelStats {
     /**
      * Helper function for testStatisticsWithFloatImage method
      */
-    private void testWithFloatImage(KernelStatistic stat, RenderedImage testImg) {
+    private void testWithFloatImage(Statistic stat, RenderedImage testImg) {
         /*
          * Note: using a larger comparison tolerance here to take into
          * account that we are working with a TYPE_FLOAT test image
@@ -191,7 +192,7 @@ public class TestKernelStats {
 
         ParameterBlockJAI pb = new ParameterBlockJAI("kernelstats");
         pb.setSource("source0", testImg);
-        pb.setParameter("stats", new KernelStatistic[]{stat});
+        pb.setParameter("stats", new Statistic[]{stat});
 
         KernelJAI kernel = new KernelJAI(3, 3, new float[]{1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f, 1f});
         pb.setParameter("kernel", kernel);
@@ -229,31 +230,31 @@ public class TestKernelStats {
 
                     switch (stat) {
                         case MAX:
-                            assertTrue(dcomp(SummaryStats.max(nbrHoodValues, true), result, tol) == 0);
+                            assertTrue(dcomp(SampleStats.max(nbrHoodValues, true), result, tol) == 0);
                             break;
 
                         case MEAN:
-                            assertTrue(dcomp(SummaryStats.mean(nbrHoodValues, true), result, tol) == 0);
+                            assertTrue(dcomp(SampleStats.mean(nbrHoodValues, true), result, tol) == 0);
                             break;
 
                         case MEDIAN:
-                            assertTrue(dcomp(SummaryStats.median(nbrHoodValues, true), result, tol) == 0);
+                            assertTrue(dcomp(SampleStats.median(nbrHoodValues, true), result, tol) == 0);
                             break;
 
                         case MIN:
-                            assertTrue(dcomp(SummaryStats.min(nbrHoodValues, true), result, tol) == 0);
+                            assertTrue(dcomp(SampleStats.min(nbrHoodValues, true), result, tol) == 0);
                             break;
 
                         case RANGE:
-                            assertTrue(dcomp(SummaryStats.range(nbrHoodValues, true), result, tol) == 0);
+                            assertTrue(dcomp(SampleStats.range(nbrHoodValues, true), result, tol) == 0);
                             break;
 
                         case SDEV:
-                            assertTrue(dcomp(SummaryStats.sdev(nbrHoodValues, true), result, tol) == 0);
+                            assertTrue(dcomp(SampleStats.sdev(nbrHoodValues, true), result, tol) == 0);
                             break;
 
                         case VARIANCE:
-                            assertTrue(dcomp(SummaryStats.variance(nbrHoodValues, true), result, tol) == 0);
+                            assertTrue(dcomp(SampleStats.variance(nbrHoodValues, true), result, tol) == 0);
                             break;
                     }
                 }

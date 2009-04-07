@@ -20,6 +20,7 @@
 
 package jaitools.media.jai.kernelstats;
 
+import jaitools.numeric.Statistic;
 import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
@@ -72,7 +73,7 @@ public class KernelStatsDescriptor extends OperationDescriptorImpl {
         };
 
     private static final Class[] paramClasses =
-        {KernelStatistic[].class,
+        {Statistic[].class,
          javax.media.jai.KernelJAI.class,
          Integer.class,
          javax.media.jai.ROI.class,
@@ -160,7 +161,7 @@ public class KernelStatsDescriptor extends OperationDescriptorImpl {
      */
     public static RenderedImage create(
             RenderedImage source0,
-            KernelStatistic[] stats,
+            Statistic[] stats,
             KernelJAI kernel,
             int band,
             ROI roi,

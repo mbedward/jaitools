@@ -20,6 +20,7 @@
 
 package jaitools.media.jai.kernelstats;
 
+import jaitools.numeric.Statistic;
 import com.sun.media.jai.opimage.RIFUtil;
 import com.sun.media.jai.util.ImageUtil;
 import java.awt.RenderingHints;
@@ -63,8 +64,8 @@ public class KernelStatsRIF implements RenderedImageFactory {
 
         BorderExtender extender = RIFUtil.getBorderExtenderHint(renderHints);
 
-        KernelStatistic[] stats =
-                (KernelStatistic[]) paramBlock.getObjectParameter(KernelStatsDescriptor.STATS_ARG_INDEX);
+        Statistic[] stats =
+                (Statistic[]) paramBlock.getObjectParameter(KernelStatsDescriptor.STATS_ARG_INDEX);
 
         KernelJAI unRotatedKernel =
                 (KernelJAI) paramBlock.getObjectParameter(KernelStatsDescriptor.KERNEL_ARG_INDEX);
@@ -77,7 +78,7 @@ public class KernelStatsRIF implements RenderedImageFactory {
 
             int dataType = source.getSampleModel().getDataType();
             if (dataType != DataBuffer.TYPE_FLOAT && dataType != DataBuffer.TYPE_DOUBLE) {
-                for (KernelStatistic stat : stats) {
+                for (Statistic stat : stats) {
                     if (!stat.supportsIntegralResult()) {
                         dataType = DataBuffer.TYPE_DOUBLE;
                         break;

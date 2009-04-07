@@ -21,7 +21,7 @@
 package jaitools.jiffle.runtime;
 
 import jaitools.jiffle.Jiffle;
-import jaitools.utils.DoubleComparison;
+import jaitools.numeric.DoubleComparison;
 import jaitools.utils.ImageUtils;
 import java.util.HashMap;
 import java.util.Map;

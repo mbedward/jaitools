@@ -20,7 +20,8 @@
 
 package jaitools.media.jai.kernelstats;
 
-import jaitools.utils.SummaryStats;
+import jaitools.numeric.Statistic;
+import jaitools.numeric.SampleStats;
 import java.awt.Rectangle;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
@@ -70,7 +71,7 @@ final class KernelStatsOpImage extends AreaOpImage {
     private boolean maskSrc;
     private boolean maskDest;
 
-    private KernelStatistic[] stats;
+    private Statistic[] stats;
     private Double[] sampleData;
     private Calculator functionTable;
     private Number nilValue;
@@ -86,17 +87,17 @@ final class KernelStatsOpImage extends AreaOpImage {
      * of bands) these will be overridden.
      * @param band the source image band to process
      * @param kernel the convolution kernel
-     * @param stats an array of KernelStatistic constants naming the statistics required
+     * @param stats an array of Statistic constants naming the statistics required
      * @throws IllegalArgumentException if the roi's bounds do not contain the entire
      * source image
      * @see KernelStatsDescriptor
-     * @see KernelStatistic
+     * @see Statistic
      */
     public KernelStatsOpImage(RenderedImage source,
             BorderExtender extender,
             Map config,
             ImageLayout layout,
-            KernelStatistic[] stats,
+            Statistic[] stats,
             KernelJAI kernel,
             int band,
             ROI roi,
@@ -635,7 +636,7 @@ final class KernelStatsOpImage extends AreaOpImage {
 
     /**
      * This class handles preparation of sample data, passing calculation tasks
-     * to {@linkplain jaitools.utils.SummaryStats} methods, and returning results
+     * to {@linkplain jaitools.utils.SampleStats} methods, and returning results
      */
     private static class Calculator {
 
@@ -651,12 +652,12 @@ final class KernelStatsOpImage extends AreaOpImage {
 
         /**
          * Calculate the specified statistic on sample data
-         * @param stat the {@linkplain KernelStatistic} constant for the desired statistic
+         * @param stat the {@linkplain Statistic} constant for the desired statistic
          * @param data the sample data
          * @param n number of elements to use from the sample data array
          * @return value of the statistic as a double (may be NaN)
          */
-        public double call(KernelStatistic stat, Double[] data, int n) {
+        public double call(Statistic stat, Double[] data, int n) {
             Double[] values = null;
             if (data.length == n) {
                 values = data;
@@ -667,25 +668,25 @@ final class KernelStatsOpImage extends AreaOpImage {
 
             switch (stat) {
                 case MAX:
-                    return SummaryStats.max(values, ignoreNaN);
+                    return SampleStats.max(values, ignoreNaN);
 
                 case MEAN:
-                    return SummaryStats.mean(values, ignoreNaN);
+                    return SampleStats.mean(values, ignoreNaN);
 
                 case MEDIAN:
-                    return SummaryStats.median(values, ignoreNaN);
+                    return SampleStats.median(values, ignoreNaN);
 
                 case MIN:
-                    return SummaryStats.min(values, ignoreNaN);
+                    return SampleStats.min(values, ignoreNaN);
 
                 case RANGE:
-                    return SummaryStats.range(values, ignoreNaN);
+                    return SampleStats.range(values, ignoreNaN);
 
                 case SDEV:
-                    return SummaryStats.sdev(values, ignoreNaN);
+                    return SampleStats.sdev(values, ignoreNaN);
                 
                 case VARIANCE:
-                    return SummaryStats.variance(values, ignoreNaN);
+                    return SampleStats.variance(values, ignoreNaN);
 
                 default:
                 throw new IllegalArgumentException("Unrecognized KernelStatstic arg");
