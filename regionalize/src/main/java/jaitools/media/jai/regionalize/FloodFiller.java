@@ -20,7 +20,7 @@
 
 package jaitools.media.jai.regionalize;
 
-import jaitools.utils.DoubleComparison;
+import jaitools.numeric.DoubleComparison;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.RenderedImage;

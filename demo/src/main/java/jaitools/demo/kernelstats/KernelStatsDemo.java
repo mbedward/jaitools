@@ -24,7 +24,7 @@ import jaitools.demo.DemoImageProvider;
 import jaitools.demo.ImageReceiver;
 import jaitools.utils.ImageFrame;
 import jaitools.media.jai.kernel.KernelFactory;
-import jaitools.media.jai.kernelstats.KernelStatistic;
+import jaitools.numeric.Statistic;
 import jaitools.utils.ImageUtils;
 import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
@@ -76,10 +76,10 @@ public class KernelStatsDemo implements ImageReceiver {
 
         pb.setSource("source0", dataImage);
         pb.setParameter("kernel", kernel);
-        KernelStatistic[] stats = new KernelStatistic[]
+        Statistic[] stats = new Statistic[]
         {
-            KernelStatistic.MEAN,
-            KernelStatistic.SDEV,
+            Statistic.MEAN,
+            Statistic.SDEV,
         };
 
         pb.setParameter("stats", stats);

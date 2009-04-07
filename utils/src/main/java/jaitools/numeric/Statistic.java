@@ -18,17 +18,18 @@
  *
  */
 
-package jaitools.media.jai.kernelstats;
+package jaitools.numeric;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Constants for the statistics supported by {@linkplain KernelStatsOpImage}
+ * Enum constants for the statistics supported by the {@linkplain SampleStats} and
+ * {@linkplain StreamingSampleStats} classes.
  * 
  * @author Michael Bedward
  */
-public enum KernelStatistic {
+public enum Statistic {
 
     /** Arithmetic mean */
     MEAN("mean", "arithmetic mean", false),
@@ -51,10 +52,10 @@ public enum KernelStatistic {
     /** Sample variance */
     VARIANCE("variance", "sample variance", false);
 
-    private static Map<String, KernelStatistic> lookup;
+    private static Map<String, Statistic> lookup;
     static {
-        lookup = new HashMap<String, KernelStatistic>();
-        for (KernelStatistic stat : KernelStatistic.values()) {
+        lookup = new HashMap<String, Statistic>();
+        for (Statistic stat : Statistic.values()) {
             lookup.put(stat.name, stat);
         }
     }
@@ -66,7 +67,7 @@ public enum KernelStatistic {
     /**
      * Private constructor
      */
-    private KernelStatistic(String name, String desc, boolean supportsIntResult) {
+    private Statistic(String name, String desc, boolean supportsIntResult) {
         this.name = name;
         this.desc = desc;
         this.supportsIntResult = supportsIntResult;
@@ -96,13 +97,13 @@ public enum KernelStatistic {
     }
 
     /**
-     * Get a KernelStatistic constant by name. A case-insensitive
+     * Get a Statistic constant by name. A case-insensitive
      * lookup is performed.
      * @param name the statistic name
-     * @return a KernelStatistic instance or null if the name was
+     * @return a Statistic instance or null if the name was
      * not recognized
      */
-    public static KernelStatistic get(String name) {
+    public static Statistic get(String name) {
         return lookup.get(name.toLowerCase());
     }
 }

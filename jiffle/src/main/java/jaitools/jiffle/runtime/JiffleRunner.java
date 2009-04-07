@@ -24,7 +24,7 @@ import jaitools.jiffle.Jiffle;
 import jaitools.jiffle.Metadata;
 import jaitools.jiffle.parser.ImageCalculator;
 import jaitools.utils.CollectionFactory;
-import static jaitools.utils.DoubleComparison.*;
+import static jaitools.numeric.DoubleComparison.*;
 import java.awt.Rectangle;
 import java.util.List;
 import java.util.Map;

@@ -18,7 +18,7 @@
  * 
  */
 
-package jaitools.utils;
+package jaitools.numeric;
 
 /**
  * Double value comparisons within a set tolerance

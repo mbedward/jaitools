@@ -40,7 +40,7 @@ import jaitools.jiffle.runtime.FunctionTable;
 import jaitools.jiffle.runtime.VarTable;
 import jaitools.utils.CollectionFactory;
 
-import static jaitools.utils.DoubleComparison.*;
+import static jaitools.numeric.DoubleComparison.*;
 }
 
 @members {

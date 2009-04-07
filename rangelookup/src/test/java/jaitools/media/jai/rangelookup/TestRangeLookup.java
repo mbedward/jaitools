@@ -20,7 +20,7 @@
 
 package jaitools.media.jai.rangelookup;
 
-import jaitools.utils.Range;
+import jaitools.numeric.Range;
 import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
 import java.net.URL;
