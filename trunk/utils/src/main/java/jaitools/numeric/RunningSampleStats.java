@@ -24,7 +24,7 @@ import java.util.EnumSet;
 import java.util.Map;
 
 /**
- * A class to calculate summary statistics for a sample of double-valued
+ * A class to calculate summary statistics for a sample of Double-valued
  * data that is received as a (potentially long) stream of values rather
  * than in a single batch.
  *
@@ -32,46 +32,136 @@ import java.util.Map;
  */
 public class RunningSampleStats {
 
-    private Map<Statistic, StatBuffer> table;
+    private Map<Statistic, StatBuffer> buffers;
 
+    /**
+     * Constructor
+     */
     public RunningSampleStats() {
-        table = CollectionFactory.newTreeMap();
+        buffers = CollectionFactory.newTreeMap();
     }
 
+    /**
+     * Set a statistic to be calculated as sample values are added.
+     * If the same statistic was previously set calling this method
+     * has the effect of clearing any previous result. In addition,
+     * because of the relationship between statistics in the calculations,
+     * calling this method for one statistic in the following groups will
+     * cause the other statistics in that group to be reset:
+     * <ul>
+     * <li>MIN, MAX, RANGE
+     * <li>MEAN, SDEV, VARIANCE
+     * </ul>
+     *
+     * @param stat the requested statistic
+     * @see Statistic
+     */
+    public void setStatistic(Statistic stat) {
+        switch (stat) {
+            case MAX:
+            case MIN:
+            case RANGE:
+                createExtremaBuffer(stat);
+                break;
+
+            case MEDIAN:
+                createMedianBuffer();
+                break;
+
+            case MEAN:
+            case SDEV:
+            case VARIANCE:
+                createVarianceBuffer(stat);
+                break;
+        }
+    }
+
+    /**
+     * Convenience method: sets the selected statistics to be calculated
+     * as subsequent sample values are added.
+     *
+     * @param stats the requested statistics
+     * @see #setStatistic(jaitools.numeric.Statistic)
+     * @see Statistic
+     */
     public void setStatistics(Statistic[] stats) {
         for (Statistic stat : stats) {
-            StatBuffer buffer = null;
-            switch (stat) {
-                case MAX:
-                case MIN:
-                case RANGE:
-                    createExtremaBuffer(stat);
-                    break;
-
-                case MEDIAN:
-                    createMedianBuffer();
-                    break;
-
-                case MEAN:
-                case SDEV:
-                case VARIANCE:
-                    createVarianceBuffer(stat);
-                    break;
-            }
+            setStatistic(stat);
         }
     }
 
-    public void addSample(double sample) {
-        for (Statistic stat : table.keySet()) {
-            table.get(stat).add(sample);
+    /**
+     * Get the (current) value of a running statistic. If there have not
+     * been enough samples provided to compute the statistic, Double.NaN
+     * is returned.
+     *
+     * @param stat
+     * @return the (current) value of the statistic
+     *
+     * @throws IllegalStateException if stat was not previously set
+     */
+    public Double getStatistic(Statistic stat) {
+        StatBuffer buffer = buffers.get(stat);
+        if (buffer == null) {
+            throw new IllegalStateException(
+                    "requesting a result for a statistic that hasn't been set: " + stat);
+        }
+
+        return buffer.get(stat);
+    }
+
+    /**
+     * Get the current sample size for the specified statistic.
+     * Note that the sample size has to be retrieved with reference to a
+     * statistic because there is no requirement for the statistics
+     * having been set at the same time.
+     *
+     * @param stat the statistic that the sample size pertains to
+     * @return number of samples added since the statistic was set
+     * @throws IllegalArgumentException if the statistic hasn't been set
+     */
+    public long size(Statistic stat) {
+        StatBuffer buffer = buffers.get(stat);
+        if (buffer == null) {
+            throw new IllegalArgumentException(
+                    "requesting sample size for a statistic that is not set: " + stat);
+        }
+
+        return buffer.getCount();
+    }
+
+    /**
+     * Add a sample value and update all currently set statistics.
+     *
+     * @param sample the new sample value
+     */
+    public void addSample(Double sample) {
+        for (Statistic stat : buffers.keySet()) {
+            buffers.get(stat).add(sample);
         }
     }
 
+    /**
+     * Convenience method: adds an array of new sample values and
+     * updates all currently set statistics.
+     *
+     * @param samples the new sample values
+     */
+    public void addSamples(Double[] samples) {
+        for (int i = 0; i < samples.length; i++) {
+            addSample(samples[i]);
+        }
+    }
+
+    /**
+     * Initialize a buffer for the requested extremum statistic:
+     * one of Statistic.MIN, Statistic.MAX or Statistic.RANGE
+     */
     private void createExtremaBuffer(Statistic stat) {
         StatBuffer buffer = null;
         for (Statistic existing : EnumSet.of(Statistic.MAX, Statistic.MIN, Statistic.RANGE)) {
             if (stat != existing) {
-                buffer = table.get(existing);
+                buffer = buffers.get(existing);
                 if (buffer != null) {
                     break;
                 }
@@ -82,18 +172,22 @@ public class RunningSampleStats {
             buffer = new StatBufferExtrema();
         }
 
-        table.put(stat, buffer);
+        buffers.put(stat, buffer);
     }
 
+    /**
+     * Create a StatBuffer object
+     */
     private void createMedianBuffer() {
-        table.put(Statistic.MEDIAN, new StatBufferMedian());
+        buffers.put(Statistic.MEDIAN, new StatBufferMedian());
     }
+
 
     private void createVarianceBuffer(Statistic stat) {
         StatBuffer buffer = null;
         for (Statistic existing : EnumSet.of(Statistic.MEAN, Statistic.SDEV, Statistic.VARIANCE)) {
             if (stat != existing) {
-                buffer = table.get(existing);
+                buffer = buffers.get(existing);
                 if (buffer != null) {
                     break;
                 }
@@ -104,41 +198,50 @@ public class RunningSampleStats {
             buffer = new StatBufferMeanVariance();
         }
 
-        table.put(stat, buffer);
+        buffers.put(stat, buffer);
     }
-
 
     private static abstract class StatBuffer {
 
-        protected long count = 0;
+        private long count = 0;
 
-        abstract void add(double sample);
+        long getCount() {
+            return count;
+        }
 
-        abstract double get(Statistic stat);
+        final void add(Double sample) {
+            count++;
+            update(sample);
+        }
+
+        abstract void update(Double sample);
+
+        abstract Double get(Statistic stat);
     }
 
     private static class StatBufferExtrema extends StatBuffer {
 
-        double min = Double.MAX_VALUE;
-        double max = Double.MIN_VALUE;
-        double range = 0d;
+        Double min;
+        Double max;
 
         @Override
-        void add(double sample) {
-            if (sample > max) {
-                max = sample;
-            }
+        void update(Double sample) {
+            if (getCount() == 1) {
+                min = max = sample;
+            } else {
+                if (sample > max) {
+                    max = sample;
+                }
 
-            if (sample < min) {
-                min = sample;
+                if (sample < min) {
+                    min = sample;
+                }
             }
-
-            count++;
         }
 
         @Override
-        double get(Statistic stat) {
-            if (count == 0) {
+        Double get(Statistic stat) {
+            if (getCount() == 0) {
                 return Double.NaN;
             }
 
@@ -159,20 +262,18 @@ public class RunningSampleStats {
         }
     }
 
-
     private static class StatBufferMedian extends StatBuffer {
 
         @Override
-        void add(double sample) {
+        void update(Double sample) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
         @Override
-        double get(Statistic stat) {
+        Double get(Statistic stat) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
     }
-
 
     /**
      * A buffer to calculate running mean and variance. The algorithm used is that
@@ -182,41 +283,41 @@ public class RunningSampleStats {
      */
     private static class StatBufferMeanVariance extends StatBuffer {
 
-        double mOld, mNew;
-        double s;
+        Double mOld, mNew;
+        Double s;
 
         @Override
-        void add(double sample) {
-            count++;
-
-            if (count == 1) {
+        void update(Double sample) {
+            if (getCount() == 1) {
                 mOld = mNew = sample;
                 s = 0.0d;
             } else {
-                mNew = mOld + (sample - mOld) / count;
-                s = s + (sample - mOld)*(sample - mNew);
+                mNew = mOld + (sample - mOld) / getCount();
+                s = s + (sample - mOld) * (sample - mNew);
                 mOld = mNew;
             }
         }
 
         @Override
-        double get(Statistic stat) {
+        Double get(Statistic stat) {
+            long n = getCount();
+
             switch (stat) {
                 case MEAN:
-                    if (count > 0) {
+                    if (n > 0) {
                         return mNew;
                     }
                     break;
 
                 case SDEV:
-                    if (count > 1) {
-                        return Math.sqrt(s / (count-1));
+                    if (n > 1) {
+                        return Math.sqrt(s / (n - 1));
                     }
                     break;
 
                 case VARIANCE:
-                    if (count > 1) {
-                        return s / (count-1);
+                    if (n > 1) {
+                        return s / (n - 1);
                     }
                     break;
 
@@ -228,5 +329,5 @@ public class RunningSampleStats {
             return Double.NaN;
         }
     }
-
 }
+
