@@ -119,29 +119,29 @@ public class SampleStats {
             return Double.NaN;
         }
         
-        List<Double> list = CollectionFactory.newList();
-        list.addAll(Arrays.asList(values));
+        List<Double> nonNaNValues = CollectionFactory.newList();
+        nonNaNValues.addAll(Arrays.asList(values));
         if (ignoreNaN) {
-            while (list.remove(Double.NaN)) /* deliberately empty */ ;
+            while (nonNaNValues.remove(Double.NaN)) /* deliberately empty */ ;
         }
         
-        if (list.isEmpty()) {
+        if (nonNaNValues.isEmpty()) {
             return Double.NaN;
-        } else if (list.size() == 1) {
-            return list.get(0);
-        } else if (list.size() == 2) {
-            return (list.get(0) + list.get(1)) / 2;
+        } else if (nonNaNValues.size() == 1) {
+            return nonNaNValues.get(0);
+        } else if (nonNaNValues.size() == 2) {
+            return (nonNaNValues.get(0) + nonNaNValues.get(1)) / 2;
         }
         
-        Collections.sort(list);
+        Collections.sort(nonNaNValues);
         
-        int midHi = list.size() / 2;
+        int midHi = nonNaNValues.size() / 2;
         int midLo = midHi - 1;
-        boolean even = list.size() % 2 == 0;
+        boolean even = nonNaNValues.size() % 2 == 0;
 
         Double result = 0.0d;
         int k = 0;
-        for (Double val : values) {
+        for (Double val : nonNaNValues) {
             if (k == midHi) {
                 if (!even) {
                     return val;
@@ -270,21 +270,24 @@ public class SampleStats {
         int n = 0;
         for (int i = 0; i < values.length; i++) {
             if (Double.isNaN(values[i])) {
-                if (!ignoreNaN) return Double.NaN;
-            }
-
-            n++ ;
-            if (n == 1) {
-                mNew = mOld = values[i];
+                if (!ignoreNaN) {
+                    return Double.NaN;
+                }
+                
             } else {
-                mNew = mOld + (values[i] - mOld) / n;
-                s = s + (values[i] - mOld) * (values[i] - mNew);
-                mOld = mNew;
+                n++;
+                if (n == 1) {
+                    mNew = mOld = values[i];
+                } else {
+                    mNew = mOld + (values[i] - mOld) / n;
+                    s = s + (values[i] - mOld) * (values[i] - mNew);
+                    mOld = mNew;
+                }
             }
         }
 
         if (n > 1) {
-            return s / (n-1);
+            return s / (n - 1);
         } else if (n == 1) {
             return 0.0d;
         } else {
