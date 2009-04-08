@@ -43,7 +43,7 @@ public class RunningSampleStatsTest {
             stats.addSample((double)val);
         }
 
-        double result = stats.getStatistic(Statistic.MEAN);
+        double result = stats.getStatisticValue(Statistic.MEAN);
         assertTrue(DoubleComparison.dzero(result));
     }
 
@@ -57,7 +57,7 @@ public class RunningSampleStatsTest {
             stats.addSample(42.0d);
         }
 
-        double result = stats.getStatistic(Statistic.VARIANCE);
+        double result = stats.getStatisticValue(Statistic.VARIANCE);
         assertTrue(DoubleComparison.dzero(result));
     }
 
@@ -72,7 +72,7 @@ public class RunningSampleStatsTest {
         }
 
         double expResult = 333833.5d;  // calculated with R
-        double result = stats.getStatistic(Statistic.VARIANCE);
+        double result = stats.getStatisticValue(Statistic.VARIANCE);
         assertTrue(DoubleComparison.dcomp(result, expResult) == 0);
     }
 
@@ -96,13 +96,13 @@ public class RunningSampleStatsTest {
             runStats.addSample(val);
         }
 
-        double result = runStats.getStatistic(Statistic.MIN);
+        double result = runStats.getStatisticValue(Statistic.MIN);
         assertTrue(DoubleComparison.dcomp(result, min) == 0);
 
-        result = runStats.getStatistic(Statistic.MAX);
+        result = runStats.getStatisticValue(Statistic.MAX);
         assertTrue(DoubleComparison.dcomp(result, max) == 0);
 
-        result = runStats.getStatistic(Statistic.RANGE);
+        result = runStats.getStatisticValue(Statistic.RANGE);
         assertTrue(DoubleComparison.dcomp(result, max - min) == 0);
     }
 }
