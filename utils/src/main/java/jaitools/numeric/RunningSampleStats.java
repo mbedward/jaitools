@@ -91,6 +91,20 @@ public class RunningSampleStats {
     }
 
     /**
+     * Get the array of statistics currently set.
+     * @return a new array of Statistic enum constants.
+     */
+    public Statistic[] getStatistics() {
+        Statistic[] stats = new Statistic[buffers.size()];
+        int k = 0;
+        for (Statistic stat : buffers.keySet()) {
+            stats[k++] = stat;
+        }
+
+        return stats;
+    }
+
+    /**
      * Get the (current) value of a running statistic. If there have not
      * been enough samples provided to compute the statistic, Double.NaN
      * is returned.
@@ -100,7 +114,7 @@ public class RunningSampleStats {
      *
      * @throws IllegalStateException if stat was not previously set
      */
-    public Double getStatistic(Statistic stat) {
+    public Double getStatisticValue(Statistic stat) {
         StatBuffer buffer = buffers.get(stat);
         if (buffer == null) {
             throw new IllegalStateException(
