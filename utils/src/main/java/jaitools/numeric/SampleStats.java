@@ -256,37 +256,40 @@ public class SampleStats {
     }
 
     /**
-     * Calculate sample variance using the two-pass algorithm
-     * as described by Press et al. 1992 <i>Numerical Recipes in C</i>
-     * (and corrected for a minor bug there) to minimize round-off
-     * error
-     *
-     * @param values sample values
-     * @param ignoreNaN specifies whether to ignore NaN values
-     * @return sample variance as a double
+     * Calculate sample variance using the running sample algorithm
+     * of Welford (1962) described by Knuth in <i>The Art of Computer
+     * Programming (3rd ed)</i> Vol.2 p.232
      */
     public static double variance(Double[] values, boolean ignoreNaN) {
         if (values.length < 2) {
             return Double.NaN;
         }
 
-        double mu = mean(values, ignoreNaN);
-        if (Double.isNaN(mu)) {
-            return mu;
-        }
+        double mNew, mOld = 0.0d, s = 0.0d;
 
-        double ss = 0.0d;
-        double ep = 0.0d;
         int n = 0;
-        for (Double val : values) {
-            if (!val.isNaN()) {  // no need to check ignoreNan after calling mean()
-                ep += val;
-                ss += val*val;
-                n++ ;
+        for (int i = 0; i < values.length; i++) {
+            if (Double.isNaN(values[i])) {
+                if (!ignoreNaN) return Double.NaN;
+            }
+
+            n++ ;
+            if (n == 1) {
+                mNew = mOld = values[i];
+            } else {
+                mNew = mOld + (values[i] - mOld) / n;
+                s = s + (values[i] - mOld) * (values[i] - mNew);
+                mOld = mNew;
             }
         }
 
-        return (ss - ep*ep/n) / (n-1);
+        if (n > 1) {
+            return s / (n-1);
+        } else if (n == 1) {
+            return 0.0d;
+        } else {
+            return Double.NaN;
+        }
     }
 
     /**
