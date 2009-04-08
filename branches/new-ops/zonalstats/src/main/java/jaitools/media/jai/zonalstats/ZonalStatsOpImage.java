@@ -20,9 +20,12 @@
 
 package jaitools.media.jai.zonalstats;
 
+import jaitools.numeric.RunningSampleStats;
 import jaitools.numeric.Statistic;
 import jaitools.utils.CollectionFactory;
+import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
 import java.awt.image.RenderedImage;
 import java.util.Map;
 import java.util.SortedSet;
@@ -31,11 +34,13 @@ import javax.media.jai.ImageLayout;
 import javax.media.jai.NullOpImage;
 import javax.media.jai.OpImage;
 import javax.media.jai.ROI;
+import javax.media.jai.iterator.RandomIter;
+import javax.media.jai.iterator.RandomIterFactory;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 
 /**
- * An operator to calculate neighbourhood statistics on a source image.
+ * An operator to calculate neighbourhood data on a source image.
  * @see KernelStatsDescriptor Description of the algorithm and example
  * 
  * @author Michael Bedward
@@ -49,18 +54,22 @@ final class ZonalStatsOpImage extends NullOpImage {
     private Statistic[] stats;
     private Number nilValue;
 
+    private RenderedImage dataImage;
+    private Rectangle dataImageBounds;
+    private RenderedImage zoneImage;
+    private AffineTransform zoneTransform;
     private SortedSet<Integer> zones;
 
     /**
      * Constructor
      * @param dataImage a RenderedImage from which data values will be read
      * @param zoneImage a RenderedImage of integral data type defining the zones for which
-     * to calculate summary statistics
+     * to calculate summary data
      * @param config configurable attributes of the image (see {@link AreaOpImage})
      * @param layout an optional ImageLayout object; if the layout specifies a SampleModel
-     * and / or ColorModel that are not valid for the requested statistics (e.g. wrong number
+     * and / or ColorModel that are not valid for the requested data (e.g. wrong number
      * of bands) these will be overridden.
-     * @param stats an array of Statistic constants naming the statistics required
+     * @param stats an array of Statistic constants naming the data required
      * @param band the data image band to process
      * @param roi an optional ROI for data image masking
      * @param ignoreNaN boolean flag for whether to ignore NaN values in the data image
@@ -74,22 +83,29 @@ final class ZonalStatsOpImage extends NullOpImage {
             Statistic[] stats,
             int band,
             ROI roi,
+            AffineTransform zoneTransform,
             boolean ignoreNaN,
             Number nilValue) {
 
         super(dataImage, layout, config, OpImage.OP_COMPUTE_BOUND);
 
-        this.srcBand = band;
+        this.dataImage = dataImage;
+
+        dataImageBounds = new Rectangle(
+                dataImage.getMinX(), dataImage.getMinY(),
+                dataImage.getWidth(), dataImage.getHeight());
+
+        this.zoneImage = zoneImage;
+        this.zoneTransform = zoneTransform;
+
         this.stats = stats;
+        this.srcBand = band;
 
         this.roi = roi;
 
         if (roi != null) {
             // check that the ROI contains the data image bounds
-            Rectangle dataBounds = new Rectangle(
-                    dataImage.getMinX(), dataImage.getMinY(), dataImage.getWidth(), dataImage.getHeight());
-
-            if (!roi.getBounds().contains(dataBounds)) {
+            if (!roi.getBounds().contains(dataImageBounds)) {
                 throw new IllegalArgumentException("The bounds of the ROI must contain the data image");
             }
         }
@@ -103,7 +119,7 @@ final class ZonalStatsOpImage extends NullOpImage {
      * 
      * @param zoneImage the zone image
      */
-    private void buildZoneList(RenderedImage zoneImage) {
+    private void buildZoneList() {
         zones = CollectionFactory.newTreeSet();
         RectIter iter = RectIterFactory.create(zoneImage, null);
         do {
@@ -113,6 +129,90 @@ final class ZonalStatsOpImage extends NullOpImage {
             iter.startPixels();
         } while (!iter.nextLineDone());
     }
+
+    @Override
+    public Object getProperty(String name) {
+        if (ZonalStatsDescriptor.ZONESTATS_PROPERTY_NAME.equalsIgnoreCase(name)) {
+            return getZonalStats();
+        } else {
+            return super.getProperty(name);
+        }
+    }
+
+    private ZonalStats getZonalStats() {
+        buildZoneList();
+
+        Map<Integer, RunningSampleStats> results = CollectionFactory.newTreeMap();
+
+        for (Integer zone : zones) {
+            RunningSampleStats rss = new RunningSampleStats();
+            rss.setStatistics(stats);
+            results.put(zone, rss);
+        }
+
+        RectIter dataIter = RectIterFactory.create(dataImage, null);
+        if (zoneTransform == null) {  // Idenity transform assumed
+            RectIter zoneIter = RectIterFactory.create(zoneImage, dataImageBounds);
+
+            do {
+                do {
+                    double value = dataIter.getSampleDouble(srcBand);
+                    int zone = zoneIter.getSample();
+                    results.get(zone).addSample(value);
+                    zoneIter.nextPixel();
+                } while (!dataIter.nextPixelDone());
+
+                dataIter.startPixels();
+                zoneIter.startPixels();
+                zoneIter.nextLine();
+
+            } while (!dataIter.nextLineDone());
+
+        } else {
+            RandomIter zoneIter = RandomIterFactory.create(zoneImage, dataImageBounds);
+            Point dataPos = new Point();
+            Point zonePos = new Point();
+            dataPos.y = dataImage.getMinY();
+            do {
+                dataPos.x = dataImage.getMinX();
+                do {
+                    double value = dataIter.getSampleDouble(srcBand);
+                    zoneTransform.transform(dataPos, zonePos);
+                    int zone = zoneIter.getSample(zonePos.x, zonePos.y, 0);
+                    results.get(zone).addSample(value);
+                } while (!dataIter.nextPixelDone());
+
+                dataIter.startPixels();
+
+            } while (!dataIter.nextLineDone());
+        }
+
+        ZonalStats zonalStats = new ZonalStats(stats, zones);
+
+        for (Integer zone : zones) {
+            zonalStats.setZoneResults(zone, results.get(zone));
+        }
+
+        return zonalStats;
+    }
+
+    @Override
+    public Class getPropertyClass(String name) {
+        return ZonalStats.class;
+    }
+
+    @Override
+    public String[] getPropertyNames() {
+        String [] names = new String[super.getPropertyNames().length + 1];
+        int k = 0;
+        for (String name : super.getPropertyNames()) {
+            names[k++] = name;
+        }
+        names[k] = "ZonalStats";
+
+        return names;
+    }
+
 
 }
 

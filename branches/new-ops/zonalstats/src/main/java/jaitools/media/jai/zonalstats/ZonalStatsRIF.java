@@ -24,6 +24,7 @@ import com.sun.media.jai.opimage.RIFUtil;
 import com.sun.media.jai.util.ImageUtil;
 import jaitools.numeric.Statistic;
 import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
@@ -49,7 +50,7 @@ public class ZonalStatsRIF implements RenderedImageFactory {
      * Create a new instance of ZonalStatsOpImage in the rendered layer.
      *
      * @param paramBlock specifies the source image and the following parameters:
-     * "stats", "band", "roi", "ignoreNaN", "nilValue"
+     * "stats", "band", "roi", "zoneTransform", "ignoreNaN", "nilValue"
      *
      * @param renderHints optional RenderingHints object
      */
@@ -92,6 +93,9 @@ public class ZonalStatsRIF implements RenderedImageFactory {
 
         ROI roi = (ROI) paramBlock.getObjectParameter(ZonalStatsDescriptor.ROI_ARG_INDEX);
 
+        AffineTransform zoneTransform =
+                (AffineTransform) paramBlock.getObjectParameter(ZonalStatsDescriptor.ZONE_TRANSFORM_ARG_INDEX);
+
         Boolean ignoreNaN =
                 (Boolean) paramBlock.getObjectParameter(ZonalStatsDescriptor.NAN_ARG_INDEX);
 
@@ -106,6 +110,7 @@ public class ZonalStatsRIF implements RenderedImageFactory {
                 stats,
                 band,
                 roi,
+                zoneTransform,
                 ignoreNaN,
                 nilValue);
     }

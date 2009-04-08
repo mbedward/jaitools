@@ -22,6 +22,7 @@ package jaitools.media.jai.zonalstats;
 
 import jaitools.numeric.Statistic;
 import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
 import javax.media.jai.JAI;
@@ -43,6 +44,8 @@ import javax.media.jai.registry.RenderedRegistryMode;
  */
 public class ZonalStatsDescriptor extends OperationDescriptorImpl {
 
+    static String ZONESTATS_PROPERTY_NAME = "ZonalStats";
+
     static final int DATA_SOURCE_INDEX = 0;
     static final int ZONE_SOURCE_INDEX = 1;
     
@@ -59,13 +62,15 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
     static final int STATS_ARG_INDEX = 0;
     static final int BAND_ARG_INDEX = 1;
     static final int ROI_ARG_INDEX = 2;
-    static final int NAN_ARG_INDEX = 3;
-    static final int NO_RESULT_VALUE_ARG_INDEX = 4;
+    static final int ZONE_TRANSFORM_ARG_INDEX = 3;
+    static final int NAN_ARG_INDEX = 4;
+    static final int NO_RESULT_VALUE_ARG_INDEX = 5;
 
     private static final String[] paramNames =
         {"stats",
          "band",
          "roi",
+         "zoneTransform",
          "ignoreNaN",
          "nilValue"
         };
@@ -74,6 +79,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
         {Statistic[].class,
          Integer.class,
          javax.media.jai.ROI.class,
+         AffineTransform.class,
          Boolean.class,
          Number.class
         };
@@ -82,6 +88,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
         {NO_PARAMETER_DEFAULT,
          Integer.valueOf(0),
          (ROI) null,
+         (AffineTransform) null,
          Boolean.TRUE,
          Integer.valueOf(0)};
 
@@ -98,11 +105,13 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
                              "statistics required"},
                     {"arg1Desc", "band (default 0) - the band of the data image to process"},
                     {"arg2Desc", "roi (default null) - an optional ROI for masking the data image"},
-                    {"arg3Desc", "ignoreNaN (Boolean, default TRUE) - " +
+                    {"arg3Desc", "zoneTransform (default null) - an optional AffineTransform to " +
+                             "from dataImage pixel coords to zoneImage pixel coords"},
+                    {"arg4Desc", "ignoreNaN (Boolean, default TRUE) - " +
                              "if TRUE, NaN values in source float or double images" +
                              "are ignored; if FALSE any NaN values in a pixel's zone" +
                              "will result in nilValue for the destination pixel"},
-                    {"arg4Desc", "nilValue (Number, default 0) - the nil value for destination" +
+                    {"arg5Desc", "nilValue (Number, default 0) - the nil value for destination" +
                              "pixels have no zonal result due to source masking or NaN values in" +
                              "their zone (if ignoreNaN == FALSE)"}
                 },
@@ -128,6 +137,8 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
      * @param stats an array specifying the statistics required
      * @param band the band of the data image to process (default 0)
      * @param roi optional roi (default is null) used to mask data values
+     * @param zoneTransform (default is null) an AffineTransform used to convert
+     * dataImage pixel coords to zoneImage pixel coords
      * @param ignoreNaN if TRUE, NaN values in input float or double images
      * are ignored in calculations
      * @param nilValue value to write to destination when there is no calculated
@@ -141,6 +152,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
             Statistic[] stats,
             Integer band,
             ROI roi,
+            AffineTransform zoneTransform,
             Boolean ignoreNaN,
             Number nilValue,
             RenderingHints hints) {
@@ -151,6 +163,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
 
         pb.setSource("dataImage", dataImage);
         pb.setSource("zoneImage", zoneImage);
+        pb.setSource("zoneTransform", zoneTransform);
         pb.setParameter("stats", stats);
         pb.setParameter("band", band);
         pb.setParameter("roi", roi);
@@ -160,6 +173,19 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
         return JAI.create("ZonalStats", pb, hints);
     }
 
+    /**
+     * Returns true to indicate that properties are supported
+     * (the "ZonalStats" property)
+     */
+    @Override
+    public boolean arePropertiesSupported() {
+        return true;
+    }
+
+    /**
+     * Validate the arguments set in the parameter block and return true
+     * if all are OK; false otherwise
+     */
     @Override
     public boolean validateArguments(String modeName, ParameterBlock pb, StringBuffer msg) {
         if (!super.validateArguments(modeName, pb, msg)) {
