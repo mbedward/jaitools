@@ -19,5 +19,4 @@ The following methods are provided:
  * sdev - sample standard deviation
  * variance - sample variance
 
-Each method has two parameters: a Double array containing the sample values; and a boolean flag specifying whether NaN values should be ignored or not. If NaNs are not ignored, all methods will return NaN if any of the sample values are NaN.
-
+Each method has two parameters: a Double array containing the sample values; and a boolean flag specifying whether NaN values should be ignored or not. If !NaNs are not ignored, all methods will return NaN if any of the sample values are NaN.
