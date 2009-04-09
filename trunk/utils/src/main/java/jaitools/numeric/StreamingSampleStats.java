@@ -48,7 +48,33 @@ import java.util.Map;
  * data stream that is monotonically increasing will result in an estimate for the
  * median that is too high. If possible, it is best to de-trend or randomly order
  * the data prior to streaming it.
+ * <p>
+ * Example of use:
+ * <pre>{@code \u0000
+ * StreamingSampleStats strmStats = new StreamingSampleStats();
  *
+ * // set the statistics that will be calculated
+ * Statistic[] stats = {
+ *     Statistic.MEAN,
+ *     Statistic.SDEV,
+ *     Statistic.RANGE,
+ *     Statistic.APPROX_MEDIAN
+ * };
+ * strmStats.setStatistics(stats);
+ *
+ * // some process that generates a long stream of data
+ * while (somethingBigIsRunning) {
+ *     double value = ...
+ *     strmStats.addSample(value);
+ * }
+ *
+ * // report the results
+ * for (Statistic s : stats) {
+ *     System.out.println(String.format("%s: %.4f", s, strmStats.getStatisticValue(s)));
+ * }
+ * 
+ * }</pre>
+ * 
  * @author Michael Bedward
  */
 public class StreamingSampleStats {
