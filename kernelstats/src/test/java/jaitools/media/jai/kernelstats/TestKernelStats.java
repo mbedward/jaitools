@@ -17,7 +17,6 @@
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 package jaitools.media.jai.kernelstats;
 
 import jaitools.numeric.Statistic;
@@ -109,8 +108,10 @@ public class TestKernelStats {
     @Test
     public void testStatisticsWithConstImage() {
         for (Statistic stat : Statistic.values()) {
-            System.out.println("   test " + stat.toString() + " with const image");
-            testWithConstImage(stat);
+            if (stat != Statistic.APPROX_MEDIAN) {
+                System.out.println("   test " + stat.toString() + " with const image");
+                testWithConstImage(stat);
+            }
         }
     }
 
@@ -129,8 +130,10 @@ public class TestKernelStats {
         RenderedImage testImg = op.getAsBufferedImage();
 
         for (Statistic stat : Statistic.values()) {
-            System.out.println("   test " + stat.toString() + " with float image");
-            testWithFloatImage(stat, testImg);
+            if (stat != Statistic.APPROX_MEDIAN) {
+                System.out.println("   test " + stat.toString() + " with float image");
+                testWithFloatImage(stat, testImg);
+            }
         }
 
     }
@@ -178,7 +181,6 @@ public class TestKernelStats {
             iter.startPixels();
         } while (!iter.nextLineDone());
     }
-
 
     /**
      * Helper function for testStatisticsWithFloatImage method
