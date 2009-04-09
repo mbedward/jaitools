@@ -6,7 +6,7 @@
 
 ==Description==
 
-The !StreamingSampleStats class offers a similar range of summary statistics as the SampleStats class, but works with a (potentially very long) stream of double-valued data. 
+The !StreamingSampleStats class offers a similar range of summary statistics as the [UtilsSampleStats SampleStats] class, but works with a (potentially very long) stream of double-valued data. 
 
 ==Example of use==
 {{{
@@ -33,5 +33,3 @@ for (Statistic s : stats) {
 }
 
 }}}
-
-
