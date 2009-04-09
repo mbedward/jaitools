@@ -34,8 +34,13 @@ public enum Statistic {
     /** Arithmetic mean */
     MEAN("mean", "arithmetic mean", false),
 
-    /** Median sample value */
+    /** Exact median */
     MEDIAN("median", "median sample value", false),
+
+    /** Approximate median calculated with the 'remedian' algorithm
+     * of Rousseeuw et al. This is only used with {@linkplain StreamingSampleStats}.
+     */
+    APPROX_MEDIAN("approx. median", "approximate median (remedian algorithm)", true),
 
     /** Minimum sample value */
     MIN("min", "minimum value", true),

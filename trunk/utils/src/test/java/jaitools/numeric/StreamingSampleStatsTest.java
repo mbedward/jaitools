@@ -20,6 +20,9 @@
 
 package jaitools.numeric;
 
+import jaitools.utils.CollectionFactory;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -28,15 +31,15 @@ import static org.junit.Assert.*;
  *
  * @author Michael Bedward
  */
-public class RunningSampleStatsTest {
+public class StreamingSampleStatsTest {
 
-    public RunningSampleStatsTest() {
+    public StreamingSampleStatsTest() {
     }
 
     @Test
     public void testMean() {
         System.out.println("   test mean");
-        RunningSampleStats stats = new RunningSampleStats();
+        StreamingSampleStats stats = new StreamingSampleStats();
         stats.setStatistic(Statistic.MEAN);
 
         for (int val = -1000; val <= 1000; val++) {
@@ -50,7 +53,7 @@ public class RunningSampleStatsTest {
     @Test
     public void testZeroVariance() {
         System.out.println("   test zero variance");
-        RunningSampleStats stats = new RunningSampleStats();
+        StreamingSampleStats stats = new StreamingSampleStats();
         stats.setStatistic(Statistic.VARIANCE);
 
         for (int val = -1000; val <= 1000; val++) {
@@ -64,7 +67,7 @@ public class RunningSampleStatsTest {
     @Test
     public void testVariance() {
         System.out.println("   test variance");
-        RunningSampleStats stats = new RunningSampleStats();
+        StreamingSampleStats stats = new StreamingSampleStats();
         stats.setStatistic(Statistic.VARIANCE);
 
         for (int val = -1000; val <= 1000; val++) {
@@ -79,11 +82,11 @@ public class RunningSampleStatsTest {
     @Test
     public void testMinMaxRange() {
         System.out.println("   test min, max and range");
-        RunningSampleStats runStats = new RunningSampleStats();
+        StreamingSampleStats streamStats = new StreamingSampleStats();
         Statistic[] stats = {
             Statistic.MIN, Statistic.MAX, Statistic.RANGE
         };
-        runStats.setStatistics(stats);
+        streamStats.setStatistics(stats);
 
         Random rr = new Random();
         double limit = 1000d;
@@ -93,16 +96,41 @@ public class RunningSampleStatsTest {
             double val = limit * (rr.nextDouble() - 2.0d);
             if (val < min) min = val;
             if (val > max) max = val;
-            runStats.addSample(val);
+            streamStats.addSample(val);
         }
 
-        double result = runStats.getStatisticValue(Statistic.MIN);
+        double result = streamStats.getStatisticValue(Statistic.MIN);
         assertTrue(DoubleComparison.dcomp(result, min) == 0);
 
-        result = runStats.getStatisticValue(Statistic.MAX);
+        result = streamStats.getStatisticValue(Statistic.MAX);
         assertTrue(DoubleComparison.dcomp(result, max) == 0);
 
-        result = runStats.getStatisticValue(Statistic.RANGE);
+        result = streamStats.getStatisticValue(Statistic.RANGE);
         assertTrue(DoubleComparison.dcomp(result, max - min) == 0);
+    }
+
+    @Test
+    public void testMedian() {
+        System.out.println("   test exact and approximate median");
+        StreamingSampleStats streamStats = new StreamingSampleStats();
+        streamStats.setStatistic(Statistic.MEDIAN);
+        streamStats.setStatistic(Statistic.APPROX_MEDIAN);
+
+        List<Double> values = CollectionFactory.newList();
+
+        for (int val = -1000, k = 0; val <= 1000; val++, k++) {
+            values.add((double)val);
+        }
+
+        Collections.shuffle(values);
+        for (Double val : values) {
+            streamStats.addSample(val);
+        }
+
+        double exact = streamStats.getStatisticValue(Statistic.MEDIAN);
+        assertTrue(DoubleComparison.dzero(exact));
+
+        double error = Math.abs(exact - streamStats.getStatisticValue(Statistic.APPROX_MEDIAN));
+        assertTrue(error / values.size() <= 0.05);
     }
 }
