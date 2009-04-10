@@ -89,12 +89,12 @@ sub_expr returns [boolean hasValue, Double value]
                 
                 | ^(FUNC_CALL ID expr_list)
                   {
-                      if ($expr_list.values != null) {
+                      if (!funcTable.isVolatile($ID.text) && $expr_list.values != null) {
                           $value = funcTable.invoke($ID.text, $expr_list.values);
                           $hasValue = true;
                       }
                   }
-                  
+
                 | ^(QUESTION econd=expr e1=expr e2=expr)
                   {
                       if (econd.hasValue && e1.hasValue && e2.hasValue) {
