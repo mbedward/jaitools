@@ -276,6 +276,10 @@ public class FunctionTable {
 
     }
 
+    private static String[] volatileFuncs = {
+        "rand", "randInt"
+    };
+
     /**
      * Constructor
      */
@@ -294,6 +298,21 @@ public class FunctionTable {
     public static boolean isDefined(String name, int numArgs) {
         OpBase op = getMethod(name, numArgs);
         return op != null;
+    }
+
+    /**
+     * Check if a function is volatile, ie. intended to be called each
+     * time the image position changes
+     *
+     * @param name the function name
+     * @return true if the function is volatile; false otherwise
+     */
+    public static boolean isVolatile(String name) {
+        for (String vf : volatileFuncs) {
+            if (vf.equals(name)) return true;
+        }
+
+        return false;
     }
 
     /**
