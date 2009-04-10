@@ -95,13 +95,13 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
     /** Constructor. */
     public ZonalStatsDescriptor() {
         super(new String[][]{
-                    {"GlobalName", "KernelStats"},
-                    {"LocalName", "KernelStats"},
+                    {"GlobalName", "ZonalStats"},
+                    {"LocalName", "ZonalStats"},
                     {"Vendor", "jaitools.media.jai"},
                     {"Description", "Calculate neighbourhood statistics"},
                     {"DocURL", "http://code.google.com/p/jai-tools/"},
                     {"Version", "1.0-SHAPSHOT"},
-                    {"arg0Desc", "stats - an array of KernelStatistic constants specifying the " +
+                    {"arg0Desc", "stats - an array of Statistic constants specifying the " +
                              "statistics required"},
                     {"arg1Desc", "band (default 0) - the band of the data image to process"},
                     {"arg2Desc", "roi (default null) - an optional ROI for masking the data image"},

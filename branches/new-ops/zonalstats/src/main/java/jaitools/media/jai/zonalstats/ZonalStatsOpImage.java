@@ -20,7 +20,7 @@
 
 package jaitools.media.jai.zonalstats;
 
-import jaitools.numeric.RunningSampleStats;
+import jaitools.numeric.StreamingSampleStats;
 import jaitools.numeric.Statistic;
 import jaitools.utils.CollectionFactory;
 import java.awt.Point;
@@ -41,7 +41,7 @@ import javax.media.jai.iterator.RectIterFactory;
 
 /**
  * An operator to calculate neighbourhood data on a source image.
- * @see KernelStatsDescriptor Description of the algorithm and example
+ * @see ZonalStatsDescriptor Description of the algorithm and example
  * 
  * @author Michael Bedward
  */
@@ -142,10 +142,10 @@ final class ZonalStatsOpImage extends NullOpImage {
     private ZonalStats getZonalStats() {
         buildZoneList();
 
-        Map<Integer, RunningSampleStats> results = CollectionFactory.newTreeMap();
+        Map<Integer, StreamingSampleStats> results = CollectionFactory.newTreeMap();
 
         for (Integer zone : zones) {
-            RunningSampleStats rss = new RunningSampleStats();
+            StreamingSampleStats rss = new StreamingSampleStats();
             rss.setStatistics(stats);
             results.put(zone, rss);
         }
@@ -203,13 +203,20 @@ final class ZonalStatsOpImage extends NullOpImage {
 
     @Override
     public String[] getPropertyNames() {
-        String [] names = new String[super.getPropertyNames().length + 1];
+        String[] names;
         int k = 0;
-        for (String name : super.getPropertyNames()) {
-            names[k++] = name;
-        }
-        names[k] = "ZonalStats";
 
+        String[] superNames = super.getPropertyNames();
+        if (superNames != null) {
+            names = new String[superNames.length + 1];
+            for (String name : super.getPropertyNames()) {
+                names[k++] = name;
+            }
+        } else {
+            names = new String[1];
+        }
+
+        names[k] = "ZonalStats";
         return names;
     }
 

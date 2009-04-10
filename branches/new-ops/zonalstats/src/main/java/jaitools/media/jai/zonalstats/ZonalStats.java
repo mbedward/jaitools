@@ -20,7 +20,7 @@
 
 package jaitools.media.jai.zonalstats;
 
-import jaitools.numeric.RunningSampleStats;
+import jaitools.numeric.StreamingSampleStats;
 import jaitools.numeric.Statistic;
 import jaitools.utils.CollectionFactory;
 import java.util.List;
@@ -53,7 +53,7 @@ public class ZonalStats {
     /**
      * Store the results for the given zone. Package-private method.
      */
-    void setZoneResults(int zone, RunningSampleStats rss) {
+    void setZoneResults(int zone, StreamingSampleStats rss) {
         Map<Statistic, Double> zoneStats = data.get(zone);
         for (Statistic stat : rss.getStatistics()) {
             zoneStats.put(stat, rss.getStatisticValue(stat));
