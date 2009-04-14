@@ -35,16 +35,88 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * An {@code OperationDescriptor} for the "ZonalStats" operation.
  * <p>
  * Calculates a range of summary statistics for zones, defined in a zone image,
- * based on values in a data image.
+ * based on values in a data image. The zone image must be of integral data
+ * type and a zone must be defined for every data image pixel. By default, the
+ * zone image is expected to have the same bounds as the data image. If this is not
+ * the case an {@linkplain java.awt.geom.AffineTransform} can be provided to transform
+ * from data image coordinates to zone image coordinates.
+ * <p>
+ * Use of this operator is similar to the standard JAI statistics operators such as
+ * {@linkplain javax.media.jai.operator.HistogramDescriptor} where the source image is
+ * simply passed through to the destination image and the results of the operation are
+ * retrieved as a property. For this operator the property name can be reliably
+ * referred to via the {@linkplain #ZONAL_STATS_PROPERTY_NAME} constant.
+ * <p>
+ * Example of use...
+ * <pre>{@code 
+ * RenderedImage myData = ...
+ * RenderedImage myZones = ...
+ * 
+ * ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
+ * pb.setSource("dataImage", myData);
+ * pb.setSource("zoneImage", myZones);
+ * 
+ * Statistic[] stats = {
+ *     Statistic.MIN,
+ *     Statistic.MAX,
+ *     Statistic.MEAN,
+ *     Statistic.SDEV
+ * };
+ * 
+ * pb.setParameter("stats", stats);
+ * RenderedOp op = JAI.create("ZonalStats", pb);
+ * 
+ * ZonalStats results = (ZonalStats) op.getProperty(
+ *     ZonalStatsDescriptor.ZONAL_STATS_PROPERTY_NAME);
+ * 
+ * // print results to console
+ * for (Integer zone : results.getZones()) {
+ *     System.out.println("Zone " + zone);
+ *     Map<Statistic, Double> zoneResults = results.getZoneStats(zone);
+ *     for (Entry<Statistic, Double> e : zoneResults.entrySet()) {
+ *         System.out.println(String.format("%12s: %.4f", e.getKey(), e.getValue()));
+ *     }
+ * }
+ * 
+ * }</pre>
+ * This operator uses {@linkplain jaitools.numeric.StreamingSampleStats} for its
+ * calculations, allowing it to handle very large images for statistics other than
+ * {@linkplain jaitools.numeric.Statistic#MEDIAN}, for which the
+ * {@linkplain jaitools.numeric.Statistic#APPROX_MEDIAN} alternative is provided.
  * <p>
  * Optionally, an ROI can be provided to define which pixels in the data image
  * will contribute to the zonal statistics.
- *
+ * <p>
+ * Note that the source names for this operator are "dataImage" and "zoneImage"
+ * rather than the more typical JAI names "source0", "source1".
+ * <p>
+ * <b>Parameters</b>
+ * <table border="1">
+ * <tr align="right">
+ * <td>Name</td><td>Type</td><td>Default value</td>
+ * </tr>
+ * <tr align="right">
+ * <td>stats</td><td>Statistic[]</td><td>NO DEFAULT</td>
+ * </tr>
+ * <tr align="right">
+ * <td>band</td><td>Integer</td><td>0</td>
+ * </tr>
+ * <tr align="right">
+ * <td>roi</td><td>ROI</td><td>null</td>
+ * </tr>
+ * <tr align="right">
+ * <td>zoneTransform</td><td>AffineTransform</td>null (means identity transform)<td></td>
+ * </tr>
+ * <tr align="right">
+ * <td>ignoreNaN</td><td>Boolean</td><td>true</td>
+ * </tr>
+ * </table>
+ * 
  * @author Michael Bedward
  */
 public class ZonalStatsDescriptor extends OperationDescriptorImpl {
 
-    static String ZONESTATS_PROPERTY_NAME = "ZonalStats";
+    static String ZONAL_STATS_PROPERTY_NAME = "ZonalStats";
 
     static final int DATA_SOURCE_INDEX = 0;
     static final int ZONE_SOURCE_INDEX = 1;
@@ -64,15 +136,13 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
     static final int ROI_ARG_INDEX = 2;
     static final int ZONE_TRANSFORM_ARG_INDEX = 3;
     static final int NAN_ARG_INDEX = 4;
-    static final int NO_RESULT_VALUE_ARG_INDEX = 5;
 
     private static final String[] paramNames =
         {"stats",
          "band",
          "roi",
          "zoneTransform",
-         "ignoreNaN",
-         "nilValue"
+         "ignoreNaN"
         };
 
     private static final Class[] paramClasses =
@@ -80,8 +150,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
          Integer.class,
          javax.media.jai.ROI.class,
          AffineTransform.class,
-         Boolean.class,
-         Number.class
+         Boolean.class
         };
 
     private static final Object[] paramDefaults =
@@ -89,8 +158,8 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
          Integer.valueOf(0),
          (ROI) null,
          (AffineTransform) null,
-         Boolean.TRUE,
-         Integer.valueOf(0)};
+         Boolean.TRUE
+        };
 
     /** Constructor. */
     public ZonalStatsDescriptor() {
@@ -110,10 +179,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
                     {"arg4Desc", "ignoreNaN (Boolean, default TRUE) - " +
                              "if TRUE, NaN values in source float or double images" +
                              "are ignored; if FALSE any NaN values in a pixel's zone" +
-                             "will result in nilValue for the destination pixel"},
-                    {"arg5Desc", "nilValue (Number, default 0) - the nil value for destination" +
-                             "pixels have no zonal result due to source masking or NaN values in" +
-                             "their zone (if ignoreNaN == FALSE)"}
+                             "will result in nilValue for the destination pixel"}
                 },
 
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
@@ -141,8 +207,6 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
      * dataImage pixel coords to zoneImage pixel coords
      * @param ignoreNaN if TRUE, NaN values in input float or double images
      * are ignored in calculations
-     * @param nilValue value to write to destination when there is no calculated
-     * statistic for a pixel
      * @param hints an optional RenderingHints object
      * @return a RenderedImage with a band for each requested statistic
      */
@@ -154,7 +218,6 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
             ROI roi,
             AffineTransform zoneTransform,
             Boolean ignoreNaN,
-            Number nilValue,
             RenderingHints hints) {
 
         ParameterBlockJAI pb =
@@ -168,7 +231,6 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
         pb.setParameter("band", band);
         pb.setParameter("roi", roi);
         pb.setParameter("ignoreNaN", ignoreNaN);
-        pb.setParameter("nilValue", nilValue);
 
         return JAI.create("ZonalStats", pb, hints);
     }

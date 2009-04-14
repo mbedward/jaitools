@@ -53,10 +53,10 @@ public class ZonalStats {
     /**
      * Store the results for the given zone. Package-private method.
      */
-    void setZoneResults(int zone, StreamingSampleStats rss) {
+    void setZoneResults(int zone, StreamingSampleStats streamStats) {
         Map<Statistic, Double> zoneStats = data.get(zone);
-        for (Statistic stat : rss.getStatistics()) {
-            zoneStats.put(stat, rss.getStatisticValue(stat));
+        for (Statistic stat : streamStats.getStatistics()) {
+            zoneStats.put(stat, streamStats.getStatisticValue(stat));
         }
     }
 
@@ -79,7 +79,7 @@ public class ZonalStats {
      * @return a Map<Statistic, Double> of Statistics and their values,
      * or null if no results are held for the zone
      */
-    public Map<Statistic, Double> getZoneValues(int zone) {
+    public Map<Statistic, Double> getZoneStats(int zone) {
         Map<Statistic, Double> zoneStats = data.get(zone);
         if (zoneStats == null) {
             return null;

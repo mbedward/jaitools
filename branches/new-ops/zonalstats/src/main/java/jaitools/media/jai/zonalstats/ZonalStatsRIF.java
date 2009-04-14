@@ -50,7 +50,7 @@ public class ZonalStatsRIF implements RenderedImageFactory {
      * Create a new instance of ZonalStatsOpImage in the rendered layer.
      *
      * @param paramBlock specifies the source image and the following parameters:
-     * "stats", "band", "roi", "zoneTransform", "ignoreNaN", "nilValue"
+     * "stats", "band", "roi", "zoneTransform", "ignoreNaN"
      *
      * @param renderHints optional RenderingHints object
      */
@@ -99,9 +99,6 @@ public class ZonalStatsRIF implements RenderedImageFactory {
         Boolean ignoreNaN =
                 (Boolean) paramBlock.getObjectParameter(ZonalStatsDescriptor.NAN_ARG_INDEX);
 
-        Number nilValue =
-                (Number) paramBlock.getObjectParameter(ZonalStatsDescriptor.NO_RESULT_VALUE_ARG_INDEX);
-
         return new ZonalStatsOpImage(
                 paramBlock.getRenderedSource(ZonalStatsDescriptor.DATA_SOURCE_INDEX),
                 paramBlock.getRenderedSource(ZonalStatsDescriptor.ZONE_SOURCE_INDEX),
@@ -111,8 +108,7 @@ public class ZonalStatsRIF implements RenderedImageFactory {
                 band,
                 roi,
                 zoneTransform,
-                ignoreNaN,
-                nilValue);
+                ignoreNaN);
     }
 }
 

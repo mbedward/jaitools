@@ -52,7 +52,6 @@ final class ZonalStatsOpImage extends NullOpImage {
     private ROI roi;
 
     private Statistic[] stats;
-    private Number nilValue;
 
     private RenderedImage dataImage;
     private Rectangle dataImageBounds;
@@ -73,7 +72,6 @@ final class ZonalStatsOpImage extends NullOpImage {
      * @param band the data image band to process
      * @param roi an optional ROI for data image masking
      * @param ignoreNaN boolean flag for whether to ignore NaN values in the data image
-     * @param nilValue value to write to the destination image if no statistic can be calculated
      * @see ZonalStatsDescriptor
      * @see Statistic
      */
@@ -84,8 +82,7 @@ final class ZonalStatsOpImage extends NullOpImage {
             int band,
             ROI roi,
             AffineTransform zoneTransform,
-            boolean ignoreNaN,
-            Number nilValue) {
+            boolean ignoreNaN) {
 
         super(dataImage, layout, config, OpImage.OP_COMPUTE_BOUND);
 
@@ -109,8 +106,6 @@ final class ZonalStatsOpImage extends NullOpImage {
                 throw new IllegalArgumentException("The bounds of the ROI must contain the data image");
             }
         }
-
-        this.nilValue = nilValue;
     }
 
     /**
@@ -132,7 +127,7 @@ final class ZonalStatsOpImage extends NullOpImage {
 
     @Override
     public Object getProperty(String name) {
-        if (ZonalStatsDescriptor.ZONESTATS_PROPERTY_NAME.equalsIgnoreCase(name)) {
+        if (ZonalStatsDescriptor.ZONAL_STATS_PROPERTY_NAME.equalsIgnoreCase(name)) {
             return getZonalStats();
         } else {
             return super.getProperty(name);
@@ -154,17 +149,18 @@ final class ZonalStatsOpImage extends NullOpImage {
         if (zoneTransform == null) {  // Idenity transform assumed
             RectIter zoneIter = RectIterFactory.create(zoneImage, dataImageBounds);
 
+            boolean done;
             do {
                 do {
                     double value = dataIter.getSampleDouble(srcBand);
                     int zone = zoneIter.getSample();
                     results.get(zone).addSample(value);
-                    zoneIter.nextPixel();
+                    zoneIter.nextPixelDone(); // safe call
                 } while (!dataIter.nextPixelDone());
 
                 dataIter.startPixels();
                 zoneIter.startPixels();
-                zoneIter.nextLine();
+                zoneIter.nextLineDone(); // safe call
 
             } while (!dataIter.nextLineDone());
 
