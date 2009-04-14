@@ -71,7 +71,6 @@ final class ZonalStatsOpImage extends NullOpImage {
      * @param stats an array of Statistic constants naming the data required
      * @param band the data image band to process
      * @param roi an optional ROI for data image masking
-     * @param ignoreNaN boolean flag for whether to ignore NaN values in the data image
      * @see ZonalStatsDescriptor
      * @see Statistic
      */
@@ -81,8 +80,7 @@ final class ZonalStatsOpImage extends NullOpImage {
             Statistic[] stats,
             int band,
             ROI roi,
-            AffineTransform zoneTransform,
-            boolean ignoreNaN) {
+            AffineTransform zoneTransform) {
 
         super(dataImage, layout, config, OpImage.OP_COMPUTE_BOUND);
 

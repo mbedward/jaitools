@@ -28,6 +28,11 @@ import java.util.Map;
 import java.util.SortedSet;
 
 /**
+ * A data class used to hold the results of the ZonalStats operator.
+ * An instance of this class is stored as a property of the destination
+ * image. See {@linkplain ZonalStatsDescriptor} for an example code
+ * snippet.
+ *
  * @author Michael Bedward
  */
 public class ZonalStats {
@@ -35,7 +40,7 @@ public class ZonalStats {
     Map<Integer, Map<Statistic, Double>> data;
 
     /**
-     * Constructor. Package-private
+     * Constructor. Package-private; called by ZonalStatsOpImage.
      * @param stats the array of data
      * @param zones a SortedSet of integer zone IDs
      */

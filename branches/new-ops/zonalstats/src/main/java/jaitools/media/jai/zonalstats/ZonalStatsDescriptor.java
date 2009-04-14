@@ -105,10 +105,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * <td>roi</td><td>ROI</td><td>null</td>
  * </tr>
  * <tr align="right">
- * <td>zoneTransform</td><td>AffineTransform</td>null (means identity transform)<td></td>
- * </tr>
- * <tr align="right">
- * <td>ignoreNaN</td><td>Boolean</td><td>true</td>
+ * <td>zoneTransform</td><td>AffineTransform</td><td>null (identity transform)</td>
  * </tr>
  * </table>
  * 
@@ -135,14 +132,12 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
     static final int BAND_ARG_INDEX = 1;
     static final int ROI_ARG_INDEX = 2;
     static final int ZONE_TRANSFORM_ARG_INDEX = 3;
-    static final int NAN_ARG_INDEX = 4;
 
     private static final String[] paramNames =
         {"stats",
          "band",
          "roi",
-         "zoneTransform",
-         "ignoreNaN"
+         "zoneTransform"
         };
 
     private static final Class[] paramClasses =
@@ -175,11 +170,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
                     {"arg1Desc", "band (default 0) - the band of the data image to process"},
                     {"arg2Desc", "roi (default null) - an optional ROI for masking the data image"},
                     {"arg3Desc", "zoneTransform (default null) - an optional AffineTransform to " +
-                             "from dataImage pixel coords to zoneImage pixel coords"},
-                    {"arg4Desc", "ignoreNaN (Boolean, default TRUE) - " +
-                             "if TRUE, NaN values in source float or double images" +
-                             "are ignored; if FALSE any NaN values in a pixel's zone" +
-                             "will result in nilValue for the destination pixel"}
+                             "from dataImage pixel coords to zoneImage pixel coords"}
                 },
 
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
@@ -205,8 +196,6 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
      * @param roi optional roi (default is null) used to mask data values
      * @param zoneTransform (default is null) an AffineTransform used to convert
      * dataImage pixel coords to zoneImage pixel coords
-     * @param ignoreNaN if TRUE, NaN values in input float or double images
-     * are ignored in calculations
      * @param hints an optional RenderingHints object
      * @return a RenderedImage with a band for each requested statistic
      */
@@ -217,7 +206,6 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
             Integer band,
             ROI roi,
             AffineTransform zoneTransform,
-            Boolean ignoreNaN,
             RenderingHints hints) {
 
         ParameterBlockJAI pb =
@@ -230,7 +218,6 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
         pb.setParameter("stats", stats);
         pb.setParameter("band", band);
         pb.setParameter("roi", roi);
-        pb.setParameter("ignoreNaN", ignoreNaN);
 
         return JAI.create("ZonalStats", pb, hints);
     }
