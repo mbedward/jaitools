@@ -6,6 +6,7 @@
   * [MaskedConvolve]
   * [RangeLookup]
   * [Regionalize]
+  * [ZonalStats]
  * Operator helper classes
   * [KernelFactory]
   * [KernelUtil]
