@@ -76,5 +76,6 @@ to work with the Java Advanced Imaging library
         <module>maskedconvolve</module>
         <module>rangelookup</module>
         <module>regionalize</module>
+        <module>zonalstats</module>
   </modules>
 </project>
