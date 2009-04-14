@@ -16,7 +16,7 @@ Unlike the KernelStats operator, which outputs its results as image bands, !Zona
 
 This operator uses !jaitools.numeric.StreamingSampleStats for its calculations, allowing it to handle very large images since sample data are not retained in memory, except when calculating the exact median. Sample variance and sample standard deviation are calculated using a streaming algorithm described by Knuth (1997)^[http://code.google.com/p/jai-tools/wiki/ZonalStats#References ref]^.
 
-Calculation of the exact median (Statistic.MEDIAN) will exhaust memory if the image is too large. An alternative median estimator is provided (Statistic.APPROX_MEDIAN) to handle such cases. This uses the _remedian_ algorithm of Rousseeuw and Bassett (1990)^[http://code.google.com/p/jai-tools/wiki/ZonalStats#References ref]^ which performs well under general conditions but can produce biased estimates for highly ordered sequences of data values (e.g. monotonically increasing or decreasing).
+Calculation of the exact median (Statistic.MEDIAN) will exhaust memory if the image is too large. An alternative median estimator is provided (Statistic.APPROX_MEDIAN) to handle such cases. This uses the _remedian_ algorithm of Rousseeuw and Bassett (1990)[http://code.google.com/p/jai-tools/wiki/ZonalStats#References ref] which performs well under general conditions but can produce biased estimates for highly ordered sequences of data values (e.g. monotonically increasing or decreasing).
 
 ==Example of use==
 
