@@ -116,7 +116,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  */
 public class ZonalStatsDescriptor extends OperationDescriptorImpl {
 
-    static String ZONAL_STATS_PROPERTY_NAME = "ZonalStats";
+    public static String ZONAL_STATS_PROPERTY_NAME = "ZonalStats";
 
     static final int DATA_SOURCE_INDEX = 0;
     static final int ZONE_SOURCE_INDEX = 1;
