@@ -79,13 +79,15 @@ import java.util.Map;
  */
 public class StreamingSampleStats {
 
-    private Map<Statistic, Processor> processors;
+    private Map<Statistic, Processor> processorTable;
+    private Map<Processor, Integer> processors;
 
     /**
      * Constructor
      */
     public StreamingSampleStats() {
-        processors = CollectionFactory.newTreeMap();
+        processorTable = CollectionFactory.newMap();
+        processors = CollectionFactory.newMap();
     }
 
     /**
@@ -104,6 +106,17 @@ public class StreamingSampleStats {
      * @see Statistic
      */
     public void setStatistic(Statistic stat) {
+        Processor proc = processorTable.get(stat);
+        if (proc != null) {
+            // treat a duplicate request as resetting this
+            // statistic
+            processorTable.remove(stat);
+            Integer count = processors.get(proc);
+            if (count == 1) {
+                processors.remove(proc);
+            }
+        }
+
         switch (stat) {
             case MAX:
             case MIN:
@@ -145,7 +158,7 @@ public class StreamingSampleStats {
     public Statistic[] getStatistics() {
         Statistic[] stats = new Statistic[processors.size()];
         int k = 0;
-        for (Statistic stat : processors.keySet()) {
+        for (Statistic stat : processorTable.keySet()) {
             stats[k++] = stat;
         }
 
@@ -163,7 +176,7 @@ public class StreamingSampleStats {
      * @throws IllegalStateException if stat was not previously set
      */
     public Double getStatisticValue(Statistic stat) {
-        Processor proc = processors.get(stat);
+        Processor proc = processorTable.get(stat);
         if (proc == null) {
             throw new IllegalStateException(
                     "requesting a result for a statistic that hasn't been set: " + stat);
@@ -183,7 +196,7 @@ public class StreamingSampleStats {
      * @throws IllegalArgumentException if the statistic hasn't been set
      */
     public long size(Statistic stat) {
-        Processor proc = processors.get(stat);
+        Processor proc = processorTable.get(stat);
         if (proc == null) {
             throw new IllegalArgumentException(
                     "requesting sample size for a statistic that is not set: " + stat);
@@ -198,8 +211,8 @@ public class StreamingSampleStats {
      * @param sample the new sample value
      */
     public void addSample(Double sample) {
-        for (Statistic stat : processors.keySet()) {
-            processors.get(stat).add(sample);
+        for (Processor proc : processors.keySet()) {
+            proc.add(sample);
         }
     }
 
@@ -221,12 +234,13 @@ public class StreamingSampleStats {
      */
     private void createExtremaProcessor(Statistic stat) {
         Processor proc = null;
-        for (Statistic existing : EnumSet.of(Statistic.MAX, Statistic.MIN, Statistic.RANGE)) {
-            if (stat != existing) {
-                proc = processors.get(existing);
-                if (proc != null) {
-                    break;
-                }
+        Integer count = 0;
+
+        for (Statistic related : EnumSet.of(Statistic.MAX, Statistic.MIN, Statistic.RANGE)) {
+            proc = processorTable.get(related);
+            if (proc != null) {
+                count = processors.get(proc);
+                break;
             }
         }
 
@@ -234,20 +248,26 @@ public class StreamingSampleStats {
             proc = new ExtremaProcessor();
         }
 
-        processors.put(stat, proc);
+        processorTable.put(stat, proc);
+        processors.put(proc, count+1);
     }
 
     /**
      * Initialize a processor for the exact or approximate median
      */
     private void createMedianProcessor(Statistic stat) {
+        Processor proc = null;
         switch (stat) {
             case MEDIAN:
-                processors.put(Statistic.MEDIAN, new ExactMedianProcessor());
+                proc = new ExactMedianProcessor();
+                processors.put(proc, 1);
+                processorTable.put(Statistic.MEDIAN, proc);
                 break;
 
             case APPROX_MEDIAN:
-                processors.put(Statistic.APPROX_MEDIAN, new RemedianProcessor());
+                proc = new RemedianProcessor();
+                processors.put(proc, 1);
+                processorTable.put(Statistic.APPROX_MEDIAN, proc);
                 break;
         }
     }
@@ -258,12 +278,13 @@ public class StreamingSampleStats {
      */
     private void createVarianceProcessor(Statistic stat) {
         Processor proc = null;
-        for (Statistic existing : EnumSet.of(Statistic.MEAN, Statistic.SDEV, Statistic.VARIANCE)) {
-            if (stat != existing) {
-                proc = processors.get(existing);
-                if (proc != null) {
-                    break;
-                }
+        Integer count = 0;
+
+        for (Statistic related : EnumSet.of(Statistic.MEAN, Statistic.SDEV, Statistic.VARIANCE)) {
+            proc = processorTable.get(related);
+            if (proc != null) {
+                count = processors.get(proc);
+                break;
             }
         }
 
@@ -271,7 +292,8 @@ public class StreamingSampleStats {
             proc = new MeanVarianceProcessor();
         }
 
-        processors.put(stat, proc);
+        processorTable.put(stat, proc);
+        processors.put(proc, count+1);
     }
 
 
