@@ -30,7 +30,8 @@ import java.util.Map;
 /**
  * A class to calculate summary statistics for a sample of Double-valued
  * buffers that is received as a (potentially long) stream of values rather
- * than in a single batch.
+ * than in a single batch. Any Double.NaN values in the stream will be
+ * ignored.
  * <p>
  * Two options are offered to calculate sample median. Where it is known a priori
  * that the data stream can be accomodated in memory, the exact median can be
@@ -207,12 +208,15 @@ public class StreamingSampleStats {
 
     /**
      * Add a sample value and update all currently set statistics.
+     * Null and Double.NaN values are ignored.
      *
      * @param sample the new sample value
      */
     public void addSample(Double sample) {
-        for (Processor proc : procTable.keySet()) {
-            proc.add(sample);
+        if (sample != null && !sample.isNaN()) {
+            for (Processor proc : procTable.keySet()) {
+                proc.add(sample);
+            }
         }
     }
 
