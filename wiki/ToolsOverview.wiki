@@ -9,6 +9,7 @@ http://jai-tools.googlecode.com/svn/wiki/images/toolbox_200.gif
  * MaskedConvolve - convolution of a subset of image pixels
  * RangeLookup - a lookup transformation defined by source image value ranges
  * [Regionalize] - identifies regions of uniform value with user-specified tolerance
+ * ZonalStats - summary statistics for data image values within zone image regions
 
 ==Operator helper classes==
  * KernelFactory - creates KernelJAI objects with a variety of configurations
