@@ -10,7 +10,7 @@ This operator calculates a range of summary statistics for values in zones, or r
 
 By default, the zone image is taken to have the same origin, and at least as many rows and columns, as the data image. If this is not the case an !AffineTransform can be provided to transform from data image coordinates to zone image coordinates, allowing differences in image origins and dimensions to be accommodated.
 
-Unlike the KernelStats operator, which outputs its results as image bands, ZonalStats works in the manner of standard JAI statistics operators such as "Histogram", simply passing pixel values through from the source data image to the destination image and storing the results of its calculations as a !ZonalStats object attached to the destination image as a property. The property name can be reliably referred to via the ZONAL_STATS_PROPERTY_NAME constant.
+Unlike the KernelStats operator, which outputs its results as image bands, !ZonalStats works in the manner of standard JAI statistics operators such as "Histogram", simply passing pixel values through from the source data image to the destination image and storing the results of its calculations as a !ZonalStats object attached to the destination image as a property. The property name can be reliably referred to via the ZONAL_STATS_PROPERTY_NAME constant.
 
 ==Implementation details==
 
