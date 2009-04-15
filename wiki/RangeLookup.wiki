@@ -13,11 +13,7 @@ a source image value range to a destination image value.
 The lower and upper bounds of the range may be open or closed. If closed
 they may include their defining value or exclude it.
 
-The !RangeLookupTable as two constructors: 
-
-The first takes no arguments: a table created with this constructor will throw an !IllegalStateException if it encounters a source image value that is not contained within any of the ranges in the table.
-
-The second takes an argument for default value: if set to a non-null value, this value will be written to the destination image whenever a source image value is not contained within any of the ranges in the table. If set to null, the table will behave as if created with the no-argument constructor.
+The !RangeLookupTable has two constructors. The first takes no arguments: a table created with this constructor will throw an !IllegalStateException if it encounters a source image value that is not contained within any of the ranges in the table. The second constructor takes an argument for default value: if set to a non-null value, this value will be written to the destination image whenever a source image value is not contained within any of the ranges in the table. If set to null, the table will behave as if created with the no-argument constructor.
 
 ==!RangeLookup vs Lookup==
 
