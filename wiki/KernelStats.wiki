@@ -6,7 +6,7 @@
 
 ==Description==
 
-This operator calculates summary statistics for pixel neighbourhoods in a single band of the source image. The neighbourhood is defined with a !KernelJAI object (see also KernelFactory). 
+This operator calculates summary statistics for pixel neighbourhoods in a single band of the source image. The neighbourhood is defined with a KernelJAI object (see also KernelFactory). 
 
 The following statistics can be calculated:
 
