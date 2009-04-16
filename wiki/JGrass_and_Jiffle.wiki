@@ -66,7 +66,13 @@ There would be another way to see if everything went well: subtracting start and
 elevation.dem - peaks_off
 }}}
 
-Can you tell the result?
+Which would result in: 
+
+http://jai-tools.googlecode.com/svn/wiki/jgrass/jgrass_06.png
+
+PROBLEM: Is this exactly what we expected?
+Not completely, since the small white borders of the original map, which are novalues, are used to do the difference and end up to be 0. Instead there should be novalue as before. THIS NEEDS TO BE CHECKED ON BOTH SIDES (JGrass & Jiffle)
+
 
 
 == Nested if statements ==
@@ -81,4 +87,26 @@ Easier to say or to do?
 if( elevation.dem > 800 && elevation.dem < 1200, if( slope < 10, if( aspect > 45 && aspect < 135, 1.0, null() ), null() ), null() ) 
 }}}
 
-...to be continued...
+I get:
+
+http://jai-tools.googlecode.com/svn/wiki/jgrass/jgrass_07.png
+
+which might even look right, but to be sure, let's do some tests and also compare with the GRASS mapcalc.
+
+By selecting two random points of the map, I find a wrong calculated point:
+
+http://jai-tools.googlecode.com/svn/wiki/jgrass/jgrass_08.png
+
+Our mapcalc equation states that the resulting map can only have 1.0 and novalues, but here we find also a 0.0. I am pretty sure that this is due to the fact that calculations are done also on novalues, which sometimes leads to 0.0 in differences, which it should always give novalue. This can happen while processing the nested ifs.
+
+By using the same equation in grass, we indeed get a slightly different map, without the additional 0.0 that are created in Jiffle.
+
+Here the GRASS created map overlayed in green, to highlight all the values that should not be there:
+
+http://jai-tools.googlecode.com/svn/wiki/jgrass/jgrass_09.png
+
+
+
+
+
+
