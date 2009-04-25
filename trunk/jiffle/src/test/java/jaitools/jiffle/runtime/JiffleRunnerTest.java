@@ -25,6 +25,7 @@ import jaitools.numeric.DoubleComparison;
 import jaitools.utils.ImageUtils;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import javax.media.jai.TiledImage;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
@@ -104,11 +105,44 @@ public class JiffleRunnerTest {
     public void testNullImageValues() throws Exception {
         System.out.println("handling null image values");
 
-        TiledImage inImg1 = ImageUtils.createDoubleImage(10, 10, new double[]{Double.NaN});
-        TiledImage inImg2 = ImageUtils.createDoubleImage(10, 10, new double[]{Double.NaN});
+        int width = 100;
+
+        TiledImage inImg1 = ImageUtils.createDoubleImage(width, width);
+        TiledImage inImg2 = ImageUtils.createDoubleImage(width, width);
+
+        /*
+         * Randomly allocate the four possible combinations of
+         * null and non-null values to the input images
+         */
+        Random rand = new Random();
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < width; j++) {
+                switch (rand.nextInt(4)) {
+                    case 0:
+                        inImg1.setSample(i, j, 0, Double.NaN);
+                        inImg2.setSample(i, j, 0, Double.NaN);
+                        break;
+
+                    case 1:
+                        inImg1.setSample(i, j, 0, Double.NaN);
+                        inImg2.setSample(i, j, 0, (double)(rand.nextInt(3) - 1));
+                        break;
+
+                    case 2:
+                        inImg1.setSample(i, j, 0, (double)(rand.nextInt(3) - 1));
+                        inImg2.setSample(i, j, 0, Double.NaN);
+                        break;
+
+                    case 3:
+                        inImg1.setSample(i, j, 0, (double)(rand.nextInt(3) - 1));
+                        inImg2.setSample(i, j, 0, (double)(rand.nextInt(3) - 1));
+                        break;
+                }
+            }
+        }
         
         // out image initially filled with zeroes
-        TiledImage outImg = ImageUtils.createDoubleImage(10, 10);
+        TiledImage outImg = ImageUtils.createDoubleImage(width, width);
         
         Map<String, TiledImage> imgParams = new HashMap<String, TiledImage>();
         imgParams.put("in1", inImg1);
@@ -124,14 +158,45 @@ public class JiffleRunnerTest {
         
         assertTrue(b);
 
-        RectIter iter = RectIterFactory.create(outImg, null);
-        do {
-            do {
-                assertTrue(Double.isNaN(iter.getSampleDouble()));
-            } while (!iter.nextPixelDone());
-            
-            iter.startPixels();
-        } while (!iter.nextLineDone());
+        final boolean VERBOSE = false;
+
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < width; j++) {
+                boolean null1 = Double.isNaN(inImg1.getSampleDouble(i, j, 0));
+                if (VERBOSE) {
+                    if (!null1) {
+                        System.out.print("  " + inImg1.getSampleDouble(i, j, 0));
+                    } else {
+                        System.out.print("  NULL");
+                    }
+                }
+
+                boolean null2 = Double.isNaN(inImg2.getSampleDouble(i, j, 0));
+
+                if (VERBOSE) {
+                    if (!null2) {
+                        System.out.print(" - " + inImg2.getSampleDouble(i, j, 0));
+                    } else {
+                        System.out.print(" - NULL");
+                    }
+                }
+
+                boolean nullOut = Double.isNaN(outImg.getSampleDouble(i, j, 0));
+
+                if (VERBOSE) {
+                    if (!nullOut) {
+                        System.out.println(" = " + outImg.getSampleDouble(i, j, 0));
+                    } else {
+                        System.out.println(" = NULL");
+                    }
+                }
+
+                assertTrue(String.format("Failed for combination %s - %s",
+                                         (null1 ? "NULL" : "NON-NULL"),
+                                         (null2 ? "NULL" : "NON-NULL")),
+                           nullOut == (null1 || null2));
+            }
+        }
     }
     
 }
