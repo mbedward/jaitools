@@ -94,28 +94,44 @@ public class FunctionTable {
         lookup.put("if_1",
                 new Op1Arg() {
                     public double call(double x) {
-                        return !dzero(x) ? 1d : 0d;
+                        if (!Double.isNaN(x)) {
+                            return !dzero(x) ? 1d : 0d;
+                        }
+                        
+                        return Double.NaN;
                     }
                 });
 
         lookup.put("if_2",
                 new Op2Arg() {
                     public double call(double x, double a) {
-                        return !dzero(x) ? a : 0d;
+                        if (!Double.isNaN(x)) {
+                            return !dzero(x) ? a : 0d;
+                        }
+
+                        return Double.NaN;
                     }
                 });
 
         lookup.put("if_3",
                 new Op3Arg() {
                     public double call(double x, double a, double b) {
-                        return !dzero(x) ? a : b;
+                        if (!Double.isNaN(x)) {
+                            return !dzero(x) ? a : b;
+                        }
+
+                        return Double.NaN;
                     }
                 });
 
         lookup.put("if_4",
                 new Op4Arg() {
                     public double call(double x, double a, double b, double c) {
-                        return dzero(x) ? b : (x > 0 ? a : c);
+                        if (!Double.isNaN(x)) {
+                            return dzero(x) ? b : (x > 0 ? a : c);
+                        }
+
+                        return Double.NaN;
                     }
                 });
 

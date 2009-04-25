@@ -21,7 +21,6 @@
 package jaitools.jiffle.runtime;
 
 import jaitools.jiffle.Jiffle;
-import jaitools.numeric.DoubleComparison;
 import jaitools.utils.ImageUtils;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +30,7 @@ import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import static jaitools.numeric.DoubleComparison.*;
 
 /**
  * Unit tests for the JiffleRunner class
@@ -43,7 +43,7 @@ public class JiffleRunnerTest {
 
     @Test
     public void testIsPositionalFunction() {
-        System.out.println("isPositionalFunction");
+        System.out.println("   isPositionalFunction");
         String[] names = {"x", "y", "row", "col"};
         for (String name : names) {
             assertTrue(JiffleRunner.isPositionalFunction(name));
@@ -54,7 +54,7 @@ public class JiffleRunnerTest {
 
     @Test
     public void testIsInfoFunction() {
-        System.out.println("isInfoFunction");
+        System.out.println("   isInfoFunction");
         String[] names = {"width", "height"};
         for (String name : names) {
             assertTrue(JiffleRunner.isInfoFunction(name));
@@ -71,7 +71,7 @@ public class JiffleRunnerTest {
      */
     @Test
     public void testRun() throws Exception {
-        System.out.println("run");
+        System.out.println("   run");
         
         double inValue = 10d;
         
@@ -95,15 +95,32 @@ public class JiffleRunnerTest {
         RectIter iter = RectIterFactory.create(outImg, null);
         do {
             do {
-                assertTrue(DoubleComparison.dzero(iter.getSampleDouble() - expValue));
+                assertTrue(dzero(iter.getSampleDouble() - expValue));
             } while (!iter.nextPixelDone());
             iter.startPixels();
         } while (!iter.nextLineDone());
     }
 
+    /**
+     * Tests for correct treatment of null (NaN) values in an arithmentic
+     * expression.
+     * <p>
+     * Creates two input images, each of which has random pixel values. The
+     * values are generated such that there is approximately equal frequency
+     * of the four possible pair-wise combinations of null or non-null.
+     * The non-null values in each image are uniformly selected from {-1, 0, 1}.
+     *
+     * <p>
+     * An output image is calculated from the Jiffle expression
+     * {@code out = in1 - in2 }
+     *
+     * <p>
+     * The output image should be null wherever one or both input images were
+     * null
+     */
     @Test
     public void testNullImageValueSubtraction() throws Exception {
-        System.out.println("handling null image values");
+        System.out.println("   subtraction with null and non-null image values");
 
         int width = 100;
 
@@ -198,5 +215,130 @@ public class JiffleRunnerTest {
             }
         }
     }
-    
+
+    /**
+     * Tests for correct treatment of null (NaN) values in an arithmentic
+     * expression within an if statement.
+     * <p>
+     * Creates two input images, each of which has random pixel values. The
+     * values are generated such that there is approximately equal frequency
+     * of the four possible pair-wise combinations of null or non-null.
+     * The non-null values in each image are uniformly selected from {-1, 0, 1}.
+     * 
+     * <p>
+     * An output image is calculated from the Jiffle expression
+     * {@code out = if(in1 - in2, 1, 0, -1) }
+     *
+     * <p>
+     * The output image should have null wherever one or both input images were
+     * null; otherwise the output image should be equal to:
+     * {@code Double.compare(in1, in2)}
+     *
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testNullSubtractionWithinIf() throws Exception {
+        System.out.println("   subtraction with null and non-null values within if statements");
+
+        int width = 100;
+
+        TiledImage inImg1 = ImageUtils.createDoubleImage(width, width);
+        TiledImage inImg2 = ImageUtils.createDoubleImage(width, width);
+
+        /*
+         * Randomly allocate the four possible combinations of
+         * null and non-null values to the input images
+         */
+        Random rand = new Random();
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < width; j++) {
+                switch (rand.nextInt(4)) {
+                    case 0:
+                        inImg1.setSample(i, j, 0, Double.NaN);
+                        inImg2.setSample(i, j, 0, Double.NaN);
+                        break;
+
+                    case 1:
+                        inImg1.setSample(i, j, 0, Double.NaN);
+                        inImg2.setSample(i, j, 0, (double)(rand.nextInt(3) - 1));
+                        break;
+
+                    case 2:
+                        inImg1.setSample(i, j, 0, (double)(rand.nextInt(3) - 1));
+                        inImg2.setSample(i, j, 0, Double.NaN);
+                        break;
+
+                    case 3:
+                        inImg1.setSample(i, j, 0, (double)(rand.nextInt(3) - 1));
+                        inImg2.setSample(i, j, 0, (double)(rand.nextInt(3) - 1));
+                        break;
+                }
+            }
+        }
+
+        // out image initially filled with zeroes
+        TiledImage outImg = ImageUtils.createDoubleImage(width, width);
+
+        Map<String, TiledImage> imgParams = new HashMap<String, TiledImage>();
+        imgParams.put("in1", inImg1);
+        imgParams.put("in2", inImg2);
+        imgParams.put("out", outImg);
+
+        Jiffle jiffle = new Jiffle("out = if (in1 - in2, 1, 0, -1)", imgParams);
+        boolean b = false;
+        if (jiffle.isCompiled()) {
+            JiffleRunner runner = new JiffleRunner(jiffle);
+            b = runner.run();
+        }
+
+        assertTrue(b);
+
+        final boolean VERBOSE = false;
+
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < width; j++) {
+                double in1 = inImg1.getSampleDouble(i, j, 0);
+                boolean null1 = Double.isNaN(in1);
+                if (VERBOSE) {
+                    if (!null1) {
+                        System.out.print("  " + in1);
+                    } else {
+                        System.out.print("  NULL");
+                    }
+                }
+
+                double in2 = inImg2.getSampleDouble(i, j, 0);
+                boolean null2 = Double.isNaN(in2);
+
+                if (VERBOSE) {
+                    if (!null2) {
+                        System.out.print(" - " + in2);
+                    } else {
+                        System.out.print(" - NULL");
+                    }
+                }
+
+                double out = outImg.getSampleDouble(i, j, 0);
+                boolean nullOut = Double.isNaN(out);
+
+                if (VERBOSE) {
+                    if (!nullOut) {
+                        System.out.println(" = " + out);
+                    } else {
+                        System.out.println(" = NULL");
+                    }
+                }
+
+                assertTrue(String.format("Failed for combination %s - %s",
+                                         (null1 ? "NULL" : "NON-NULL"),
+                                         (null2 ? "NULL" : "NON-NULL")),
+                           nullOut == (null1 || null2));
+
+                if (!nullOut) {
+                    assertTrue(String.format("got %.1f - %.1f = %.1f", in1, in2, out),
+                            out == dcomp(in1 - in2, 0d));
+                }
+            }
+        }
+    }
 }
