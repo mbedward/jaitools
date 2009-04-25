@@ -43,7 +43,7 @@ import static org.junit.Assert.*;
 public class TestMaskedConvolve {
 
     // round off tolerance for float comparisons
-    private static final float FTOL = 1.0e-8f;
+    private static final float FTOL = 1.0e-4f;
 
     public TestMaskedConvolve() {
         ensureRegistered();
