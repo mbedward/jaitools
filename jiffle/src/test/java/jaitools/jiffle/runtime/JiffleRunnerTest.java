@@ -102,7 +102,7 @@ public class JiffleRunnerTest {
     }
 
     @Test
-    public void testNullImageValues() throws Exception {
+    public void testNullImageValueSubtraction() throws Exception {
         System.out.println("handling null image values");
 
         int width = 100;
