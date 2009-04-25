@@ -35,12 +35,13 @@ Lets' try something easy such as dividing a map by two:
 elevation.dem / 2.0
 }}}
 
-and the result is as expected:
+and the result is NOT as expected:
 
 http://jai-tools.googlecode.com/svn/wiki/jgrass/jgrass_03.png
 
 Don't be missleaded by the colormap. That can be changed in any moment and when a map is created in JGrass a default rainbow colormap is created.
 
+PROBLEM: the problem lies in the fact that the resulting map is shifted versus north. What happens here?
 
 == Cutting of the peaks ==
 
@@ -104,8 +105,6 @@ By using the same equation in grass, we indeed get a slightly different map, wit
 Here the GRASS created map overlayed in green, to highlight all the values that should not be there:
 
 http://jai-tools.googlecode.com/svn/wiki/jgrass/jgrass_09.png
-
-
 
 
 
