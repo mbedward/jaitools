@@ -24,17 +24,26 @@ import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.io.File;
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.math.BigInteger;
 import javax.media.jai.CachedTile;
 import javax.media.jai.PlanarImage;
 
 /**
- * Represents a tile cached on disk that may also be resident in memory
+ * Represents a tile cached on disk that may also be resident in memory.
+ * <p>
+ * This class does not hold a reference to the associated raster. When an
+ * instance is created, the raster is written to disk and may, at the discretion
+ * of the controlling {@linkplain DiskBasedTileCache}, also remain resident in
+ * memory.
  *
  * @see DiskBasedTileCache
  */
 final class DiskCachedTile implements CachedTile {
+
+    public static final String FILE_PREFIX = "tile";
+    public static final String FILE_SUFFIX = ".tmp";
 
     private File file;
     private WeakReference<RenderedImage> owner;
@@ -49,12 +58,56 @@ final class DiskCachedTile implements CachedTile {
     private int action = 0;
 
 
+    /**
+     * Create a file to cache the given tile on disk. Presently
+     * this method does nothing more than delegate to File.createTempFile
+     *
+     * @throws java.io.IOException
+     */
+    public static File createFile(DiskCachedTile tile) throws IOException {
+        return File.createTempFile(FILE_PREFIX, FILE_SUFFIX);
+    }
+
+
+    /**
+     * Get a unique (we hope) identifier for the given tile
+     * @param owner the owning image
+     * @param tileX tile column
+     * @param tileY tile row
+     * @return the key as an Object which will be an instance of either Long or BigInteger
+     */
+    public static Object getTileKey(RenderedImage owner,
+                              int tileX,
+                              int tileY) {
+
+        long tileId = tileY * (long)owner.getNumXTiles() + tileX;
+
+        BigInteger imageId = null;
+
+        if (owner instanceof PlanarImage) {
+            imageId = (BigInteger)((PlanarImage)owner).getImageID();
+        }
+
+        if (imageId != null) {
+            byte[] buf = imageId.toByteArray();
+            int length = buf.length;
+            byte[] buf1 = new byte[buf.length + 8];
+            System.arraycopy(buf, 0, buf1, 0, length);
+            for (int i = 7, j = 0; i >= 0; i--, j += 8)
+                buf1[length++] = (byte)(tileId >> j);
+            return new BigInteger(buf1);
+
+        } else {
+            tileId &= 0x00000000ffffffffL;
+            return new Long(((long)owner.hashCode() << 32) | tileId);
+        }
+    }
+
     DiskCachedTile(RenderedImage owner,
                   int tileX,
                   int tileY,
                   Raster tile,
-                  Object tileCacheMetric,
-                  File file) {
+                  Object tileCacheMetric) throws IOException {
 
         if (owner == null || tile == null || file == null) {
             throw new IllegalArgumentException(
@@ -65,13 +118,15 @@ final class DiskCachedTile implements CachedTile {
         this.tileX = tileX;
         this.tileY = tileY;
         this.tileCacheMetric = tileCacheMetric;
-        this.file = file;
 
-        key = generateTileKey(owner, tileX, tileY);
+        key = getTileKey(owner, tileX, tileY);
 
         DataBuffer db = tile.getDataBuffer();
         memorySize = DataBuffer.getDataTypeSize(db.getDataType()) / 8L *
                      db.getSize() * db.getNumBanks();
+
+        file = createFile(this);
+        writeData();
     }
 
     /**
@@ -165,35 +220,11 @@ final class DiskCachedTile implements CachedTile {
      * into the upper bytes of a long or BigInteger value and the tile id into
      * the lower bytes.
      */
-    private Object generateTileKey(RenderedImage owner,
-                              int tileX,
-                              int tileY) {
-
-        if (key != null) {
-            throw new IllegalStateException("trying to generate the tile key more than once");
-        }
-
-        long tileId = tileY * (long)owner.getNumXTiles() + tileX;
-
-        BigInteger imageId = null;
-
-        if (owner instanceof PlanarImage) {
-            imageId = (BigInteger)((PlanarImage)owner).getImageID();
-        }
-
-        if (imageId != null) {
-            byte[] buf = imageId.toByteArray();
-            int length = buf.length;
-            byte[] buf1 = new byte[buf.length + 8];
-            System.arraycopy(buf, 0, buf1, 0, length);
-            for (int i = 7, j = 0; i >= 0; i--, j += 8)
-                buf1[length++] = (byte)(tileId >> j);
-            return new BigInteger(buf1);
-
-        } else {
-            tileId &= 0x00000000ffffffffL;
-            return new Long(((long)owner.hashCode() << 32) | tileId);
-        }
+    /**
+     * Write data for the raster associated with this tile to
+     * disk
+     */
+    private void writeData() {
+        // TODO Write me !
     }
-
 }

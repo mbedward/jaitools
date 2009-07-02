@@ -25,12 +25,18 @@ import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
-import java.lang.ref.ReferenceQueue;
+import java.io.IOException;
 import java.lang.ref.SoftReference;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.media.jai.ParameterList;
+import javax.media.jai.ParameterListDescriptor;
 import javax.media.jai.TileCache;
 
 /**
@@ -39,24 +45,97 @@ import javax.media.jai.TileCache;
 public class DiskBasedTileCache implements TileCache {
 
     public static final long DEFAULT_MEMORY_CAPACITY = 64L * 1024L * 1024L;
+
+    // @todo use JAI ParameterList or some other ready-made class for this ?
+    private static class ParamDesc {
+        String key;
+        Class<?> clazz;
+        Object defaultValue;
+
+        ParamDesc(String key, Class<?> clazz, Object defaultValue) {
+            this.key = key; this.clazz = clazz; this.defaultValue = defaultValue;
+        }
+
+        boolean typeOK (Object value) {
+            return value.getClass().isAssignableFrom(clazz);
+        }
+    }
+
+    /**
+     * Key for the parameter controlling initial memory capacity of the
+     * tile cache. This determines the maximum number of tiles that can
+     * be resident concurrently. The value must be numeric and will be
+     * treated as Long.
+     */
+    public static final String INITIAL_MEMORY_CAPACITY = "memcapacity";
+
+    /**
+     * Key for the parameter controlling whether newly added tiles become
+     * resident in memory. The value must be Boolean.
+     */
+    public static final String MAKE_NEW_TILES_RESIDENT = "newtilesres";
+
+    private static Map<String, ParamDesc> paramDescriptors;
+    static {
+        ParamDesc desc;
+        paramDescriptors = new HashMap<String, ParamDesc>();
+
+        desc = new ParamDesc(INITIAL_MEMORY_CAPACITY, Long.class, DEFAULT_MEMORY_CAPACITY);
+        paramDescriptors.put( desc.key, desc );
+
+        desc = new ParamDesc(MAKE_NEW_TILES_RESIDENT, Boolean.class, Boolean.TRUE);
+        paramDescriptors.put( desc.key, desc );
+    }
+
     private long memCapacity;
+    private boolean newTilesResident;
 
     // map of all tiles whether currently in memory or cached on disk
-    private Map<Integer, DiskBasedTile> tiles;
+    private Map<Object, DiskCachedTile> tiles;
     
     // set of those tiles currently resident in memory
-    private Map<Integer, SoftReference<Raster>> residentTiles;
+    private Map<Object, SoftReference<Raster>> residentTiles;
 
     // current (approximate) memory used for resident tiles
     private long curSize;
     
 
-    public DiskBasedTileCache() {
-        tiles = new HashMap<Integer, DiskBasedTile>();
-        residentTiles = new HashMap<Integer, SoftReference<Raster>>();
-        
-        memCapacity = DEFAULT_MEMORY_CAPACITY;
+    /**
+     * Constructor.
+     *
+     * @param params an optional map of parameters (may be empty or null)
+     */
+    public DiskBasedTileCache(Map<String, Object> params) {
+        if (params == null) {
+            params = Collections.emptyMap();
+        }
+
+        tiles = new HashMap<Object, DiskCachedTile>();
+        residentTiles = new HashMap<Object, SoftReference<Raster>>();
         curSize = 0L;
+
+        Object o;
+        ParamDesc desc;
+
+        desc= paramDescriptors.get(INITIAL_MEMORY_CAPACITY);
+        o = params.get(desc.key);
+        if (o != null) {
+            if (desc.typeOK(o)) {
+                memCapacity = (Long)o;
+            }
+        } else {
+            memCapacity = (Long)desc.defaultValue;
+        }
+
+        desc = paramDescriptors.get(MAKE_NEW_TILES_RESIDENT);
+        o = params.get(desc.key);
+        if (o != null) {
+            if (desc.typeOK(o)) {
+                newTilesResident = (Boolean)o;
+            }
+        } else {
+            newTilesResident = (Boolean)desc.defaultValue;
+        }
     }
 
     public void add(RenderedImage owner, int tileX, int tileY, Raster data) {
@@ -68,8 +147,13 @@ public class DiskBasedTileCache implements TileCache {
                 int tileY,
                 Raster data,
                 Object tileCacheMetric) {
+        try {
+            DiskCachedTile tile = new DiskCachedTile(owner, tileX, tileY, data, tileCacheMetric);
 
-        throw new UnsupportedOperationException("Not supported yet.");
+        } catch (IOException ex) {
+            Logger.getLogger(DiskBasedTileCache.class.getName())
+                    .log(Level.SEVERE, "Unable to cache this tile on disk", ex);
+        }
     }
 
     public void remove(RenderedImage owner, int tileX, int tileY) {
@@ -80,12 +164,12 @@ public class DiskBasedTileCache implements TileCache {
         Raster r = null;
 
         // is the tile resident ?
-        int id = computeTileId(owner, tileX, tileY);
-        if (residentTiles.containsKey(id)) {
-            r = residentTiles.get(id).get();
+        Object key = DiskCachedTile.getTileKey(owner, tileX, tileY);
+        if (residentTiles.containsKey(key)) {
+            r = residentTiles.get(key).get();
             if (r == null) {
                 // tile has been garbage collected
-                residentTiles.remove(id);
+                residentTiles.remove(key);
 
             } else {
                 return r;
@@ -94,10 +178,10 @@ public class DiskBasedTileCache implements TileCache {
 
         // tile needs to be loaded from disk and added
         // to the memory store
-        DiskBasedTile tile = tiles.get(id);
+        DiskCachedTile tile = tiles.get(key);
         if (tile != null) {
             r = tile.getTile();
-            makeResident(id, r);
+            makeResident(key, r);
         }
 
         return r;
@@ -176,7 +260,7 @@ public class DiskBasedTileCache implements TileCache {
     /**
      * Add a raster to those resident in memory
      */
-    private void makeResident(int tileId, Raster r) {
+    private void makeResident(Object tileKey, Raster r) {
         SampleModel sm = r.getSampleModel();
         long typeLen = DataBuffer.getDataTypeSize(sm.getTransferType());
         long size = (long)sm.getNumDataElements() * typeLen;
@@ -189,6 +273,8 @@ public class DiskBasedTileCache implements TileCache {
         while (curSize + size > memCapacity) {
             removeResidentTile();
         }
+
+        // TODO FINISH ME 1
     }
 
     /**
@@ -198,17 +284,4 @@ public class DiskBasedTileCache implements TileCache {
 
     }
 
-    /**
-     * Compute an integer ID for a tile based on its image coordinates
-     * and the hash code of the parent image
-     * 
-     * @param owner the parent image
-     * @param tileX the tile's x location
-     * @param tileY the tile's y location
-     * 
-     * @return integer ID
-     */
-    private int computeTileId(RenderedImage owner, int tileX, int tileY) {
-        return 31 * owner.hashCode() + tileX + tileY * owner.getNumXTiles();
-    }
 }
