@@ -21,22 +21,16 @@
 package jaitools.tilecache;
 
 import java.awt.Point;
-import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
-import java.awt.image.SampleModel;
 import java.io.IOException;
 import java.lang.ref.SoftReference;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.media.jai.ParameterList;
-import javax.media.jai.ParameterListDescriptor;
 import javax.media.jai.TileCache;
 
 /**
@@ -45,6 +39,23 @@ import javax.media.jai.TileCache;
 public class DiskBasedTileCache implements TileCache {
 
     public static final long DEFAULT_MEMORY_CAPACITY = 64L * 1024L * 1024L;
+
+    /**
+     * Hints used with the {@linkplain #makeResident} method
+     */
+    private enum ResidencyHint {
+        /**
+         * Only make a tile resident if there is enough free memory
+         * without swapping any currently resident tiles to disk
+         */
+        NO_SWAP,
+
+        /**
+         * Force tile to be come resident, swapping other tiles to
+         * disk as necessary
+         */
+        FORCE
+    };
 
     // @todo use JAI ParameterList or some other ready-made class for this ?
     private static class ParamDesc {
@@ -139,7 +150,7 @@ public class DiskBasedTileCache implements TileCache {
     }
 
     public void add(RenderedImage owner, int tileX, int tileY, Raster data) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        add(owner, tileX, tileY, data, null);
     }
 
     public void add(RenderedImage owner,
@@ -149,6 +160,10 @@ public class DiskBasedTileCache implements TileCache {
                 Object tileCacheMetric) {
         try {
             DiskCachedTile tile = new DiskCachedTile(owner, tileX, tileY, data, tileCacheMetric);
+
+            if (newTilesResident) {
+                makeResident(tile, data, ResidencyHint.NO_SWAP);
+            }
 
         } catch (IOException ex) {
             Logger.getLogger(DiskBasedTileCache.class.getName())
@@ -181,7 +196,7 @@ public class DiskBasedTileCache implements TileCache {
         DiskCachedTile tile = tiles.get(key);
         if (tile != null) {
             r = tile.getTile();
-            makeResident(key, r);
+            makeResident(tile, r, ResidencyHint.FORCE);
         }
 
         return r;
@@ -199,11 +214,27 @@ public class DiskBasedTileCache implements TileCache {
                      Point[] tileIndices,
                      Raster[] tiles,
                      Object tileCacheMetric) {
-        throw new UnsupportedOperationException("Not supported yet.");
+
+        if (tileIndices.length != tiles.length) {
+            throw new IllegalArgumentException("tileIndices and tiles args must be the same length");
+        }
+
+        for (int i = 0; i < tiles.length; i++) {
+            add(owner, tileIndices[i].x, tileIndices[i].y, tiles[i], tileCacheMetric);
+        }
     }
 
     public Raster[] getTiles(RenderedImage owner, Point[] tileIndices) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Raster[] r = null;
+
+        if (tileIndices.length > 0) {
+            r = new Raster[tileIndices.length];
+            for (int i = 0; i < tileIndices.length; i++) {
+                r[i] = getTile(owner, tileIndices[i].x, tileIndices[i].y);
+            }
+        }
+
+        return r;
     }
 
     public void flush() {
@@ -238,7 +269,7 @@ public class DiskBasedTileCache implements TileCache {
     }
 
     public long getMemoryCapacity() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return memCapacity;
     }
 
     public void setMemoryThreshold(float memoryThreshold) {
@@ -260,28 +291,30 @@ public class DiskBasedTileCache implements TileCache {
     /**
      * Add a raster to those resident in memory
      */
-    private void makeResident(Object tileKey, Raster r) {
-        SampleModel sm = r.getSampleModel();
-        long typeLen = DataBuffer.getDataTypeSize(sm.getTransferType());
-        long size = (long)sm.getNumDataElements() * typeLen;
+    private void makeResident(DiskCachedTile tile, Raster data, ResidencyHint hint) {
 
-        if (size > memCapacity) {
+        if (tile.getTileSize() > memCapacity) {
             // @todo something better than this...
             throw new RuntimeException("tile size greater than memory capacity");
         }
 
-        while (curSize + size > memCapacity) {
-            removeResidentTile();
+        if (hint == ResidencyHint.NO_SWAP &&
+                tile.getTileSize() > memCapacity - curSize) {
+            return;
         }
 
-        // TODO FINISH ME 1
+        while (curSize + tile.getTileSize() > memCapacity) {
+            removeNextTile();
+        }
+
+        residentTiles.put(tile.getTileKey(), new SoftReference<Raster>(data));
     }
 
     /**
-     * Remove the tile with the longest time since last access from memory
+     * Remove the tile with the lowest residency priority
      */
-    private void removeResidentTile() {
-
+    private void removeNextTile() {
+        // TODO: WRITE ME
     }
 
 }
