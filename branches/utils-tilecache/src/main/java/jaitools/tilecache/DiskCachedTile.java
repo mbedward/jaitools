@@ -26,9 +26,7 @@ import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.math.BigInteger;
 import javax.media.jai.CachedTile;
-import javax.media.jai.PlanarImage;
 
 /**
  * Represents a tile cached on disk that may also be resident in memory.
@@ -45,15 +43,14 @@ final class DiskCachedTile implements CachedTile {
     public static final String FILE_PREFIX = "tile";
     public static final String FILE_SUFFIX = ".tmp";
 
-    private File file;
+    private Object id;
     private WeakReference<RenderedImage> owner;
     private int tileX;
     private int tileY;
     private Object tileCacheMetric;
     private long timeStamp;
-
-    private Object key;
     private long memorySize;
+    private File file;
 
     private int action = 0;
 
@@ -69,41 +66,8 @@ final class DiskCachedTile implements CachedTile {
     }
 
 
-    /**
-     * Get a unique (we hope) identifier for the given tile
-     * @param owner the owning image
-     * @param tileX tile column
-     * @param tileY tile row
-     * @return the key as an Object which will be an instance of either Long or BigInteger
-     */
-    public static Object getTileKey(RenderedImage owner,
-                              int tileX,
-                              int tileY) {
-
-        long tileId = tileY * (long)owner.getNumXTiles() + tileX;
-
-        BigInteger imageId = null;
-
-        if (owner instanceof PlanarImage) {
-            imageId = (BigInteger)((PlanarImage)owner).getImageID();
-        }
-
-        if (imageId != null) {
-            byte[] buf = imageId.toByteArray();
-            int length = buf.length;
-            byte[] buf1 = new byte[buf.length + 8];
-            System.arraycopy(buf, 0, buf1, 0, length);
-            for (int i = 7, j = 0; i >= 0; i--, j += 8)
-                buf1[length++] = (byte)(tileId >> j);
-            return new BigInteger(buf1);
-
-        } else {
-            tileId &= 0x00000000ffffffffL;
-            return new Long(((long)owner.hashCode() << 32) | tileId);
-        }
-    }
-
-    DiskCachedTile(RenderedImage owner,
+    DiskCachedTile(Object id,
+                  RenderedImage owner,
                   int tileX,
                   int tileY,
                   Raster tile,
@@ -114,12 +78,11 @@ final class DiskCachedTile implements CachedTile {
                     "All of owner, tile and file args must be non-null");
         }
 
+        this.id = id;
         this.owner = new WeakReference(owner);
         this.tileX = tileX;
         this.tileY = tileY;
         this.tileCacheMetric = tileCacheMetric;
-
-        key = getTileKey(owner, tileX, tileY);
 
         DataBuffer db = tile.getDataBuffer();
         memorySize = DataBuffer.getDataTypeSize(db.getDataType()) / 8L *
@@ -145,9 +108,10 @@ final class DiskCachedTile implements CachedTile {
                " tileX = " + Integer.toString(tileX) +
                " tileY = " + Integer.toString(tileY) +
                " tile = " + tstring +
-               " key = " + ((key instanceof Long)? Long.toHexString(((Long)key).longValue()) : key.toString()) +
+               " id = " + ((id instanceof Long)? Long.toHexString(((Long)id).longValue()) : id.toString()) +
                " memorySize = " + Long.toString(memorySize) +
-               " timeStamp = " + Long.toString(timeStamp);
+               " timeStamp = " + Long.toString(timeStamp) +
+               " file = " + file.getPath();
     }
 
     /**
@@ -205,21 +169,15 @@ final class DiskCachedTile implements CachedTile {
     }
 
     /**
-     * Get the unique key for this tile. The key is a combination of
+     * Get the unique ID for this tile. The ID is a combination of
      * either the JAI-generated unique ID of the owning image or the image's
      * hash key if a unique ID was not available plus the tile index.
      * The returned object will be either Long or BigInteger.
      */
-    public Object getTileKey() {
-        return key;
+    public Object getTileId() {
+        return id;
     }
 
-    /**
-     * Generate a hash key for this tile. This uses the same technique as the
-     * Sun memory cache implementation: putting the id of the owning image
-     * into the upper bytes of a long or BigInteger value and the tile id into
-     * the lower bytes.
-     */
     /**
      * Write data for the raster associated with this tile to
      * disk

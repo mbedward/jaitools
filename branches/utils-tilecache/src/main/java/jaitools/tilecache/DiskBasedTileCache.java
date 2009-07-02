@@ -25,12 +25,14 @@ import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.lang.ref.SoftReference;
+import java.math.BigInteger;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.media.jai.PlanarImage;
 import javax.media.jai.TileCache;
 
 /**
@@ -109,6 +111,8 @@ public class DiskBasedTileCache implements TileCache {
 
     // current (approximate) memory used for resident tiles
     private long curSize;
+    private int numTiles;
+    private int numResidentTiles;
     
 
     /**
@@ -124,6 +128,8 @@ public class DiskBasedTileCache implements TileCache {
         tiles = new HashMap<Object, DiskCachedTile>();
         residentTiles = new HashMap<Object, SoftReference<Raster>>();
         curSize = 0L;
+        numTiles = 0;
+        numResidentTiles = 0;
 
         Object o;
         ParamDesc desc;
@@ -158,12 +164,21 @@ public class DiskBasedTileCache implements TileCache {
                 int tileY,
                 Raster data,
                 Object tileCacheMetric) {
+
+        Object key = getTileId(owner, tileX, tileY);
+        if (tiles.containsKey(key)) {
+            // tile is already cached
+            return;
+        }
+
         try {
-            DiskCachedTile tile = new DiskCachedTile(owner, tileX, tileY, data, tileCacheMetric);
+            DiskCachedTile tile = new DiskCachedTile(key, owner, tileX, tileY, data, tileCacheMetric);
 
             if (newTilesResident) {
                 makeResident(tile, data, ResidencyHint.NO_SWAP);
             }
+
+            numTiles++ ;
 
         } catch (IOException ex) {
             Logger.getLogger(DiskBasedTileCache.class.getName())
@@ -179,7 +194,7 @@ public class DiskBasedTileCache implements TileCache {
         Raster r = null;
 
         // is the tile resident ?
-        Object key = DiskCachedTile.getTileKey(owner, tileX, tileY);
+        Object key = getTileId(owner, tileX, tileY);
         if (residentTiles.containsKey(key)) {
             r = residentTiles.get(key).get();
             if (r == null) {
@@ -307,7 +322,7 @@ public class DiskBasedTileCache implements TileCache {
             removeNextTile();
         }
 
-        residentTiles.put(tile.getTileKey(), new SoftReference<Raster>(data));
+        residentTiles.put(tile.getTileId(), new SoftReference<Raster>(data));
     }
 
     /**
@@ -315,6 +330,43 @@ public class DiskBasedTileCache implements TileCache {
      */
     private void removeNextTile() {
         // TODO: WRITE ME
+    }
+
+    /**
+     * Generate a unique ID for this tile. This uses the same technique as the
+     * Sun memory cache implementation: putting the id of the owning image
+     * into the upper bytes of a long or BigInteger value and the tile index into
+     * the lower bytes.
+     * @param owner the owning image
+     * @param tileX tile column
+     * @param tileY tile row
+     * @return the ID as an Object which will be an instance of either Long or BigInteger
+     */
+    private Object getTileId(RenderedImage owner,
+                              int tileX,
+                              int tileY) {
+
+        long tileId = tileY * (long)owner.getNumXTiles() + tileX;
+
+        BigInteger imageId = null;
+
+        if (owner instanceof PlanarImage) {
+            imageId = (BigInteger)((PlanarImage)owner).getImageID();
+        }
+
+        if (imageId != null) {
+            byte[] buf = imageId.toByteArray();
+            int length = buf.length;
+            byte[] buf1 = new byte[buf.length + 8];
+            System.arraycopy(buf, 0, buf1, 0, length);
+            for (int i = 7, j = 0; i >= 0; i--, j += 8)
+                buf1[length++] = (byte)(tileId >> j);
+            return new BigInteger(buf1);
+
+        } else {
+            tileId &= 0x00000000ffffffffL;
+            return new Long(((long)owner.hashCode() << 32) | tileId);
+        }
     }
 
 }
