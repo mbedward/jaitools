@@ -43,6 +43,8 @@ public class DiskBasedTileCache extends Observable implements TileCache {
 
     public static final long DEFAULT_MEMORY_CAPACITY = 64L * 1024L * 1024L;
 
+    public static final float DEFAULT_MEMORY_THRESHOLD = 0.75F;
+
     /**
      * Hints used with the {@linkplain #makeResident} method
      */
@@ -89,6 +91,17 @@ public class DiskBasedTileCache extends Observable implements TileCache {
      */
     public static final String MAKE_NEW_TILES_RESIDENT = "newtilesres";
 
+    /**
+     * Key for the parameter controlling whether the memory threshold value
+     * is used when creating space for new resident tiles. If set to true
+     * memory thresholding is used when the resident tile space becomes full
+     * (see {@linkplain #setMemoryThreshold(float)} for more details).
+     * If set to FALSE (the default) new tiles are added to resident space by minimal
+     * clearing of currently resident tiles.
+     */
+    public static final String USE_MEMORY_THRESHOLD = "memthreshold";
+
+
     private static Map<String, ParamDesc> paramDescriptors;
     static {
         ParamDesc desc;
@@ -99,9 +112,29 @@ public class DiskBasedTileCache extends Observable implements TileCache {
 
         desc = new ParamDesc(MAKE_NEW_TILES_RESIDENT, Boolean.class, Boolean.TRUE);
         paramDescriptors.put( desc.key, desc );
+
+        desc = new ParamDesc(USE_MEMORY_THRESHOLD, Boolean.class, Boolean.TRUE);
+        paramDescriptors.put( desc.key, desc );
     }
 
+    // maximum memory available for resident tiles
     private long memCapacity;
+
+    // current memory used for resident tiles
+    private long curMemory;
+
+    /*
+     * A value between 0.0 and 1.0 that may be used for memory control
+     * if the param USE_MEMORY_THRESHOLD is TRUE.
+     */
+    private float memThreshold;
+
+    /**
+     * Flags whether the memory threshold is used when freeing resident tile
+     * memory. If false, a strategy of freeing minimum memory is used.
+     */
+    private boolean useThreshold;
+
     private boolean newTilesResident;
 
     // map of all tiles whether currently in memory or cached on disk
@@ -110,9 +143,6 @@ public class DiskBasedTileCache extends Observable implements TileCache {
     // set of those tiles currently resident in memory
     private Map<Object, SoftReference<Raster>> residentTiles;
 
-    // current (approximate) memory used for resident tiles
-    private long curSize;
-    
 
     /**
      * Constructor.
@@ -126,7 +156,7 @@ public class DiskBasedTileCache extends Observable implements TileCache {
 
         tiles = new HashMap<Object, DiskCachedTile>();
         residentTiles = new HashMap<Object, SoftReference<Raster>>();
-        curSize = 0L;
+        curMemory = 0L;
 
         Object o;
         ParamDesc desc;
@@ -139,6 +169,16 @@ public class DiskBasedTileCache extends Observable implements TileCache {
             }
         } else {
             memCapacity = (Long)desc.defaultValue;
+        }
+
+        desc = paramDescriptors.get(USE_MEMORY_THRESHOLD);
+        o = params.get(desc.key);
+        memThreshold = DEFAULT_MEMORY_THRESHOLD;
+        useThreshold = false;
+        if (o != null) {
+            if (desc.typeOK(o) && (Boolean)o) {
+                useThreshold = true;
+            }
         }
 
         desc = paramDescriptors.get(MAKE_NEW_TILES_RESIDENT);
@@ -282,8 +322,22 @@ public class DiskBasedTileCache extends Observable implements TileCache {
         tiles.clear();
     }
 
+    /**
+     * Free memory for resident tiles so that the fraction of memory occupied is
+     * no more than the current value of the mamory threshold. Does nothing if
+     * memory thresholding has not been enabled.
+     *
+     * @see DiskBasedTileCache#USE_MEMORY_THRESHOLD
+     * @see DiskBasedTileCache#setMemoryThreshold(float)
+     * @see DiskBasedTileCache#getMemoryThreshold() 
+     */
     public void memoryControl() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (useThreshold) {
+            long toFree = (long) (curMemory - memThreshold * memCapacity);
+            if (toFree > 0) {
+                freeMemory( toFree );
+            }
+        }
     }
 
     /**
@@ -317,12 +371,34 @@ public class DiskBasedTileCache extends Observable implements TileCache {
         return memCapacity;
     }
 
+    /**
+     * Sets the memoryThreshold value to a floating point number that ranges from
+     * 0.0 to 1.0. When the cache memory is full, the memory usage will be reduced
+     * to this fraction of the total cache memory capacity. For example, a value
+     * of .75 will cause 25% of the memory to be cleared, while retaining 75%.
+     * <p>
+     * Memory thresholding is only used if the parameter {@linkplain #USE_MEMORY_THRESHOLD}
+     * was passed to the cache constructor with a value of <code>Boolean.TRUE</code>.
+     * Otherwise, the default strategy is to free the minimum amount of memory for
+     * resident tiles sufficient to add the next tile.
+     *
+     * @param memoryThreshold Retained fraction of memory
+     * @throws IllegalArgumentException if the memoryThreshold is less than 0.0 or greater than 1.0
+     */
     public void setMemoryThreshold(float memoryThreshold) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        memThreshold = memoryThreshold;
     }
 
+    /**
+     * Returns the memory threshold, which is the fractional amount of cache memory
+     * to retain during tile removal. This only applies if memory thresholding has
+     * been enabled by passing the parameter {@linkplain #USE_MEMORY_THRESHOLD} to
+     * the constructor with a value of <code>Boolean.TRUE</code>.
+     *
+     * @return the retained fraction of memory
+     */
     public float getMemoryThreshold() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return memThreshold;
     }
 
     public void setTileComparator(Comparator comparator) {
@@ -338,11 +414,16 @@ public class DiskBasedTileCache extends Observable implements TileCache {
      */
     private boolean makeResident(DiskCachedTile tile, Raster data, ResidencyHint hint) {
         if (hint == ResidencyHint.NO_SWAP &&
-                tile.getTileSize() > memCapacity - curSize) {
+                tile.getTileSize() > memCapacity - curMemory) {
             return false;
         }
 
-        freeMemory( tile.getTileSize() );
+        if (useThreshold) {
+            memoryControl();
+        } else {
+            freeMemory( tile.getTileSize() );
+        }
+        
         residentTiles.put(tile.getTileId(), new SoftReference<Raster>(data));
         return true;
     }
@@ -359,7 +440,7 @@ public class DiskBasedTileCache extends Observable implements TileCache {
             throw new RuntimeException("space required is greater than cache memory capacity");
         }
 
-        while (memCapacity - curSize < memRequired) {
+        while (memCapacity - curMemory < memRequired) {
             removeNextTile();
         }
     }
