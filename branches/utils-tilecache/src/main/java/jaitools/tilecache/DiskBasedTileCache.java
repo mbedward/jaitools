@@ -255,7 +255,7 @@ public class DiskBasedTileCache extends Observable implements TileCache {
         // to the memory store
         DiskCachedTile tile = tiles.get(key);
         if (tile != null) {
-            r = tile.getTile();
+            r = tile.readData();
             makeResident(tile, r, ResidencyHint.FORCE);
         }
 
@@ -425,6 +425,9 @@ public class DiskBasedTileCache extends Observable implements TileCache {
         }
         
         residentTiles.put(tile.getTileId(), new SoftReference<Raster>(data));
+        setChanged();
+        tile.setAction(DiskCachedTile.ACTION_RESIDENT);
+        notifyObservers(tile);
         return true;
     }
 

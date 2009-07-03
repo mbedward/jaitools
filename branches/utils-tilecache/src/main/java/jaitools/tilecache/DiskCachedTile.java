@@ -20,12 +20,23 @@
 
 package jaitools.tilecache;
 
+import java.awt.Point;
 import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferByte;
+import java.awt.image.DataBufferDouble;
+import java.awt.image.DataBufferFloat;
+import java.awt.image.DataBufferInt;
+import java.awt.image.DataBufferShort;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
+import java.awt.image.WritableRaster;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.imageio.stream.FileImageInputStream;
 import javax.media.jai.CachedTile;
 
 /**
@@ -83,6 +94,8 @@ final class DiskCachedTile implements CachedTile {
     private long timeStamp;
     private long memorySize;
     private File file;
+    private Point location;
+    private boolean isWritable;
 
     private int action = 0;
 
@@ -115,6 +128,8 @@ final class DiskCachedTile implements CachedTile {
         this.tileX = tileX;
         this.tileY = tileY;
         this.tileCacheMetric = tileCacheMetric;
+        this.location = tile.getBounds().getLocation();
+        this.isWritable = (tile instanceof WritableRaster);
 
         DataBuffer db = tile.getDataBuffer();
         memorySize = DataBuffer.getDataTypeSize(db.getDataType()) / 8L *
@@ -219,10 +234,95 @@ final class DiskCachedTile implements CachedTile {
     }
 
     /**
+     * Package-private method that reads data for the raster associated with this tile
+     * from disk
+     *
+     * @return a new instance of Raster or WritableRaster
+     */
+    Raster readData() {
+        FileImageInputStream strm = null;
+        DataBuffer dataBuf = null;
+        RenderedImage img = owner.get();
+        Raster raster = null;
+
+        if (img != null) {
+            try {
+                strm = new FileImageInputStream(file);
+                int len = img.getSampleModel().getNumDataElements();
+
+                switch (img.getSampleModel().getDataType()) {
+                    case DataBuffer.TYPE_BYTE: {
+                        byte[] tileData = new byte[len];
+                        strm.readFully(tileData, 0, len);
+                        dataBuf = new DataBufferByte(tileData, len);
+                    }
+                    break;
+
+                    case DataBuffer.TYPE_DOUBLE: {
+                        double[] tileData = new double[len];
+                        strm.readFully(tileData, 0, len);
+                        dataBuf = new DataBufferDouble(tileData, len);
+                    }
+                    break;
+
+                    case DataBuffer.TYPE_FLOAT: {
+                        float[] tileData = new float[len];
+                        strm.readFully(tileData, 0, len);
+                        dataBuf = new DataBufferFloat(tileData, len);
+                    }
+                    break;
+
+                    case DataBuffer.TYPE_INT: {
+                        int[] tileData = new int[len];
+                        strm.readFully(tileData, 0, len);
+                        dataBuf = new DataBufferInt(tileData, len);
+                    }
+                    break;
+
+                    case DataBuffer.TYPE_SHORT: {
+                        short[] tileData = new short[len];
+                        strm.readFully(tileData, 0, len);
+                        dataBuf = new DataBufferShort(tileData, len);
+                    }
+                    break;
+
+                    case DataBuffer.TYPE_USHORT: {
+                        throw new UnsupportedOperationException("Unsigned short image data not supported yet");
+                    }
+
+                    default:
+                        throw new UnsupportedOperationException("Unsupported image data type");
+                }
+
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(DiskCachedTile.class.getName()).
+                        log(Level.SEVERE, "Failed to read image tile data", ex);
+                return null;
+
+            } catch (IOException ex) {
+                Logger.getLogger(DiskCachedTile.class.getName()).log(Level.SEVERE, "Failed to read image tile data", ex);
+                return null;
+            }
+        }
+
+        if (dataBuf != null) {
+            if (isWritable) {
+                raster = Raster.createWritableRaster(img.getSampleModel(), dataBuf, location);
+            } else {
+                raster = Raster.createRaster(img.getSampleModel(), dataBuf, location);
+            }
+        }
+
+        return raster;
+    }
+
+
+    /**
      * Write data for the raster associated with this tile to
      * disk
      */
     private void writeData() {
         // TODO Write me !
     }
+
 }
