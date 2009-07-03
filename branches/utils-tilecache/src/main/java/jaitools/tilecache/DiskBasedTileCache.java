@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Observable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.media.jai.PlanarImage;
@@ -38,7 +39,7 @@ import javax.media.jai.TileCache;
 /**
  * @author Michael Bedward
  */
-public class DiskBasedTileCache implements TileCache {
+public class DiskBasedTileCache extends Observable implements TileCache {
 
     public static final long DEFAULT_MEMORY_CAPACITY = 64L * 1024L * 1024L;
 
@@ -111,8 +112,6 @@ public class DiskBasedTileCache implements TileCache {
 
     // current (approximate) memory used for resident tiles
     private long curSize;
-    private int numTiles;
-    private int numResidentTiles;
     
 
     /**
@@ -128,8 +127,6 @@ public class DiskBasedTileCache implements TileCache {
         tiles = new HashMap<Object, DiskCachedTile>();
         residentTiles = new HashMap<Object, SoftReference<Raster>>();
         curSize = 0L;
-        numTiles = 0;
-        numResidentTiles = 0;
 
         Object o;
         ParamDesc desc;
@@ -173,12 +170,20 @@ public class DiskBasedTileCache implements TileCache {
 
         try {
             DiskCachedTile tile = new DiskCachedTile(key, owner, tileX, tileY, data, tileCacheMetric);
+            tiles.put(key, tile);
 
             if (newTilesResident) {
-                makeResident(tile, data, ResidencyHint.NO_SWAP);
+                if (makeResident(tile, data, ResidencyHint.NO_SWAP)) {
+                    tile.setAction(DiskCachedTile.ACTION_ADDED_RESIDENT);
+                } else {
+                    tile.setAction(DiskCachedTile.ACTION_ADDED);
+                }
+            } else {
+                tile.setAction(DiskCachedTile.ACTION_ADDED);
             }
 
-            numTiles++ ;
+            setChanged();
+            this.notifyObservers(tile);
 
         } catch (IOException ex) {
             Logger.getLogger(DiskBasedTileCache.class.getName())
@@ -252,8 +257,29 @@ public class DiskBasedTileCache implements TileCache {
         return r;
     }
 
+    /**
+     * Remove all tiles from the cache: all resident tiles will be
+     * removed from memory and all files for disk-cached tiles will
+     * be discarded.
+     * <p>
+     * The update action of each tile will be set to {@linkplain DiskCachedTile#ACTION_REMOVED}.
+     */
     public void flush() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        /*
+         * @todo is this adequate to ensure garbage collection ?
+         */
+        for (SoftReference<Raster> wref : residentTiles.values()) {
+            wref.clear();
+        }
+        residentTiles.clear();
+
+        for (DiskCachedTile tile : tiles.values()) {
+            tile.getSource().delete();
+            setChanged();
+            tile.setAction(DiskCachedTile.ACTION_REMOVED);
+            notifyObservers(tile);
+        }
+        tiles.clear();
     }
 
     public void memoryControl() {
@@ -279,8 +305,12 @@ public class DiskBasedTileCache implements TileCache {
         return 0;
     }
 
-    public void setMemoryCapacity(long memoryCapacity) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public void setMemoryCapacity(long newCapacity) {
+        if (newCapacity < memCapacity) {
+            freeMemory(memCapacity - newCapacity);
+        }
+
+        memCapacity = newCapacity;
     }
 
     public long getMemoryCapacity() {
@@ -306,23 +336,32 @@ public class DiskBasedTileCache implements TileCache {
     /**
      * Add a raster to those resident in memory
      */
-    private void makeResident(DiskCachedTile tile, Raster data, ResidencyHint hint) {
-
-        if (tile.getTileSize() > memCapacity) {
-            // @todo something better than this...
-            throw new RuntimeException("tile size greater than memory capacity");
-        }
-
+    private boolean makeResident(DiskCachedTile tile, Raster data, ResidencyHint hint) {
         if (hint == ResidencyHint.NO_SWAP &&
                 tile.getTileSize() > memCapacity - curSize) {
-            return;
+            return false;
         }
 
-        while (curSize + tile.getTileSize() > memCapacity) {
+        freeMemory( tile.getTileSize() );
+        residentTiles.put(tile.getTileId(), new SoftReference<Raster>(data));
+        return true;
+    }
+
+    /**
+     * Make the requested amount of memory cache available, removing
+     * resident tiles as necessary
+     * 
+     * @param memRequired memory requested (bytes)
+     */
+    private void freeMemory( long memRequired ) {
+        if (memRequired > memCapacity) {
+            // @todo something better than this...
+            throw new RuntimeException("space required is greater than cache memory capacity");
+        }
+
+        while (memCapacity - curSize < memRequired) {
             removeNextTile();
         }
-
-        residentTiles.put(tile.getTileId(), new SoftReference<Raster>(data));
     }
 
     /**

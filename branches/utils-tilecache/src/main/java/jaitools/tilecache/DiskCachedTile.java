@@ -43,6 +43,38 @@ final class DiskCachedTile implements CachedTile {
     public static final String FILE_PREFIX = "tile";
     public static final String FILE_SUFFIX = ".tmp";
 
+    /**
+     * Value that will be returned by {@linkplain #getAction()} when
+     * the tile has been added to the cache
+     */
+    public static final int ACTION_ADDED = 1;
+
+    /**
+     * Value that will be returned by {@linkplain #getAction()} when
+     * the tile has been added to the cache and immediately loaded
+     * into memory
+     */
+    public static final int ACTION_ADDED_RESIDENT = 2;
+
+    /**
+     * Value that will be returned by {@linkplain #getAction()} when
+     * the tile becomes resident in memory
+     */
+    public static final int ACTION_RESIDENT = 3;
+
+    /**
+     * Value that will be returned by {@linkplain #getAction()} when
+     * the tile is removed from memory
+     */
+    public static final int ACTION_NON_RESIDENT = 4;
+
+    /**
+     * Value that will be returned by {@linkplain #getAction()} when
+     * the tile is removed from the cache entirely
+     */
+    public static final int ACTION_REMOVED = 5;
+
+    
     private Object id;
     private WeakReference<RenderedImage> owner;
     private int tileX;
@@ -176,6 +208,14 @@ final class DiskCachedTile implements CachedTile {
      */
     public Object getTileId() {
         return id;
+    }
+
+    /**
+     * Package-private method called by the controlling {@linkplain DiskBasedTileCache}
+     * object when the tile is added to, or removed from, the cache.
+     */
+    void setAction( int action ) {
+        this.action = action;
     }
 
     /**
