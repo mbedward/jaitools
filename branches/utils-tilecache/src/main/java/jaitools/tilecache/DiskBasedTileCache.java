@@ -73,7 +73,12 @@ public class DiskBasedTileCache extends Observable implements TileCache {
         }
 
         boolean typeOK (Object value) {
-            return value.getClass().isAssignableFrom(clazz);
+            if (Number.class.isAssignableFrom(clazz)) {
+                return Number.class.isAssignableFrom(value.getClass());
+
+            } else {
+                return clazz.isAssignableFrom(value.getClass());
+            }
         }
     }
 
@@ -107,7 +112,7 @@ public class DiskBasedTileCache extends Observable implements TileCache {
         ParamDesc desc;
         paramDescriptors = new HashMap<String, ParamDesc>();
 
-        desc = new ParamDesc(INITIAL_MEMORY_CAPACITY, Long.class, DEFAULT_MEMORY_CAPACITY);
+        desc = new ParamDesc(INITIAL_MEMORY_CAPACITY, Number.class, DEFAULT_MEMORY_CAPACITY);
         paramDescriptors.put( desc.key, desc );
 
         desc = new ParamDesc(MAKE_NEW_TILES_RESIDENT, Boolean.class, Boolean.TRUE);
@@ -162,33 +167,30 @@ public class DiskBasedTileCache extends Observable implements TileCache {
         ParamDesc desc;
 
         desc= paramDescriptors.get(INITIAL_MEMORY_CAPACITY);
+        memCapacity = (Long)desc.defaultValue;
         o = params.get(desc.key);
         if (o != null) {
             if (desc.typeOK(o)) {
-                memCapacity = (Long)o;
+                memCapacity = ((Number)o).longValue();
             }
-        } else {
-            memCapacity = (Long)desc.defaultValue;
         }
 
         desc = paramDescriptors.get(USE_MEMORY_THRESHOLD);
+        useThreshold = (Boolean)desc.defaultValue;
         o = params.get(desc.key);
-        memThreshold = DEFAULT_MEMORY_THRESHOLD;
-        useThreshold = false;
         if (o != null) {
-            if (desc.typeOK(o) && (Boolean)o) {
-                useThreshold = true;
+            if (desc.typeOK(o)) {
+                useThreshold = (Boolean)o;
             }
         }
 
         desc = paramDescriptors.get(MAKE_NEW_TILES_RESIDENT);
+        newTilesResident = (Boolean)desc.defaultValue;
         o = params.get(desc.key);
         if (o != null) {
             if (desc.typeOK(o)) {
                 newTilesResident = (Boolean)o;
             }
-        } else {
-            newTilesResident = (Boolean)desc.defaultValue;
         }
     }
 
