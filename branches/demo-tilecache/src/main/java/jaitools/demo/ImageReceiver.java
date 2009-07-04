@@ -24,14 +24,15 @@ import java.awt.image.RenderedImage;
 
 /**
  * Interface for classes that request images created by
- * the DemoImageBuilder utility class
+ * the DemoImageProvider utility class
  *
+ * @see DemoImageProvider
  * @author Michael Bedward
  */
 public interface ImageReceiver {
 
     /**
-     * Receive an image created by DemoImageBuilder
+     * Receive an image created by DemoImageProvider
      * @param image the image
      */
     public void receiveImage(RenderedImage image);
