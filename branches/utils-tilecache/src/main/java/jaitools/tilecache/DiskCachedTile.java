@@ -37,6 +37,7 @@ import java.lang.ref.WeakReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.stream.FileImageInputStream;
+import javax.imageio.stream.FileImageOutputStream;
 import javax.media.jai.CachedTile;
 
 /**
@@ -92,6 +93,9 @@ final class DiskCachedTile implements CachedTile {
     private int tileY;
     private Object tileCacheMetric;
     private long timeStamp;
+    private int  numBanks;
+    private int  dataLen;
+    private int[] dataOffsets;
     private long memorySize;
     private File file;
     private Point location;
@@ -115,10 +119,10 @@ final class DiskCachedTile implements CachedTile {
                   RenderedImage owner,
                   int tileX,
                   int tileY,
-                  Raster tile,
+                  Raster raster,
                   Object tileCacheMetric) throws IOException {
 
-        if (owner == null || tile == null || file == null) {
+        if (owner == null || raster == null || file == null) {
             throw new IllegalArgumentException(
                     "All of owner, tile and file args must be non-null");
         }
@@ -128,15 +132,17 @@ final class DiskCachedTile implements CachedTile {
         this.tileX = tileX;
         this.tileY = tileY;
         this.tileCacheMetric = tileCacheMetric;
-        this.location = tile.getBounds().getLocation();
-        this.isWritable = (tile instanceof WritableRaster);
+        this.location = raster.getBounds().getLocation();
+        this.isWritable = (raster instanceof WritableRaster);
 
-        DataBuffer db = tile.getDataBuffer();
-        memorySize = DataBuffer.getDataTypeSize(db.getDataType()) / 8L *
-                     db.getSize() * db.getNumBanks();
+        DataBuffer db = raster.getDataBuffer();
+        numBanks = db.getNumBanks();
+        dataLen = db.getSize();
+        dataOffsets = db.getOffsets();
+        memorySize = DataBuffer.getDataTypeSize(db.getDataType()) / 8L * dataLen * numBanks;
 
         file = createFile(this);
-        writeData();
+        writeData(raster);
     }
 
     /**
@@ -248,41 +254,50 @@ final class DiskCachedTile implements CachedTile {
         if (img != null) {
             try {
                 strm = new FileImageInputStream(file);
-                int len = img.getSampleModel().getNumDataElements();
 
                 switch (img.getSampleModel().getDataType()) {
                     case DataBuffer.TYPE_BYTE: {
-                        byte[] tileData = new byte[len];
-                        strm.readFully(tileData, 0, len);
-                        dataBuf = new DataBufferByte(tileData, len);
+                        byte[][] bankData = new byte[numBanks][dataLen];
+                        for (int i = 0; i < numBanks; i++) {
+                            strm.read(bankData[i], 0, dataLen);
+                        }
+                        dataBuf = new DataBufferByte(bankData, dataLen);
                     }
                     break;
 
                     case DataBuffer.TYPE_DOUBLE: {
-                        double[] tileData = new double[len];
-                        strm.readFully(tileData, 0, len);
-                        dataBuf = new DataBufferDouble(tileData, len);
+                        double[][] bankData = new double[numBanks][dataLen];
+                        for (int i = 0; i < numBanks; i++) {
+                            strm.readFully(bankData[i], 0, dataLen);
+                        }
+                        dataBuf = new DataBufferDouble(bankData, dataLen);
                     }
                     break;
 
                     case DataBuffer.TYPE_FLOAT: {
-                        float[] tileData = new float[len];
-                        strm.readFully(tileData, 0, len);
-                        dataBuf = new DataBufferFloat(tileData, len);
+                        float[][] bankData = new float[numBanks][dataLen];
+                        for (int i = 0; i < numBanks; i++) {
+                            strm.readFully(bankData[i], 0, dataLen);
+                        }
+                        dataBuf = new DataBufferFloat(bankData, dataLen);
                     }
                     break;
 
                     case DataBuffer.TYPE_INT: {
-                        int[] tileData = new int[len];
-                        strm.readFully(tileData, 0, len);
-                        dataBuf = new DataBufferInt(tileData, len);
+                        int[][] bankData = new int[numBanks][dataLen];
+                        for (int i = 0; i < numBanks; i++) {
+                            strm.readFully(bankData[i], 0, dataLen);
+                        }
+                        dataBuf = new DataBufferInt(bankData, dataLen);
                     }
                     break;
 
                     case DataBuffer.TYPE_SHORT: {
-                        short[] tileData = new short[len];
-                        strm.readFully(tileData, 0, len);
-                        dataBuf = new DataBufferShort(tileData, len);
+                        short[][] bankData = new short[numBanks][dataLen];
+                        for (int i = 0; i < numBanks; i++) {
+                            strm.readFully(bankData[i], 0, dataLen);
+                        }
+                        dataBuf = new DataBufferShort(bankData, dataLen);
                     }
                     break;
 
@@ -321,8 +336,80 @@ final class DiskCachedTile implements CachedTile {
      * Write data for the raster associated with this tile to
      * disk
      */
-    private void writeData() {
-        // TODO Write me !
-    }
+    private void writeData(Raster raster) {
+        FileImageOutputStream strm = null;
+        DataBuffer dataBuf = raster.getDataBuffer();
 
+        try {
+            strm = new FileImageOutputStream(file);
+
+            switch (dataBuf.getDataType()) {
+                case DataBuffer.TYPE_BYTE:
+                     {
+                        byte[] bankData = new byte[dataLen];
+                        for (int i = 0; i < numBanks; i++) {
+                            bankData = ((DataBufferByte) dataBuf).getData(i);
+                            strm.write(bankData);
+                        }
+                    }
+                    break;
+
+                case DataBuffer.TYPE_DOUBLE:
+                     {
+                        double[] bankData = new double[dataLen];
+                        for (int i = 0; i < numBanks; i++) {
+                            bankData = ((DataBufferDouble) dataBuf).getData(i);
+                            strm.writeDoubles(bankData, 0, dataLen);
+                        }
+                    }
+                    break;
+
+                case DataBuffer.TYPE_FLOAT:
+                     {
+                        float[] bankData = new float[dataLen];
+                        for (int i = 0; i < numBanks; i++) {
+                            bankData = ((DataBufferFloat) dataBuf).getData(i);
+                            strm.writeFloats(bankData, 0, dataLen);
+                        }
+                    }
+                    break;
+
+                case DataBuffer.TYPE_INT:
+                     {
+                        int[] bankData = new int[dataLen];
+                        for (int i = 0; i < numBanks; i++) {
+                            bankData = ((DataBufferInt) dataBuf).getData(i);
+                            strm.writeInts(bankData, 0, dataLen);
+                        }
+                    }
+                    break;
+
+                case DataBuffer.TYPE_SHORT:
+                     {
+                        short[] bankData = new short[dataLen];
+                        for (int i = 0; i < numBanks; i++) {
+                            bankData = ((DataBufferShort) dataBuf).getData(i);
+                            strm.writeShorts(bankData, 0, dataLen);
+                        }
+                    }
+                    break;
+
+                case DataBuffer.TYPE_USHORT: {
+                    throw new UnsupportedOperationException("Unsigned short image data not supported yet");
+                }
+
+                default:
+                    throw new UnsupportedOperationException("Unsupported image data type");
+            }
+
+            strm.close();
+
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(DiskCachedTile.class.getName()).
+                    log(Level.SEVERE, "Failed to write image tile data", ex);
+
+        } catch (IOException ex) {
+            Logger.getLogger(DiskCachedTile.class.getName()).log(Level.SEVERE, "Failed to write image tile data", ex);
+        }
+    }
 }
