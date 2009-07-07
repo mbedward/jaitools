@@ -21,9 +21,14 @@
 package jaitools.demo.disktilecache;
 
 import jaitools.tilecache.DiskBasedTileCache;
+import java.awt.RenderingHints;
+import java.awt.image.Raster;
 import java.util.HashMap;
 import java.util.Map;
+import javax.media.jai.ImageLayout;
 import javax.media.jai.JAI;
+import javax.media.jai.ParameterBlockJAI;
+import javax.media.jai.RenderedOp;
 
 /**
  * Testing and demonstration of {@linkplain jaitools.tilecache.DiskBasedTileCache}
@@ -32,18 +37,40 @@ import javax.media.jai.JAI;
  */
 public class DiskTileCacheDemo {
 
+    private static final int IMAGE_WIDTH = 256;
+    private static final int IMAGE_HEIGHT = 384;
+    private static final int TILE_WIDTH = 128;
+
     public static void main(String[] args) {
         DiskTileCacheDemo me = new DiskTileCacheDemo();
         me.demo();
     }
 
     private void demo() {
-        Map<String, Object> params = new HashMap<String, Object>();
-        params.put(DiskBasedTileCache.INITIAL_MEMORY_CAPACITY, 100L * 1024 * 1024);
-        params.put(DiskBasedTileCache.MAKE_NEW_TILES_RESIDENT, Boolean.FALSE);
-        params.put(DiskBasedTileCache.USE_MEMORY_THRESHOLD, Boolean.TRUE);
+        Map<String, Object> cacheParams = new HashMap<String, Object>();
+        cacheParams.put(DiskBasedTileCache.INITIAL_MEMORY_CAPACITY, 100L * 1024 * 1024);
+        cacheParams.put(DiskBasedTileCache.MAKE_NEW_TILES_RESIDENT, Boolean.FALSE);
+        cacheParams.put(DiskBasedTileCache.USE_MEMORY_THRESHOLD, Boolean.TRUE);
 
-        DiskBasedTileCache cache = new DiskBasedTileCache(params);
-        JAI.getDefaultInstance().setTileCache(cache);
+        DiskBasedTileCache cache = new DiskBasedTileCache(cacheParams);
+
+        ParameterBlockJAI pb = new ParameterBlockJAI("constant");
+        pb.setParameter("width", (float)IMAGE_WIDTH);
+        pb.setParameter("height", (float)IMAGE_HEIGHT);
+        pb.setParameter("bandValues", new Double[]{0d, 1d, 2d});
+
+        ImageLayout layout = new ImageLayout();
+        layout.setTileWidth(TILE_WIDTH);
+        layout.setTileHeight(TILE_WIDTH);
+
+        Map<RenderingHints.Key, Object> imgParams = new HashMap<RenderingHints.Key, Object>();
+        imgParams.put(JAI.KEY_IMAGE_LAYOUT, layout);
+        imgParams.put(JAI.KEY_TILE_CACHE, cache);
+
+        RenderingHints hints = new RenderingHints(imgParams);
+        RenderedOp op = JAI.create("constant", pb, hints);
+
+        // force computation
+        Raster tile = op.getTile(1, 1);
     }
 }
