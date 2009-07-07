@@ -145,7 +145,6 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
          Integer.class,
          javax.media.jai.ROI.class,
          AffineTransform.class,
-         Boolean.class
         };
 
     private static final Object[] paramDefaults =
@@ -153,7 +152,6 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
          Integer.valueOf(0),
          (ROI) null,
          (AffineTransform) null,
-         Boolean.TRUE
         };
 
     /** Constructor. */
