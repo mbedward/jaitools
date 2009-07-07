@@ -404,11 +404,10 @@ public class DiskBasedTileCache extends Observable implements TileCache {
     }
 
     public void setTileComparator(Comparator comparator) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public Comparator getTileComparator() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return null;
     }
 
     /**
