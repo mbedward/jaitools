@@ -45,10 +45,11 @@ import javax.media.jai.CachedTile;
  * <p>
  * This class does not hold a reference to the associated raster. When an
  * instance is created, the raster is written to disk and may, at the discretion
- * of the controlling {@linkplain DiskBasedTileCache}, also remain resident in
+ * of the controlling DiskMemTileCache, also remain resident in
  * memory.
  *
- * @see DiskBasedTileCache
+ *
+ * @see DiskMemTileCache
  */
 public final class DiskCachedTile implements CachedTile {
 
@@ -85,6 +86,12 @@ public final class DiskCachedTile implements CachedTile {
      * the tile is removed from the cache entirely
      */
     public static final int ACTION_REMOVED = 5;
+
+    /**
+     * Value that will be returned by {@linkplain #getAction()} when
+     * the tile is accessed via the cache
+     */
+    public static final int ACTION_ACCESSED = 6;
 
     
     private Object id;
@@ -128,7 +135,7 @@ public final class DiskCachedTile implements CachedTile {
         }
 
         this.id = id;
-        this.owner = new WeakReference(owner);
+        this.owner = new WeakReference<RenderedImage>(owner);
         this.tileX = tileX;
         this.tileY = tileY;
         this.tileCacheMetric = tileCacheMetric;

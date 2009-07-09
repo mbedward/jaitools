@@ -320,9 +320,9 @@ public class DiskMemTileCache extends Observable implements TileCache {
                 // tile needs to be read from disk
                 r = tile.readData();
                 makeResident(tile, r, ResidencyRule.FORCE);
-                tile.setAction(DiskCachedTile.ACTION_RESIDENT);
             }
 
+            tile.setAction(DiskCachedTile.ACTION_ACCESSED);
             tile.setTileTimeStamp(System.currentTimeMillis());
 
             setChanged();
