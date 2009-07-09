@@ -122,7 +122,7 @@ final class DiskCachedTile implements CachedTile {
                   Raster raster,
                   Object tileCacheMetric) throws IOException {
 
-        if (owner == null || raster == null || file == null) {
+        if (owner == null || raster == null) {
             throw new IllegalArgumentException(
                     "All of owner, tile and file args must be non-null");
         }

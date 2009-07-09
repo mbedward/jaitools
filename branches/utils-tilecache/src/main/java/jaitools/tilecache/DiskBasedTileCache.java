@@ -237,28 +237,38 @@ public class DiskBasedTileCache extends Observable implements TileCache {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    /**
+     * Get the specified tile from the cache, if present. If the tile is
+     * cached but not resident in memory it will be read from the cache's
+     * disk storage and made resident.
+     *
+     * @param owner the image that the tile belongs to
+     * @param tileX the tile column
+     * @param tileY the tile row
+     * @return the requested tile or null if the tile was not cached
+     */
     public Raster getTile(RenderedImage owner, int tileX, int tileY) {
         Raster r = null;
 
-        // is the tile resident ?
         Object key = getTileId(owner, tileX, tileY);
-        if (residentTiles.containsKey(key)) {
-            r = residentTiles.get(key).get();
-            if (r == null) {
-                // tile has been garbage collected
-                residentTiles.remove(key);
 
-            } else {
-                return r;
-            }
-        }
-
-        // tile needs to be loaded from disk and added
-        // to the memory store
         DiskCachedTile tile = tiles.get(key);
         if (tile != null) {
-            r = tile.readData();
-            makeResident(tile, r, ResidencyHint.FORCE);
+
+            // is the tile resident ?
+            if (residentTiles.containsKey(key)) {
+                r = residentTiles.get(key).get();
+                if (r == null) {
+                    // tile has been garbage collected
+                    residentTiles.remove(key);
+                }
+            }
+
+            if (r == null) {
+                // tile needs to be read from disk
+                r = tile.readData();
+                makeResident(tile, r, ResidencyHint.FORCE);
+            }
         }
 
         return r;
