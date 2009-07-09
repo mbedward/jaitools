@@ -10,49 +10,13 @@
     <packaging>jar</packaging>
     <name>ZonalStats operator</name>
     <description>Calculates summary statistics within zones, defined by a zone image, for values in a data image</description>
-    <developers>
-        <developer>
-            <id>michael</id>
-            <name>Michael Bedward</name>
-            <email>michael.bedward@gmail.com</email>
-            <timezone>+10</timezone>
-        </developer>
-    </developers>
-    <build>
-        <resources>
-            <resource>
-                <targetPath>META-INF</targetPath>
-                <directory>src/main/java/META-INF</directory>
-                <includes>
-                    <include>*</include>
-                </includes>
-            </resource>
-            <resource>
-                <targetPath>META-INF/services</targetPath>
-                <directory>src/main/java/META-INF/services</directory>
-                <includes>
-                    <include>*</include>
-                </includes>
-            </resource>
-        </resources>
-    </build>
     <dependencies>
         <dependency>
             <groupId>jaitools</groupId>
             <artifactId>utils</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
-    <repositories>
-        <repository>
-            <id>aussiehq</id>
-            <name>Australian mirror for Ibiblio</name>
-            <url>http://apache.mirror.aussiehq.net.au/</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
     <properties>
         <netbeans.hint.useExternalMaven>true</netbeans.hint.useExternalMaven>
     </properties>
