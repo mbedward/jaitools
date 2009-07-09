@@ -20,44 +20,42 @@
 
 package jaitools.demo.disktilecache;
 
-import jaitools.tilecache.DiskBasedTileCache;
+import jaitools.tilecache.DiskCachedTile;
+import jaitools.tilecache.DiskMemTileCache;
 import java.awt.RenderingHints;
 import java.awt.image.Raster;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
 
 /**
- * Testing and demonstration of {@linkplain jaitools.tilecache.DiskBasedTileCache}
+ * Testing and demonstration of {@linkplain jaitools.tilecache.DiskMemTileCache}
  *
  * @author Michael Bedward
  */
-public class DiskTileCacheDemo {
+public class TileCacheDemo implements Observer {
 
     private static final int IMAGE_WIDTH = 256;
     private static final int IMAGE_HEIGHT = 384;
     private static final int TILE_WIDTH = 128;
 
     public static void main(String[] args) {
-        DiskTileCacheDemo me = new DiskTileCacheDemo();
+        TileCacheDemo me = new TileCacheDemo();
         me.demo();
     }
 
     private void demo() {
         Map<String, Object> cacheParams = new HashMap<String, Object>();
-        cacheParams.put(DiskBasedTileCache.KEY_INITIAL_MEMORY_CAPACITY, 100L * 1024 * 1024);
-        cacheParams.put(DiskBasedTileCache.KEY_NEW_TILES_RESIDENT, DiskBasedTileCache.VALUE_NEW_TILES_RESIDENT_TRY);
-        cacheParams.put(DiskBasedTileCache.KEY_USE_MEMORY_THRESHOLD, Boolean.TRUE);
+        cacheParams.put(DiskMemTileCache.KEY_INITIAL_MEMORY_CAPACITY, 100L * 1024 * 1024);
+        cacheParams.put(DiskMemTileCache.KEY_NEW_TILES_RESIDENT, DiskMemTileCache.VALUE_NEW_TILES_RESIDENT_TRY);
 
-        DiskBasedTileCache cache = new DiskBasedTileCache(cacheParams);
-
-        ParameterBlockJAI pb = new ParameterBlockJAI("constant");
-        pb.setParameter("width", (float)IMAGE_WIDTH);
-        pb.setParameter("height", (float)IMAGE_HEIGHT);
-        pb.setParameter("bandValues", new Double[]{0d, 1d, 2d});
+        DiskMemTileCache cache = new DiskMemTileCache(cacheParams);
+        cache.addObserver(this);
 
         ImageLayout layout = new ImageLayout();
         layout.setTileWidth(TILE_WIDTH);
@@ -68,6 +66,12 @@ public class DiskTileCacheDemo {
         imgParams.put(JAI.KEY_TILE_CACHE, cache);
 
         RenderingHints hints = new RenderingHints(imgParams);
+
+        ParameterBlockJAI pb = new ParameterBlockJAI("constant");
+        pb.setParameter("width", (float)IMAGE_WIDTH);
+        pb.setParameter("height", (float)IMAGE_HEIGHT);
+        pb.setParameter("bandValues", new Double[]{0d, 1d, 2d});
+
         RenderedOp op1 = JAI.create("constant", pb, hints);
 
         pb = new ParameterBlockJAI("MultiplyConst");
@@ -78,5 +82,37 @@ public class DiskTileCacheDemo {
 
         // force computation
         Raster[] tiles = op2.getTiles();
+    }
+
+    public void update(Observable ocache, Object otile) {
+        DiskCachedTile tile = (DiskCachedTile)otile;
+
+        StringBuffer sb = new StringBuffer();
+        sb.append("Tile at ");
+        sb.append(tile.getLocation());
+
+        switch (tile.getAction()) {
+            case DiskCachedTile.ACTION_ADDED:
+                sb.append(" added to cache");
+                break;
+
+            case DiskCachedTile.ACTION_ADDED_RESIDENT:
+                sb.append(" added to cache and placed into memory");
+                break;
+
+            case DiskCachedTile.ACTION_NON_RESIDENT:
+                sb.append(" removed from memory");
+                break;
+
+            case DiskCachedTile.ACTION_REMOVED:
+                sb.append(" removed from the cache");
+                break;
+
+            case DiskCachedTile.ACTION_RESIDENT:
+                sb.append(" loaded into memory");
+                break;
+        }
+
+        System.out.println(sb.toString());
     }
 }

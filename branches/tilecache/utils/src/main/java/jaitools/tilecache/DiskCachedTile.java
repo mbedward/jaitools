@@ -50,7 +50,7 @@ import javax.media.jai.CachedTile;
  *
  * @see DiskBasedTileCache
  */
-final class DiskCachedTile implements CachedTile {
+public final class DiskCachedTile implements CachedTile {
 
     public static final String FILE_PREFIX = "tile";
     public static final String FILE_SUFFIX = ".tmp";
@@ -229,6 +229,14 @@ final class DiskCachedTile implements CachedTile {
      */
     public Object getTileId() {
         return id;
+    }
+
+    /**
+     * Get this tile's location in its parent image
+     * @return a new Point instance for the location
+     */
+    public Point getLocation() {
+        return new Point(location);
     }
 
     /**
