@@ -46,9 +46,9 @@ public class DiskBasedTileCache extends Observable implements TileCache {
     public static final float DEFAULT_MEMORY_THRESHOLD = 0.75F;
 
     /**
-     * Hints used with the {@linkplain #makeResident} method
+     * Rules used with the {@linkplain #makeResident} method
      */
-    private enum ResidencyHint {
+    private enum ResidencyRule {
         /**
          * Only make a tile resident if there is enough free memory
          * without swapping any currently resident tiles to disk
@@ -88,13 +88,39 @@ public class DiskBasedTileCache extends Observable implements TileCache {
      * be resident concurrently. The value must be numeric and will be
      * treated as Long.
      */
-    public static final String INITIAL_MEMORY_CAPACITY = "memcapacity";
+    public static final String KEY_INITIAL_MEMORY_CAPACITY = "memcapacity";
 
     /**
-     * Key for the parameter controlling whether newly added tiles become
-     * resident in memory. The value must be Boolean.
+     * Key for the parameter controlling whether newly added tiles
+     * automatically become resident in memory. The value must be
+     * one of
+     * {@linkplain #VALUE_NEW_TILES_RESIDENT_ALWAYS},
+     * {@linkplain #VALUE_NEW_TILES_RESIDENT_TRY} or
+     * {@linkplain #VALUE_NEW_TILES_RESIDENT_NEVER}
      */
-    public static final String MAKE_NEW_TILES_RESIDENT = "newtilesres";
+    public static final String KEY_NEW_TILES_RESIDENT = "newtilesres";
+
+    /**
+     * Value option for {@linkplain #KEY_NEW_TILES_RESIDENT} indicating
+     * that newly cached tiles should always become resident in memory
+     * even if currently-resident tiles must be swapped out to make
+     * space available.
+     */
+    public static final int VALUE_NEW_TILES_RESIDENT_ALWAYS = 1;
+
+    /**
+     * Value option for {@linkplain #KEY_NEW_TILES_RESIDENT} indicating
+     * that newly cached tiles should become resident in memory only
+     * if there is currently enough space available.
+     * <b>This is the default behaviour</b>.
+     */
+    public static final int VALUE_NEW_TILES_RESIDENT_TRY    = 2;
+
+    /**
+     * Value option for {@linkplain #KEY_NEW_TILES_RESIDENT} indicating
+     * that newly cached tiles do not automatically become resident in memory.
+     */
+    public static final int VALUE_NEW_TILES_RESIDENT_NEVER  = 3;
 
     /**
      * Key for the parameter controlling whether the memory threshold value
@@ -104,7 +130,8 @@ public class DiskBasedTileCache extends Observable implements TileCache {
      * If set to FALSE (the default) new tiles are added to resident space by minimal
      * clearing of currently resident tiles.
      */
-    public static final String USE_MEMORY_THRESHOLD = "memthreshold";
+    public static final String KEY_USE_MEMORY_THRESHOLD = "memthreshold";
+
 
 
     private static Map<String, ParamDesc> paramDescriptors;
@@ -112,13 +139,13 @@ public class DiskBasedTileCache extends Observable implements TileCache {
         ParamDesc desc;
         paramDescriptors = new HashMap<String, ParamDesc>();
 
-        desc = new ParamDesc(INITIAL_MEMORY_CAPACITY, Number.class, DEFAULT_MEMORY_CAPACITY);
+        desc = new ParamDesc(KEY_INITIAL_MEMORY_CAPACITY, Number.class, DEFAULT_MEMORY_CAPACITY);
         paramDescriptors.put( desc.key, desc );
 
-        desc = new ParamDesc(MAKE_NEW_TILES_RESIDENT, Boolean.class, Boolean.TRUE);
+        desc = new ParamDesc(KEY_NEW_TILES_RESIDENT, Integer.class, VALUE_NEW_TILES_RESIDENT_TRY);
         paramDescriptors.put( desc.key, desc );
 
-        desc = new ParamDesc(USE_MEMORY_THRESHOLD, Boolean.class, Boolean.TRUE);
+        desc = new ParamDesc(KEY_USE_MEMORY_THRESHOLD, Boolean.class, Boolean.FALSE);
         paramDescriptors.put( desc.key, desc );
     }
 
@@ -130,7 +157,7 @@ public class DiskBasedTileCache extends Observable implements TileCache {
 
     /*
      * A value between 0.0 and 1.0 that may be used for memory control
-     * if the param USE_MEMORY_THRESHOLD is TRUE.
+     * if the param KEY_USE_MEMORY_THRESHOLD is TRUE.
      */
     private float memThreshold;
 
@@ -140,7 +167,7 @@ public class DiskBasedTileCache extends Observable implements TileCache {
      */
     private boolean useThreshold;
 
-    private boolean newTilesResident;
+    private int newTilesResident;
 
     // map of all tiles whether currently in memory or cached on disk
     private Map<Object, DiskCachedTile> tiles;
@@ -166,7 +193,7 @@ public class DiskBasedTileCache extends Observable implements TileCache {
         Object o;
         ParamDesc desc;
 
-        desc= paramDescriptors.get(INITIAL_MEMORY_CAPACITY);
+        desc= paramDescriptors.get(KEY_INITIAL_MEMORY_CAPACITY);
         memCapacity = (Long)desc.defaultValue;
         o = params.get(desc.key);
         if (o != null) {
@@ -175,7 +202,7 @@ public class DiskBasedTileCache extends Observable implements TileCache {
             }
         }
 
-        desc = paramDescriptors.get(USE_MEMORY_THRESHOLD);
+        desc = paramDescriptors.get(KEY_USE_MEMORY_THRESHOLD);
         useThreshold = (Boolean)desc.defaultValue;
         o = params.get(desc.key);
         if (o != null) {
@@ -184,12 +211,23 @@ public class DiskBasedTileCache extends Observable implements TileCache {
             }
         }
 
-        desc = paramDescriptors.get(MAKE_NEW_TILES_RESIDENT);
-        newTilesResident = (Boolean)desc.defaultValue;
+        desc = paramDescriptors.get(KEY_NEW_TILES_RESIDENT);
+        newTilesResident = (Integer)desc.defaultValue;
         o = params.get(desc.key);
         if (o != null) {
             if (desc.typeOK(o)) {
-                newTilesResident = (Boolean)o;
+                int ival = (Integer)o;
+                switch (ival) {
+                    case VALUE_NEW_TILES_RESIDENT_ALWAYS:
+                    case VALUE_NEW_TILES_RESIDENT_NEVER:
+                    case VALUE_NEW_TILES_RESIDENT_TRY:
+                        newTilesResident = ival;
+                        break;
+
+                    default:
+                        throw new IllegalArgumentException(
+                                "Unrecognized option for cache parameter: KEY_NEW_TILES_RESIDENT");
+                }
             }
         }
     }
@@ -214,12 +252,23 @@ public class DiskBasedTileCache extends Observable implements TileCache {
             DiskCachedTile tile = new DiskCachedTile(key, owner, tileX, tileY, data, tileCacheMetric);
             tiles.put(key, tile);
 
-            if (newTilesResident) {
-                if (makeResident(tile, data, ResidencyHint.NO_SWAP)) {
-                    tile.setAction(DiskCachedTile.ACTION_ADDED_RESIDENT);
-                } else {
-                    tile.setAction(DiskCachedTile.ACTION_ADDED);
-                }
+            boolean resident = false;
+            switch (newTilesResident) {
+                case VALUE_NEW_TILES_RESIDENT_ALWAYS:
+                    resident = makeResident(tile, data, ResidencyRule.FORCE);
+                    break;
+                    
+                case VALUE_NEW_TILES_RESIDENT_TRY:
+                    resident = makeResident(tile, data, ResidencyRule.NO_SWAP);
+                    break;
+                    
+                case VALUE_NEW_TILES_RESIDENT_NEVER:
+                    // do nothing
+                    break;
+            }
+
+            if (resident) {
+                tile.setAction(DiskCachedTile.ACTION_ADDED_RESIDENT);
             } else {
                 tile.setAction(DiskCachedTile.ACTION_ADDED);
             }
@@ -267,7 +316,7 @@ public class DiskBasedTileCache extends Observable implements TileCache {
             if (r == null) {
                 // tile needs to be read from disk
                 r = tile.readData();
-                makeResident(tile, r, ResidencyHint.FORCE);
+                makeResident(tile, r, ResidencyRule.FORCE);
             }
         }
 
@@ -339,7 +388,7 @@ public class DiskBasedTileCache extends Observable implements TileCache {
      * no more than the current value of the mamory threshold. Does nothing if
      * memory thresholding has not been enabled.
      *
-     * @see DiskBasedTileCache#USE_MEMORY_THRESHOLD
+     * @see DiskBasedTileCache#KEY_USE_MEMORY_THRESHOLD
      * @see DiskBasedTileCache#setMemoryThreshold(float)
      * @see DiskBasedTileCache#getMemoryThreshold() 
      */
@@ -389,7 +438,7 @@ public class DiskBasedTileCache extends Observable implements TileCache {
      * to this fraction of the total cache memory capacity. For example, a value
      * of .75 will cause 25% of the memory to be cleared, while retaining 75%.
      * <p>
-     * Memory thresholding is only used if the parameter {@linkplain #USE_MEMORY_THRESHOLD}
+     * Memory thresholding is only used if the parameter {@linkplain #KEY_USE_MEMORY_THRESHOLD}
      * was passed to the cache constructor with a value of <code>Boolean.TRUE</code>.
      * Otherwise, the default strategy is to free the minimum amount of memory for
      * resident tiles sufficient to add the next tile.
@@ -404,7 +453,7 @@ public class DiskBasedTileCache extends Observable implements TileCache {
     /**
      * Returns the memory threshold, which is the fractional amount of cache memory
      * to retain during tile removal. This only applies if memory thresholding has
-     * been enabled by passing the parameter {@linkplain #USE_MEMORY_THRESHOLD} to
+     * been enabled by passing the parameter {@linkplain #KEY_USE_MEMORY_THRESHOLD} to
      * the constructor with a value of <code>Boolean.TRUE</code>.
      *
      * @return the retained fraction of memory
@@ -423,8 +472,8 @@ public class DiskBasedTileCache extends Observable implements TileCache {
     /**
      * Add a raster to those resident in memory
      */
-    private boolean makeResident(DiskCachedTile tile, Raster data, ResidencyHint hint) {
-        if (hint == ResidencyHint.NO_SWAP &&
+    private boolean makeResident(DiskCachedTile tile, Raster data, ResidencyRule hint) {
+        if (hint == ResidencyRule.NO_SWAP &&
                 tile.getTileSize() > memCapacity - curMemory) {
             return false;
         }
@@ -436,9 +485,12 @@ public class DiskBasedTileCache extends Observable implements TileCache {
         }
         
         residentTiles.put(tile.getTileId(), new SoftReference<Raster>(data));
+        curMemory += tile.getTileSize();
+
         setChanged();
         tile.setAction(DiskCachedTile.ACTION_RESIDENT);
         notifyObservers(tile);
+
         return true;
     }
 
@@ -463,7 +515,14 @@ public class DiskBasedTileCache extends Observable implements TileCache {
      * Remove the tile with the lowest residency priority
      */
     private void removeNextTile() {
-        // TODO: WRITE ME
+        // TODO: implement alternative tile priority methods here
+
+        // XXX: dumb method for testing purposes - just remove the
+        // first tile we come to
+        for (Object key : residentTiles.keySet()) {
+            residentTiles.remove(key);
+            return;
+        }
     }
 
     /**
