@@ -48,9 +48,9 @@ public class DiskTileCacheDemo {
 
     private void demo() {
         Map<String, Object> cacheParams = new HashMap<String, Object>();
-        cacheParams.put(DiskBasedTileCache.INITIAL_MEMORY_CAPACITY, 100L * 1024 * 1024);
-        cacheParams.put(DiskBasedTileCache.MAKE_NEW_TILES_RESIDENT, Boolean.FALSE);
-        cacheParams.put(DiskBasedTileCache.USE_MEMORY_THRESHOLD, Boolean.TRUE);
+        cacheParams.put(DiskBasedTileCache.KEY_INITIAL_MEMORY_CAPACITY, 100L * 1024 * 1024);
+        cacheParams.put(DiskBasedTileCache.KEY_NEW_TILES_RESIDENT, DiskBasedTileCache.VALUE_NEW_TILES_RESIDENT_TRY);
+        cacheParams.put(DiskBasedTileCache.KEY_USE_MEMORY_THRESHOLD, Boolean.TRUE);
 
         DiskBasedTileCache cache = new DiskBasedTileCache(cacheParams);
 
@@ -68,9 +68,15 @@ public class DiskTileCacheDemo {
         imgParams.put(JAI.KEY_TILE_CACHE, cache);
 
         RenderingHints hints = new RenderingHints(imgParams);
-        RenderedOp op = JAI.create("constant", pb, hints);
+        RenderedOp op1 = JAI.create("constant", pb, hints);
+
+        pb = new ParameterBlockJAI("MultiplyConst");
+        pb.setSource("source0", op1);
+        pb.setParameter("constants", new double[]{2.0d});
+
+        RenderedOp op2 = JAI.create("MultiplyConst", pb, hints);
 
         // force computation
-        Raster tile = op.getTile(1, 1);
+        Raster[] tiles = op2.getTiles();
     }
 }
