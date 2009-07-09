@@ -240,6 +240,14 @@ final class DiskCachedTile implements CachedTile {
     }
 
     /**
+     * Package-private method called by the controlling {@linkplain DiskBasedTileCache}
+     * object when the tile is accessed
+     */
+    void setTileTimeStamp(long time) {
+        this.timeStamp = time;
+    }
+
+    /**
      * Package-private method that reads data for the raster associated with this tile
      * from disk
      *

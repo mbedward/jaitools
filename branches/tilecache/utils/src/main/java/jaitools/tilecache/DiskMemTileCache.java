@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Observable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -39,7 +40,7 @@ import javax.media.jai.TileCache;
 /**
  * @author Michael Bedward
  */
-public class DiskBasedTileCache extends Observable implements TileCache {
+public class DiskMemTileCache extends Observable implements TileCache {
 
     public static final long DEFAULT_MEMORY_CAPACITY = 64L * 1024L * 1024L;
 
@@ -181,7 +182,7 @@ public class DiskBasedTileCache extends Observable implements TileCache {
      *
      * @param params an optional map of parameters (may be empty or null)
      */
-    public DiskBasedTileCache(Map<String, Object> params) {
+    public DiskMemTileCache(Map<String, Object> params) {
         if (params == null) {
             params = Collections.emptyMap();
         }
@@ -273,11 +274,13 @@ public class DiskBasedTileCache extends Observable implements TileCache {
                 tile.setAction(DiskCachedTile.ACTION_ADDED);
             }
 
+            tile.setTileTimeStamp(System.currentTimeMillis());
+
             setChanged();
             this.notifyObservers(tile);
 
         } catch (IOException ex) {
-            Logger.getLogger(DiskBasedTileCache.class.getName())
+            Logger.getLogger(DiskMemTileCache.class.getName())
                     .log(Level.SEVERE, "Unable to cache this tile on disk", ex);
         }
     }
@@ -318,6 +321,8 @@ public class DiskBasedTileCache extends Observable implements TileCache {
                 r = tile.readData();
                 makeResident(tile, r, ResidencyRule.FORCE);
             }
+
+            tile.setTileTimeStamp(System.currentTimeMillis());
         }
 
         return r;
@@ -388,9 +393,9 @@ public class DiskBasedTileCache extends Observable implements TileCache {
      * no more than the current value of the mamory threshold. Does nothing if
      * memory thresholding has not been enabled.
      *
-     * @see DiskBasedTileCache#KEY_USE_MEMORY_THRESHOLD
-     * @see DiskBasedTileCache#setMemoryThreshold(float)
-     * @see DiskBasedTileCache#getMemoryThreshold() 
+     * @see DiskMemTileCache#KEY_USE_MEMORY_THRESHOLD
+     * @see DiskMemTileCache#setMemoryThreshold(float)
+     * @see DiskMemTileCache#getMemoryThreshold()
      */
     public void memoryControl() {
         if (useThreshold) {
@@ -512,17 +517,31 @@ public class DiskBasedTileCache extends Observable implements TileCache {
     }
 
     /**
-     * Remove the tile with the lowest residency priority
+     * Remove the tile with the lowest residency priority. Presently this
+     * is based on last access time.
+     * @todo add other priority methods based on proximity to recently
+     * accessed tiles
      */
     private void removeNextTile() {
-        // TODO: implement alternative tile priority methods here
+        long earliestTime = 0;
+        Object earliestKey = null;
 
-        // XXX: dumb method for testing purposes - just remove the
-        // first tile we come to
-        for (Object key : residentTiles.keySet()) {
-            residentTiles.remove(key);
-            return;
+        for (Entry<Object, SoftReference<Raster>> e : residentTiles.entrySet()) {
+            Object key = e.getKey();
+            if (earliestKey == null) {
+                earliestKey = key;
+                earliestTime = tiles.get(key).getTileTimeStamp();
+            } else {
+                long time = tiles.get(key).getTileTimeStamp();
+                if (time < earliestTime) {
+                    earliestTime = time;
+                    earliestKey = key;
+                }
+            }
         }
+
+        residentTiles.remove(earliestKey);
+        curMemory -= tiles.get(earliestKey).getTileSize();
     }
 
     /**
