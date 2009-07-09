@@ -320,9 +320,13 @@ public class DiskMemTileCache extends Observable implements TileCache {
                 // tile needs to be read from disk
                 r = tile.readData();
                 makeResident(tile, r, ResidencyRule.FORCE);
+                tile.setAction(DiskCachedTile.ACTION_RESIDENT);
             }
 
             tile.setTileTimeStamp(System.currentTimeMillis());
+
+            setChanged();
+            notifyObservers(tile);
         }
 
         return r;
@@ -477,8 +481,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
     /**
      * Add a raster to those resident in memory
      */
-    private boolean makeResident(DiskCachedTile tile, Raster data, ResidencyRule hint) {
-        if (hint == ResidencyRule.NO_SWAP &&
+    private boolean makeResident(DiskCachedTile tile, Raster data, ResidencyRule rule) {
+        if (rule == ResidencyRule.NO_SWAP &&
                 tile.getTileSize() > memCapacity - curMemory) {
             return false;
         }
@@ -491,10 +495,6 @@ public class DiskMemTileCache extends Observable implements TileCache {
         
         residentTiles.put(tile.getTileId(), new SoftReference<Raster>(data));
         curMemory += tile.getTileSize();
-
-        setChanged();
-        tile.setAction(DiskCachedTile.ACTION_RESIDENT);
-        notifyObservers(tile);
 
         return true;
     }
@@ -542,6 +542,11 @@ public class DiskMemTileCache extends Observable implements TileCache {
 
         residentTiles.remove(earliestKey);
         curMemory -= tiles.get(earliestKey).getTileSize();
+
+        DiskCachedTile tile = tiles.get(earliestKey);
+        tile.setAction(DiskCachedTile.ACTION_NON_RESIDENT);
+        setChanged();
+        notifyObservers(tile);
     }
 
     /**
