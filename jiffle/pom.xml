@@ -12,14 +12,7 @@
     <description>Jiffle is a language and interpreter intended to make it easier to create
         images from mathematical functions.
     </description>
-    <developers>
-        <developer>
-            <id>michael</id>
-            <name>Michael Bedward</name>
-            <email>michael.bedward@gmail.com</email>
-            <timezone>+10</timezone>
-        </developer>
-    </developers>
+
     <build>
         <plugins>
             <plugin>
@@ -40,24 +33,13 @@
         <dependency>
             <groupId>jaitools</groupId>
             <artifactId>utils</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr</artifactId>
-            <version>3.1.3</version>
         </dependency>
     </dependencies>
-    <repositories>
-        <repository>
-            <id>aussiehq</id>
-            <name>Australian mirror for Ibiblio</name>
-            <url>http://apache.mirror.aussiehq.net.au/</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
     <properties>
         <netbeans.hint.useExternalMaven>true</netbeans.hint.useExternalMaven>
     </properties>

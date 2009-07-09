@@ -9,37 +9,11 @@
     <artifactId>kernelstats</artifactId>
     <packaging>jar</packaging>
     <name>KernelStats operator</name>
-    <developers>
-        <developer>
-            <id>michael</id>
-            <name>Michael Bedward</name>
-            <email>michael.bedward@gmail.com</email>
-            <timezone>+10</timezone>
-        </developer>
-    </developers>
-    <build>
-        <resources>
-            <resource>
-                <targetPath>META-INF</targetPath>
-                <directory>src/main/java/META-INF</directory>
-                <includes>
-                    <include>*</include>
-                </includes>
-            </resource>
-            <resource>
-                <targetPath>META-INF/services</targetPath>
-                <directory>src/main/java/META-INF/services</directory>
-                <includes>
-                    <include>*</include>
-                </includes>
-            </resource>
-        </resources>
-    </build>
     <dependencies>
         <dependency>
             <groupId>jaitools</groupId>
             <artifactId>utils</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>
