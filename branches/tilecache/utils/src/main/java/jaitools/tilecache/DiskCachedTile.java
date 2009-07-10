@@ -96,7 +96,7 @@ public final class DiskCachedTile implements CachedTile {
 	    ACTION_ACCESSED(5);
 	    
 	    /** an int associated to this action.*/
-	    private int action;
+	    private final int action;
 	    
 	    /**
 	     * Private constructor to have maximum control over the values we use for this action.
