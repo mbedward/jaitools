@@ -183,6 +183,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
 
     private SortedSet<DiskCachedTile> sortedResidentTiles;
 
+    private boolean diagnosticsEnabled;
+
     /**
      * Constructor.
      *
@@ -193,6 +195,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
             params = Collections.emptyMap();
         }
 
+        diagnosticsEnabled = false;
         tiles = new HashMap<Object, DiskCachedTile>();
         residentTiles = new HashMap<Object, SoftReference<Raster>>();
         curMemory = 0L;
@@ -278,8 +281,10 @@ public class DiskMemTileCache extends Observable implements TileCache {
 
             tile.setTileTimeStamp(System.currentTimeMillis());
 
-            setChanged();
-            this.notifyObservers(tile);
+            if (diagnosticsEnabled) {
+                setChanged();
+                notifyObservers(tile);
+            }
 
         } catch (IOException ex) {
             Logger.getLogger(DiskMemTileCache.class.getName())
@@ -310,8 +315,10 @@ public class DiskMemTileCache extends Observable implements TileCache {
         tile.getFile().delete();
 
         tile.setAction(DiskCachedTile.TileAction.ACTION_REMOVED);
-        setChanged();
-        notifyObservers(tile);
+        if (diagnosticsEnabled) {
+            setChanged();
+            notifyObservers(tile);
+        }
     }
 
     
@@ -343,8 +350,10 @@ public class DiskMemTileCache extends Observable implements TileCache {
                     curMemory -= tile.getTileSize();
 
                     tile.setAction(DiskCachedTile.TileAction.ACTION_NON_RESIDENT);
-                    setChanged();
-                    notifyObservers(tile);
+                    if (diagnosticsEnabled) {
+                        setChanged();
+                        notifyObservers(tile);
+                    }
                 }
             }
 
@@ -357,8 +366,10 @@ public class DiskMemTileCache extends Observable implements TileCache {
             tile.setAction(DiskCachedTile.TileAction.ACTION_ACCESSED);
             tile.setTileTimeStamp(System.currentTimeMillis());
 
-            setChanged();
-            notifyObservers(tile);
+            if (diagnosticsEnabled) {
+                setChanged();
+                notifyObservers(tile);
+            }
         }
 
         return r;
@@ -403,8 +414,10 @@ public class DiskMemTileCache extends Observable implements TileCache {
 
             tile.setTileTimeStamp(System.currentTimeMillis());
             tile.setAction(DiskCachedTile.TileAction.ACTION_ACCESSED);
-            setChanged();
-            notifyObservers(tile);
+            if (diagnosticsEnabled) {
+                setChanged();
+                notifyObservers(tile);
+            }
         }
 
         return rasters;
@@ -480,9 +493,11 @@ public class DiskMemTileCache extends Observable implements TileCache {
         
         for (DiskCachedTile tile : tiles.values()) {
             tile.getFile().delete();
-            setChanged();
             tile.setAction(DiskCachedTile.TileAction.ACTION_REMOVED);
-            notifyObservers(tile);
+            if (diagnosticsEnabled) {
+                setChanged();
+                notifyObservers(tile);
+            }
         }
         tiles.clear();
     }
@@ -510,8 +525,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * @see DiskMemTileCache#setMemoryThreshold(float)
      */
     public synchronized void memoryControl() {
-        long maxMemory = (long)(memThreshold * memCapacity);
-        long toFree = curMemory - maxMemory;
+        long maxUsed = (long)(memThreshold * memCapacity);
+        long toFree = curMemory - maxUsed;
         if (toFree > 0) {
             defaultMemoryControl( toFree );
         }
@@ -538,8 +553,10 @@ public class DiskMemTileCache extends Observable implements TileCache {
             curMemory -= tile.getTileSize();
 
             tile.setAction(DiskCachedTile.TileAction.ACTION_NON_RESIDENT);
-            setChanged();
-            notifyObservers(tile);
+            if (diagnosticsEnabled) {
+                setChanged();
+                notifyObservers(tile);
+            }
         }
     }
 
@@ -598,8 +615,16 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * @param memoryThreshold Retained fraction of memory
      * @throws IllegalArgumentException if the memoryThreshold is less than 0.0 or greater than 1.0
      */
-    public void setMemoryThreshold(float memoryThreshold) {
-        memThreshold = memoryThreshold;
+    public void setMemoryThreshold(float newThreshold) {
+        if (newThreshold < 0.0F) {
+            memThreshold = 0.0F;
+        } else if (newThreshold > 1.0F) {
+            memThreshold = 1.0F;
+        } else {
+            memThreshold = newThreshold;
+        }
+
+        memoryControl();
     }
 
     /**
@@ -630,8 +655,40 @@ public class DiskMemTileCache extends Observable implements TileCache {
         }
     }
 
+    /**
+     * Get the Comparator currently being used to set priority
+     * for resident tiles
+     * @return reference to the current Comparator
+     */
     public Comparator getTileComparator() {
         return comparator;
+    }
+
+    /**
+     * Get the total number of tiles currently in the cache
+     * @return number of cached tiles
+     */
+    public int getNumTiles() {
+        return tiles.size();
+    }
+
+    /**
+     * Get the number of tiles currently residing in the
+     * cache's memory storage
+     * @return number of memory-resident tiles
+     */
+    public int getNumResidentTiles() {
+        return residentTiles.size();
+    }
+
+    /**
+     * Enable or disable the publishing of cache messages
+     * to Observers
+     *
+     * @param state true to publish diagnostic messages; false to suppress them
+     */
+    public void setDiagnostics(boolean state) {
+        diagnosticsEnabled = state;
     }
 
     /**
@@ -692,8 +749,10 @@ public class DiskMemTileCache extends Observable implements TileCache {
 
         DiskCachedTile tile = tiles.get(earliestKey);
         tile.setAction(DiskCachedTile.TileAction.ACTION_NON_RESIDENT);
-        setChanged();
-        notifyObservers(tile);
+        if (diagnosticsEnabled) {
+            setChanged();
+            notifyObservers(tile);
+        }
     }
 
     /**

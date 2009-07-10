@@ -63,6 +63,7 @@ public class TileCacheDemo implements Observer {
          * so that we are notified about cache actions
          */
         DiskMemTileCache cache = new DiskMemTileCache(cacheParams);
+        cache.setDiagnostics(true);
         cache.addObserver(this);
 
         /*
@@ -100,9 +101,32 @@ public class TileCacheDemo implements Observer {
 
         /*
          * Force computation of the image tiles. This will cause the
-         * cache to be used.
+         * cache to be used. There is only enough memory capacity for
+         * two tiles.
          */
+        System.out.println("Requesting tiles. Cache has only enough memory capacity");
+        System.out.println("for 2 tiles");
+        System.out.println();
+
         Raster[] tiles = op2.getTiles();
+        System.out.println(String.format("%d tiles cached; %d resident in memory",
+                cache.getNumTiles(), cache.getNumResidentTiles()));
+
+        /*
+         * Now we increase memory capacity and repeat the getTiles
+         * request
+         */
+        cache.setMemoryCapacity(5L * 1024 * 1024);
+
+        System.out.println();
+        System.out.println("Repeating the tile request after increasing the");
+        System.out.println("memory capacity of the cache");
+        System.out.println();
+
+        tiles = op2.getTiles();
+
+        System.out.println(String.format("%d tiles cached; %d resident in memory",
+                cache.getNumTiles(), cache.getNumResidentTiles()));
     }
 
     /**
