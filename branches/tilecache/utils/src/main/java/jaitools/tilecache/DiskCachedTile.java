@@ -296,7 +296,7 @@ public final class DiskCachedTile implements CachedTile {
      * Get the file used to cache this tile on disk.
      * @todo Perhaps we should be using a URL ?
      */
-    public File getSource() {
+    public File getFile() {
         return file;
     }
 

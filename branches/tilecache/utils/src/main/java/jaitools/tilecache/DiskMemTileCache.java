@@ -26,9 +26,11 @@ import java.awt.image.RenderedImage;
 import java.io.IOException;
 import java.lang.ref.SoftReference;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Observable;
@@ -285,10 +287,34 @@ public class DiskMemTileCache extends Observable implements TileCache {
         }
     }
 
+    /**
+     * Remove the specifed tile from the cache
+     * @param owner the image that this tile belongs to
+     * @param tileX the tile column
+     * @param tileY the tile row
+     */
     public synchronized void remove(RenderedImage owner, int tileX, int tileY) {
-        throw new UnsupportedOperationException("Not supported yet.");
+
+        Object key = getTileId(owner, tileX, tileY);
+        DiskCachedTile tile = tiles.get(key);
+
+        if (tile != null) {
+            if (residentTiles.containsKey(key)) {
+                residentTiles.remove(key);
+                sortedResidentTiles.remove(tile);
+                curMemory -= tile.getTileSize();
+            }
+        }
+
+        tiles.remove(key);
+        tile.getFile().delete();
+
+        tile.setAction(DiskCachedTile.TileAction.ACTION_REMOVED);
+        setChanged();
+        notifyObservers(tile);
     }
 
+    
     /**
      * Get the specified tile from the cache, if present. If the tile is
      * cached but not resident in memory it will be read from the cache's
@@ -338,12 +364,62 @@ public class DiskMemTileCache extends Observable implements TileCache {
         return r;
     }
 
+    /**
+     * Get all cached tiles associated with the specified image.
+     * The tiles will be loaded into memory as space allows.
+     * 
+     * @param owner the image for which tiles are requested
+     * @return an array of tile Rasters
+     */
     public synchronized Raster[] getTiles(RenderedImage owner) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int minX = owner.getMinTileX();
+        int minY = owner.getMinTileY();
+        int numX = owner.getNumXTiles();
+        int numY = owner.getNumYTiles();
+        
+        List<Object> keys = new ArrayList<Object>();
+        for (int y = minY, ny=0; ny < numY; y++, ny++) {
+            for (int x = minX, nx = 0; nx < numX; x++, nx++) {
+                Object key = getTileId(owner, x, y);
+                if (tiles.containsKey(key)) keys.add(key);
+            }
+        }
+
+        Raster[] rasters = new Raster[keys.size()];
+        int k = 0;
+        for (Object key : keys) {
+            DiskCachedTile tile = tiles.get(key);
+            Raster r = null;
+            if (residentTiles.containsKey(tile)) {
+                r = residentTiles.get(tile).get();
+            }
+
+            if (r == null) {
+                r = tile.readData();
+                makeResident(tile, r, ResidencyRule.FORCE);
+            }
+
+            rasters[k++] = r;
+
+            tile.setTileTimeStamp(System.currentTimeMillis());
+            tile.setAction(DiskCachedTile.TileAction.ACTION_ACCESSED);
+            setChanged();
+            notifyObservers(tile);
+        }
+
+        return rasters;
     }
 
+    /**
+     * Remove all tiles that belong to the specified image from the cache
+     * @param owner the image owning the tiles to be removed
+     */
     public void removeTiles(RenderedImage owner) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        for (int y = owner.getMinTileY(), ny=0; ny < owner.getNumYTiles(); y++, ny++) {
+            for (int x = owner.getMinTileX(), nx=0; nx < owner.getNumXTiles(); x++, nx++) {
+                remove(owner, x, y);
+            }
+        }
     }
 
     /**
@@ -403,7 +479,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
         flushMemory();
         
         for (DiskCachedTile tile : tiles.values()) {
-            tile.getSource().delete();
+            tile.getFile().delete();
             setChanged();
             tile.setAction(DiskCachedTile.TileAction.ACTION_REMOVED);
             notifyObservers(tile);
@@ -456,9 +532,11 @@ public class DiskMemTileCache extends Observable implements TileCache {
         while (memCapacity - curMemory < memRequired) {
             Object oldestKey = sortedResidentTiles.last().getTileId();
             residentTiles.remove(oldestKey);
-            curMemory -= tiles.get(oldestKey).getTileSize();
 
             DiskCachedTile tile = tiles.get(oldestKey);
+            sortedResidentTiles.remove(tile);
+            curMemory -= tile.getTileSize();
+
             tile.setAction(DiskCachedTile.TileAction.ACTION_NON_RESIDENT);
             setChanged();
             notifyObservers(tile);
