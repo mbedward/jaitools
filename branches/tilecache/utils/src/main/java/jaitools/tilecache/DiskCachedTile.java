@@ -64,38 +64,45 @@ public final class DiskCachedTile implements CachedTile {
 	     * Value that will be returned by {@linkplain #getAction()} when
 	     * the tile has been added to the cache
 	     */
-	    ACTION_ADDED(0),
+	    ACTION_ADDED(0, "added to cache"),
 
 	    /**
 	     * Value that will be returned by {@linkplain #getAction()} when
 	     * the tile has been added to the cache and immediately loaded
 	     * into memory
 	     */
-	    ACTION_ADDED_RESIDENT(1),
+	    ACTION_ADDED_RESIDENT(1, "added to cache and placed into memory"),
 
 	    /**
 	     * Value that will be returned by {@linkplain #getAction()} when
 	     * the tile becomes resident in memory
 	     */
-	    ACTION_RESIDENT(2),
+	    ACTION_RESIDENT(2, "placed into memory"),
 
 	    /**
 	     * Value that will be returned by {@linkplain #getAction()} when
 	     * the tile is removed from memory
 	     */
-	    ACTION_NON_RESIDENT(3),
+	    ACTION_NON_RESIDENT(3, "removed from memory"),
 
 	    /**
 	     * Value that will be returned by {@linkplain #getAction()} when
 	     * the tile is removed from the cache entirely
 	     */
-	    ACTION_REMOVED(4),
+	    ACTION_REMOVED(4, "removed from the cache"),
 
 	    /**
 	     * Value that will be returned by {@linkplain #getAction()} when
 	     * the tile is accessed via the cache
 	     */
-	    ACTION_ACCESSED(5);
+	    ACTION_ACCESSED(5, "accessed"),
+
+        /**
+         * Value that will be returned by {@linkplain #getAction()} when
+         * the tile's raster has been garbage collected
+         */
+        ACTION_GARBAGE_COLLECTED(6, "garbage collected");
+
 
         /**
          * Map for the reverse lookup facility
@@ -108,15 +115,19 @@ public final class DiskCachedTile implements CachedTile {
             }
         }
 	    
-	    /** an int associated to this action.*/
+	    /** An int associated to this action.*/
 	    private final int action;
+
+        /** Description of the action. */
+        private final String desc;
 	    
 	    /**
 	     * Private constructor to have maximum control over the values we use for this action.
 	     * @param action an int associated to this action for interoperability with {@link CachedTile} interface.
 	     */
-		private TileAction(final int action){
-	    	this.action=action;
+		private TileAction(final int action, final String desc){
+	    	this.action = action;
+            this.desc = desc;
 	    }
 	    
 		/**
@@ -126,6 +137,14 @@ public final class DiskCachedTile implements CachedTile {
 	    public int getAction(){
 	    	return action;
 	    }
+
+        /**
+         * Retrieves a description of this action
+         * @return a description of this action
+         */
+        public String getDescription() {
+            return desc;
+        }
 
         /**
          * Reverse lookup.
@@ -148,13 +167,6 @@ public final class DiskCachedTile implements CachedTile {
     public static final String FILE_PREFIX = "tile";
     public static final String FILE_SUFFIX = ".tmp";
 
-    /**
-     * Value that will be returned by {@linkplain #getAction()} when
-     * the tile's raster has been garbage collected
-     */
-    public static final int ACTION_GARBAGE_COLLECTED = 7;
-
-    
     private Object id;
     private WeakReference<RenderedImage> owner;
     private int tileX;

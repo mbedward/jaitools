@@ -114,28 +114,10 @@ public class TileCacheDemo implements Observer {
         StringBuffer sb = new StringBuffer();
         sb.append("Tile at ");
         sb.append(tile.getLocation());
+        sb.append(" ");
 
-        switch (DiskCachedTile.TileAction.get(tile.getAction())) {
-            case ACTION_ADDED:
-                sb.append(" added to cache");
-                break;
-
-            case ACTION_ADDED_RESIDENT:
-                sb.append(" added to cache and placed into memory");
-                break;
-
-            case ACTION_NON_RESIDENT:
-                sb.append(" removed from memory");
-                break;
-
-            case ACTION_REMOVED:
-                sb.append(" removed from the cache");
-                break;
-
-            case ACTION_RESIDENT:
-                sb.append(" loaded into memory");
-                break;
-        }
+        int actionValue = tile.getAction();
+        sb.append(DiskCachedTile.TileAction.get(actionValue).getDescription());
 
         System.out.println(sb.toString());
     }

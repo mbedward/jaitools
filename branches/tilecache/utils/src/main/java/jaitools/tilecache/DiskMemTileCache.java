@@ -42,7 +42,18 @@ import javax.media.jai.PlanarImage;
 import javax.media.jai.TileCache;
 
 /**
+ * This class implements JAI {@linkplain javax.media.jai.TileCache}. It stores
+ * cached tiles on disk to allow applications to work with very large volumes of
+ * tiled image data without being limited by available memory.
+ * <p>
+ * The cache can also provide memory storage for a subset of tiles to avoid
+ * excessive disk activity when the same tiles are being repeatedly accessed.
+ *
  * @author Michael Bedward
+ * @author Simone Giannecchini, GeoSolutions SAS
+ *
+ * @see DiskCachedTile
+ * @see TileAccessTimeComparator
  */
 public class DiskMemTileCache extends Observable implements TileCache {
 
