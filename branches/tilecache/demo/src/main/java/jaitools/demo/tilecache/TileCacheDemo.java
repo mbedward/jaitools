@@ -56,7 +56,7 @@ public class TileCacheDemo implements Observer {
          */
         Map<String, Object> cacheParams = new HashMap<String, Object>();
         cacheParams.put(DiskMemTileCache.KEY_INITIAL_MEMORY_CAPACITY, 1L * 1024 * 1024);
-        cacheParams.put(DiskMemTileCache.KEY_NEW_TILES_RESIDENT, DiskMemTileCache.VALUE_NEW_TILES_RESIDENT_TRY);
+        cacheParams.put(DiskMemTileCache.KEY_NEW_TILES_RESIDENT, DiskMemTileCache.VALUE_NEW_TILES_RESIDENT_ALWAYS);
 
         /*
          * Create a new instance of DiskMemTileCache and add this as an observer
@@ -115,24 +115,24 @@ public class TileCacheDemo implements Observer {
         sb.append("Tile at ");
         sb.append(tile.getLocation());
 
-        switch (tile.getAction()) {
-            case DiskCachedTile.ACTION_ADDED:
+        switch (DiskCachedTile.TileAction.get(tile.getAction())) {
+            case ACTION_ADDED:
                 sb.append(" added to cache");
                 break;
 
-            case DiskCachedTile.ACTION_ADDED_RESIDENT:
+            case ACTION_ADDED_RESIDENT:
                 sb.append(" added to cache and placed into memory");
                 break;
 
-            case DiskCachedTile.ACTION_NON_RESIDENT:
+            case ACTION_NON_RESIDENT:
                 sb.append(" removed from memory");
                 break;
 
-            case DiskCachedTile.ACTION_REMOVED:
+            case ACTION_REMOVED:
                 sb.append(" removed from the cache");
                 break;
 
-            case DiskCachedTile.ACTION_RESIDENT:
+            case ACTION_RESIDENT:
                 sb.append(" loaded into memory");
                 break;
         }

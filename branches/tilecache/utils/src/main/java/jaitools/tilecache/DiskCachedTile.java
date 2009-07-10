@@ -34,11 +34,13 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
-import javax.imageio.stream.FileImageOutputStream;
 import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.ImageOutputStream;
 import javax.media.jai.CachedTile;
@@ -94,6 +96,17 @@ public final class DiskCachedTile implements CachedTile {
 	     * the tile is accessed via the cache
 	     */
 	    ACTION_ACCESSED(5);
+
+        /**
+         * Map for the reverse lookup facility
+         */
+        private static Map<Integer, TileAction> lookup;
+        static {
+            lookup = new HashMap<Integer, TileAction>();
+            for (TileAction t : EnumSet.allOf(TileAction.class)) {
+                lookup.put(t.getAction(), t);
+            }
+        }
 	    
 	    /** an int associated to this action.*/
 	    private final int action;
@@ -113,6 +126,15 @@ public final class DiskCachedTile implements CachedTile {
 	    public int getAction(){
 	    	return action;
 	    }
+
+        /**
+         * Reverse lookup.
+         * @param actionValue int value associated with an action
+         * @return the corresponding TileAction
+         */
+        public static TileAction get(int value) {
+            return lookup.get(value);
+        }
 	    
 	    /**
 	     * The default action.
@@ -125,6 +147,12 @@ public final class DiskCachedTile implements CachedTile {
 
     public static final String FILE_PREFIX = "tile";
     public static final String FILE_SUFFIX = ".tmp";
+
+    /**
+     * Value that will be returned by {@linkplain #getAction()} when
+     * the tile's raster has been garbage collected
+     */
+    public static final int ACTION_GARBAGE_COLLECTED = 7;
 
     
     private Object id;
