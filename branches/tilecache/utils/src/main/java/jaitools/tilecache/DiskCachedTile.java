@@ -36,8 +36,11 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.imageio.stream.FileImageInputStream;
+
+import javax.imageio.ImageIO;
 import javax.imageio.stream.FileImageOutputStream;
+import javax.imageio.stream.ImageInputStream;
+import javax.imageio.stream.ImageOutputStream;
 import javax.media.jai.CachedTile;
 
 /**
@@ -50,48 +53,78 @@ import javax.media.jai.CachedTile;
  *
  *
  * @see DiskMemTileCache
+ * @author Michael Bedward
+ * @author Simone Giannecchini, GeoSolutions SAS
  */
 public final class DiskCachedTile implements CachedTile {
+	public enum TileAction{
+		/**
+	     * Value that will be returned by {@linkplain #getAction()} when
+	     * the tile has been added to the cache
+	     */
+	    ACTION_ADDED(0),
+
+	    /**
+	     * Value that will be returned by {@linkplain #getAction()} when
+	     * the tile has been added to the cache and immediately loaded
+	     * into memory
+	     */
+	    ACTION_ADDED_RESIDENT(1),
+
+	    /**
+	     * Value that will be returned by {@linkplain #getAction()} when
+	     * the tile becomes resident in memory
+	     */
+	    ACTION_RESIDENT(2),
+
+	    /**
+	     * Value that will be returned by {@linkplain #getAction()} when
+	     * the tile is removed from memory
+	     */
+	    ACTION_NON_RESIDENT(3),
+
+	    /**
+	     * Value that will be returned by {@linkplain #getAction()} when
+	     * the tile is removed from the cache entirely
+	     */
+	    ACTION_REMOVED(4),
+
+	    /**
+	     * Value that will be returned by {@linkplain #getAction()} when
+	     * the tile is accessed via the cache
+	     */
+	    ACTION_ACCESSED(5);
+	    
+	    /** an int associated to this action.*/
+	    private int action;
+	    
+	    /**
+	     * Private constructor to have maximum control over the values we use for this action.
+	     * @param action an int associated to this action for interoperability with {@link CachedTile} interface.
+	     */
+		private TileAction(final int action){
+	    	this.action=action;
+	    }
+	    
+		/**
+		 * Retrieves an int associated to this action for interoperability with {@link CachedTile} interface.
+		 * @return an int associated to this action for interoperability with {@link CachedTile} interface.
+		 */
+	    public int getAction(){
+	    	return action;
+	    }
+	    
+	    /**
+	     * The default action.
+	     * @return the default action.
+	     */
+	    public static TileAction getDefault(){
+	    	return ACTION_ACCESSED;
+	    }
+	}
 
     public static final String FILE_PREFIX = "tile";
     public static final String FILE_SUFFIX = ".tmp";
-
-    /**
-     * Value that will be returned by {@linkplain #getAction()} when
-     * the tile has been added to the cache
-     */
-    public static final int ACTION_ADDED = 1;
-
-    /**
-     * Value that will be returned by {@linkplain #getAction()} when
-     * the tile has been added to the cache and immediately loaded
-     * into memory
-     */
-    public static final int ACTION_ADDED_RESIDENT = 2;
-
-    /**
-     * Value that will be returned by {@linkplain #getAction()} when
-     * the tile becomes resident in memory
-     */
-    public static final int ACTION_RESIDENT = 3;
-
-    /**
-     * Value that will be returned by {@linkplain #getAction()} when
-     * the tile is removed from memory
-     */
-    public static final int ACTION_NON_RESIDENT = 4;
-
-    /**
-     * Value that will be returned by {@linkplain #getAction()} when
-     * the tile is removed from the cache entirely
-     */
-    public static final int ACTION_REMOVED = 5;
-
-    /**
-     * Value that will be returned by {@linkplain #getAction()} when
-     * the tile is accessed via the cache
-     */
-    public static final int ACTION_ACCESSED = 6;
 
     
     private Object id;
@@ -102,13 +135,12 @@ public final class DiskCachedTile implements CachedTile {
     private long timeStamp;
     private int  numBanks;
     private int  dataLen;
-    private int[] dataOffsets;
     private long memorySize;
     private File file;
     private Point location;
     private boolean isWritable;
 
-    private int action = 0;
+    private TileAction action =TileAction.getDefault();
 
 
     /**
@@ -145,7 +177,7 @@ public final class DiskCachedTile implements CachedTile {
         DataBuffer db = raster.getDataBuffer();
         numBanks = db.getNumBanks();
         dataLen = db.getSize();
-        dataOffsets = db.getOffsets();
+        db.getOffsets();
         memorySize = DataBuffer.getDataTypeSize(db.getDataType()) / 8L * dataLen * numBanks;
 
         file = createFile(this);
@@ -217,7 +249,7 @@ public final class DiskCachedTile implements CachedTile {
      * Not used at present - returns 0
      */
     public int getAction() {
-        return action;
+        return action.ordinal();
     }
 
     /**
@@ -250,7 +282,7 @@ public final class DiskCachedTile implements CachedTile {
      * Package-private method called by the controlling {@linkplain DiskBasedTileCache}
      * object when the tile is added to, or removed from, the cache.
      */
-    void setAction( int action ) {
+    void setAction( TileAction action ) {
         this.action = action;
     }
 
@@ -269,14 +301,14 @@ public final class DiskCachedTile implements CachedTile {
      * @return a new instance of Raster or WritableRaster
      */
     Raster readData() {
-        FileImageInputStream strm = null;
+        ImageInputStream strm = null;
         DataBuffer dataBuf = null;
         RenderedImage img = owner.get();
         Raster raster = null;
 
         if (img != null) {
             try {
-                strm = new FileImageInputStream(file);
+                strm = ImageIO.createImageInputStream(file);
 
                 switch (img.getSampleModel().getDataType()) {
                     case DataBuffer.TYPE_BYTE: {
@@ -341,6 +373,14 @@ public final class DiskCachedTile implements CachedTile {
                 Logger.getLogger(DiskCachedTile.class.getName()).log(Level.SEVERE, "Failed to read image tile data", ex);
                 return null;
             }
+            finally{
+            	if(strm!=null)
+            		try{
+            			strm.close();
+            		}catch (Throwable e) {
+						// chew me
+					}
+            }
         }
 
         if (dataBuf != null) {
@@ -360,11 +400,11 @@ public final class DiskCachedTile implements CachedTile {
      * disk
      */
     private void writeData(Raster raster) {
-        FileImageOutputStream strm = null;
+        ImageOutputStream strm = null;
         DataBuffer dataBuf = raster.getDataBuffer();
 
         try {
-            strm = new FileImageOutputStream(file);
+            strm = ImageIO.createImageOutputStream(file);
 
             switch (dataBuf.getDataType()) {
                 case DataBuffer.TYPE_BYTE:
@@ -425,7 +465,6 @@ public final class DiskCachedTile implements CachedTile {
                     throw new UnsupportedOperationException("Unsupported image data type");
             }
 
-            strm.close();
 
         } catch (FileNotFoundException ex) {
             Logger.getLogger(DiskCachedTile.class.getName()).
@@ -433,6 +472,14 @@ public final class DiskCachedTile implements CachedTile {
 
         } catch (IOException ex) {
             Logger.getLogger(DiskCachedTile.class.getName()).log(Level.SEVERE, "Failed to write image tile data", ex);
+        }
+        finally{
+        	if(strm!=null)
+        		try{
+        			strm.close();
+        		}catch (Throwable e) {
+					// chew me
+				}
         }
     }
 }

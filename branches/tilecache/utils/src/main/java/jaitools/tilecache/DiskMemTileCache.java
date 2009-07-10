@@ -30,10 +30,11 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Observable;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.media.jai.PlanarImage;
 import javax.media.jai.TileCache;
 
@@ -269,9 +270,9 @@ public class DiskMemTileCache extends Observable implements TileCache {
             }
 
             if (resident) {
-                tile.setAction(DiskCachedTile.ACTION_ADDED_RESIDENT);
+                tile.setAction(DiskCachedTile.TileAction.ACTION_ADDED_RESIDENT);
             } else {
-                tile.setAction(DiskCachedTile.ACTION_ADDED);
+                tile.setAction(DiskCachedTile.TileAction.ACTION_ADDED);
             }
 
             tile.setTileTimeStamp(System.currentTimeMillis());
@@ -322,7 +323,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
                 makeResident(tile, r, ResidencyRule.FORCE);
             }
 
-            tile.setAction(DiskCachedTile.ACTION_ACCESSED);
+            tile.setAction(DiskCachedTile.TileAction.ACTION_ACCESSED);
             tile.setTileTimeStamp(System.currentTimeMillis());
 
             setChanged();
@@ -405,7 +406,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
         for (DiskCachedTile tile : tiles.values()) {
             tile.getSource().delete();
             setChanged();
-            tile.setAction(DiskCachedTile.ACTION_REMOVED);
+            tile.setAction(DiskCachedTile.TileAction.ACTION_REMOVED);
             notifyObservers(tile);
         }
         tiles.clear();
@@ -566,7 +567,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
         curMemory -= tiles.get(earliestKey).getTileSize();
 
         DiskCachedTile tile = tiles.get(earliestKey);
-        tile.setAction(DiskCachedTile.ACTION_NON_RESIDENT);
+        tile.setAction(DiskCachedTile.TileAction.ACTION_NON_RESIDENT);
         setChanged();
         notifyObservers(tile);
     }
