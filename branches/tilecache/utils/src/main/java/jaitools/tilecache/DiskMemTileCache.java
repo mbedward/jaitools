@@ -237,7 +237,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
         add(owner, tileX, tileY, data, null);
     }
 
-    public void add(RenderedImage owner,
+    public synchronized void add(RenderedImage owner,
                 int tileX,
                 int tileY,
                 Raster data,
@@ -285,7 +285,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
         }
     }
 
-    public void remove(RenderedImage owner, int tileX, int tileY) {
+    public synchronized void remove(RenderedImage owner, int tileX, int tileY) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -299,7 +299,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * @param tileY the tile row
      * @return the requested tile or null if the tile was not cached
      */
-    public Raster getTile(RenderedImage owner, int tileX, int tileY) {
+    public synchronized Raster getTile(RenderedImage owner, int tileX, int tileY) {
         Raster r = null;
 
         Object key = getTileId(owner, tileX, tileY);
@@ -332,7 +332,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
         return r;
     }
 
-    public Raster[] getTiles(RenderedImage owner) {
+    public synchronized Raster[] getTiles(RenderedImage owner) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -340,6 +340,16 @@ public class DiskMemTileCache extends Observable implements TileCache {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    /**
+     * This method is not presently declared as synchronized because it simply calls
+     * the <code>addTile</code> method repeatedly.
+     *
+     * @param owner the image that the tiles belong to
+     * @param tileIndices an array of Points specifying the column-row coordinates
+     * of each tile
+     * @param tiles tile data in the form of Raster objects
+     * @param tileCacheMetric optional metric (may be null)
+     */
     public void addTiles(RenderedImage owner,
                      Point[] tileIndices,
                      Raster[] tiles,
@@ -354,6 +364,15 @@ public class DiskMemTileCache extends Observable implements TileCache {
         }
     }
 
+    /**
+     * This method is not presently declared as synchronized because it simply calls
+     * the <code>getTile</code> method repeatedly.
+     *
+     * @param owner the image that the tiles belong to
+     * @param tileIndices an array of Points specifying the column-row coordinates
+     * of each tile
+     * @return data for the requested tiles as Raster objects
+     */
     public Raster[] getTiles(RenderedImage owner, Point[] tileIndices) {
         Raster[] r = null;
 
@@ -374,7 +393,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * <p>
      * The update action of each tile will be set to {@linkplain DiskCachedTile#ACTION_REMOVED}.
      */
-    public void flush() {
+    public synchronized void flush() {
         /*
          * @todo is this adequate to ensure garbage collection ?
          */
@@ -390,6 +409,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
             notifyObservers(tile);
         }
         tiles.clear();
+        curMemory = 0;
     }
 
     /**
@@ -401,7 +421,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * @see DiskMemTileCache#setMemoryThreshold(float)
      * @see DiskMemTileCache#getMemoryThreshold()
      */
-    public void memoryControl() {
+    public synchronized void memoryControl() {
         if (useThreshold) {
             long toFree = (long) (curMemory - memThreshold * memCapacity);
             if (toFree > 0) {
@@ -471,9 +491,11 @@ public class DiskMemTileCache extends Observable implements TileCache {
         return memThreshold;
     }
 
-    public void setTileComparator(Comparator comparator) {
+    // TODO write me !
+    public synchronized void setTileComparator(Comparator comparator) {
     }
 
+    // TODO write me !
     public Comparator getTileComparator() {
         return null;
     }
