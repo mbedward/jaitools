@@ -311,11 +311,27 @@ public final class DiskCachedTile implements CachedTile {
     }
 
     /**
-     * Get this tile's location in its parent image
+     * Get this tile's location in its parent image in pixel coordinates
      * @return a new Point instance for the location
      */
     public Point getLocation() {
         return new Point(location);
+    }
+
+    /**
+     * Return the X location (column) of this tile
+     * @return tile X location
+     */
+    public int getTileX() {
+        return tileX;
+    }
+
+    /**
+     * Return the Y location (row) of this tile
+     * @return tile Y location
+     */
+    public int getTileY() {
+        return tileY;
     }
 
     /**

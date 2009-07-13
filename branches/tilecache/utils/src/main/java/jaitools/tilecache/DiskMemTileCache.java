@@ -368,7 +368,13 @@ public class DiskMemTileCache extends Observable implements TileCache {
             if (r == null) {
                 // tile needs to be read from disk
                 r = tile.readData();
-                makeResident(tile, r, ResidencyRule.FORCE);
+                if (makeResident(tile, r, ResidencyRule.FORCE)) {
+                    tile.setAction(DiskCachedTile.TileAction.ACTION_RESIDENT);
+                    if (diagnosticsEnabled) {
+                        setChanged();
+                        notifyObservers(tile);
+                    }
+                }
             }
 
             tile.setAction(DiskCachedTile.TileAction.ACTION_ACCESSED);
@@ -703,6 +709,10 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * Add a raster to those resident in memory
      */
     private boolean makeResident(DiskCachedTile tile, Raster data, ResidencyRule rule) {
+        if (tile.getTileSize() > memCapacity) {
+            return false;
+        }
+        
         if (rule == ResidencyRule.NO_SWAP &&
                 tile.getTileSize() > memCapacity - curMemory) {
             return false;

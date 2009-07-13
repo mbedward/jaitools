@@ -20,7 +20,11 @@
 
 package jaitools.tilecache;
 
+import jaitools.utils.CollectionFactory;
 import java.awt.RenderingHints;
+import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
@@ -33,7 +37,7 @@ import static org.junit.Assert.*;
 /**
  * @author Michael Bedward
  */
-public class TileCacheTest {
+public class TileCacheTest implements Observer {
 
     private static TileCache origCache;
 
@@ -41,6 +45,9 @@ public class TileCacheTest {
     private static RenderingHints testHints;
 
     private static final float FLOAT_TOL = 0.0001F;
+
+    private List<DiskCachedTile> tiles = CollectionFactory.newList();
+    private List<DiskCachedTile> residentTiles = CollectionFactory.newList();
 
     @Before
     public void beforeTests() {
@@ -89,34 +96,21 @@ public class TileCacheTest {
         DiskMemTileCache cache = (DiskMemTileCache) JAI.getDefaultInstance().getTileCache();
 
         /*
-         * First node in a simple rendering chain: create
-         * a constant image, 3 tiles x 2 tiles
+         * Create a rendering chain for an output image 3 tiles x 2 tiles
          */
-        ParameterBlockJAI pb = new ParameterBlockJAI("Constant");
-        pb.setParameter("bandValues", new Double[]{1.0d, 2.0d});
-        pb.setParameter("width", (float)TILE_WIDTH * 3);
-        pb.setParameter("height", (float)TILE_WIDTH * 2);
-        RenderedOp op1 = JAI.create("constant", pb, testHints);
-
-        /*
-         * Second node: multiply the constant image by a constant
-         */
-        pb = new ParameterBlockJAI("MultiplyConst");
-        pb.setSource("source0", op1);
-        pb.setParameter("constants", new double[]{2.0d, 3.0d});
-        RenderedOp op2 = JAI.create("MultiplyConst", pb, testHints);
+        RenderedOp op = simpleJAIOp(3, 2);
 
         /*
          * Reset the cache's memory capacity for resident tiles so
          * that it is enough for 3 tiles only
          */
-        cache.setMemoryCapacity((long)TILE_WIDTH * TILE_WIDTH * (Double.SIZE / 8) * 3 * 2);
+        cache.setMemoryCapacity((long)TILE_WIDTH * TILE_WIDTH * (Double.SIZE / 8) * 3);
 
         /*
          * Force computation of tiles. This will cause the cache to
          * be used
          */
-        op2.getTiles();
+        op.getTiles();
 
         /*
          * Test that the cache has all tiles but that only 3 are
@@ -136,5 +130,130 @@ public class TileCacheTest {
 
         DiskMemTileCache cache = (DiskMemTileCache) JAI.getDefaultInstance().getTileCache();
         assertTrue(cache.getNumTiles() == 0);
+    }
+
+    /**
+     * Test that the cache is used correctly in a simple JAI operation
+     */
+    @Test
+    public void testMemorySwapping() {
+        System.out.println("   swapping tiles into memory");
+        DiskMemTileCache cache = (DiskMemTileCache) JAI.getDefaultInstance().getTileCache();
+
+        /*
+         * Create a rendering chain for an output image 3 tiles x 2 tiles
+         */
+        RenderedOp op = simpleJAIOp(3, 2);
+
+        /*
+         * Reset the cache's memory capacity for resident tiles so
+         * that it is enough for 3 tiles only
+         */
+        cache.setMemoryCapacity((long)TILE_WIDTH * TILE_WIDTH * (Double.SIZE / 8) * 3);
+
+        /*
+         * Register ourselves as an observer
+         */
+        cache.addObserver(this);
+        cache.setDiagnostics(true);
+
+        /*
+         * Force computation of tiles. This will cause the cache to
+         * be used. The first three tiles will fit into available
+         * cache memory while the remaining three will only be in
+         * the cache's disk storage.
+         */
+        op.getTiles();
+
+        /*
+         * Request the non-resident tiles to force memory swapping
+         */
+        boolean[] resident = new boolean[tiles.size()];
+        int k = 0;
+        for (DiskCachedTile tile : tiles) {
+            resident[k++] = residentTiles.contains(tile);
+        }
+
+        k = 0;
+        for (DiskCachedTile tile : tiles) {
+            if (!resident[k++]) {
+                int x = tile.getTileX ();
+                int y = tile.getTileY();
+                op.getTile(x, y);
+                assertTrue(residentTiles.contains(tile));
+            }
+        }
+
+        cache.deleteObserver(this);
+        cache.setDiagnostics(false);
+    }
+
+    /**
+     * Creates a simple JAI rendering chain for a single band image
+     * that will require use of the cache
+     *
+     * @param numXTiles image width as number of tiles
+     * @param numYTiles image height as number of tiles
+     * @return a new RenderedOp instance
+     */
+    private RenderedOp simpleJAIOp(int numXTiles, int numYTiles) {
+        /*
+         * First node in a simple rendering chain: create
+         * a constant image, 3 tiles x 2 tiles
+         */
+        ParameterBlockJAI pb = new ParameterBlockJAI("Constant");
+        pb.setParameter("bandValues", new Double[]{1.0d});
+        pb.setParameter("width", (float)TILE_WIDTH * numXTiles);
+        pb.setParameter("height", (float)TILE_WIDTH * numYTiles);
+        RenderedOp op1 = JAI.create("constant", pb, testHints);
+
+        /*
+         * Second node: multiply the constant image by a constant
+         */
+        pb = new ParameterBlockJAI("MultiplyConst");
+        pb.setSource("source0", op1);
+        pb.setParameter("constants", new double[]{2.0d});
+        RenderedOp op2 = JAI.create("MultiplyConst", pb, testHints);
+
+        return op2;
+    }
+
+    /**
+     * Observer method to receive cache events
+     * @param ocache the tile cache
+     * @param otile a cached tile
+     */
+    public void update(Observable ocache, Object otile) {
+        DiskCachedTile tile = (DiskCachedTile)otile;
+
+        int actionValue = tile.getAction();
+        switch (DiskCachedTile.TileAction.get(actionValue)) {
+            case ACTION_ACCESSED:
+                break;
+
+            case ACTION_ADDED:
+                tiles.add(tile);
+                break;
+
+            case ACTION_ADDED_RESIDENT:
+                tiles.add(tile);
+                residentTiles.add(tile);
+                break;
+
+            case ACTION_RESIDENT:
+                System.out.println("      tile placed into memory");
+                residentTiles.add(tile);
+                break;
+
+            case ACTION_NON_RESIDENT:
+                System.out.println("      tile removed from memory");
+                residentTiles.remove(tile);
+                break;
+
+            case ACTION_REMOVED:
+                tiles.remove(tile);
+                residentTiles.remove(tile);
+                break;
+        }
     }
 }
