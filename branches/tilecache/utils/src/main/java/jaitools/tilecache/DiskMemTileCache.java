@@ -186,6 +186,14 @@ public class DiskMemTileCache extends Observable implements TileCache {
     private boolean diagnosticsEnabled;
 
     /**
+     * Constructor. Creates an instance of the cache with all parameters set
+     * to their default values. Equivalent to <code>DiskMemTileCache(null)</code>.
+     */
+    public DiskMemTileCache() {
+        this(null);
+    }
+
+    /**
      * Constructor.
      *
      * @param params an optional map of parameters (may be empty or null)
