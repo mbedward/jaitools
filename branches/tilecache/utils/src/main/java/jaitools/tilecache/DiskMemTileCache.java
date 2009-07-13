@@ -23,6 +23,7 @@ package jaitools.tilecache;
 import java.awt.Point;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
+import java.io.File;
 import java.io.IOException;
 import java.lang.ref.SoftReference;
 import java.math.BigInteger;
@@ -307,7 +308,6 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * @param tileY the tile row
      */
     public synchronized void remove(RenderedImage owner, int tileX, int tileY) {
-
         Object key = getTileId(owner, tileX, tileY);
         DiskCachedTile tile = tiles.get(key);
 
@@ -320,7 +320,10 @@ public class DiskMemTileCache extends Observable implements TileCache {
         }
 
         tiles.remove(key);
-        tile.getFile().delete();
+        File f = tile.getFile();
+        if (f != null && f.exists()) {
+            f.delete();
+        }
 
         tile.setAction(DiskCachedTile.TileAction.ACTION_REMOVED);
         if (diagnosticsEnabled) {

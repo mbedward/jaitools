@@ -68,7 +68,7 @@ public class TileCacheTest implements Observer {
      */
     @Test
     public void testJAIHasCache() {
-        System.out.println("   JAI set with DiskMemTileCache");
+        System.out.println("   testing JAI set with DiskMemTileCache");
         TileCache cache = JAI.getDefaultInstance().getTileCache();
         assertTrue(cache instanceof DiskMemTileCache);
     }
@@ -79,7 +79,7 @@ public class TileCacheTest implements Observer {
      */
     @Test
     public void testDefaultParams() {
-        System.out.println("   default params");
+        System.out.println("   testing default cache params");
         TileCache cache = JAI.getDefaultInstance().getTileCache();
 
         assertTrue(cache.getMemoryCapacity() == DiskMemTileCache.DEFAULT_MEMORY_CAPACITY);
@@ -92,7 +92,7 @@ public class TileCacheTest implements Observer {
      */
     @Test
     public void testCacheUsed() {
-        System.out.println("   cache use in simple op");
+        System.out.println("   testing cache use in simple op");
         DiskMemTileCache cache = (DiskMemTileCache) JAI.getDefaultInstance().getTileCache();
 
         /*
@@ -126,18 +126,18 @@ public class TileCacheTest implements Observer {
      * previous test is no longer in scope
      */
     public void testCacheEmptied() {
-        System.out.println("   cache emptied correctly");
+        System.out.println("   testing cache emptied correctly");
 
         DiskMemTileCache cache = (DiskMemTileCache) JAI.getDefaultInstance().getTileCache();
         assertTrue(cache.getNumTiles() == 0);
     }
 
     /**
-     * Test that the cache is used correctly in a simple JAI operation
+     * Test the caches ability to swap tiles in and out of limited memory
      */
     @Test
     public void testMemorySwapping() {
-        System.out.println("   swapping tiles into memory");
+        System.out.println("   testing swapping tiles into memory");
         DiskMemTileCache cache = (DiskMemTileCache) JAI.getDefaultInstance().getTileCache();
 
         /*
@@ -187,6 +187,81 @@ public class TileCacheTest implements Observer {
         cache.deleteObserver(this);
         cache.setDiagnostics(false);
     }
+
+    /**
+     * Test removing tiles for a given image
+     */
+    @Test
+    public void removeTilesForImage() {
+        System.out.println("   testing removal of tiles for an image");
+        DiskMemTileCache cache = (DiskMemTileCache) JAI.getDefaultInstance().getTileCache();
+        cache.setMemoryCapacity(DiskMemTileCache.DEFAULT_MEMORY_CAPACITY);
+
+        /*
+         * Register ourselves as an observer
+         */
+        cache.addObserver(this);
+        cache.setDiagnostics(true);
+
+        System.out.println("tiles list has " + tiles.size() + " tiles");
+
+        /*
+         * Create an image and use getTiles to force the tiles to be cached
+         */
+        RenderedOp op1 = simpleJAIOp(2, 2);
+        op1.getTiles();
+
+        /*
+         * Repeat for a second image
+         */
+        RenderedOp op2 = simpleJAIOp(2, 2);
+        op2.getTiles();
+
+        System.out.println("tiles list has " + tiles.size() + " tiles");
+
+        /*
+         * Test removal of tiles for the first image
+         */
+        cache.removeTiles(op1.getCurrentRendering());
+        System.out.println("tiles list has " + tiles.size() + " tiles");
+
+        /*
+         * Check that only tiles for the second image remain
+         */
+        assert(cache.getNumTiles() == 4);
+        for (DiskCachedTile tile : tiles) {
+            assertTrue(tile.getOwner() == op2.getCurrentRendering());
+        }
+
+        cache.deleteObserver(this);
+        cache.setDiagnostics(false);
+    }
+
+    /**
+     * Test flushing the cache
+     */
+    @Test
+    public void testFlush() {
+        System.out.println("   testing cache flush and flushMemory");
+        DiskMemTileCache cache = (DiskMemTileCache) JAI.getDefaultInstance().getTileCache();
+        cache.setMemoryCapacity(DiskMemTileCache.DEFAULT_MEMORY_CAPACITY);
+
+        /*
+         * Create an image and use getTiles to force the tiles to be cached
+         */
+        RenderedOp op = simpleJAIOp(2, 2);
+        op.getTiles();
+
+        assertTrue(cache.getNumTiles() == 4);
+
+        cache.flushMemory();
+        assertTrue(cache.getNumTiles() == 4);
+        assertTrue(cache.getNumResidentTiles() == 0);
+
+        cache.flush();
+        assertTrue(cache.getNumTiles() == 0);
+    }
+
 
     /**
      * Creates a simple JAI rendering chain for a single band image
@@ -241,12 +316,10 @@ public class TileCacheTest implements Observer {
                 break;
 
             case ACTION_RESIDENT:
-                System.out.println("      tile placed into memory");
                 residentTiles.add(tile);
                 break;
 
             case ACTION_NON_RESIDENT:
-                System.out.println("      tile removed from memory");
                 residentTiles.remove(tile);
                 break;
 
