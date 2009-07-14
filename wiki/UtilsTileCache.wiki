@@ -6,15 +6,15 @@
 
 ==Description==
 
-JAI operations can use a cache class to store image tiles. The default Sun reference implementation of TileCache stores all tiles in memory. The DiskMemTileCache class uses both disk and memory storage to allow operations to work with large volumes of image data without being constrained by available memory.
+JAI operations can use a cache class to store image tiles. The default Sun reference implementation of `TileCache` stores all tiles in memory. The !DiskMemTileCache class uses both disk and memory storage to allow operations to work with large volumes of image data without being constrained by available memory.
 
 When an image tile is added to the cache it's data are written to a temporary file. Depending on cache settings, the tile's data may also be immediately placed into memory. When a tile is requested from the cache, by a JAI OpImage or other client code, the cache checks to see if the tile is already resident in memory and, if not, it is loaded into memory before passing its data to the caller. Thus excessive disk activity is avoided when a tile is accessed multiple times in quick succession.
 
-If the cache does not have enough free memory to store a tile that is to be made resident, space is made available by removing other, currently resident tiles that have the lowest priority. By default, tiles are ranked in priority from the most recently accessed (highest) to least recently accessed (lowest). This is implemented by jaitools.tilecache.TileAccessTimeComparator. Users can implement other priority schemes by providing a class implenting Comparator<CachedTile>.
+If the cache does not have enough free memory to store a tile that is to be made resident, space is made available by removing other, currently resident tiles that have the lowest priority. By default, tiles are ranked in priority from the most recently accessed (highest) to least recently accessed (lowest). This is implemented by `jaitools.tilecache.TileAccessTimeComparator`. Users can implement other priority schemes by providing a class implenting `Comparator<CachedTile>`.
 
 ==Examples of use==
 
-Here, an instance of DiskMemTileCache is created and set as the default tile cache for JAI operations...
+Here, an instance of !DiskMemTileCache is created and set as the default tile cache for JAI operations...
 {{{
 TileCache cache = new DiskMemTileCache();
 JAI.getDefaultInstance().setTileCache(cache);
@@ -38,4 +38,4 @@ RenderingHints hints = new RenderingHints(imgParams);
 RenderedOp op = JAI.create(opname, paramBlock, hints);
 }}}
 
-Cache use can be monitored using an Observer object. See jaitools.demo.tilecache.TileCacheDemo for an example of this.
+Cache use can be monitored using an Observer object. See `jaitools.demo.tilecache.TileCacheDemo` for an example of this.
