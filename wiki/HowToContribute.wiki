@@ -1,0 +1,31 @@
+#summary how to contribute to the jai-tools project
+
+=Try the software=
+
+As we are a new-ish porject, the single most useful thing you can do for us is to grab a copy of the code, try it out and give us your feedback.
+
+We don't have any releases yet, so you will need to download the source code using Subversion. Instructions for how to do that are on [http://code.google.com/p/jai-tools/source/checkout this page]). To build the library you will need to have maven installed on your system, either as a command line tool or within your IDE (e.g. the mevenide plugin for Netbeans).
+
+Building jai-tools should be simple as this ('nix command line example)...
+{{{
+> cd /where/I/put/jaitools
+> mvn install
+}}}
+
+=Providing feedback to us=
+
+The best way to tell us about bugs and bottlenecks, or to suggest specific improvements or new features, is to use the [http://code.google.com/p/jai-tools/issues/list Issue Tracker]. Please be sure to include the revision number of the jai-tools code that you are working with in your report.
+
+For general questions, wide ranging discussion, and rambling but fascinating explorations of the philosophy underlying our work (and yours) there is the [http://groups.google.com/group/jai-tools jai-tools mailing list].
+
+Please note, at this stage there are no commercial support options for jai-tools.
+
+=Code contributions=
+
+Small, informal contributions are welcome in the form of patches for bug fixes and improvements to the jai-tools classes. To submit a patch, create an Issue with the [http://code.google.com/p/jai-tools/issues/list Issue Tracker] describing the context and purpose of your code, and attach your patch to the Issue.
+
+At this early stage of the project we plan to keep the development team (ie. those with commit access to the subversion repository) fairly small and so are not inviting general requests for project membership.
+
+=More general JAI-related discussions=
+
+You might also like to discuss your ideas, questions, or general befuddlement concerning the jai-tools classes with other JAI users at the [http://forums.java.net/jive/forum.jspa?forumID=75&start=0 java.net JAI forum]. 
