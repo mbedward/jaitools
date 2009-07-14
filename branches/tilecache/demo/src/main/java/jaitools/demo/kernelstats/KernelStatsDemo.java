@@ -39,6 +39,8 @@ import javax.media.jai.ParameterBlockJAI;
  * statistics for the neighbourhood of each pixel in a source image
  *
  * @author Michael Bedward
+ * @since 1.0
+ * @version $Id$
  */
 public class KernelStatsDemo implements ImageReceiver {
 

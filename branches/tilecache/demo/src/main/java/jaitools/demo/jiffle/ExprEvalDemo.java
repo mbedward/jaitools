@@ -40,6 +40,8 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
  * the moment :-)
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @version $Id$
  */
 public class ExprEvalDemo {
 

@@ -39,6 +39,8 @@ import javax.swing.SwingUtilities;
  * We use this class as a singleton.
  *
  * @author Michael Bedward
+ * @since 1.0
+ * @version $Id$
  */
 public class DemoImageProvider {
 

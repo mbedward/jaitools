@@ -37,6 +37,8 @@ import javax.media.jai.RenderedOp;
  * Testing and demonstration of {@linkplain jaitools.tilecache.DiskMemTileCache}
  *
  * @author Michael Bedward
+ * @since 1.0
+ * @version $Id$
  */
 public class TileCacheDemo implements Observer {
 

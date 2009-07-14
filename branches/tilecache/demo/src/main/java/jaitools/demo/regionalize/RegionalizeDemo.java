@@ -35,6 +35,8 @@ import javax.media.jai.RenderedOp;
  * of uniform value in a source image.
  *
  * @author Michael Bedward
+ * @since 1.0
+ * @version $Id$
  */
 public class RegionalizeDemo implements ImageReceiver {
 
