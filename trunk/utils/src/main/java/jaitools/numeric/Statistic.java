@@ -28,6 +28,8 @@ import java.util.Map;
  * {@linkplain StreamingSampleStats} classes.
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @version $Id$
  */
 public enum Statistic {
 

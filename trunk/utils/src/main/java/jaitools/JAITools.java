@@ -26,6 +26,8 @@ import java.util.Properties;
  * This class contains a small number of general info and utility methods.
  *
  * @author Michael Bedward
+ * @since 1.0
+ * @version $Id$
  */
 public class JAITools {
 

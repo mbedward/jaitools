@@ -40,6 +40,8 @@ import java.util.TreeSet;
  * </code>
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @version $Id$
  */
 public class CollectionFactory {
     /**
