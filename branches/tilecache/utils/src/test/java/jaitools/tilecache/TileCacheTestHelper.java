@@ -18,7 +18,11 @@ import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
 
 /**
+ * Support class for unit tests in the jaitools.tilecache package
+ *
  * @author Michael Bedward
+ * @since 1.0
+ * $Id$
  */
 public class TileCacheTestHelper implements Observer {
 

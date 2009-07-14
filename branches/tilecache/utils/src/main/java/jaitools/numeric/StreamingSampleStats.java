@@ -77,6 +77,8 @@ import java.util.Map;
  * }</pre>
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * $Id$
  */
 public class StreamingSampleStats {
 

@@ -30,6 +30,8 @@ import static org.junit.Assert.*;
 /**
  *
  * @author Michael Bedward
+ * @since 1.0
+ * $Id$
  */
 public class StreamingSampleStatsTest {
 

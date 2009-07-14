@@ -43,6 +43,8 @@ import javax.swing.JTextField;
  * Note: the default close operation for the frame is JFrame.EXIT_ON_CLOSE.
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * $Id$
  */
 public class ImageFrame extends JFrame implements FrameWithStatusBar {
 

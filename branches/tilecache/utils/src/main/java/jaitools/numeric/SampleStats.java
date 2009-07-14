@@ -32,6 +32,8 @@ import java.util.SortedSet;
  * and the KernelStats operator.
  *
  * @author Michael Bedward
+ * @since 1.0
+ * $Id$
  */
 public class SampleStats {
     

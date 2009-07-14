@@ -57,6 +57,8 @@ import javax.media.jai.CachedTile;
  * @see DiskMemTileCache
  * @author Michael Bedward
  * @author Simone Giannecchini, GeoSolutions SAS
+ * @since 1.0
+ * $Id$
  */
 public final class DiskCachedTile implements CachedTile {
 	public enum TileAction{

@@ -36,6 +36,8 @@ import static org.junit.Assert.*;
  * retrieve information about cache contents.
  *
  * @author Michael Bedward
+ * @since 1.0
+ * $Id$
  */
 public class TileCacheVisitorTest {
 

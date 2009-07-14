@@ -55,6 +55,8 @@ import javax.media.jai.TileCache;
  * @author Michael Bedward
  * @author Simone Giannecchini, GeoSolutions SAS
  *
+ * @since 1.0
+ * $Id$
  * @see DiskCachedTile
  * @see TileAccessTimeComparator
  */

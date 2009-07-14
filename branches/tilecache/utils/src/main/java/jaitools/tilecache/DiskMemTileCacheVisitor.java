@@ -27,6 +27,8 @@ package jaitools.tilecache;
  *
  * @see DiskMemTileCache
  * @author Michael Bedward
+ * @since 1.0
+ * $Id$
  */
 public interface DiskMemTileCacheVisitor {
 

@@ -30,6 +30,8 @@ import static org.junit.Assert.*;
  * Hayes (2003) Figure 3.
  *
  * @author Michael Bedward
+ * @since 1.0
+ * $Id$
  */
 public class RangeComparatorTest {
 

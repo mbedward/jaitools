@@ -35,6 +35,8 @@ import javax.media.jai.TiledImage;
  * Static helper functions for common image tasks.
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * $Id$
  */
 public class ImageUtils {
 

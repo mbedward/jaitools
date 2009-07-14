@@ -27,6 +27,8 @@ import static org.junit.Assert.*;
  * Unit tests for the SampleStats class
  *
  * @author Michael Bedward
+ * @since 1.0
+ * $Id$
  */
 public class SampleStatsTest {
     

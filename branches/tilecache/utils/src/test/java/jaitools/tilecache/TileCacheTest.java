@@ -31,7 +31,11 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
+ * Unit tests for DiskMemTileCache
+ * 
  * @author Michael Bedward
+ * @since 1.0
+ * $Id$
  */
 public class TileCacheTest {
 

@@ -28,6 +28,8 @@ import javax.swing.JProgressBar;
  * A progress bar in a frame for use in Jiffle demonstrations
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * $Id$
  */
 public class ProgressMeter extends JFrame {
     
