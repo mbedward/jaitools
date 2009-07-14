@@ -4,7 +4,7 @@
 
 As we are a new-ish porject, the single most useful thing you can do for us is to grab a copy of the code, try it out and give us your feedback.
 
-We don't have any releases yet, so you will need to download the source code using Subversion. Instructions for how to do that are on [http://code.google.com/p/jai-tools/source/checkout this page]). To build the library you will need to have maven installed on your system, either as a command line tool or within your IDE (e.g. the mevenide plugin for Netbeans).
+We don't have any releases yet, so you will need to download the source code using Subversion (see [http://code.google.com/p/jai-tools/source/checkout this page]). To build the library you will need to have maven installed on your system, either as a command line tool or within your IDE (e.g. the mevenide plugin for Netbeans).
 
 Building jai-tools should be simple as this ('nix command line example)...
 {{{
