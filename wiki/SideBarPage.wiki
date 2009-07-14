@@ -19,7 +19,7 @@
    * [http://www.emilythecamel.com/projects/jai-tools/jiffle/apidocs/index.html API]
  * Support and utility classes
    * [UtilsCollectionFactory CollectionFactory]
-   * [UtilsDiskMemTileCache DiskMemTileCache]
+   * [UtilsTileCache DiskMemTileCache]
    * [UtilsImageFrame ImageFrame]
    * [UtilsRange Range]
    * [UtilsSampleStats SampleStats]
