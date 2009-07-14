@@ -1,0 +1,41 @@
+#summary a JAI TileCache implementation to handle large volumes of image data
+
+=DiskMemTileCache=
+
+*package:* jaitools.tilecache
+
+==Description==
+
+JAI operations can use a cache class to store image tiles. The default Sun reference implementation of TileCache stores all tiles in memory. The DiskMemTileCache class uses both disk and memory storage to allow operations to work with large volumes of image data without being constrained by available memory.
+
+When an image tile is added to the cache it's data are written to a temporary file. Depending on cache settings, the tile's data may also be immediately placed into memory. When a tile is requested from the cache, by a JAI OpImage or other client code, the cache checks to see if the tile is already resident in memory and, if not, it is loaded into memory before passing its data to the caller. Thus excessive disk activity is avoided when a tile is accessed multiple times in quick succession.
+
+If the cache does not have enough free memory to store a tile that is to be made resident, space is made available by removing other, currently resident tiles that have the lowest priority. By default, tiles are ranked in priority from the most recently accessed (highest) to least recently accessed (lowest). This is implemented by jaitools.tilecache.TileAccessTimeComparator. Users can implement other priority schemes by providing a class implenting Comparator<CachedTile>.
+
+==Examples of use==
+
+Here, an instance of DiskMemTileCache is created and set as the default tile cache for JAI operations...
+{{{
+TileCache cache = new DiskMemTileCache();
+JAI.getDefaultInstance().setTileCache(cache);
+}}}
+
+Alternatively, the cache can be passed to individual JAI operations as a rendering hint along
+with other tile settings as in this example...
+{{{
+Map<RenderingHints.Key, Object> imgParams = new HashMap<RenderingHints.Key, Object>();
+TileCache cache = new DiskMemTileCache();
+imgParams.put(JAI.KEY_TILE_CACHE, cache);
+
+ImageLayout layout = new ImageLayout();
+layout.setTileWidth(128);
+layout.setTileHeight(128);
+imgParams.put(JAI.KEY_IMAGE_LAYOUT, layout);
+
+RenderingHints hints = new RenderingHints(imgParams);
+
+// later...
+RenderedOp op = JAI.create(opname, paramBlock, hints);
+}}}
+
+Cache use can be monitored using an Observer object. See jaitools.demo.tilecache.TileCacheDemo for an example of this.
