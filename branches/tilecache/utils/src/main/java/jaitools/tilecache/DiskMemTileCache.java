@@ -709,6 +709,17 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
+     * Accept a <code>DiskMemCacheVisitor</code> object and call its
+     * <code>visit</code> method for each tile presently in the
+     * cache.
+     */
+    public synchronized void accept(DiskMemTileCacheVisitor visitor) {
+        for (Object key : tiles.keySet()) {
+            visitor.visit(tiles.get(key), residentTiles.containsKey(key));
+        }
+    }
+
+    /**
      * Add a raster to those resident in memory
      */
     private boolean makeResident(DiskCachedTile tile, Raster data, ResidencyRule rule) {

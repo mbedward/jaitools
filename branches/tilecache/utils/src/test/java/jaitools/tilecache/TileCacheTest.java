@@ -20,15 +20,8 @@
 
 package jaitools.tilecache;
 
-import jaitools.utils.CollectionFactory;
-import java.awt.RenderingHints;
 import java.io.File;
-import java.util.List;
-import java.util.Observable;
-import java.util.Observer;
-import javax.media.jai.ImageLayout;
 import javax.media.jai.JAI;
-import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.TileCache;
 import org.junit.After;
@@ -40,18 +33,13 @@ import static org.junit.Assert.*;
 /**
  * @author Michael Bedward
  */
-public class TileCacheTest implements Observer {
+public class TileCacheTest {
 
     private static TileCache origCache;
     private static DiskMemTileCache cache;
-
-    private static final int TILE_WIDTH = 128;
-    private static RenderingHints testHints;
+    private static TileCacheTestHelper helper;
 
     private static final float FLOAT_TOL = 0.0001F;
-
-    private List<DiskCachedTile> tiles = CollectionFactory.newList();
-    private List<DiskCachedTile> residentTiles = CollectionFactory.newList();
 
     @BeforeClass
     public static void commonSetup() {
@@ -60,11 +48,7 @@ public class TileCacheTest implements Observer {
         cache = new DiskMemTileCache();
         inst.setTileCache(cache);
 
-        ImageLayout layout = new ImageLayout();
-        layout.setTileWidth(TILE_WIDTH);
-        layout.setTileHeight(TILE_WIDTH);
-
-        testHints = new RenderingHints(JAI.KEY_IMAGE_LAYOUT, layout);
+        helper = new TileCacheTestHelper();
     }
 
     @AfterClass
@@ -111,13 +95,13 @@ public class TileCacheTest implements Observer {
         /*
          * Create a rendering chain for an output image 3 tiles x 2 tiles
          */
-        RenderedOp op = simpleJAIOp(3, 2);
+        RenderedOp op = helper.simpleJAIOp(3, 2);
 
         /*
          * Reset the cache's memory capacity for resident tiles so
          * that it is enough for 3 tiles only
          */
-        cache.setMemoryCapacity((long)TILE_WIDTH * TILE_WIDTH * (Double.SIZE / 8) * 3);
+        cache.setMemoryCapacity(helper.getTileMemSize() * 3);
 
         /*
          * Force computation of tiles. This will cause the cache to
@@ -143,19 +127,15 @@ public class TileCacheTest implements Observer {
         /*
          * Create a rendering chain for an output image 3 tiles x 2 tiles
          */
-        RenderedOp op = simpleJAIOp(3, 2);
+        RenderedOp op = helper.simpleJAIOp(3, 2);
 
         /*
          * Reset the cache's memory capacity for resident tiles so
          * that it is enough for 3 tiles only
          */
-        cache.setMemoryCapacity((long)TILE_WIDTH * TILE_WIDTH * (Double.SIZE / 8) * 3);
+        cache.setMemoryCapacity(helper.getTileMemSize() * 3);
 
-        /*
-         * Register ourselves as an observer
-         */
-        cache.addObserver(this);
-        cache.setDiagnostics(true);
+        helper.startObserving(cache);
 
         /*
          * Force computation of tiles. This will cause the cache to
@@ -168,24 +148,23 @@ public class TileCacheTest implements Observer {
         /*
          * Request the non-resident tiles to force memory swapping
          */
-        boolean[] resident = new boolean[tiles.size()];
+        boolean[] resident = new boolean[helper.getTiles().size()];
         int k = 0;
-        for (DiskCachedTile tile : tiles) {
-            resident[k++] = residentTiles.contains(tile);
+        for (DiskCachedTile tile : helper.getTiles()) {
+            resident[k++] = helper.getResidentTiles().contains(tile);
         }
 
         k = 0;
-        for (DiskCachedTile tile : tiles) {
+        for (DiskCachedTile tile : helper.getTiles()) {
             if (!resident[k++]) {
                 int x = tile.getTileX ();
                 int y = tile.getTileY();
                 op.getTile(x, y);
-                assertTrue(residentTiles.contains(tile));
+                assertTrue(helper.getResidentTiles().contains(tile));
             }
         }
 
-        cache.deleteObserver(this);
-        cache.setDiagnostics(false);
+        helper.stopObserving(cache);
     }
 
     /**
@@ -195,22 +174,18 @@ public class TileCacheTest implements Observer {
     public void removeTilesForImage() {
         System.out.println("   testing removal of tiles for an image");
 
-        /*
-         * Register ourselves as an observer
-         */
-        cache.addObserver(this);
-        cache.setDiagnostics(true);
+        helper.startObserving(cache);
 
         /*
          * Create an image and use getTiles to force the tiles to be cached
          */
-        RenderedOp op1 = simpleJAIOp(2, 2);
+        RenderedOp op1 = helper.simpleJAIOp(2, 2);
         op1.getTiles();
 
         /*
          * Repeat for a second image
          */
-        RenderedOp op2 = simpleJAIOp(2, 2);
+        RenderedOp op2 = helper.simpleJAIOp(2, 2);
         op2.getTiles();
 
         /*
@@ -219,12 +194,11 @@ public class TileCacheTest implements Observer {
          */
         cache.removeTiles(op1.getCurrentRendering());
         assert(cache.getNumTiles() == 4);
-        for (DiskCachedTile tile : tiles) {
+        for (DiskCachedTile tile : helper.getTiles()) {
             assertTrue(tile.getOwner() == op2.getCurrentRendering());
         }
 
-        cache.deleteObserver(this);
-        cache.setDiagnostics(false);
+        helper.stopObserving(cache);
     }
 
     /**
@@ -237,7 +211,7 @@ public class TileCacheTest implements Observer {
         /*
          * Create an image and use getTiles to force the tiles to be cached
          */
-        RenderedOp op = simpleJAIOp(2, 2);
+        RenderedOp op = helper.simpleJAIOp(2, 2);
         op.getTiles();
 
         assertTrue(cache.getNumTiles() == 4);
@@ -258,14 +232,18 @@ public class TileCacheTest implements Observer {
     public void testFileHandling() {
         System.out.println("   testing cache file handling");
 
-        cache.addObserver(this);
-        cache.setDiagnostics(true);
+        helper.startObserving(cache);
 
-        RenderedOp op = simpleJAIOp(10, 10);
-        File[] files = new File[tiles.size()];
-        for (File f : files) {
+        RenderedOp op = helper.simpleJAIOp(10, 10);
+        File[] files = new File[cache.getNumTiles()];
+
+        int k = 0;
+        for (DiskCachedTile tile : helper.getTiles()) {
+            File f = tile.getFile();
             assertTrue(f.exists());
             assertTrue(f.canRead());
+
+            files[k++] = f;
         }
 
         cache.flush();
@@ -274,75 +252,8 @@ public class TileCacheTest implements Observer {
             assertFalse(f.exists());
         }
 
-        cache.deleteObserver(this);
-        cache.setDiagnostics(false);
+        helper.stopObserving(cache);
     }
 
 
-    /**
-     * Creates a simple JAI rendering chain for a single band image
-     * that will require use of the cache
-     *
-     * @param numXTiles image width as number of tiles
-     * @param numYTiles image height as number of tiles
-     * @return a new RenderedOp instance
-     */
-    private RenderedOp simpleJAIOp(int numXTiles, int numYTiles) {
-        /*
-         * First node in a simple rendering chain: create
-         * a constant image, 3 tiles x 2 tiles
-         */
-        ParameterBlockJAI pb = new ParameterBlockJAI("Constant");
-        pb.setParameter("bandValues", new Double[]{1.0d});
-        pb.setParameter("width", (float)TILE_WIDTH * numXTiles);
-        pb.setParameter("height", (float)TILE_WIDTH * numYTiles);
-        RenderedOp op1 = JAI.create("constant", pb, testHints);
-
-        /*
-         * Second node: multiply the constant image by a constant
-         */
-        pb = new ParameterBlockJAI("MultiplyConst");
-        pb.setSource("source0", op1);
-        pb.setParameter("constants", new double[]{2.0d});
-        RenderedOp op2 = JAI.create("MultiplyConst", pb, testHints);
-
-        return op2;
-    }
-
-    /**
-     * Observer method to receive cache events
-     * @param ocache the tile cache
-     * @param otile a cached tile
-     */
-    public void update(Observable ocache, Object otile) {
-        DiskCachedTile tile = (DiskCachedTile)otile;
-
-        int actionValue = tile.getAction();
-        switch (DiskCachedTile.TileAction.get(actionValue)) {
-            case ACTION_ACCESSED:
-                break;
-
-            case ACTION_ADDED:
-                tiles.add(tile);
-                break;
-
-            case ACTION_ADDED_RESIDENT:
-                tiles.add(tile);
-                residentTiles.add(tile);
-                break;
-
-            case ACTION_RESIDENT:
-                residentTiles.add(tile);
-                break;
-
-            case ACTION_NON_RESIDENT:
-                residentTiles.remove(tile);
-                break;
-
-            case ACTION_REMOVED:
-                tiles.remove(tile);
-                residentTiles.remove(tile);
-                break;
-        }
-    }
 }
