@@ -38,4 +38,14 @@ RenderingHints hints = new RenderingHints(imgParams);
 RenderedOp op = JAI.create(opname, paramBlock, hints);
 }}}
 
+The cache's memory capacity and handling of new tiles can be set when constructing an instance of !DiskMemTileCache...
+{{{
+Map<String, Object> cacheParams = new HashMap<String, Object>();
+cacheParams.put(DiskMemTileCache.KEY_INITIAL_MEMORY_CAPACITY, 1L * 1024 * 1024);
+cacheParams.put(DiskMemTileCache.KEY_NEW_TILES_RESIDENT,
+        DiskMemTileCache.VALUE_NEW_TILES_RESIDENT_ALWAYS);
+
+DiskMemTileCache cache = new DiskMemTileCache(cacheParams);
+}}}
+
 Cache use can be monitored using an Observer object. See `jaitools.demo.tilecache.TileCacheDemo` for an example of this.
