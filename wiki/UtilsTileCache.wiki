@@ -48,4 +48,4 @@ cacheParams.put(DiskMemTileCache.KEY_NEW_TILES_RESIDENT,
 DiskMemTileCache cache = new DiskMemTileCache(cacheParams);
 }}}
 
-Cache use can be monitored using an Observer object. See `jaitools.demo.tilecache.TileCacheDemo` for an example of this.
+Cache use can be monitored by classes that implement the `java.util.Observer` interface. See `jaitools.demo.tilecache.TileCacheDemo` for an example.
