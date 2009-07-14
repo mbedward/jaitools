@@ -5,4 +5,5 @@
   * [https://jai.dev.java.net/ JAI project home] on java.net
   * [http://java.sun.com/products/java-media/jai/forDevelopers/jai1_0_1guide-unc/JAITOC.fm.html JAI programming guide]
   * [http://java.sun.com/products/java-media/jai/forDevelopers/jai-apidocs/index.html JAI API]
-  * [https://jaistuff.dev.java.net/ jaistuff] collection of code examples
+  * [https://jaistuff.dev.java.net/ jaistuff] An excellent collection of code examples
+  * [https://imageio-ext.dev.java.net/] Extends the Java ImageI/O framework by providing access to new raster formats
