@@ -22,4 +22,4 @@ http://jai-tools.googlecode.com/svn/wiki/images/toolbox_200.gif
  * [UtilsRange Range] - implements numeric intervals and comparisons
  * [UtilsSampleStats SampleStats] - summary statistics
  * [UtilsStreamingSampleStats StreamingSampleStats] - smmary statistics for very long sequences of data
- * [UtilsTileCache DiskMemTileCache] - a TileCache that uses disk storage to handle large images
+ * [UtilsTileCache DiskMemTileCache] - a JAI !TileCache implementation that uses disk and memory storage
