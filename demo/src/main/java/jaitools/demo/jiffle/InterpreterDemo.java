@@ -58,6 +58,8 @@ import javax.swing.SwingUtilities;
  * @see jaitools.jiffle.runtime.JiffleEvent
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @version $Id$
  */
 public class InterpreterDemo {
     private JiffleInterpreter interp;

@@ -42,6 +42,8 @@ import javax.media.jai.TiledImage;
  * of each summary statistic to be very similar across zones.
  *
  * @author Michael Bedward
+ * @since 1.0
+ * @version $Id$
  */
 public class ZonalStatsDemo {
 
