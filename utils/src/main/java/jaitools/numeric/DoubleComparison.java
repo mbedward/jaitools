@@ -24,6 +24,8 @@ package jaitools.numeric;
  * Double value comparisons within a set tolerance
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @version $Id$
  */
 public class DoubleComparison {
 

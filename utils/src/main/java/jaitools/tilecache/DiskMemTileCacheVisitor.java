@@ -2,7 +2,7 @@
  * Copyright 2009 Michael Bedward
  *
  * This file is part of jai-tools.
-
+ *
  * jai-tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
@@ -18,16 +18,27 @@
  *
  */
 
-package jaitools.utils;
+package jaitools.tilecache;
 
 /**
- * 
+ * A visitor to collect information about tiles in a {@linkplain DiskMemTileCache}.
+ * This can be used to examine cache performance in more detail than with
+ * the cache's diagnostic methods and observer events.
+ *
+ * @see DiskMemTileCache
  * @author Michael Bedward
  * @since 1.0
  * @version $Id$
  */
-public interface FrameWithStatusBar {
+public interface DiskMemTileCacheVisitor {
 
-    public void setStatusText(String text);
-    
+    /**
+     * Called by the cache once for each tile 
+     * 
+     * @param tile the tile being visited
+     * @param isResident set by the cache to indicate whether the tile is
+     * currently resident in memory
+     */
+    public void visit(DiskCachedTile tile, boolean isResident);
+
 }

@@ -27,6 +27,8 @@ package jaitools.numeric;
  * typing.
  *
  * @author Michael Bedward
+ * @since 1.0
+ * @version $Id$
  */
 public class Range<T extends Number & Comparable> {
 

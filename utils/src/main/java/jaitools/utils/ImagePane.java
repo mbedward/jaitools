@@ -35,6 +35,8 @@ import javax.media.jai.iterator.RandomIterFactory;
  * displayed by the owning frame (e.g. an ImageFrame object).
  *
  * @author Michael Bedward
+ * @since 1.0
+ * @version $Id$
  */
 class ImagePane extends DisplayJAI {
 
