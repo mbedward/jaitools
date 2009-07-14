@@ -1,6 +1,6 @@
 #summary a JAI TileCache implementation to handle large volumes of image data
 
-=DiskMemTileCache=
+=!DiskMemTileCache=
 
 *package:* jaitools.tilecache
 
