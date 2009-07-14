@@ -29,7 +29,7 @@ import javax.swing.JProgressBar;
  * 
  * @author Michael Bedward
  * @since 1.0
- * $Id$
+ * @version $Id$
  */
 public class ProgressMeter extends JFrame {
     

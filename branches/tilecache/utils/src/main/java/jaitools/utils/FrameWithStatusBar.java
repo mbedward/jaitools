@@ -24,7 +24,7 @@ package jaitools.utils;
  * 
  * @author Michael Bedward
  * @since 1.0
- * $Id$
+ * @version $Id$
  */
 public interface FrameWithStatusBar {
 

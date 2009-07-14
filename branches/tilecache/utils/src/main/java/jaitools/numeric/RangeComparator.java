@@ -28,7 +28,7 @@ import java.util.Map;
 /**
  * @author Michael Bedward
  * @since 1.0
- * $Id$
+ * @version $Id$
  */
 public class RangeComparator<T extends Number & Comparable> {
 

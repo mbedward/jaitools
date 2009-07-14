@@ -44,7 +44,7 @@ import javax.swing.JTextField;
  * 
  * @author Michael Bedward
  * @since 1.0
- * $Id$
+ * @version $Id$
  */
 public class ImageFrame extends JFrame implements FrameWithStatusBar {
 

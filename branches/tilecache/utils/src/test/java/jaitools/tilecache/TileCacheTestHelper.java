@@ -22,7 +22,7 @@ import javax.media.jai.RenderedOp;
  *
  * @author Michael Bedward
  * @since 1.0
- * $Id$
+ * @version $Id$
  */
 public class TileCacheTestHelper implements Observer {
 

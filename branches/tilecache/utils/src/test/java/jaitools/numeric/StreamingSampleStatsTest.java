@@ -31,7 +31,7 @@ import static org.junit.Assert.*;
  *
  * @author Michael Bedward
  * @since 1.0
- * $Id$
+ * @version $Id$
  */
 public class StreamingSampleStatsTest {
 

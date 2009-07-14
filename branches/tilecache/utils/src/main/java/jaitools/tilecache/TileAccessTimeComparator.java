@@ -31,7 +31,7 @@ import javax.media.jai.CachedTile;
  * 
  * @author Michael Bedward
  * @since 1.0
- * $Id$
+ * @version $Id$
  */
 public class TileAccessTimeComparator implements Comparator<CachedTile> {
 

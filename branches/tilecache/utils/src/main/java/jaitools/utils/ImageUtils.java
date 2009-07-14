@@ -36,7 +36,7 @@ import javax.media.jai.TiledImage;
  * 
  * @author Michael Bedward
  * @since 1.0
- * $Id$
+ * @version $Id$
  */
 public class ImageUtils {
 
