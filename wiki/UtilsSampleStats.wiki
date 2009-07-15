@@ -2,6 +2,7 @@
 
 =!SampleStats=
 
+*module:* utils<br>
 *package:* jaitools.numeric
 
 ==Description==
