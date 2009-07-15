@@ -2,6 +2,7 @@
 
 =!DiskMemTileCache=
 
+*module:* utils
 *package:* jaitools.tilecache
 
 ==Description==
