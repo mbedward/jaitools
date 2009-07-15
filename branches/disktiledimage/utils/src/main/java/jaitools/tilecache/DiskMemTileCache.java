@@ -33,7 +33,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Observable;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -316,9 +315,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
 
         if (tile != null) {
             if (residentTiles.containsKey(key)) {
-                residentTiles.remove(key);
-                sortedResidentTiles.remove(tile);
-                curMemory -= tile.getTileSize();
+                removeResidentTile(key, false);
             }
         }
 
@@ -358,12 +355,14 @@ public class DiskMemTileCache extends Observable implements TileCache {
             if (residentTiles.containsKey(key)) {
                 r = residentTiles.get(key).get();
                 if (r == null) {
-                    // tile has been garbage collected
+                    // tile data has been garbage collected
+                    // TODO: issue a warning ?
+
                     residentTiles.remove(key);
                     sortedResidentTiles.remove(tile);
                     curMemory -= tile.getTileSize();
 
-                    tile.setAction(DiskCachedTile.TileAction.ACTION_NON_RESIDENT);
+                    tile.setAction(DiskCachedTile.TileAction.ACTION_GARBAGE_COLLECTED);
                     if (diagnosticsEnabled) {
                         setChanged();
                         notifyObservers(tile);
@@ -523,7 +522,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * Remove all resident tiles from memory.
+     * Remove all resident tiles from memory. No rewriting of tile data
+     * to disk is done.
      */
     public synchronized void flushMemory() {
         /*
@@ -564,19 +564,13 @@ public class DiskMemTileCache extends Observable implements TileCache {
             throw new RuntimeException("space required is greater than cache memory capacity");
         }
 
+        /*
+         * Remove one or more lowest priority tiles to free
+         * space
+         */
         while (memCapacity - curMemory < memRequired) {
-            Object oldestKey = sortedResidentTiles.last().getTileId();
-            residentTiles.remove(oldestKey);
-
-            DiskCachedTile tile = tiles.get(oldestKey);
-            sortedResidentTiles.remove(tile);
-            curMemory -= tile.getTileSize();
-
-            tile.setAction(DiskCachedTile.TileAction.ACTION_NON_RESIDENT);
-            if (diagnosticsEnabled) {
-                setChanged();
-                notifyObservers(tile);
-            }
+            Object key = sortedResidentTiles.last().getTileId();
+            removeResidentTile(key, true);
         }
     }
 
@@ -756,39 +750,47 @@ public class DiskMemTileCache extends Observable implements TileCache {
 
 
     /**
-     * Remove the tile with the lowest residency priority. Presently this
-     * is based on last access time.
-     * @todo add other priority methods based on proximity to recently
-     * accessed tiles
+     * Remove a tile from the cache's memory storage. This may be to free
+     * space for other tiles, in which case <code>writeData</code> will be
+     * set to true and, if the tile is writable, a request is made to write
+     * its data to disk again. If the tile is being removed from the cache
+     * entirely, this method will be called with <code>writeData</code> set
+     * to false.
+     *
+     * @param tileId the tile's unique id
+     * @param writeData if true, and the tile is writable, its data will be
+     * written to disk again; otherwise no writing is done.
      */
-    private void removeNextTile() {
-        long earliestTime = 0;
-        Object earliestKey = null;
+    private void removeResidentTile(Object tileId, boolean writeData) {
 
-        for (Entry<Object, SoftReference<Raster>> e : residentTiles.entrySet()) {
-            Object key = e.getKey();
-            if (earliestKey == null) {
-                earliestKey = key;
-                earliestTime = tiles.get(key).getTileTimeStamp();
-            } else {
-                long time = tiles.get(key).getTileTimeStamp();
-                if (time < earliestTime) {
-                    earliestTime = time;
-                    earliestKey = key;
-                }
+        SoftReference<Raster> ref = residentTiles.remove(tileId);
+        DiskCachedTile tile = tiles.get(tileId);
+
+        sortedResidentTiles.remove(tile);
+        curMemory -= tile.getTileSize();
+
+        /**
+         * If the tile is writable, ie. its data are represented
+         * by a WritableRaster, we renew the file copy of the data
+         * to preserve any changes
+         *
+         * TODO: consider how to detect when this is really necessary
+         */
+        if (writeData && tile.isWritable()) {
+            Raster r = ref.get();
+            if (r != null) {
+                tile.writeData(r);
             }
         }
 
-        residentTiles.remove(earliestKey);
-        curMemory -= tiles.get(earliestKey).getTileSize();
-
-        DiskCachedTile tile = tiles.get(earliestKey);
         tile.setAction(DiskCachedTile.TileAction.ACTION_NON_RESIDENT);
         if (diagnosticsEnabled) {
             setChanged();
             notifyObservers(tile);
         }
+
     }
+    
 
     /**
      * Generate a unique ID for this tile. This uses the same technique as the

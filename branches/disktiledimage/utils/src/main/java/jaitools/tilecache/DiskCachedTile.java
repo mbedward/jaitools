@@ -337,6 +337,13 @@ public final class DiskCachedTile implements CachedTile {
     }
 
     /**
+     * Query if this tile is writable
+     */
+    public boolean isWritable() {
+        return isWritable;
+    }
+
+    /**
      * Package-private method called by the controlling {@linkplain DiskBasedTileCache}
      * object when the tile is added to, or removed from, the cache.
      */
@@ -455,9 +462,10 @@ public final class DiskCachedTile implements CachedTile {
 
     /**
      * Write data for the raster associated with this tile to
-     * disk
+     * disk. This may be called by <code>DiskMemTileCache</code>
+     * as well as be the tile itself.
      */
-    private void writeData(Raster raster) {
+    void writeData(Raster raster) {
         ImageOutputStream strm = null;
         DataBuffer dataBuf = raster.getDataBuffer();
 
