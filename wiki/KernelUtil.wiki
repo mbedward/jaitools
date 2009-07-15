@@ -2,6 +2,7 @@
 
 =!KernelUtil=
 
+*module:* kernel <br>
 *package:* jaitools.media.jai.kernel
 
 ==Description==

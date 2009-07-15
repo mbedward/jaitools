@@ -2,6 +2,7 @@
 
 =!ZonalStats=
 
+*module:* zonalstats <br>
 *package:* jaitools.media.jai.zonalstats
 
 ==Description==

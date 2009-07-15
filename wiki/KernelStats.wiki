@@ -2,6 +2,7 @@
 
 =!KernelStats=
 
+*module:* kernelstats <br>
 *package:* jaitools.media.jai.kernelstats
 
 ==Description==

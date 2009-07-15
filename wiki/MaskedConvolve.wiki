@@ -2,6 +2,7 @@
 
 =!MaskedConvolve operator=
 
+*module:* maskedconvole <br>
 *package:* jaitools.media.jai.maskedconvolve
 
 ==Description==

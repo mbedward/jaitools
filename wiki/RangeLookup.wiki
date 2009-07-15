@@ -2,6 +2,7 @@
 
 =!RangeLookup operator=
 
+*module:* rangelookup <br>
 *package:* jaitools.media.jai.rangelookup
 
 ==Description==

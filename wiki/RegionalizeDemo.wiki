@@ -2,6 +2,9 @@
 
 =Regionalize demo=
 
+*module:* demo <br>
+*package:* jaitools.demo.regionalize
+
 This program demonstrates the [Regionalize] operator which identifies areas of uniform value, within some specified tolerance, in a source image.
 
 The input image has a chessboard pattern, where each square contains pixels with value 0.0 (black) or 1.0 (white).
