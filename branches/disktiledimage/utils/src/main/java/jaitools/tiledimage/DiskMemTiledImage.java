@@ -37,6 +37,8 @@ import javax.media.jai.PlanarImage;
 /**
  * A tiled image class
  * @author Michael Bedward
+ * @since 1.0
+ * @version $Id$
  */
 public class DiskMemTiledImage 
         extends PlanarImage
