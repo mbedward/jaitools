@@ -34,8 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Observable;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -184,9 +182,10 @@ public class DiskMemTileCache extends Observable implements TileCache {
     // memory storage
     private Comparator<CachedTile> comparator;
 
-    private SortedSet<DiskCachedTile> sortedResidentTiles;
+    private List<DiskCachedTile> sortedResidentTiles;
 
     private boolean diagnosticsEnabled;
+
 
     /**
      * Constructor. Creates an instance of the cache with all parameters set
@@ -244,9 +243,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
             }
         }
 
-        // TODO consider making this a cache param
         comparator = new TileAccessTimeComparator();
-        sortedResidentTiles = Collections.synchronizedSortedSet(new TreeSet<DiskCachedTile>(comparator));
+        sortedResidentTiles = new ArrayList<DiskCachedTile>();
     }
 
     public void add(RenderedImage owner, int tileX, int tileY, Raster data) {
@@ -568,8 +566,9 @@ public class DiskMemTileCache extends Observable implements TileCache {
          * Remove one or more lowest priority tiles to free
          * space
          */
+        Collections.sort(sortedResidentTiles, comparator);
         while (memCapacity - curMemory < memRequired) {
-            Object key = sortedResidentTiles.last().getTileId();
+            Object key = sortedResidentTiles.get(sortedResidentTiles.size()-1).getTileId();
             removeResidentTile(key, true);
         }
     }
@@ -602,17 +601,28 @@ public class DiskMemTileCache extends Observable implements TileCache {
      *
      * @param newCapacity requested memory capacity for resident tiles
      */
-    public void setMemoryCapacity(long newCapacity) {
+    public synchronized void setMemoryCapacity(long newCapacity) {
         if (newCapacity < 0) {
             throw new IllegalArgumentException("memory capacity must be >= 0");
         }
 
+        long oldCapacity = memCapacity;
         memCapacity = newCapacity;
 
         if (newCapacity == 0) {
             flushMemory();
-        } else if (newCapacity < memCapacity) {
-            memoryControl();
+
+        } else if (newCapacity < oldCapacity && curMemory > newCapacity) {
+            /*
+             * Note: we free memory here directly rather than using
+             * memoryControl or defaultMemoryControl methods because
+             * they will fail when memCapacity has been reduced
+             */
+            Collections.sort(sortedResidentTiles, comparator);
+            while (curMemory > newCapacity) {
+                Object key = sortedResidentTiles.get(sortedResidentTiles.size()-1).getTileId();
+                removeResidentTile(key, true);
+            }
         }
     }
 
@@ -663,10 +673,11 @@ public class DiskMemTileCache extends Observable implements TileCache {
             comparator = comp;
         }
 
-        sortedResidentTiles = Collections.synchronizedSortedSet(new TreeSet<DiskCachedTile>(comparator));
+        sortedResidentTiles = new ArrayList<DiskCachedTile>();
         for (Object key : residentTiles.keySet()) {
-            sortedResidentTiles.add(tiles.get(key));
+            sortedResidentTiles.addAll(tiles.values());
         }
+        Collections.sort(sortedResidentTiles, comparator);
     }
 
     /**
@@ -742,8 +753,14 @@ public class DiskMemTileCache extends Observable implements TileCache {
         }
         
         residentTiles.put(tile.getTileId(), new SoftReference<Raster>(data));
-        sortedResidentTiles.add(tile);
         curMemory += tile.getTileSize();
+
+        /*
+         * We don't bother about sort order here. Instead, the list
+         * will be sorted by tile priority when resident tiles are
+         * being removed
+         */
+        sortedResidentTiles.add(tile);
 
         return true;
     }
@@ -763,11 +780,12 @@ public class DiskMemTileCache extends Observable implements TileCache {
      */
     private void removeResidentTile(Object tileId, boolean writeData) {
 
-        SoftReference<Raster> ref = residentTiles.remove(tileId);
         DiskCachedTile tile = tiles.get(tileId);
-
+        SoftReference<Raster> ref = residentTiles.remove(tileId);
         sortedResidentTiles.remove(tile);
         curMemory -= tile.getTileSize();
+
+
 
         /**
          * If the tile is writable, ie. its data are represented
@@ -788,7 +806,6 @@ public class DiskMemTileCache extends Observable implements TileCache {
             setChanged();
             notifyObservers(tile);
         }
-
     }
     
 
