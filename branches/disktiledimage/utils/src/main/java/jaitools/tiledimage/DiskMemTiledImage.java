@@ -330,7 +330,7 @@ public class DiskMemTiledImage
 
         for (int y = minTileY; y <= maxTileY; y++) {
             for (int x = minTileX; x <= maxTileX; x++) {
-                WritableRaster tile = (WritableRaster) tileCache.getTile(this, x, y);
+                WritableRaster tile = getWritableTile(x, y);
                 Rectangle tileOverlap = tile.getBounds().intersection(common);
 
                 Raster dataChild = data.createChild(
