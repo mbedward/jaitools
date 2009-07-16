@@ -21,6 +21,7 @@
 package jaitools.tiledimage;
 
 import jaitools.tilecache.DiskMemTileCache;
+import jaitools.tilecache.TileNotResidentException;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.ColorModel;
@@ -31,6 +32,8 @@ import java.awt.image.WritableRaster;
 import java.awt.image.WritableRenderedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.PlanarImage;
 
@@ -47,6 +50,7 @@ public class DiskMemTiledImage
     private DiskMemTileCache tileCache;
     private Rectangle tileGrid;
     private boolean[][] tileInUse;
+    private int numTilesInUse;
 
 
     /**
@@ -159,12 +163,14 @@ public class DiskMemTiledImage
                 getMaxTileY() - getMinTileY() + 1);
 
         tileInUse = new boolean[tileGrid.width][tileGrid.height];
+        numTilesInUse = 0;
 
         tileCache = new DiskMemTileCache();
     }
 
     /**
-     * Retrieve a tile for reading
+     * Retrieve a tile for reading. Any changes to the tile's data
+     * will not be preserved by the cache.
      *
      * @param tileX the tile's column in the tile grid
      * @param tileY the tile's row in the tile grid
@@ -192,11 +198,26 @@ public class DiskMemTiledImage
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    /**
+     * Check-out a tile for writing. The tile will be unavailable to other
+     * callers through this method until it is released via
+     * {@linkplain #releaseWritableTile(int, int)}. If this method is
+     * called for the same time prior to the tile being released
+     * it returns <code>null</code> and a warning message is logged.
+     *
+     * @param tileX the tile's column in the tile grid
+     * @param tileY the tile's row in the tile grid
+     * @return the tile data for writing, or <code>null</code> if the tile
+     * is already checked-out
+     */
     public WritableRaster getWritableTile(int tileX, int tileY) {
         WritableRaster r = null;
         if (tileGrid.contains(tileX, tileY)) {
             if (tileInUse[tileX - tileGrid.x][tileY - tileGrid.y]) {
                 // TODO: throw an exception here ?
+                Logger.getLogger(DiskMemTiledImage.class.getName()).log(Level.WARNING,
+                        String.format("Attempting to get tile %d,%d for writing while it is already checked-out",
+                        tileX, tileY));
                 return null;
             }
 
@@ -207,30 +228,126 @@ public class DiskMemTiledImage
             }
 
             tileInUse[tileX - tileGrid.x][tileY - tileGrid.y] = true;
+            numTilesInUse++ ;
         }
         return r;
     }
 
+    /**
+     * Release a tile after writing to it. The cache's disk copy of
+     * the tile's data will be refreshed.
+     * <p>
+     * If the cache no longer has the tile in its memory storage, e.g.
+     * because of memory swapping for other tile accesses, the cache
+     * will be unable to refresh the tile's data on disk. In this case
+     * a warning message is logged.
+     * <p>
+     * If the tile was not previously checked-out via
+     * {@linkplain #getWritableTile(int, int)} a warning message is
+     * logged.
+     *
+     * @param tileX the tile's column in the tile grid
+     * @param tileY the tile's row in the tile grid
+     */
     public void releaseWritableTile(int tileX, int tileY) {
         if (tileGrid.contains(tileX, tileY)) {
-            tileInUse[tileX - tileGrid.x][tileY - tileGrid.y] = false;
+            if (tileInUse[tileX - tileGrid.x][tileY - tileGrid.y]) {
+                tileInUse[tileX - tileGrid.x][tileY - tileGrid.y] = false;
+                numTilesInUse--;
+
+                try {
+                    tileCache.setTileChanged(this, tileX, tileY);
+
+                } catch (TileNotResidentException ex) {
+                    Logger.getLogger(DiskMemTiledImage.class.getName()).
+                            log(Level.WARNING, "Failed to write tile data to disk", ex);
+                }
+
+            } else {
+                Logger.getLogger(DiskMemTiledImage.class.getName()).
+                        log(Level.WARNING, "Attempting to release a tile that was not checked-out");
+            }
         }
     }
 
+    /**
+     * Query if a tile is currently checked-out for writing (via
+     * a call to {@linkplain #getWritableTile(int, int)}.
+     *
+     * @param tileX the tile's column in the tile grid
+     * @param tileY the tile's row in the tile grid
+     * @return true if the tile is currently checked-out for
+     * writing; false otherwise.
+     */
     public boolean isTileWritable(int tileX, int tileY) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return tileInUse[tileX - tileGrid.x][tileY - tileGrid.y];
     }
 
+    /**
+     * Returns the indices (tile grid col,row) as <code>Point</code>s of
+     * those tiles that are currently checked out for writing.
+     *
+     * @return array of tile indices or null if no tiles are checked-out
+     */
     public Point[] getWritableTileIndices() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Point[] indices = null;
+
+        if (numTilesInUse > 0) {
+            indices = new Point[numTilesInUse];
+            int k = 0;
+            for (int y = tileGrid.y, ny = 0; ny < tileGrid.height; y++, ny++) {
+                for (int x = tileGrid.x, nx = 0; nx < tileGrid.width; x++, nx++) {
+                    if (tileInUse[nx][ny]) {
+                        indices[k++] = new Point(x, y);
+                    }
+                }
+            }
+        }
+
+        return indices;
     }
 
+    /**
+     * Query if any tiles are currently checked out for writing
+     * @return true if any tiles are currently checked out for writing; false otherwise
+     */
     public boolean hasTileWriters() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return numTilesInUse > 0;
     }
 
-    public void setData(Raster r) {
-        throw new UnsupportedOperationException("Not supported yet.");
+
+    public void setData(Raster data) {
+        Rectangle rBounds = data.getBounds();
+        Rectangle common = rBounds.intersection(getBounds());
+        if (common.isEmpty()) {
+            return;
+        }
+
+        int minTileX = XToTileX(common.x);
+        int maxTileX = XToTileX(common.x + common.width - 1);
+        int minTileY = YToTileY(common.y);
+        int maxTileY = YToTileY(common.y + common.height - 1);
+
+        for (int y = minTileY; y <= maxTileY; y++) {
+            for (int x = minTileX; x <= maxTileX; x++) {
+                WritableRaster tile = (WritableRaster) tileCache.getTile(this, x, y);
+                Rectangle tileOverlap = tile.getBounds().intersection(common);
+
+                Raster dataChild = data.createChild(
+                        tileOverlap.x, tileOverlap.y,
+                        tileOverlap.width, tileOverlap.height,
+                        tileOverlap.x, tileOverlap.y,
+                        null);
+
+                WritableRaster tChild = tile.createWritableChild(
+                        tileOverlap.x, tileOverlap.y,
+                        tileOverlap.width, tileOverlap.height,
+                        tileOverlap.x, tileOverlap.y,
+                        null);
+
+                tChild.setRect(dataChild);
+            }
+        }
     }
 
     public void propertyChange(PropertyChangeEvent evt) {
@@ -243,4 +360,5 @@ public class DiskMemTiledImage
         Point location = new Point(tileXToX(tileX), tileYToY(tileY));
         return createWritableRaster(getSampleModel(), location);
     }
+
 }

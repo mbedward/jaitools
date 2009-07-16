@@ -182,8 +182,16 @@ public class DiskMemTileCache extends Observable implements TileCache {
     // memory storage
     private Comparator<CachedTile> comparator;
 
+    /* List of tile references that is sorted into tile priority order when
+     * required for memory swapping.
+     *
+     * Note: we use this in preference to a SortedSet or similar because of
+     * the complications of using the remove(obj) method with a collection
+     * that is using a comparator rather than equals().
+     */
     private List<DiskCachedTile> sortedResidentTiles;
 
+    // whether to send cache diagnostics to observers
     private boolean diagnosticsEnabled;
 
 
@@ -704,6 +712,59 @@ public class DiskMemTileCache extends Observable implements TileCache {
      */
     public int getNumResidentTiles() {
         return residentTiles.size();
+    }
+
+    /**
+     * Query whether a given tile is in this cache
+     * 
+     * @param owner the owning image
+     * @param tileX tile column
+     * @param tileY tile row
+     * @return true if the cache contains the tile; false otherwise
+     */
+    public boolean containsTile(RenderedImage owner, int tileX, int tileY) {
+        Object key = getTileId(owner, tileX, tileY);
+        return tiles.containsKey(key);
+    }
+
+    /**
+     * Query whether a given tile is in this cache's memory storage
+     *
+     * @param owner the owning image
+     * @param tileX tile column
+     * @param tileY tile row
+     * @return true if the tile is in cache memory; false otherwise
+     */
+    public boolean containsResidentTile(RenderedImage owner, int tileX, int tileY) {
+        Object key = getTileId(owner, tileX, tileY);
+        return residentTiles.containsKey(key);
+    }
+
+    /**
+     * Inform the cache that the tile's data have changed. The tile should
+     * be resident in memory as the result of a previous <code>getTile</code>
+     * request. If this is the case, the cache's disk copy of the tile's data
+     * will be refreshed. If the tile is not resident in memory, for instance
+     * because of memory swapping for other tile accesses, the disk copy
+     * will not be refreshed and a <code>TileNotResidentException</code> is
+     * thrown.
+     *
+     * @param owner the owning image
+     * @param tileX tile column
+     * @param tileY tile row
+     * @throws TileNotResidentException if the tile is no longer resident
+     */
+    public void setTileChanged(RenderedImage owner, int tileX, int tileY)
+            throws TileNotResidentException {
+
+        Object tileId = getTileId(owner, tileX, tileY);
+        SoftReference<Raster> ref = residentTiles.get(tileId);
+        if (ref == null || ref.get() == null) {
+            throw new TileNotResidentException(owner, tileX, tileY);
+        }
+
+        DiskCachedTile tile = tiles.get(tileId);
+        tile.writeData(ref.get());
     }
 
     /**
