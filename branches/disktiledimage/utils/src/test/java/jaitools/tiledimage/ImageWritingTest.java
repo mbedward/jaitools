@@ -49,6 +49,46 @@ public class ImageWritingTest extends TiledImageTestBase {
     }
 
     /**
+     * Test using JAI iterators to write and read image data
+     */
+    @Test
+    public void testWriteIter() {
+        System.out.println("   read/write using JAI iterators");
+
+        WritableRectIter writeIter = RectIterFactory.createWritable(image, null);
+        int i = 1;
+        do {
+            do {
+                do {
+                    writeIter.setSample(i);
+                    i = (i % 31) + 1;
+                } while (!writeIter.nextPixelDone());
+
+                writeIter.startPixels();
+            } while (!writeIter.nextLineDone());
+
+            writeIter.startLines();
+        } while (!writeIter.nextBandDone());
+
+
+        RectIter readIter = RectIterFactory.create(image, null);
+        i = 1;
+        do {
+            do {
+                do {
+                    assertTrue(readIter.getSample() == i);
+                    i = (i % 31) + 1;
+                } while (!readIter.nextPixelDone());
+
+                readIter.startPixels();
+            } while (!readIter.nextLineDone());
+
+            readIter.startLines();
+        } while (!readIter.nextBandDone());
+    }
+
+
+    /**
      * Test setting a rectangle of image data
      */
     @Test
@@ -98,41 +138,12 @@ public class ImageWritingTest extends TiledImageTestBase {
     }
 
     /**
-     * Test using JAI iterators to write and read image data
+     * Test writing to the image via Graphics2D
      */
     @Test
-    public void testWriteIter() {
-        System.out.println("   read/write using JAI iterators");
+    public void testGraphics() {
+        System.out.println("   setting image data via Graphics2D methods");
 
-        WritableRectIter writeIter = RectIterFactory.createWritable(image, null);
-        int i = 1;
-        do {
-            do {
-                do {
-                    writeIter.setSample(i);
-                    i = (i % 31) + 1;
-                } while (!writeIter.nextPixelDone());
-
-                writeIter.startPixels();
-            } while (!writeIter.nextLineDone());
-
-            writeIter.startLines();
-        } while (!writeIter.nextBandDone());
-
-
-        RectIter readIter = RectIterFactory.create(image, null);
-        i = 1;
-        do {
-            do {
-                do {
-                    assertTrue(readIter.getSample() == i);
-                    i = (i % 31) + 1;
-                } while (!readIter.nextPixelDone());
-
-                readIter.startPixels();
-            } while (!readIter.nextLineDone());
-
-            readIter.startLines();
-        } while (!readIter.nextBandDone());
     }
+
 }

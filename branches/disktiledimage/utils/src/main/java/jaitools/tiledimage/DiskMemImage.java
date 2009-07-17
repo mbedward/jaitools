@@ -22,9 +22,11 @@ package jaitools.tiledimage;
 
 import jaitools.tilecache.DiskMemTileCache;
 import jaitools.tilecache.TileNotResidentException;
+import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.ColorModel;
+import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
 import java.awt.image.SampleModel;
 import java.awt.image.TileObserver;
@@ -43,7 +45,7 @@ import javax.media.jai.PlanarImage;
  * @since 1.0
  * @version $Id$
  */
-public class DiskMemTiledImage 
+public class DiskMemImage
         extends PlanarImage
         implements WritableRenderedImage, PropertyChangeListener {
     
@@ -63,7 +65,7 @@ public class DiskMemTiledImage
      * @param tileSampleModel a <code>SampleModel</code> specifying the dimensions
      * data type etc. for image tiles
      */
-    public DiskMemTiledImage(
+    public DiskMemImage(
             int width, int height,
             SampleModel tileSampleModel) {
 
@@ -88,7 +90,7 @@ public class DiskMemTiledImage
      * @param tileSampleModel a <code>SampleModel</code> specifying the dimensions
      * data type etc. for image tiles
      */
-    public DiskMemTiledImage(
+    public DiskMemImage(
             int minX, int minY,
             int width, int height,
             SampleModel tileSampleModel) {
@@ -114,7 +116,7 @@ public class DiskMemTiledImage
      * @param tileGridYOffset y coordinate of the upper-left pixel of the upper-left tile
      * @param tileSampleModel a <code>SampleModel</code> specifying the dimensions
      */
-    public DiskMemTiledImage(
+    public DiskMemImage(
             int minX, int minY,
             int width, int height,
             int tileGridXOffset, int tileGridYOffset,
@@ -141,7 +143,7 @@ public class DiskMemTiledImage
      * @param tileSampleModel a <code>SampleModel</code> specifying the dimensions
      * @param colorModel a <code>ColorModel</code> to use with the image (may be null)
      */
-    public DiskMemTiledImage(
+    public DiskMemImage(
             int minX, int minY,
             int width, int height,
             int tileGridXOffset, int tileGridYOffset,
@@ -215,7 +217,7 @@ public class DiskMemTiledImage
         if (tileGrid.contains(tileX, tileY)) {
             if (tileInUse[tileX - tileGrid.x][tileY - tileGrid.y]) {
                 // TODO: throw an exception here ?
-                Logger.getLogger(DiskMemTiledImage.class.getName()).log(Level.WARNING,
+                Logger.getLogger(DiskMemImage.class.getName()).log(Level.WARNING,
                         String.format("Attempting to get tile %d,%d for writing while it is already checked-out",
                         tileX, tileY));
                 return null;
@@ -259,12 +261,12 @@ public class DiskMemTiledImage
                     tileCache.setTileChanged(this, tileX, tileY);
 
                 } catch (TileNotResidentException ex) {
-                    Logger.getLogger(DiskMemTiledImage.class.getName()).
+                    Logger.getLogger(DiskMemImage.class.getName()).
                             log(Level.WARNING, "Failed to write tile data to disk", ex);
                 }
 
             } else {
-                Logger.getLogger(DiskMemTiledImage.class.getName()).
+                Logger.getLogger(DiskMemImage.class.getName()).
                         log(Level.WARNING, "Attempting to release a tile that was not checked-out");
             }
         }
@@ -352,6 +354,27 @@ public class DiskMemTiledImage
 
     public void propertyChange(PropertyChangeEvent evt) {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    /**
+     * Create a Graphics2D object for drawing operations with this image.
+     * The graphics object will be an instance of JAI's TiledImageGraphics class.
+     * The image must be of integral data type or an exception is thrown.
+     *
+     * @return
+     */
+    public Graphics2D createGraphics() {
+        int dataType = getSampleModel().getDataType();
+        if (dataType == DataBuffer.TYPE_BYTE ||
+            dataType == DataBuffer.TYPE_INT ||
+            dataType == DataBuffer.TYPE_SHORT ||
+            dataType == DataBuffer.TYPE_USHORT)
+        {
+            return new DiskMemImageGraphics(this);
+
+        } else {
+            throw new UnsupportedOperationException("Image must have an integral data type");
+        }
     }
 
     private WritableRaster createTile(int tileX, int tileY) {

@@ -36,12 +36,12 @@ public abstract class TiledImageTestBase {
     protected static final int XTILES = 5;
     protected static final int YTILES = 3;
 
-    protected DiskMemTiledImage image;
+    protected DiskMemImage image;
 
-    protected DiskMemTiledImage makeImage(int tileWidth, int xTiles, int yTiles) {
+    protected DiskMemImage makeImage(int tileWidth, int xTiles, int yTiles) {
         ColorModel cm = ColorModel.getRGBdefault();
         SampleModel sm = cm.createCompatibleSampleModel(tileWidth, tileWidth);
-        return new DiskMemTiledImage(0, 0, tileWidth * xTiles, tileWidth * yTiles, 0, 0, sm, cm);
+        return new DiskMemImage(0, 0, tileWidth * xTiles, tileWidth * yTiles, 0, 0, sm, cm);
     }
 
 }
