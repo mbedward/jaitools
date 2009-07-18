@@ -678,7 +678,7 @@ public class DiskMemImageGraphics extends Graphics2D {
      * @param bounds bounds of the element to be drawn
      * @param args a variable length list of arguments for the operation
      */
-    boolean doDraw(OpType opType, Rectangle2D bounds, Object ...args) {
+    private boolean doDraw(OpType opType, Rectangle2D bounds, Object ...args) {
         Method method = null;
         boolean rtnVal = false;
 
@@ -798,7 +798,7 @@ public class DiskMemImageGraphics extends Graphics2D {
      *
      * @throws UnsupportedOperationException if a compatible <code>ColorModel</code> is not found
      */
-    void setColorModel() {
+    private void setColorModel() {
         assert(targetImage != null);
 
         colorModel = targetImage.getColorModel();
@@ -825,7 +825,7 @@ public class DiskMemImageGraphics extends Graphics2D {
      * Helper method for the constructor. Retrieves any properties 
      * set for the target image.
      */
-    void setProperties() {
+    private void setProperties() {
         assert(targetImage != null);
 
         properties = new Hashtable<String, Object>();
@@ -844,7 +844,7 @@ public class DiskMemImageGraphics extends Graphics2D {
      * based on the target image's first tile and uses its state to set
      * the graphics params of this object
      */
-    void setGraphicsParams() {
+    private void setGraphicsParams() {
         assert(targetImage != null);
         assert(colorModel != null);
         assert(properties != null);
@@ -874,7 +874,7 @@ public class DiskMemImageGraphics extends Graphics2D {
      *
      * @param gr a Graphics2D object
      */
-    void copyGraphicsParams(Graphics2D gr) {
+    private void copyGraphicsParams(Graphics2D gr) {
         gr.translate(origin.x, origin.y);
         gr.setClip(clip);
         gr.setColor(getColor());
