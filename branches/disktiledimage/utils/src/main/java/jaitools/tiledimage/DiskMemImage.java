@@ -257,6 +257,11 @@ public class DiskMemImage
                 tileInUse[tileX - tileGrid.x][tileY - tileGrid.y] = false;
                 numTilesInUse--;
 
+                /*
+                 * TODO: Consider skipping this step. It is mostly here as a
+                 * precaution against the cached tile being garbage collected
+                 * if the system runs very low on memory.
+                 */
                 try {
                     tileCache.setTileChanged(this, tileX, tileY);
 
@@ -358,10 +363,13 @@ public class DiskMemImage
 
     /**
      * Create a Graphics2D object for drawing operations with this image.
-     * The graphics object will be an instance of JAI's TiledImageGraphics class.
-     * The image must be of integral data type or an exception is thrown.
+     * The graphics object will be an instance of <code>DiskMemImageGraphics</code>.
+     * <p>
+     * Note that only images of integral data type support graphics operations.
      *
-     * @return
+     * @return a new Graphics2D object
+     * @throws UnsupportedOperationException if the image is not of integral data type
+     * @see DiskMemImageGraphics
      */
     public Graphics2D createGraphics() {
         int dataType = getSampleModel().getDataType();
@@ -375,6 +383,28 @@ public class DiskMemImage
         } else {
             throw new UnsupportedOperationException("Image must have an integral data type");
         }
+    }
+
+    /**
+     * Returns the maximum amount of memory, in bytes, that this
+     * image will use for in-memory storage of its data. Since
+     * this class uses a dedicated <code>DiskMemTileCache</code>
+     * object, all image data are cached on disk during the lifetime
+     * of the image, with tiles being loaded into memory as required.
+     */
+    public long getMemoryCapacity() {
+        return tileCache.getMemoryCapacity();
+    }
+
+    /**
+     * Set the maximum amount of memory, in bytes, that this image
+     * will use for in-memory storage of its tiles. All tiles are
+     * also cached on disk during the lifetime of the image.
+     *
+     * @param memCapacity maximum memory capacity for image tiles (in bytes)
+     */
+    public void setMemoryCapacity(long memCapacity) {
+        tileCache.setMemoryCapacity(memCapacity);
     }
 
     private WritableRaster createTile(int tileX, int tileY) {

@@ -752,7 +752,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * @param owner the owning image
      * @param tileX tile column
      * @param tileY tile row
-     * @throws TileNotResidentException if the tile is no longer resident
+     * @throws TileNotResidentException if the tile is not resident
      */
     public void setTileChanged(RenderedImage owner, int tileX, int tileY)
             throws TileNotResidentException {

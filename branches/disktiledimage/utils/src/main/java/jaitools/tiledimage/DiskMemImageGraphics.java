@@ -60,12 +60,8 @@ import javax.media.jai.PlanarImage;
 /**
  * A Graphics class for drawing into a <code>DiskMemImage</code>.
  * As with JAI's <code>TiledImageGraphics</code> class, java.awt
- * routines do the real work and the purpose of this class is to
+ * routines do the work and the purpose of this class is to
  * serve the image data in a form that those routines can handle.
- *
- * @todo It would have been a lot easier to be able to use JAI's
- * TiledImageGraphics class directly but, for some reason, they've
- * made it package private.
  *
  * @author Michael Bedward
  * @since 1.0
