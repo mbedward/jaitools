@@ -112,7 +112,23 @@ public class DiskMemImageGraphics extends Graphics2D {
 
         DRAW_BUFFERED_IMAGE("drawImage", BufferedImage.class, BufferedImageOp.class, int.class, int.class),
 
-        DRAW_IMAGE("drawImage", Image.class, AffineTransform.class, ImageObserver.class),
+        DRAW_GLYPH_VECTOR("drawGlyphVector", GlyphVector.class, float.class, float.class),
+
+        DRAW_IMAGE_DEST_SRC("drawImage", Image.class, int.class, int.class, int.class, int.class,
+                            int.class, int.class, int.class, int.class, ImageObserver.class),
+
+        DRAW_IMAGE_DEST_SRC_COL("drawImage", Image.class, int.class, int.class, int.class, int.class,
+                                int.class, int.class, int.class, int.class, Color.class, ImageObserver.class),
+
+        DRAW_IMAGE_TRANSFORM("drawImage", Image.class, AffineTransform.class, ImageObserver.class),
+
+        DRAW_IMAGE_XY("drawImage", Image.class, int.class, int.class, ImageObserver.class),
+
+        DRAW_IMAGE_XY_COL("drawImage", Image.class, int.class, int.class, Color.class, ImageObserver.class),
+
+        DRAW_IMAGE_XYWH("drawImage", Image.class, int.class, int.class, int.class, int.class, ImageObserver.class),
+
+        DRAW_IMAGE_XYWH_COL("drawImage", Image.class, int.class, int.class, int.class, int.class, Color.class, ImageObserver.class),
 
         DRAW_LINE("drawLine", int.class, int.class, int.class, int.class),
 
@@ -121,6 +137,10 @@ public class DiskMemImageGraphics extends Graphics2D {
         DRAW_POLYGON("drawPolygon", int[].class, int[].class, int.class),
 
         DRAW_POLYLINE("drawPolyline", int[].class, int[].class, int.class),
+
+        DRAW_RENDERABLE_IMAGE("drawRenderableImage", RenderableImage.class, AffineTransform.class),
+
+        DRAW_RENDERED_IMAGE("drawRenderedImage", RenderedImage.class, AffineTransform.class),
 
         DRAW_ROUND_RECT("drawRoundRect", int.class, int.class, int.class, int.class, int.class, int.class),
 
@@ -201,25 +221,36 @@ public class DiskMemImageGraphics extends Graphics2D {
 
     @Override
     public boolean drawImage(Image img, AffineTransform xform, ImageObserver obs) {
-        Rectangle bounds = new Rectangle(0, 0, img.getWidth(obs), img.getHeight(obs));
-        Rectangle2D xformBounds = xform.createTransformedShape(bounds).getBounds2D();
+        Rectangle2D bounds = new Rectangle(0, 0, img.getWidth(obs), img.getHeight(obs));
+        Rectangle2D trBounds = xform.createTransformedShape(bounds).getBounds2D();
 
-        return doDraw(OpType.DRAW_IMAGE, xformBounds, img, xform, obs);
+        return doDraw(OpType.DRAW_IMAGE_TRANSFORM, trBounds, img, xform, obs);
     }
 
     @Override
     public void drawImage(BufferedImage img, BufferedImageOp op, int x, int y) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Rectangle2D bounds = op.getBounds2D(img);
+        doDraw(OpType.DRAW_BUFFERED_IMAGE, bounds, img, op, x, y);
     }
 
     @Override
     public void drawRenderedImage(RenderedImage img, AffineTransform xform) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Rectangle2D bounds = new Rectangle(img.getMinX(), img.getMinY(),
+                                           img.getWidth(), img.getHeight());
+
+        Rectangle2D trBounds = xform.createTransformedShape(bounds).getBounds2D();
+
+        doDraw(OpType.DRAW_RENDERED_IMAGE, trBounds, img, xform);
     }
 
     @Override
     public void drawRenderableImage(RenderableImage img, AffineTransform xform) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Rectangle2D bounds = new Rectangle2D.Float(img.getMinX(), img.getMinY(),
+                                           img.getWidth(), img.getHeight());
+
+        Rectangle2D trBounds = xform.createTransformedShape(bounds).getBounds2D();
+
+        doDraw(OpType.DRAW_RENDERABLE_IMAGE, trBounds, img, xform);
     }
 
     @Override
@@ -258,7 +289,15 @@ public class DiskMemImageGraphics extends Graphics2D {
 
     @Override
     public void drawGlyphVector(GlyphVector g, float x, float y) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Rectangle2D bounds = g.getVisualBounds();
+
+        // expand the rectangle by a single pixel width to allow for
+        // rasterizing round-off errors
+        // (see apidocs for Graphics2D.drawGlyphVector)
+        bounds.setFrame(bounds.getMinX() - 1, bounds.getMinY() - 1,
+                        bounds.getWidth() + 2, bounds.getHeight() + 2);
+
+        doDraw(OpType.DRAW_GLYPH_VECTOR, bounds, g, x, y);
     }
 
     @Override
@@ -322,7 +361,7 @@ public class DiskMemImageGraphics extends Graphics2D {
 
     @Override
     public RenderingHints getRenderingHints() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return renderingHints;
     }
 
     @Override
@@ -580,33 +619,52 @@ public class DiskMemImageGraphics extends Graphics2D {
     }
 
     @Override
-    public boolean drawImage(Image img, int x, int y, ImageObserver observer) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public boolean drawImage(Image img, int x, int y, ImageObserver obs) {
+        Rectangle2D bounds = new Rectangle(x, y, img.getWidth(obs), img.getHeight(obs));
+        return doDraw(OpType.DRAW_IMAGE_XY, bounds, img, x, y, obs);
     }
 
     @Override
-    public boolean drawImage(Image img, int x, int y, int width, int height, ImageObserver observer) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public boolean drawImage(Image img, int x, int y, int width, int height, ImageObserver obs) {
+        Rectangle2D bounds = new Rectangle(x, y, width, height);
+        return doDraw(OpType.DRAW_IMAGE_XYWH, bounds, img, x, y, width, height, obs);
     }
 
     @Override
-    public boolean drawImage(Image img, int x, int y, Color bgcolor, ImageObserver observer) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public boolean drawImage(Image img, int x, int y, Color bgcolor, ImageObserver obs) {
+        Rectangle2D bounds = new Rectangle(x, y, img.getWidth(obs), img.getHeight(obs));
+        return doDraw(OpType.DRAW_IMAGE_XY_COL, bounds, img, x, y, bgcolor, obs);
     }
 
     @Override
-    public boolean drawImage(Image img, int x, int y, int width, int height, Color bgcolor, ImageObserver observer) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public boolean drawImage(Image img,
+            int x, int y, int width, int height,
+            Color bgcolor, ImageObserver obs) {
+
+        Rectangle2D bounds = new Rectangle(x, y, width, height);
+        return doDraw(OpType.DRAW_IMAGE_XYWH_COL, bounds, img, x, y, width, height, bgcolor, obs);
     }
 
     @Override
-    public boolean drawImage(Image img, int dx1, int dy1, int dx2, int dy2, int sx1, int sy1, int sx2, int sy2, ImageObserver observer) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public boolean drawImage(Image img, 
+            int dx1, int dy1, int dx2, int dy2,
+            int sx1, int sy1, int sx2, int sy2,
+            ImageObserver obs) {
+
+        Rectangle2D bounds = new Rectangle(dx1, dy1, dx2-dx1+1, dy2-dy1+1);
+        return doDraw(OpType.DRAW_IMAGE_DEST_SRC, bounds, img, dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2, obs);
     }
 
     @Override
-    public boolean drawImage(Image img, int dx1, int dy1, int dx2, int dy2, int sx1, int sy1, int sx2, int sy2, Color bgcolor, ImageObserver observer) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public boolean drawImage(Image img, 
+            int dx1, int dy1, int dx2, int dy2,
+            int sx1, int sy1, int sx2, int sy2,
+            Color bgcolor, ImageObserver obs) {
+
+        Rectangle2D bounds = new Rectangle(dx1, dy1, dx2-dx1+1, dy2-dy1+1);
+        return doDraw(OpType.DRAW_IMAGE_DEST_SRC_COL, bounds, img,
+                      dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2,
+                      bgcolor, obs);
     }
 
     @Override
