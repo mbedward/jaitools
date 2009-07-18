@@ -38,6 +38,9 @@ import java.awt.Stroke;
 import java.awt.font.FontRenderContext;
 import java.awt.font.GlyphVector;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Area;
+import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
@@ -100,9 +103,39 @@ public class DiskMemImageGraphics extends Graphics2D {
     private AffineTransform transform;
 
     public static enum OpType {
+
+        CLEAR_RECT("clearRect", int.class, int.class, int.class, int.class),
+
+        COPY_AREA("copyArea", int.class, int.class, int.class, int.class, int.class, int.class),
+        
+        DRAW_ARC("drawArc", int.class, int.class, int.class, int.class, int.class, int.class),
+
         DRAW_BUFFERED_IMAGE("drawImage", BufferedImage.class, BufferedImageOp.class, int.class, int.class),
+
         DRAW_IMAGE("drawImage", Image.class, AffineTransform.class, ImageObserver.class),
-        DRAW_SHAPE("draw", Shape.class);
+
+        DRAW_LINE("drawLine", int.class, int.class, int.class, int.class),
+
+        DRAW_OVAL("drawOval", int.class, int.class, int.class, int.class),
+
+        DRAW_ROUND_RECT("drawRoundRect", int.class, int.class, int.class, int.class, int.class, int.class),
+
+        DRAW_SHAPE("draw", Shape.class),
+
+        DRAW_STRING_XY("drawString", String.class, float.class, float.class),
+
+        DRAW_STRING_ITER_XY("drawString", AttributedCharacterIterator.class, float.class, float.class),
+
+        FILL("fill", Shape.class),
+
+        FILL_ARC("fillArc", int.class, int.class, int.class, int.class, int.class, int.class),
+
+        FILL_OVAL("fillOval", int.class, int.class, int.class, int.class),
+
+        FILL_RECT("fillRect", int.class, int.class, int.class, int.class),
+
+        FILL_ROUND_RECT("fillRoundRect", int.class, int.class, int.class, int.class, int.class, int.class);
+
 
         private String methodName;
         private Class<?>[] paramTypes;
@@ -117,6 +150,21 @@ public class DiskMemImageGraphics extends Graphics2D {
 
         public String getMethodName() {
             return methodName;
+        }
+
+        public String getFullMethodName() {
+            StringBuffer sb = new StringBuffer();
+            sb.append(methodName);
+            sb.append("(");
+            if (paramTypes.length > 0) {
+                sb.append(paramTypes[0].getSimpleName());
+                for (int i = 1; i < paramTypes.length; i++) {
+                    sb.append(", ");
+                    sb.append(paramTypes[i].getSimpleName());
+                }
+            }
+            sb.append(")");
+            return sb.toString();
         }
 
         public int getNumParams() {
@@ -170,22 +218,36 @@ public class DiskMemImageGraphics extends Graphics2D {
 
     @Override
     public void drawString(String str, int x, int y) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        drawString( str, (float)x, (float)y );
     }
 
     @Override
-    public void drawString(String s, float x, float y) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public void drawString(String str, float x, float y) {
+        Rectangle2D bounds = getFontMetrics().getStringBounds(str, this);
+        bounds.setRect(x,
+                       y - bounds.getHeight() + 1,
+                       bounds.getWidth(),
+                       bounds.getHeight() );
+
+        doDraw(OpType.DRAW_STRING_XY, bounds, str, x, y);
     }
 
     @Override
-    public void drawString(AttributedCharacterIterator iterator, int x, int y) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public void drawString(AttributedCharacterIterator iter, int x, int y) {
+        drawString( iter, (float)x, (float)y );
     }
 
     @Override
-    public void drawString(AttributedCharacterIterator iterator, float x, float y) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public void drawString(AttributedCharacterIterator iter, float x, float y) {
+        Rectangle2D bounds = getFontMetrics().getStringBounds(
+                iter, iter.getBeginIndex(), iter.getEndIndex(), this);
+
+        bounds.setRect(x,
+                       y - bounds.getHeight() + 1,
+                       bounds.getWidth(),
+                       bounds.getHeight() );
+
+        doDraw(OpType.DRAW_STRING_ITER_XY, bounds, iter, x, y);
     }
 
     @Override
@@ -195,17 +257,25 @@ public class DiskMemImageGraphics extends Graphics2D {
 
     @Override
     public void fill(Shape s) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        doDraw(OpType.FILL, s.getBounds2D(), s);
     }
 
     @Override
     public boolean hit(Rectangle rect, Shape s, boolean onStroke) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Graphics2D gr = getProxy();
+        copyGraphicsParams(gr);
+        boolean rtnVal = gr.hit(rect, s, onStroke);
+        gr.dispose();
+        return rtnVal;
     }
 
     @Override
     public GraphicsConfiguration getDeviceConfiguration() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Graphics2D gr = getProxy();
+        copyGraphicsParams(gr);
+        GraphicsConfiguration gc = gr.getDeviceConfiguration();
+        gr.dispose();
+        return gc;
     }
 
     @Override
@@ -251,37 +321,38 @@ public class DiskMemImageGraphics extends Graphics2D {
 
     @Override
     public void translate(int x, int y) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        origin.setLocation(x, y);
+        transform.translate( (double)x, (double)y );
     }
 
     @Override
     public void translate(double tx, double ty) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        transform.translate(tx, ty);
     }
 
     @Override
     public void rotate(double theta) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        transform.rotate(theta);
     }
 
     @Override
     public void rotate(double theta, double x, double y) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        transform.rotate(theta, x, y);
     }
 
     @Override
     public void scale(double sx, double sy) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        transform.scale(sx, sy);
     }
 
     @Override
     public void shear(double shx, double shy) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        transform.shear(shx, shy);
     }
 
     @Override
     public void transform(AffineTransform Tx) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        transform.concatenate(Tx);
     }
 
     @Override
@@ -321,12 +392,22 @@ public class DiskMemImageGraphics extends Graphics2D {
 
     @Override
     public void clip(Shape s) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if(clip == null) {
+            clip = s;
+        } else {
+            Area clipArea = (clip instanceof Area ? (Area)clip : new Area(clip));
+            clipArea.intersect(s instanceof Area ? (Area)s : new Area(s));
+            clip = clipArea;
+        }
     }
 
     @Override
     public FontRenderContext getFontRenderContext() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Graphics2D gr = getProxy();
+        copyGraphicsParams(gr);
+        FontRenderContext frc = gr.getFontRenderContext();
+        gr.dispose();
+        return frc;
     }
 
     /**
@@ -373,7 +454,11 @@ public class DiskMemImageGraphics extends Graphics2D {
 
     @Override
     public FontMetrics getFontMetrics(Font f) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Graphics2D gr = getProxy();
+        copyGraphicsParams(gr);
+        FontMetrics fm = gr.getFontMetrics(f);
+        gr.dispose();
+        return fm;
     }
 
     @Override
@@ -383,12 +468,12 @@ public class DiskMemImageGraphics extends Graphics2D {
 
     @Override
     public void clipRect(int x, int y, int width, int height) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        clip(new Rectangle(x, y, width, height));
     }
 
     @Override
     public void setClip(int x, int y, int width, int height) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        setClip(new Rectangle(x, y, width, height));
     }
 
     @Override
@@ -403,52 +488,68 @@ public class DiskMemImageGraphics extends Graphics2D {
 
     @Override
     public void copyArea(int x, int y, int width, int height, int dx, int dy) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        doDraw(OpType.COPY_AREA,
+               new Rectangle(x + dx, y + dy, width, height),
+               x, y, width, height, dx, dy);
     }
 
     @Override
     public void drawLine(int x1, int y1, int x2, int y2) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Rectangle2D bounds = new Rectangle();
+        bounds.setFrameFromDiagonal(x1, y1, x2, y2);
+        doDraw(OpType.DRAW_LINE, bounds, x1, y1, x2, y2);
     }
 
     @Override
     public void fillRect(int x, int y, int width, int height) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        doDraw(OpType.FILL_RECT, new Rectangle(x, y, width, height), x, y, width, height);
     }
 
     @Override
     public void clearRect(int x, int y, int width, int height) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        doDraw(OpType.CLEAR_RECT, new Rectangle(x, y, width, height), x, y, width, height);
     }
 
     @Override
     public void drawRoundRect(int x, int y, int width, int height, int arcWidth, int arcHeight) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Rectangle2D bounds = new Rectangle(
+                x - arcWidth, y - arcHeight,
+                width + 2 * arcWidth, height + 2 * arcHeight);
+
+        doDraw(OpType.DRAW_ROUND_RECT, bounds, x, y, width, height, arcWidth, arcHeight);
     }
 
     @Override
     public void fillRoundRect(int x, int y, int width, int height, int arcWidth, int arcHeight) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Rectangle2D bounds = new Rectangle(
+                x - arcWidth, y - arcHeight,
+                width + 2 * arcWidth, height + 2 * arcHeight);
+
+        doDraw(OpType.FILL_ROUND_RECT, bounds, x, y, width, height, arcWidth, arcHeight);
     }
 
     @Override
     public void drawOval(int x, int y, int width, int height) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Rectangle2D bounds = new Rectangle(x, y, width, height);
+        doDraw(OpType.DRAW_OVAL, bounds, x, y, width, height);
     }
 
     @Override
     public void fillOval(int x, int y, int width, int height) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Rectangle2D bounds = new Rectangle(x, y, width, height);
+        doDraw(OpType.FILL_OVAL, bounds, x, y, width, height);
     }
 
     @Override
     public void drawArc(int x, int y, int width, int height, int startAngle, int arcAngle) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Rectangle2D bounds = new Rectangle(x, y, width, height);
+        doDraw(OpType.DRAW_ARC, bounds, x, y, width, height, startAngle, arcAngle);
     }
 
     @Override
     public void fillArc(int x, int y, int width, int height, int startAngle, int arcAngle) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Rectangle2D bounds = new Rectangle(x, y, width, height);
+        doDraw(OpType.FILL_ARC, bounds, x, y, width, height, startAngle, arcAngle);
     }
 
     @Override
@@ -498,7 +599,9 @@ public class DiskMemImageGraphics extends Graphics2D {
 
     @Override
     public void dispose() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        /*
+         * No need to do anything here
+         */
     }
 
     /**
@@ -510,24 +613,15 @@ public class DiskMemImageGraphics extends Graphics2D {
      * @param args a variable length list of arguments for the operation
      */
     boolean doDraw(OpType opType, Rectangle2D bounds, Object ...args) {
+        Method method = null;
+        boolean rtnVal = false;
+
         try {
-            Method method = Graphics2D.class.getMethod(opType.getMethodName(), opType.getParamTypes());
+            method = Graphics2D.class.getMethod(opType.getMethodName(), opType.getParamTypes());
 
         } catch (NoSuchMethodException nsmEx) {
             // programmer error :-(
-            StringBuffer sb = new StringBuffer();
-            sb.append("No method ");
-            sb.append(opType.getMethodName());
-            sb.append("(");
-            if (opType.getNumParams() > 0) {
-                sb.append(opType.getParamTypes()[0].getSimpleName());
-                for (int i = 1; i < opType.getNumParams(); i++) {
-                    sb.append(", ");
-                    sb.append(opType.getParamTypes()[i].getSimpleName());
-                }
-            }
-            sb.append(")");
-            throw new RuntimeException(sb.toString());
+            throw new RuntimeException("No such method: " + opType.getFullMethodName());
         }
 
         int minTileX = Math.max(targetImage.XToTileX((int)bounds.getMinX()),
@@ -562,10 +656,35 @@ public class DiskMemImageGraphics extends Graphics2D {
 
                 Graphics2D gr = bufImg.createGraphics();
                 copyGraphicsParams(gr);
+
+                try {
+                    Point2D p2d = gr.getTransform().transform(new Point2D.Double(0, 0), null);
+                    Point p = new Point((int)p2d.getX() - minX, (int)p2d.getY() - minY);
+                    p2d = gr.getTransform().inverseTransform(p, null);
+                    gr.translate(p2d.getX(), p2d.getY());
+
+                } catch(NoninvertibleTransformException nte) {
+                    // TODO replace this with decent error handling
+                    throw new RuntimeException(nte);
+                }
+
+                try {
+                    Object oRtnVal = method.invoke(gr, args);
+                    if(oRtnVal != null && oRtnVal.getClass() == boolean.class) {
+                        rtnVal = ((Boolean)oRtnVal).booleanValue();
+                    }
+
+                } catch(Exception ex) {
+                    // TODO replace this with decent error handling
+                    throw new RuntimeException(ex);
+                }
+
+                gr.dispose();
+                targetImage.releaseWritableTile(tileX, tileY);
             }
         }
 
-        return true;
+        return rtnVal;
     }
 
     /**
@@ -606,8 +725,11 @@ public class DiskMemImageGraphics extends Graphics2D {
         assert(targetImage != null);
 
         properties = new Hashtable<String, Object>();
-        for (String name : targetImage.getPropertyNames()) {
-            properties.put(name, targetImage.getProperty(name));
+        String[] propertyNames = targetImage.getPropertyNames();
+        if (propertyNames != null) {
+            for (String name : propertyNames) {
+                properties.put(name, targetImage.getProperty(name));
+            }
         }
 
         // TODO: set rendering hints
@@ -623,13 +745,7 @@ public class DiskMemImageGraphics extends Graphics2D {
         assert(colorModel != null);
         assert(properties != null);
 
-        Raster tile = targetImage.getTile(targetImage.getMinTileX(), targetImage.getMinTileY());
-        WritableRaster tiny = tile.createCompatibleWritableRaster(1, 1);
-
-        BufferedImage img = new BufferedImage(
-                colorModel, tiny, colorModel.isAlphaPremultiplied(), properties);
-
-        Graphics2D gr = img.createGraphics();
+        Graphics2D gr = getProxy();
 
         origin = new Point(0, 0);
         clip = targetImage.getBounds();
@@ -673,9 +789,26 @@ public class DiskMemImageGraphics extends Graphics2D {
         if(paint != null) {
             gr.setPaint(paint);
         }
-        gr.setRenderingHints(renderingHints);
+        if (renderingHints != null) {
+            gr.setRenderingHints(renderingHints);
+        }
         gr.setStroke(stroke);
         gr.setTransform(transform);
     }
 
+    /**
+     * Helper method for other methods that need an instantiated
+     * Graphics2D object that is 'representative' of the target image.
+     * 
+     * @return a new Graphics2D instance
+     */
+    private Graphics2D getProxy() {
+        Raster tile = targetImage.getTile(targetImage.getMinTileX(), targetImage.getMinTileY());
+        WritableRaster tiny = tile.createCompatibleWritableRaster(1, 1);
+
+        BufferedImage img = new BufferedImage(
+                colorModel, tiny, colorModel.isAlphaPremultiplied(), properties);
+
+        return img.createGraphics();
+    }
 }
