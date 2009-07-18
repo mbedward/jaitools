@@ -118,6 +118,10 @@ public class DiskMemImageGraphics extends Graphics2D {
 
         DRAW_OVAL("drawOval", int.class, int.class, int.class, int.class),
 
+        DRAW_POLYGON("drawPolygon", int[].class, int[].class, int.class),
+
+        DRAW_POLYLINE("drawPolyline", int[].class, int[].class, int.class),
+
         DRAW_ROUND_RECT("drawRoundRect", int.class, int.class, int.class, int.class, int.class, int.class),
 
         DRAW_SHAPE("draw", Shape.class),
@@ -131,6 +135,8 @@ public class DiskMemImageGraphics extends Graphics2D {
         FILL_ARC("fillArc", int.class, int.class, int.class, int.class, int.class, int.class),
 
         FILL_OVAL("fillOval", int.class, int.class, int.class, int.class),
+
+        FILL_POLYGON("fillPolygon", int[].class, int[].class, int.class),
 
         FILL_RECT("fillRect", int.class, int.class, int.class, int.class),
 
@@ -554,17 +560,23 @@ public class DiskMemImageGraphics extends Graphics2D {
 
     @Override
     public void drawPolyline(int[] xPoints, int[] yPoints, int nPoints) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        doDraw(OpType.DRAW_POLYLINE,
+               getPolyBounds(xPoints, yPoints, nPoints),
+               xPoints, yPoints, nPoints);
     }
 
     @Override
     public void drawPolygon(int[] xPoints, int[] yPoints, int nPoints) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        doDraw(OpType.DRAW_POLYGON,
+               getPolyBounds(xPoints, yPoints, nPoints),
+               xPoints, yPoints, nPoints);
     }
 
     @Override
     public void fillPolygon(int[] xPoints, int[] yPoints, int nPoints) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        doDraw(OpType.FILL_POLYGON,
+               getPolyBounds(xPoints, yPoints, nPoints),
+               xPoints, yPoints, nPoints);
     }
 
     @Override
@@ -685,6 +697,44 @@ public class DiskMemImageGraphics extends Graphics2D {
         }
 
         return rtnVal;
+    }
+
+    /**
+     * Helper for methods that draw polylines and polygons. Gets the
+     * bounding rectangle of the vertices.
+     *
+     * @param xPoints x coordinates of vertices
+     * @param yPoints y coordinates of vertices
+     * @param nPoints number of vertices
+     * @return
+     */
+    private Rectangle2D getPolyBounds(int[] xPoints, int[] yPoints, int nPoints) {
+        Rectangle bounds = new Rectangle();
+
+        if (nPoints > 0) {
+            int minX = xPoints[0];
+            int maxX = minX;
+            int minY = yPoints[0];
+            int maxY = minY;
+
+            for (int i = 1; i < nPoints; i++) {
+                if (xPoints[i] < minX) {
+                    minX = xPoints[i];
+                } else if (xPoints[i] > maxX) {
+                    maxX = xPoints[i];
+                }
+
+                if (yPoints[i] < minY) {
+                    minY = yPoints[i];
+                } else if (yPoints[i] > maxY) {
+                    maxY = yPoints[i];
+                }
+            }
+
+            bounds.setBounds(minX, minY, maxX - minX + 1, maxY - minY + 1);
+        }
+
+        return bounds;
     }
 
     /**

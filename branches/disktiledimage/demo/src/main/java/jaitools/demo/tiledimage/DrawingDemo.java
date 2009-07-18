@@ -57,13 +57,9 @@ public class DrawingDemo {
         gr.setBackground(Color.ORANGE);
         gr.clearRect(0, 0, 256, 256);
 
-        gr.setStroke(new BasicStroke(3.0f));
-        gr.setColor(Color.GRAY);
-        gr.drawLine(0, 0, 255, 255);
-        gr.drawLine(255, 0, 0, 255);
-
         Shape shp = new Rectangle(64, 64, 128, 128);
         gr.setColor(Color.BLUE);
+        gr.setStroke(new BasicStroke(3.0f));
         gr.draw(shp);
 
         gr.setColor(Color.RED);
@@ -74,7 +70,15 @@ public class DrawingDemo {
         gr.setFont(font.deriveFont(24f));
         gr.drawString("Hello World !", 48, 32);
 
-        ImageFrame frame = new ImageFrame(img, "drawing demo");
+        /**
+         * Draw lines on tile boundaries
+         */
+        gr.setStroke(new BasicStroke(1.0f));
+        gr.setColor(Color.GRAY);
+        gr.drawLine(128, 0, 128, 255);
+        gr.drawLine(0, 128, 255, 128);
+
+        ImageFrame frame = new ImageFrame(img, "Image of 4 square tiles");
         frame.setVisible(true);
     }
 }
