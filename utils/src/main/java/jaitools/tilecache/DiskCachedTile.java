@@ -185,17 +185,6 @@ public final class DiskCachedTile implements CachedTile {
     private TileAction action =TileAction.getDefault();
 
 
-    /**
-     * Create a file to cache the given tile on disk. Presently
-     * this method does nothing more than delegate to File.createTempFile
-     *
-     * @throws java.io.IOException
-     */
-    public static File createFile(DiskCachedTile tile) throws IOException {
-        return File.createTempFile(FILE_PREFIX, FILE_SUFFIX);
-    }
-
-
     DiskCachedTile(Object id,
                   RenderedImage owner,
                   int tileX,
@@ -548,4 +537,15 @@ public final class DiskCachedTile implements CachedTile {
 				}
         }
     }
+
+    /**
+     * Create a file to cache the given tile on disk. Presently
+     * this method does nothing more than delegate to File.createTempFile
+     *
+     * @throws java.io.IOException
+     */
+    private File createFile(DiskCachedTile tile) throws IOException {
+        return File.createTempFile(FILE_PREFIX, FILE_SUFFIX);
+    }
+
 }

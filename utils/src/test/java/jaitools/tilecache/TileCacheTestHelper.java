@@ -24,7 +24,7 @@ import javax.media.jai.RenderedOp;
  * @since 1.0
  * @version $Id$
  */
-public class TileCacheTestHelper implements Observer {
+class TileCacheTestHelper implements Observer {
 
     private static final int TILE_WIDTH = 128;
     private RenderingHints hints;

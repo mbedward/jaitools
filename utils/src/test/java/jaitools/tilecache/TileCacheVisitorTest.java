@@ -58,7 +58,7 @@ public class TileCacheVisitorTest {
 
     @Test
     public void testVisitor(){
-        System.out.println("   testing cache visitor");
+        System.out.println("   cache visitor");
         final int MEM_TILES = 10;
         final int XTILES = 3;
         final int YTILES = 3;
@@ -78,35 +78,24 @@ public class TileCacheVisitorTest {
          */
         RenderedOp op1 = helper.simpleJAIOp(XTILES, YTILES);
         op1.getTiles();
+
         RenderedOp op2 = helper.simpleJAIOp(XTILES, YTILES);
         op2.getTiles();
+
         /*
          * Visit the cache and check that we get the correct tile stats
          */
-        TestVisitor visitor = new TestVisitor();
+        BasicCacheVisitor visitor = new BasicCacheVisitor();
+        visitor.setFilter(BasicCacheVisitor.Key.OWNER, op1.getCurrentRendering());
         cache.accept(visitor);
 
-        assertTrue(visitor.numTiles == XTILES * YTILES * 2);
-        assertTrue(visitor.numResidentTiles == MEM_TILES);
-        assertTrue(visitor.imageIds.size() == 2);
+        assertTrue(visitor.getTiles().size() == XTILES * YTILES);
+
+        visitor.setFilter(BasicCacheVisitor.Key.RESIDENT, Boolean.TRUE);
+        visitor.clear();
+        cache.accept(visitor);
+
+        assertTrue(visitor.getTiles().size() == MEM_TILES);
     }
 
-    /*
-     * A very basic visitor class for testing purposes
-     */
-    static class TestVisitor implements DiskMemTileCacheVisitor {
-        int numTiles = 0;
-        int numResidentTiles = 0;
-        Set<Object> imageIds = new HashSet<Object>();
-
-        public void visit(DiskCachedTile tile, boolean isResident) {
-            numTiles++;
-            if (isResident) {
-                numResidentTiles++;
-            }
-
-            imageIds.add(((PlanarImage)tile.getOwner()).getImageID());
-        }
-
-    }
 }
