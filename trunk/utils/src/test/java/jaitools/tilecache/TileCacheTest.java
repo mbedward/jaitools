@@ -71,7 +71,7 @@ public class TileCacheTest {
      */
     @Test
     public void testJAIHasCache() {
-        System.out.println("   testing JAI set with DiskMemTileCache");
+        System.out.println("   JAI set with DiskMemTileCache");
         TileCache jaicache = JAI.getDefaultInstance().getTileCache();
         assertTrue(jaicache instanceof DiskMemTileCache);
     }
@@ -82,7 +82,7 @@ public class TileCacheTest {
      */
     @Test
     public void testDefaultParams() {
-        System.out.println("   testing default cache params");
+        System.out.println("   default cache params");
 
         assertTrue(cache.getMemoryCapacity() == DiskMemTileCache.DEFAULT_MEMORY_CAPACITY);
         assertTrue(cache.getMemoryThreshold() - DiskMemTileCache.DEFAULT_MEMORY_THRESHOLD < FLOAT_TOL);
@@ -94,7 +94,7 @@ public class TileCacheTest {
      */
     @Test
     public void testCacheUsed() {
-        System.out.println("   testing cache use in simple op");
+        System.out.println("   cache use in simple op");
 
         /*
          * Create a rendering chain for an output image 3 tiles x 2 tiles
@@ -126,7 +126,7 @@ public class TileCacheTest {
      */
     @Test
     public void testMemorySwapping() {
-        System.out.println("   testing swapping tiles into memory");
+        System.out.println("   swapping tiles into memory");
 
         /*
          * Create a rendering chain for an output image 3 tiles x 2 tiles
@@ -176,7 +176,7 @@ public class TileCacheTest {
      */
     @Test
     public void removeTilesForImage() {
-        System.out.println("   testing removal of tiles for an image");
+        System.out.println("   removal of tiles for an image");
 
         helper.startObserving(cache);
 
@@ -210,7 +210,7 @@ public class TileCacheTest {
      */
     @Test
     public void testFlush() {
-        System.out.println("   testing cache flush and flushMemory");
+        System.out.println("   cache flush and flushMemory");
 
         /*
          * Create an image and use getTiles to force the tiles to be cached
@@ -234,7 +234,7 @@ public class TileCacheTest {
      */
     @Test
     public void testFileHandling() {
-        System.out.println("   testing cache file handling");
+        System.out.println("   cache file handling");
 
         helper.startObserving(cache);
 
