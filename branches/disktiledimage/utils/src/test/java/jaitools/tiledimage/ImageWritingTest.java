@@ -43,6 +43,10 @@ import static org.junit.Assert.*;
  */
 public class ImageWritingTest extends TiledImageTestBase {
 
+    private static final int TILE_WIDTH = 128;
+    private static final int XTILES = 5;
+    private static final int YTILES = 3;
+
     @Before
     public void setup() {
         image = makeImage(TILE_WIDTH, XTILES, YTILES);
@@ -134,15 +138,6 @@ public class ImageWritingTest extends TiledImageTestBase {
                 }
             }
         }
-
-    }
-
-    /**
-     * Test writing to the image via Graphics2D
-     */
-    @Test
-    public void testGraphics() {
-        System.out.println("   setting image data via Graphics2D methods");
 
     }
 

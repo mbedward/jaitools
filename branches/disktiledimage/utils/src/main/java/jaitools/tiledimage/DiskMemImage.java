@@ -38,6 +38,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.PlanarImage;
+import javax.media.jai.TileCache;
 
 /**
  * A tiled image class
@@ -54,6 +55,7 @@ public class DiskMemImage
     private boolean[][] tileInUse;
     private int numTilesInUse;
 
+    private long tileMemorySize;
 
     /**
      * Minimal onstructor. This will set default values for the image's
@@ -168,6 +170,10 @@ public class DiskMemImage
         numTilesInUse = 0;
 
         tileCache = new DiskMemTileCache();
+
+        DataBuffer db = tileSampleModel.createDataBuffer();
+        tileMemorySize = DataBuffer.getDataTypeSize(db.getDataType()) / 8L *
+                db.getSize() * db.getNumBanks();
     }
 
     /**
@@ -405,6 +411,30 @@ public class DiskMemImage
      */
     public void setMemoryCapacity(long memCapacity) {
         tileCache.setMemoryCapacity(memCapacity);
+    }
+
+    /**
+     * Returns the amount of memory (bytes) required to store a single image
+     * tile's data
+     *
+     * @return tile memory size in bytes
+     */
+    public long getTileMemorySize() {
+        return tileMemorySize;
+    }
+
+    /**
+     * Retrieve a reference to the <code>DiskMemTileCache</code> instance
+     * that is being used by this image. This method is intended for client
+     * code that wishes to query cache state or receive cache diagnostic
+     * messages (via the <code>Observer</code> interface). It is probably <b>not</b>
+     * a good idea to manipulate the cache state directly !
+     *
+     * @return a live reference to the cache being used exclusively by this image
+     * @see DiskMemTileCache
+     */
+    public DiskMemTileCache getTileCache() {
+        return tileCache;
     }
 
     private WritableRaster createTile(int tileX, int tileY) {

@@ -32,10 +32,6 @@ import java.awt.image.SampleModel;
  */
 public abstract class TiledImageTestBase {
 
-    protected static final int TILE_WIDTH = 128;
-    protected static final int XTILES = 5;
-    protected static final int YTILES = 3;
-
     protected DiskMemImage image;
 
     protected DiskMemImage makeImage(int tileWidth, int xTiles, int yTiles) {

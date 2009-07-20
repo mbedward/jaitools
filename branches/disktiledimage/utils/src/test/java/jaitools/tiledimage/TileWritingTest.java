@@ -36,6 +36,10 @@ import static org.junit.Assert.*;
  */
 public class TileWritingTest extends TiledImageTestBase {
 
+    private static final int TILE_WIDTH = 128;
+    private static final int XTILES = 5;
+    private static final int YTILES = 3;
+
     @Before
     public void setUp() {
         image = makeImage(TILE_WIDTH, XTILES, YTILES);
