@@ -212,7 +212,7 @@ public class DiskMemImageGraphics extends Graphics2D {
 
     @Override
     public void draw(Shape s) {
-        doDraw(OpType.DRAW_SHAPE, s.getBounds2D(), s);
+        doDraw(OpType.DRAW_SHAPE, correctForStroke(s.getBounds2D()), s);
     }
 
     @Override
@@ -538,7 +538,7 @@ public class DiskMemImageGraphics extends Graphics2D {
     public void drawLine(int x1, int y1, int x2, int y2) {
         Rectangle2D bounds = new Rectangle();
         bounds.setFrameFromDiagonal(x1, y1, x2, y2);
-        doDraw(OpType.DRAW_LINE, bounds, x1, y1, x2, y2);
+        doDraw(OpType.DRAW_LINE, correctForStroke(bounds), x1, y1, x2, y2);
     }
 
     @Override
@@ -557,7 +557,8 @@ public class DiskMemImageGraphics extends Graphics2D {
                 x - arcWidth, y - arcHeight,
                 width + 2 * arcWidth, height + 2 * arcHeight);
 
-        doDraw(OpType.DRAW_ROUND_RECT, bounds, x, y, width, height, arcWidth, arcHeight);
+        doDraw(OpType.DRAW_ROUND_RECT, correctForStroke(bounds),
+                x, y, width, height, arcWidth, arcHeight);
     }
 
     @Override
@@ -572,7 +573,7 @@ public class DiskMemImageGraphics extends Graphics2D {
     @Override
     public void drawOval(int x, int y, int width, int height) {
         Rectangle2D bounds = new Rectangle(x, y, width, height);
-        doDraw(OpType.DRAW_OVAL, bounds, x, y, width, height);
+        doDraw(OpType.DRAW_OVAL, correctForStroke(bounds), x, y, width, height);
     }
 
     @Override
@@ -584,7 +585,7 @@ public class DiskMemImageGraphics extends Graphics2D {
     @Override
     public void drawArc(int x, int y, int width, int height, int startAngle, int arcAngle) {
         Rectangle2D bounds = new Rectangle(x, y, width, height);
-        doDraw(OpType.DRAW_ARC, bounds, x, y, width, height, startAngle, arcAngle);
+        doDraw(OpType.DRAW_ARC, correctForStroke(bounds), x, y, width, height, startAngle, arcAngle);
     }
 
     @Override
@@ -596,14 +597,14 @@ public class DiskMemImageGraphics extends Graphics2D {
     @Override
     public void drawPolyline(int[] xPoints, int[] yPoints, int nPoints) {
         doDraw(OpType.DRAW_POLYLINE,
-               getPolyBounds(xPoints, yPoints, nPoints),
+               correctForStroke(getPolyBounds(xPoints, yPoints, nPoints)),
                xPoints, yPoints, nPoints);
     }
 
     @Override
     public void drawPolygon(int[] xPoints, int[] yPoints, int nPoints) {
         doDraw(OpType.DRAW_POLYGON,
-               getPolyBounds(xPoints, yPoints, nPoints),
+               correctForStroke(getPolyBounds(xPoints, yPoints, nPoints)),
                xPoints, yPoints, nPoints);
     }
 
@@ -751,6 +752,27 @@ public class DiskMemImageGraphics extends Graphics2D {
         }
 
         return rtnVal;
+    }
+
+    /**
+     * Helper method that takes a bounding rectangle calculated by
+     * one fo the drawing methods and expands it, if necessary, to
+     * account for the current Stroke width.
+     * <p>
+     * This correction appears to be missing from JAI's TiledImageGraphics
+     * class.
+     *
+     * @param rect input bounds
+     * @return expanded bounds as a new Rectangle2D object; or the
+     * input Rectangle2D if no stroke is set
+     */
+    private Rectangle2D correctForStroke(Rectangle2D rect) {
+        if (stroke != null) {
+            Shape shp = stroke.createStrokedShape(rect);
+            return shp.getBounds2D();
+        } else {
+            return rect;
+        }
     }
 
     /**
