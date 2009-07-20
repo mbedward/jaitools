@@ -62,6 +62,9 @@ import javax.media.jai.PlanarImage;
  * As with JAI's <code>TiledImageGraphics</code> class, java.awt
  * routines do the work and the purpose of this class is to
  * serve the image data in a form that those routines can handle.
+ * <p>
+ * Most of the methods in this class are identical in function to
+ * those in Graphics2D; these have not been documented here.
  *
  * @author Michael Bedward
  * @since 1.0
@@ -98,6 +101,9 @@ public class DiskMemImageGraphics extends Graphics2D {
     private Stroke stroke;
     private AffineTransform transform;
 
+    /**
+     * Constants and associated data for graphics operations
+     */
     public static enum OpType {
 
         CLEAR_RECT("clearRect", int.class, int.class, int.class, int.class),
