@@ -50,3 +50,7 @@ DiskMemTileCache cache = new DiskMemTileCache(cacheParams);
 }}}
 
 Cache use can be monitored by classes that implement the `java.util.Observer` interface. See `jaitools.demo.tilecache.TileCacheDemo` for an example.
+
+==See also==
+
+[DiskMemImage] - a writable tiled image class that uses !DiskMemTileCache
