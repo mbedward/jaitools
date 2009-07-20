@@ -1,6 +1,8 @@
 #summary Side-bar items
 
  * [http://code.google.com/p/jai-tools/ Home]
+ * Image classes
+  * [DiskMemImage]
  * Operators
   * [KernelStats]
   * [MaskedConvolve]

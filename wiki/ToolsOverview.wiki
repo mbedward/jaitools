@@ -4,6 +4,9 @@
 
 http://jai-tools.googlecode.com/svn/wiki/images/toolbox_200.gif
 
+==Image classes==
+ * DiskMemImage - a writable tiled image that uses disk and memory caching for its data
+
 ==Operators==
  * KernelStats - calculates one or more statistics for a pixel's neighbourhood
  * MaskedConvolve - convolution of a subset of image pixels

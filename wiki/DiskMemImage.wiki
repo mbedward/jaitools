@@ -1,0 +1,59 @@
+*summary A writable tiled image class that uses disk as well as memory storage for its data
+
+=!DiskMemImage=
+
+*module:* utils <br>
+*package:* jaitools.tiledimage
+
+==Description==
+
+This class serves the same purpose as JAI's standard !TiledImage class. However, unlike TiledImage the image size is not constrained by 
+available memory. 
+
+Each instance of !DiskMemImage uses its own DiskMemTileCache to store image data on disk and hold the most recently accessed tiles in memory. The amount of memory used for tile storage can be controlled.
+
+!DiskMemImage implements the WritableRenderedImage and PlanarImage interfaces.
+
+==Examples of use==
+
+This code illustrates creating a !DiskMemImage...
+{{{
+// RGB ColorModel
+ColorModel cm = ColorModel.getRGBdefault();
+
+// Sample  model specifying the size of image tiles
+int tileW = 128;
+SampleModel sm = cm.createCompatibleSampleModel(tileW, tileW);
+
+// Create an image 512 x 512 pixels with the given sample and 
+// color models
+DiskMemImage img = new DiskMemImage(0, 0, 512, 512, 0, 0, sm, cm);
+}}}
+
+Graphics2D methods can be used to draw into a !DiskMemImage...
+{{{
+DiskMemImage img = ...
+// create a graphics object (this will be an instance
+// of jaitools.tiledimage.DiskMemImageGraphics)
+Graphics2D gr = img.createGraphics();
+
+// do some drawing with Graphics2D methods
+gr.setColor(Color.BLUE);
+Shape shp = ... 
+gr.draw(shp);
+}}}
+
+Image data can also be accessed at the tile level...
+{{{
+DiskMemImage img = ...
+
+// for read-only access...
+Raster reading = img.getTile(tileX, tileY);
+
+// for writing...
+WritableRaster writing = img.getWritableTile(tileX, tileY);
+... // write to the tile
+img.releaseWritableTile(tileX, tileY);
+}}}
+
+
