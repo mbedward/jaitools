@@ -7,12 +7,12 @@
 
 ==Description==
 
-This class serves the same purpose as JAI's standard !TiledImage class. However, unlike TiledImage the image size is not constrained by 
+This class serves the same purpose as JAI's standard !TiledImage class. However, unlike !TiledImage the image size is not constrained by 
 available memory. 
 
-Each instance of !DiskMemImage uses its own DiskMemTileCache to store image data on disk and hold the most recently accessed tiles in memory. The amount of memory used for tile storage can be controlled.
+Each instance of !DiskMemImage uses its own [UtilsTileCache DiskMemTileCache] to store image data on disk and hold the most recently accessed tiles in memory. The amount of memory used for tile storage can be controlled.
 
-!DiskMemImage implements the WritableRenderedImage and PlanarImage interfaces.
+!DiskMemImage implements the !WritableRenderedImage and !PlanarImage interfaces.
 
 ==Examples of use==
 
@@ -47,12 +47,13 @@ Image data can also be accessed at the tile level...
 {{{
 DiskMemImage img = ...
 
-// for read-only access...
+// access to read
 Raster reading = img.getTile(tileX, tileY);
 
-// for writing...
+// access for writing
 WritableRaster writing = img.getWritableTile(tileX, tileY);
-... // write to the tile
+... 
+// release the tile when finished
 img.releaseWritableTile(tileX, tileY);
 }}}
 
