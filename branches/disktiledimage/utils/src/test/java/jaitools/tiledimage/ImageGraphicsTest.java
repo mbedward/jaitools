@@ -19,11 +19,14 @@
  */
 package jaitools.tiledimage;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
+import javax.media.jai.iterator.RectIter;
+import javax.media.jai.iterator.RectIterFactory;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -72,15 +75,8 @@ public class ImageGraphicsTest extends TiledImageTestBase {
 
 
     @Test
-    public void createGraphics() {
-        System.out.println("   creating a Graphics2D object for the image");
-        gr = image.createGraphics();
-        assertTrue(gr != null);
-    }
-
-    @Test
     public void drawShape() {
-        System.out.println("   drawShape");
+        System.out.println("   draw(Shape s)");
 
         Rectangle shp = new Rectangle(
                 imgMinX + TILE_WIDTH / 2,
@@ -99,7 +95,6 @@ public class ImageGraphicsTest extends TiledImageTestBase {
          * will be 1 pixel beyond the shape's max x and y
          * coords
          */
-
         int shpMinX = shp.x;
         int shpMinY = shp.y;
         int shpMaxX = shp.x + shp.width;  // as drawn
@@ -139,7 +134,153 @@ public class ImageGraphicsTest extends TiledImageTestBase {
         }
     }
 
+    @Test
+    public void fillShape() {
+        System.out.println("   fill(Shape s)");
+
+        Rectangle shp = new Rectangle(
+                imgMinX + TILE_WIDTH / 2,
+                imgMinY + TILE_WIDTH / 2,
+                imgW - TILE_WIDTH,
+                imgH - TILE_WIDTH);
+
+        gr.setColor(new Color(argb));
+        gr.fill(shp);
+
+        RectIter iter = getRectIter();
+        int[] data = new int[4];
+
+        int y = imgMinY;
+        do {
+            int x = imgMinX;
+            do {
+
+                iter.getPixel(data);
+                if (shp.contains(x, y)) {
+                    assertTrue(data[RED_INDEX] == red);
+                    assertTrue(data[GREEN_INDEX] == green);
+                    assertTrue(data[BLUE_INDEX] == blue);
+                    assertTrue(data[ALPHA_INDEX] == alpha);
+
+                } else {
+                    assertTrue(data[RED_INDEX] == 0);
+                    assertTrue(data[GREEN_INDEX] == 0);
+                    assertTrue(data[BLUE_INDEX] == 0);
+                    assertTrue(data[ALPHA_INDEX] == 0);
+                }
+                x++ ;
+
+            } while (!iter.nextPixelDone());
+
+            iter.startPixels();
+            y++ ;
+
+        } while (!iter.nextLineDone());
+
+    }
+
+    @Test
+    public void drawLine() {
+        System.out.println("   drawLine");
+
+        gr.setColor(new Color(argb));
+
+        // draw the diagonal of a square
+        int endCoord = (imgW <= imgH ? imgMaxX : imgMaxY);
+        gr.drawLine(imgMinX, imgMinY, endCoord, endCoord);
+
+        // check the drawing
+        int x = imgMinX;
+        int y = imgMinY;
+        RandomIter iter = getRandomIter();
+        int[] data = new int[4];
+        while (x <= endCoord) {
+            iter.getPixel(x, y, data);
+            assertTrue(data[RED_INDEX] == red);
+            assertTrue(data[GREEN_INDEX] == green);
+            assertTrue(data[BLUE_INDEX] == blue);
+            assertTrue(data[ALPHA_INDEX] == alpha);
+            x++;
+            y++;
+        }
+    }
+
+    @Test
+    public void setStroke() {
+        System.out.println("   drawing with set stroke width");
+        
+        gr.setColor(new Color(argb));
+        gr.setStroke(new BasicStroke(3.0f));
+
+        int yline = imgH / 2;
+        gr.drawLine(imgMinX, yline, imgMaxX, yline);
+
+        RandomIter iter = getRandomIter();
+        int[] data = new int[4];
+        for (int x = imgMinX; x <= imgMaxX; x++) {
+            for (int y = yline-1; y <= yline+1; y++) {
+                iter.getPixel(x, y, data);
+                assertTrue(data[RED_INDEX] == red);
+                assertTrue(data[GREEN_INDEX] == green);
+                assertTrue(data[BLUE_INDEX] == blue);
+                assertTrue(data[ALPHA_INDEX] == alpha);
+            }
+        }
+    }
+
+    @Test
+    public void drawPolyline() {
+        System.out.println("   drawPolyline");
+
+        int minX = imgMinX + 10;
+        int midX = imgMinX + imgW / 2;
+        int maxX = imgMaxX - 10;
+
+        int minY = imgMinY + 10;
+        int maxY = imgMaxY - 10;
+
+        int[] xPoints = { minX, midX, midX, maxX };
+        int[] yPoints = { minY, minY, maxY, maxY };
+
+        gr.setColor(new Color(argb));
+        gr.drawPolyline(xPoints, yPoints, xPoints.length);
+
+        RandomIter iter = getRandomIter();
+        int[] data = new int[4];
+
+        // first segment
+        for (int x = minX; x <= midX; x++) {
+            iter.getPixel(x, minY, data);
+            assertTrue(data[RED_INDEX] == red);
+            assertTrue(data[GREEN_INDEX] == green);
+            assertTrue(data[BLUE_INDEX] == blue);
+            assertTrue(data[ALPHA_INDEX] == alpha);
+        }
+
+        // second segment
+        for (int y = minY; y <= maxY; y++) {
+            iter.getPixel(midX, y, data);
+            assertTrue(data[RED_INDEX] == red);
+            assertTrue(data[GREEN_INDEX] == green);
+            assertTrue(data[BLUE_INDEX] == blue);
+            assertTrue(data[ALPHA_INDEX] == alpha);
+        }
+
+        // last segment
+        for (int x = midX; x <= maxX; x++) {
+            iter.getPixel(x, maxY, data);
+            assertTrue(data[RED_INDEX] == red);
+            assertTrue(data[GREEN_INDEX] == green);
+            assertTrue(data[BLUE_INDEX] == blue);
+            assertTrue(data[ALPHA_INDEX] == alpha);
+        }
+    }
+
     private RandomIter getRandomIter() {
         return RandomIterFactory.create(image, null);
+    }
+
+    private RectIter getRectIter() {
+        return RectIterFactory.create(image, null);
     }
 }
