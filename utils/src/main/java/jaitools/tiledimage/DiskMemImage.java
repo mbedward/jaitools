@@ -22,6 +22,7 @@ package jaitools.tiledimage;
 
 import jaitools.tilecache.DiskMemTileCache;
 import jaitools.tilecache.TileNotResidentException;
+import jaitools.utils.CollectionFactory;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -32,13 +33,11 @@ import java.awt.image.SampleModel;
 import java.awt.image.TileObserver;
 import java.awt.image.WritableRaster;
 import java.awt.image.WritableRenderedImage;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.PlanarImage;
-import javax.media.jai.TileCache;
 
 /**
  * A tiled image class
@@ -48,7 +47,7 @@ import javax.media.jai.TileCache;
  */
 public class DiskMemImage
         extends PlanarImage
-        implements WritableRenderedImage, PropertyChangeListener {
+        implements WritableRenderedImage {
     
     private DiskMemTileCache tileCache;
     private Rectangle tileGrid;
@@ -56,6 +55,8 @@ public class DiskMemImage
     private int numTilesInUse;
 
     private long tileMemorySize;
+
+    private Set<TileObserver> tileObservers;
 
     /**
      * Minimal onstructor. This will set default values for the image's
@@ -174,6 +175,8 @@ public class DiskMemImage
         DataBuffer db = tileSampleModel.createDataBuffer();
         tileMemorySize = DataBuffer.getDataTypeSize(db.getDataType()) / 8L *
                 db.getSize() * db.getNumBanks();
+
+        tileObservers = CollectionFactory.newSet();
     }
 
     /**
@@ -199,11 +202,11 @@ public class DiskMemImage
     }
 
     public void addTileObserver(TileObserver to) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        tileObservers.add(to);
     }
 
     public void removeTileObserver(TileObserver to) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        tileObservers.remove(to);
     }
 
     /**
@@ -237,6 +240,10 @@ public class DiskMemImage
 
             tileInUse[tileX - tileGrid.x][tileY - tileGrid.y] = true;
             numTilesInUse++ ;
+
+            for (TileObserver obs : tileObservers) {
+                obs.tileUpdate(this, tileX, tileY, true);
+            }
         }
         return r;
     }
@@ -274,6 +281,10 @@ public class DiskMemImage
                 } catch (TileNotResidentException ex) {
                     Logger.getLogger(DiskMemImage.class.getName()).
                             log(Level.WARNING, "Failed to write tile data to disk", ex);
+                }
+
+                for (TileObserver obs : tileObservers) {
+                    obs.tileUpdate(this, tileX, tileY, false);
                 }
 
             } else {
@@ -361,10 +372,6 @@ public class DiskMemImage
                 tChild.setRect(dataChild);
             }
         }
-    }
-
-    public void propertyChange(PropertyChangeEvent evt) {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     /**
