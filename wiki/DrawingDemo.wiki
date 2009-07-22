@@ -7,7 +7,7 @@
 
 This simple program demonstrates creating a DiskMemImage and drawing into it using !Graphics2D methods. The program displays the results to screen...
 
-http://jai-tools.googlecode.com/svn/wiki/images/orthogonal_regions.gif
+http://jai-tools.googlecode.com/svn/wiki/images/drawingdemo.gif
 
 This code snippet contains the juicy bits...
 {{{
