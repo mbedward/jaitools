@@ -8,8 +8,16 @@ You can download or browse the source of the demos [http://code.google.com/p/jai
 
 The following pages describe each of the demo programs...
 
+==Operators==
+
 * [KernelStatsDemo KernelStats] operator
 
 * [RegionalizeDemo Regionalize] operator
 
+==Jiffle image scripting language==
+
 * [JiffleDemo Jiffle] language
+
+==Image classes==
+
+* [DrawingDemo Drawing into a tiled !DiskMemImage]
