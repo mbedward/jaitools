@@ -20,4 +20,4 @@ The following pages describe each of the demo programs...
 
 ==Image classes==
 
-* [DrawingDemo Drawing into a tiled !DiskMemImage]
+* [DrawingDemo Drawing] into a tiled !DiskMemImage with Graphics2D methods
