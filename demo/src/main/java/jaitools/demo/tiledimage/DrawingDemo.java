@@ -32,7 +32,9 @@ import java.awt.image.ColorModel;
 import java.awt.image.SampleModel;
 
 /**
- * Demonstrates drawing into a <code>DiskMemImage</code>
+ * Demonstrates drawing into a <code>DiskMemImage</code> using
+ * Graphics2D methods. See comments in the source code for more
+ * details.
  *
  * @see jaitools.tiledimage.DiskMemImage
  * @see jaitools.tiledimage.DiskMemImageGraphics
@@ -49,11 +51,27 @@ public class DrawingDemo {
     }
 
     private void demo() {
+        /*
+         * First we create a DiskMemImage with an RGB color model.
+         * The image will be tiled: we specify a tile size of 128x128 pixels
+         * when creating the sample model. The image size is 256x256 pixels
+         * (2x2 tiles).
+         */
         ColorModel cm = ColorModel.getRGBdefault();
         SampleModel sm = cm.createCompatibleSampleModel(128, 128);
         DiskMemImage img = new DiskMemImage(0, 0, 256, 256, 0, 0, sm, cm);
+
+        /*
+         * The createGraphics methods returns an instance of
+         * jaitools.tiledimage.DiskMemImageGraphics which provides a
+         * bridge to Graphics2D drawing methods
+         */
         Graphics2D gr = img.createGraphics();
 
+        /*
+         * Here we do some common operations to demonstrate
+         * that they work
+         */
         gr.setBackground(Color.ORANGE);
         gr.clearRect(0, 0, 256, 256);
 
@@ -70,7 +88,7 @@ public class DrawingDemo {
         gr.setFont(font.deriveFont(24f));
         gr.drawString("Hello World !", 48, 32);
 
-        /**
+        /*
          * Draw lines on tile boundaries
          */
         gr.setStroke(new BasicStroke(1.0f));
@@ -78,6 +96,9 @@ public class DrawingDemo {
         gr.drawLine(128, 0, 128, 255);
         gr.drawLine(0, 128, 255, 128);
 
+        /*
+         * We display the results using jaitools.utils.ImageFrame widget
+         */
         ImageFrame frame = new ImageFrame(img, "Image of 4 square tiles");
         frame.setVisible(true);
     }
