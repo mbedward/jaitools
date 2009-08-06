@@ -40,6 +40,7 @@ import javax.media.jai.ParameterBlockJAI;
  *
  * @author Michael Bedward
  * @since 1.0
+ * @source $URL$
  * @version $Id$
  */
 public class KernelStatsDemo implements ImageReceiver {

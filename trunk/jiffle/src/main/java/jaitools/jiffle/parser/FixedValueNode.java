@@ -28,6 +28,9 @@ import org.antlr.runtime.tree.CommonTree;
  * by classes generated from ANTLR grammars.
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 class FixedValueNode extends CommonTree {
     private double value;

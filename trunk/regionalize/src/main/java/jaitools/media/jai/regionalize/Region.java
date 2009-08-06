@@ -21,7 +21,12 @@
 package jaitools.media.jai.regionalize;
 
 /**
- * Holds summary data for a single region
+ * Holds summary data for a single region of uniform value identified in the image
+ *
+ * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class Region {
 

@@ -21,9 +21,12 @@
 package jaitools.jiffle.runtime;
 
 /**
- * For internal use by the interpreter
+ * For internal use by the interpreter classes {@code JiffleRunner} and {@code JiffleTask}
  *
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 interface RunProgressListener {
 

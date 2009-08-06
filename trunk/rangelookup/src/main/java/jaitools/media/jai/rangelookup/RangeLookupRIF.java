@@ -34,6 +34,9 @@ import javax.media.jai.ImageLayout;
  * @see RangeLookupDescriptor
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class RangeLookupRIF implements RenderedImageFactory {
 

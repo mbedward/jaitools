@@ -44,8 +44,11 @@ import javax.media.jai.iterator.RectIterFactory;
  * @see ZonalStatsDescriptor Description of the algorithm and example
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
-final class ZonalStatsOpImage extends NullOpImage {
+public class ZonalStatsOpImage extends NullOpImage {
 
     private int srcBand;
 

@@ -27,6 +27,9 @@ import jaitools.jiffle.Jiffle;
  * successfully executed
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class JiffleCompletionEvent extends JiffleEvent {
 

@@ -38,7 +38,9 @@ import javax.media.jai.KernelJAI;
  * KernelJAI objects with specified geometries
  *
  * @author Michael Bedward
- *
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class KernelFactory {
 

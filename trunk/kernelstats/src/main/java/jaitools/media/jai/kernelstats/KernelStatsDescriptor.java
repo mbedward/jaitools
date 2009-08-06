@@ -49,6 +49,9 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * The two options may be used together.
  *
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class KernelStatsDescriptor extends OperationDescriptorImpl {
 

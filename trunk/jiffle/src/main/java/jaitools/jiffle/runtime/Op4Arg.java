@@ -21,9 +21,15 @@
 package jaitools.jiffle.runtime;
 
 /**
- * Class to invoke 4 argument functions
- * 
+ * Class used by {@code FunctionTable} to invoke four argument functions
+ * called from a running script
+ *
+ * @see FunctionTable
+ *
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public abstract class Op4Arg implements OpBase {
 

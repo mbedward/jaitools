@@ -21,11 +21,15 @@
 package jaitools.jiffle.runtime;
 
 /**
- * Base interface implemented by Jiffle function objects.
- * 
- * @see jaitools.jiffle.runtime.FunctionTable
- * 
+ * Interface implemented by classes that are used, by {@code FunctionTable}
+ * to invoke functions called from a running script
+ *
+ * @see FunctionTable
+ *
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public interface OpBase {
     

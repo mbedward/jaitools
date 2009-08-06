@@ -34,6 +34,9 @@ import java.util.SortedSet;
  * snippet.
  *
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class ZonalStats {
 

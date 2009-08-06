@@ -33,6 +33,9 @@ import javax.media.jai.TiledImage;
  * use in client code.
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class Metadata {
     

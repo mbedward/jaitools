@@ -26,6 +26,9 @@ import javax.media.jai.KernelJAI;
  * Various utility methods that work with KernelJAI objects
  *
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class KernelUtil {
 

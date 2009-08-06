@@ -27,6 +27,9 @@ import jaitools.jiffle.Jiffle;
  * the execution of a Jiffle script
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class JiffleFailureEvent extends JiffleEvent {
     

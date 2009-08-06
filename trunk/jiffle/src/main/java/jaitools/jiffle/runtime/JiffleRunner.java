@@ -72,6 +72,9 @@ import org.antlr.runtime.RecognitionException;
  * }</pre>
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class JiffleRunner {
     

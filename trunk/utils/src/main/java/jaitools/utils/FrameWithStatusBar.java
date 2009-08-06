@@ -21,9 +21,12 @@
 package jaitools.utils;
 
 /**
- * 
+ * Interface for a frame (or other GUI class) with an associated
+ * status bar
+ *
  * @author Michael Bedward
  * @since 1.0
+ * @source $URL$
  * @version $Id$
  */
 public interface FrameWithStatusBar {

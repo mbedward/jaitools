@@ -29,6 +29,7 @@ import java.awt.image.RenderedImage;
  * @see DemoImageProvider
  * @author Michael Bedward
  * @since 1.0
+ * @source $URL$
  * @version $Id$
  */
 public interface ImageReceiver {

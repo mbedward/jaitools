@@ -32,6 +32,9 @@ import static jaitools.numeric.DoubleComparison.*;
  * mathematical and conditional functions
  *  
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class FunctionTable {
 

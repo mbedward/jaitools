@@ -21,9 +21,15 @@
 package jaitools.jiffle.runtime;
 
 /**
- * Class to invoke 3 argument functions
- * 
+ * Class used by {@code FunctionTable} to invoke three argument functions
+ * called from a running script
+ *
+ * @see FunctionTable
+ *
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public abstract class Op3Arg implements OpBase {
 

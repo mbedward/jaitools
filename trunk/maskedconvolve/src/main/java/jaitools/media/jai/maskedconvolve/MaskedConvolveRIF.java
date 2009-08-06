@@ -34,6 +34,9 @@ import javax.media.jai.ROI;
  * The image factory for the {@link MaskedConvolveOpImage} operation.
  *
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class MaskedConvolveRIF implements RenderedImageFactory {
 

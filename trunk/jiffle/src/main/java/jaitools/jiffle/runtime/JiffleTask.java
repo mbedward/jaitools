@@ -27,6 +27,9 @@ import jaitools.jiffle.Jiffle;
  * associated {@link Jiffle} being run by the interpreter
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 class JiffleTask implements Runnable {
     

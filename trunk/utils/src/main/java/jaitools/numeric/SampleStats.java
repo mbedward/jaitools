@@ -33,6 +33,7 @@ import java.util.SortedSet;
  *
  * @author Michael Bedward
  * @since 1.0
+ * @source $URL$
  * @version $Id$
  */
 public class SampleStats {

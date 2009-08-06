@@ -28,6 +28,7 @@ package jaitools.numeric;
  *
  * @author Michael Bedward
  * @since 1.0
+ * @source $URL$
  * @version $Id$
  */
 public class Range<T extends Number & Comparable> {

@@ -40,6 +40,9 @@ import javax.media.jai.RasterFactory;
  * The image factory for the {@link KernelStatsOpImage} operation.
  *
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class KernelStatsRIF implements RenderedImageFactory {
 

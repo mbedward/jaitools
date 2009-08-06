@@ -38,6 +38,9 @@ import javax.media.jai.ImageLayout;
  * @see RegionData
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class RegionalizeRIF implements RenderedImageFactory {
 

@@ -43,8 +43,11 @@ import javax.media.jai.iterator.RectIterFactory;
  * @see RegionData
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
-final class RegionalizeOpImage extends PointOpImage {
+public class RegionalizeOpImage extends PointOpImage {
 
     private boolean singleBand;
     private int band;

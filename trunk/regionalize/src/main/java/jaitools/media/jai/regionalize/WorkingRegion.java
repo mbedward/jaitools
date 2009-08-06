@@ -35,6 +35,9 @@ import java.util.Map;
  * package-private class and the public Region and RegionData classes.
  *
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 class WorkingRegion {
     private int id;

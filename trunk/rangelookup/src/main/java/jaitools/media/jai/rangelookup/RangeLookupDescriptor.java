@@ -69,6 +69,9 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * @see RangeLookupTable
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class RangeLookupDescriptor extends OperationDescriptorImpl {
 
