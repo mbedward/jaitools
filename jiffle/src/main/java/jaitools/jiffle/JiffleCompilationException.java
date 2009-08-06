@@ -24,6 +24,9 @@ package jaitools.jiffle;
  * Exception class for errors encountered while compiling a script
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class JiffleCompilationException extends Exception {
 

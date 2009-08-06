@@ -39,6 +39,9 @@ import javax.media.jai.RasterFactory;
  * The image factory for the {@link ZonalStatsOpImage} operation.
  *
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class ZonalStatsRIF implements RenderedImageFactory {
 

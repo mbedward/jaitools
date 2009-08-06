@@ -39,8 +39,11 @@ import javax.media.jai.RasterFormatTag;
  * @see MaskedConvolveDescriptor Description of the algorithm and example
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
-final class MaskedConvolveOpImage extends AreaOpImage {
+public class MaskedConvolveOpImage extends AreaOpImage {
 
     /* Source image variables */
     private int[] srcBandOffsets;

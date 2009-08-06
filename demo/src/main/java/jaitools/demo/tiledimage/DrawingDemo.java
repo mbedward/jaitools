@@ -41,6 +41,7 @@ import java.awt.image.SampleModel;
  * 
  * @author Michael Bedward
  * @since 1.0
+ * @source $URL$
  * @version $Id$
  */
 public class DrawingDemo {

@@ -40,9 +40,17 @@ import javax.media.jai.ImageLayout;
 import javax.media.jai.PlanarImage;
 
 /**
- * A tiled image class
+ * A tiled image class similar to JAI's standard {@code TiledImage} that uses a
+ * {@code DiskMemTileCache} to manage its data. All images tiles are cached on disk
+ * with a subset (most recently used) also being cached in memory for faster access.
+ * This allows very large images to be handled that would otherwise exhaust
+ * the system's memory, albeit at the cost of disk I/O leading to slower tile access.
+ *
+ * @see DiskMemTileCache
+ * 
  * @author Michael Bedward
  * @since 1.0
+ * @source $URL$
  * @version $Id$
  */
 public class DiskMemImage

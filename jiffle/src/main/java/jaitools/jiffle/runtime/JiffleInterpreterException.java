@@ -21,8 +21,15 @@
 package jaitools.jiffle.runtime;
 
 /**
+ * Exception thrown by {@code JiffleRunner} objects when runtime
+ * problems occur
+ *
+ * @see JiffleRunner
  *
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class JiffleInterpreterException extends Exception {
 

@@ -29,6 +29,9 @@ import java.util.Arrays;
  * intended for use by client code.
  *
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 class KernelFactoryHelper {
     private static final float FTOL = 1.0e-8f;

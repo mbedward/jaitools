@@ -23,8 +23,15 @@ package jaitools.jiffle.runtime;
 import jaitools.jiffle.Jiffle;
 
 /**
+ * Event objects of this class are published by {@code JiffleInterpreter}
+ * to indicate progress of the runnign script
+ *
+ * @see JiffleInterpreter
  *
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class JiffleProgressEvent extends JiffleEvent {
     

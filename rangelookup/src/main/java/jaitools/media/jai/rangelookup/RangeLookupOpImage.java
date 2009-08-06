@@ -40,8 +40,11 @@ import javax.media.jai.RasterFormatTag;
  * @see RangeLookupDescriptor
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
-final class RangeLookupOpImage extends PointOpImage {
+public class RangeLookupOpImage extends PointOpImage {
 
     private RangeLookupTable table;
 

@@ -30,6 +30,10 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * OperationRegistrySpi implementation to register the "RangeLookup"
  * operation and its associated image factories.
  *
+ * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class RangeLookupSpi implements OperationRegistrySpi {
 

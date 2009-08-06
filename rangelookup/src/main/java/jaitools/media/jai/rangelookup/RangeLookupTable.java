@@ -27,8 +27,11 @@ import java.util.List;
 /**
  * Holds a collection of source image value ranges and their corresponding
  * destination image values for the RangeLookup operation.
- * <p>
+ * 
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class RangeLookupTable<T extends Number & Comparable> {
 

@@ -38,11 +38,15 @@ import javax.media.jai.RasterFormatTag;
 
 /**
  * An operator to calculate neighbourhood statistics on a source image.
+ *
  * @see KernelStatsDescriptor Description of the algorithm and example
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
-final class KernelStatsOpImage extends AreaOpImage {
+public class KernelStatsOpImage extends AreaOpImage {
 
     private int[] srcBandOffsets;
     private int srcPixelStride;

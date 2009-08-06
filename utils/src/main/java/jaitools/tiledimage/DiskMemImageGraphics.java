@@ -66,8 +66,11 @@ import javax.media.jai.PlanarImage;
  * Most of the methods in this class are identical in function to
  * those in Graphics2D; these have not been documented here.
  *
+ * @see DiskMemImage
+ *
  * @author Michael Bedward
  * @since 1.0
+ * @source $URL$
  * @version $Id$
  */
 public class DiskMemImageGraphics extends Graphics2D {

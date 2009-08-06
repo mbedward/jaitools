@@ -25,6 +25,9 @@ package jaitools.jiffle;
  * and an error level (presently just ErrorLevel.ERROR or ErrorLevel.WARNING).
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public enum ErrorCode {
     

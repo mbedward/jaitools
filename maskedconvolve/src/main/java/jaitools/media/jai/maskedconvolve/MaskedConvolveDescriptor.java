@@ -77,6 +77,9 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * ConvolveDescriptor</a>
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
 

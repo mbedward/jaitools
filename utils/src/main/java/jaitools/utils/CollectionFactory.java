@@ -31,7 +31,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
- * Some convenience methods to create generic collections
+ * Convenience methods to create generic collections
  * following the DRY (Don't Repeat Yourself) principle.
  * Examples of use:
  * <code>
@@ -41,6 +41,7 @@ import java.util.TreeSet;
  * 
  * @author Michael Bedward
  * @since 1.0
+ * @source $URL$
  * @version $Id$
  */
 public class CollectionFactory {

@@ -22,9 +22,15 @@ package jaitools.jiffle.runtime;
 
 
 /**
- * Class to invoke single argument functions
+ * Class used by {@code FunctionTable} to invoke single argument functions
+ * called from a running script
+ *
+ * @see FunctionTable
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public abstract class Op1Arg implements OpBase {
 

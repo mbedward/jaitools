@@ -28,6 +28,9 @@ import jaitools.jiffle.Jiffle;
  * @see JiffleEventListener
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public abstract class JiffleEvent {
     protected int jobId;

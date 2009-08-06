@@ -25,10 +25,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A symbol table for user-defined variables and pre-defined, named constants
+ * A symbol table for user-defined variables and some pre-defined, named constants
  * (PI, E, NaN).
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class VarTable {
 

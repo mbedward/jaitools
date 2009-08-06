@@ -25,6 +25,9 @@ package jaitools.jiffle.runtime;
  * declared in the JiffleEventListener interface are required
  * 
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class JiffleEventAdapter implements JiffleEventListener {
 

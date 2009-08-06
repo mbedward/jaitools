@@ -48,8 +48,11 @@ import javax.media.jai.iterator.WritableRandomIter;
  * which are accessed using JAI iterators.
  *
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
-class FloodFiller {
+public class FloodFiller {
 
     private RegionalizeOpImage opImage;
     private RandomIter srcIter;
@@ -108,7 +111,7 @@ class FloodFiller {
      * @param diagonal set to true to include sub-regions that are only connected
      * diagonally; set to false to require orthogonal connections
      */
-    FloodFiller(RegionalizeOpImage opImage, RenderedImage src,
+    public FloodFiller(RegionalizeOpImage opImage, RenderedImage src,
             int band, double tolerance, boolean diagonal) {
 
         this.opImage = opImage;
@@ -129,7 +132,7 @@ class FloodFiller {
     /**
      * Set the current destination raster
      */
-    void setDestination(WritableRaster dest, Rectangle bounds) {
+    public void setDestination(WritableRaster dest, Rectangle bounds) {
         destIter = RandomIterFactory.createWritable(dest, bounds);
         minDestX = bounds.x;
         minDestY = bounds.y;
@@ -144,7 +147,7 @@ class FloodFiller {
      *
      * @return a List of (part) Regions
      */
-    List<WorkingRegion> getCarryOverRegions() {
+    public List<WorkingRegion> getCarryOverRegions() {
         List<WorkingRegion> regions = new ArrayList<WorkingRegion>();
         if (edgePixels.isEmpty()) return regions;
 
@@ -219,7 +222,7 @@ class FloodFiller {
      * @param refValue the reference value for this region
      * @return a new {@linkplain WorkingRegion}
      */
-    WorkingRegion fill(int x, int y, int fillValue, double refValue) {
+    public WorkingRegion fill(int x, int y, int fillValue, double refValue) {
         if (destIter == null) {
             throw new RuntimeException("need to initialize destination iterator first");
         }

@@ -30,6 +30,9 @@ import java.util.List;
  *
  * @see RegionalizeDescriptor
  * @author Michael Bedward
+ * @since 1.0
+ * @source $URL$
+ * @version $Id$
  */
 public class RegionData {
 
