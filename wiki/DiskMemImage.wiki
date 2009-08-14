@@ -11,7 +11,7 @@ This class serves the same purpose as JAI's standard !TiledImage class: namely, 
 
 Each instance of !DiskMemImage uses its own [UtilsTileCache DiskMemTileCache] to store image data on disk and hold the most recently accessed tiles in memory. The amount of memory used for tile storage can be controlled.
 
-!DiskMemImage extends !PlanarImage and implements the !WritableRenderedImage interface.
+!DiskMemImage implements the !WritableRenderedImage and !PlanarImage interfaces.
 
 ==Examples of use==
 
