@@ -191,6 +191,7 @@ public final class DiskCachedTile implements CachedTile {
                   int tileX,
                   int tileY,
                   Raster raster,
+                  boolean writeToFile,
                   Object tileCacheMetric) throws IOException {
 
         if (owner == null || raster == null) {
@@ -212,8 +213,9 @@ public final class DiskCachedTile implements CachedTile {
         db.getOffsets();
         memorySize = DataBuffer.getDataTypeSize(db.getDataType()) / 8L * dataLen * numBanks;
 
-        file = createFile(this);
-        writeData(raster);
+        if (writeToFile ) {
+            writeData(raster);
+        }
     }
 
     /**
@@ -285,11 +287,28 @@ public final class DiskCachedTile implements CachedTile {
     }
 
     /**
-     * Get the file used to cache this tile on disk.
-     * @todo Perhaps we should be using a URL ?
+     * Query if this tile has been cached to disk. This method is
+     * a short-cut for: {@code getFile() != null}
+     */
+    public boolean cachedToDisk() {
+        return file != null;
+    }
+
+    /**
+     * Get this tile's disk cache file. If the tile has not
+     * been cached to disk, return {@code null}.
      */
     public File getFile() {
         return file;
+    }
+
+    /**
+     * Delete this tile's disk cache file
+     */
+    public void deleteDiskCopy() {
+        if (file != null) {
+            file.delete();
+        }
     }
 
     /**
@@ -455,9 +474,14 @@ public final class DiskCachedTile implements CachedTile {
      * disk. This may be called by <code>DiskMemTileCache</code>
      * as well as be the tile itself.
      */
-    void writeData(Raster raster) {
+    void writeData(Raster raster) throws IOException {
         ImageOutputStream strm = null;
         DataBuffer dataBuf = raster.getDataBuffer();
+
+        if (file == null) {
+            // first time this tile has been written to disk
+            file = createFile();
+        }
 
         try {
             strm = ImageIO.createImageOutputStream(file);
@@ -545,7 +569,7 @@ public final class DiskCachedTile implements CachedTile {
      *
      * @throws java.io.IOException
      */
-    private File createFile(DiskCachedTile tile) throws IOException {
+    private File createFile() throws IOException {
         return File.createTempFile(FILE_PREFIX, FILE_SUFFIX);
     }
 

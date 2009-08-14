@@ -20,14 +20,14 @@
 
 package jaitools.tilecache;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 import javax.media.jai.JAI;
-import javax.media.jai.PlanarImage;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.TileCache;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -59,16 +59,20 @@ public class TileCacheVisitorTest {
     @Test
     public void testVisitor(){
         System.out.println("   cache visitor");
-        final int MEM_TILES = 10;
-        final int XTILES = 3;
-        final int YTILES = 3;
+        final int XTILES = 4;
+        final int YTILES = 4;
+        final int EXTRA = 2;
+        final int MEM_TILES = XTILES * YTILES + EXTRA;
 
         TileCacheTestHelper helper = new TileCacheTestHelper();
 
-        /**
-         * Set cache memory capacity for a limited number of tiles
+        /*
+         * Set cache memory capacity for a limited number of tiles and
+         * set the memory threshold such that one tile's worth of space
+         * is freed each time the cache swaps tiles to disk
          */
         cache.setMemoryCapacity(helper.getTileMemSize() * MEM_TILES);
+        cache.setMemoryThreshold(1.0f - 1.0f / MEM_TILES); // clears one tile from memory
 
         /*
          * Create s simple rendering chain and use the getNewRendering
@@ -85,16 +89,24 @@ public class TileCacheVisitorTest {
         /*
          * Visit the cache and check that we get the correct tile stats
          */
-        BasicCacheVisitor visitor = new BasicCacheVisitor();
-        visitor.setFilter(BasicCacheVisitor.Key.OWNER, op1.getCurrentRendering());
-        cache.accept(visitor);
+        Map<BasicCacheVisitor.Key, Object> filters = new HashMap<BasicCacheVisitor.Key, Object>();
+        filters.put(BasicCacheVisitor.Key.OWNER, op1.getCurrentRendering());
+        filters.put(BasicCacheVisitor.Key.RESIDENT, Boolean.TRUE);
 
+        BasicCacheVisitor visitor = new BasicCacheVisitor();
+        visitor.setFilters(filters);
+        cache.accept(visitor);
+        assertTrue(visitor.getTiles().size() == EXTRA);
+
+        visitor.clear();
+        filters.put(BasicCacheVisitor.Key.OWNER, op2.getCurrentRendering());
+        visitor.setFilters(filters);
+        cache.accept(visitor);
         assertTrue(visitor.getTiles().size() == XTILES * YTILES);
 
         visitor.setFilter(BasicCacheVisitor.Key.RESIDENT, Boolean.TRUE);
         visitor.clear();
         cache.accept(visitor);
-
         assertTrue(visitor.getTiles().size() == MEM_TILES);
     }
 

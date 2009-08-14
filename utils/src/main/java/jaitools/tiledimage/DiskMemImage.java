@@ -21,7 +21,6 @@
 package jaitools.tiledimage;
 
 import jaitools.tilecache.DiskMemTileCache;
-import jaitools.tilecache.TileNotResidentException;
 import jaitools.utils.CollectionFactory;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -286,9 +285,9 @@ public class DiskMemImage
                 try {
                     tileCache.setTileChanged(this, tileX, tileY);
 
-                } catch (TileNotResidentException ex) {
+                } catch (Exception ex) {
                     Logger.getLogger(DiskMemImage.class.getName()).
-                            log(Level.WARNING, "Failed to write tile data to disk", ex);
+                            log(Level.SEVERE, null, ex);
                 }
 
                 for (TileObserver obs : tileObservers) {
