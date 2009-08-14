@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <groupId>jaitools</groupId>
     <artifactId>jaitools</artifactId>
     <version>1.0-SNAPSHOT</version>
+
     <packaging>pom</packaging>
     <name>JAI-tools - Extends the Java Advanced Imaging library</name>
-    <description>Additional operators, utility classes and the Jiffle scripting language
-to work with the Java Advanced Imaging library
+    <description>
+        Additional operators, utility classes and the Jiffle scripting
+        language to work with the Java Advanced Imaging library
     </description>
+
     <url>http://code.google.com/p/jai-tools/</url>
+
     <build>
         <plugins>
             <plugin>
@@ -192,14 +197,16 @@ to work with the Java Advanced Imaging library
     <!--     closer to you.                                                 -->
 	<!-- ================================================================== -->
 	<repositories>
+        <!-- Edit the Ibiblio mirror repository for your region -->
 		<repository>
-			<id>aussiehq</id>
+			<id>ibiblio-mirror</id>
 			<name>Australian mirror for Ibiblio</name>
 			<url>http://apache.mirror.aussiehq.net.au/</url>
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
 		</repository>
+
 		<repository>
 			<id>maven2-repository.dev.java.net</id>
 			<name>Java.net repository</name>
@@ -226,10 +233,6 @@ to work with the Java Advanced Imaging library
         <module>utils</module>
         <module>jiffle</module>
         <module>kernel</module>
-        <module>kernelstats</module>
-        <module>maskedconvolve</module>
-        <module>rangelookup</module>
-        <module>regionalize</module>
-        <module>zonalstats</module>
+        <module>operator</module>
   </modules>
 </project>

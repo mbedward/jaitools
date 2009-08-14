@@ -3,12 +3,14 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>jaitools</groupId>
-        <artifactId>jaitools</artifactId>
+        <artifactId>operator</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
+    
     <artifactId>kernelstats</artifactId>
     <packaging>jar</packaging>
     <name>KernelStats operator</name>
+
     <dependencies>
         <dependency>
             <groupId>jaitools</groupId>
