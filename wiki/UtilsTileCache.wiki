@@ -9,9 +9,9 @@
 
 JAI operations can use a cache class to store image tiles. The default Sun reference implementation of `TileCache` stores all tiles in memory. The !DiskMemTileCache class uses both disk and memory storage to allow operations to work with large volumes of image data without being constrained by available memory.
 
-When an image tile is added to the cache it's data are written to a temporary file. Depending on cache settings, the tile's data may also be immediately placed into memory. When a tile is requested from the cache, by a JAI `OpImage` or other client code, the cache checks to see if the tile is already resident in memory and, if not, it is loaded into memory before passing its data to the caller. Thus excessive disk activity is avoided when a tile is accessed multiple times in quick succession.
+Each image tile added to the cache is placed into memory. If the cache does not have enough free memory to store a tile, it makes space available by removing one or more currently resident tiles of the lowest priority. By default, tile priorites are based on access time (most recent being highest). Users can work with other priority schemes by providing a class that implements `Comparator<CachedTile>`.
 
-If the cache does not have enough free memory to store a tile that is to be made resident, space is made available by removing other, currently resident tiles that have the lowest priority. By default, tiles are ranked in priority from the most recently accessed (highest) to least recently accessed (lowest). This is implemented by `jaitools.tilecache.TileAccessTimeComparator`. Users can implement other priority schemes by providing a class implementing `Comparator<CachedTile>`.
+When a tile is swapped out of memory to make space for other tiles its data are written to disk. If the tile is accessed later it will be copied back into memory.
 
 ==Examples of use==
 
@@ -43,8 +43,7 @@ The cache's memory capacity and handling of new tiles can be set when constructi
 {{{
 Map<String, Object> cacheParams = new HashMap<String, Object>();
 cacheParams.put(DiskMemTileCache.KEY_INITIAL_MEMORY_CAPACITY, 1L * 1024 * 1024);
-cacheParams.put(DiskMemTileCache.KEY_NEW_TILES_RESIDENT,
-        DiskMemTileCache.VALUE_NEW_TILES_RESIDENT_ALWAYS);
+cacheParams.put(DiskMemTileCache.KEY_ALWAYS_DISK_CACHE, Boolean.TRUE);
 
 DiskMemTileCache cache = new DiskMemTileCache(cacheParams);
 }}}
