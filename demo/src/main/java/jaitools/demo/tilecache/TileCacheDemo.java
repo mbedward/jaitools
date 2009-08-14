@@ -59,7 +59,6 @@ public class TileCacheDemo implements Observer {
          */
         Map<String, Object> cacheParams = new HashMap<String, Object>();
         cacheParams.put(DiskMemTileCache.KEY_INITIAL_MEMORY_CAPACITY, 1L * 1024 * 1024);
-        cacheParams.put(DiskMemTileCache.KEY_NEW_TILES_RESIDENT, DiskMemTileCache.VALUE_NEW_TILES_RESIDENT_ALWAYS);
 
         /*
          * Create a new instance of DiskMemTileCache and add this as an observer
