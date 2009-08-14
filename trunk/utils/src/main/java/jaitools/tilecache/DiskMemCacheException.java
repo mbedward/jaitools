@@ -23,8 +23,7 @@ package jaitools.tilecache;
 import java.awt.image.RenderedImage;
 
 /**
- * Exception thrown when by <code>DiskMemTileCache</code> when a tile was
- * not resident in cache memory when required to be.
+ * Base exception class for {@code DiskMemTileCache} errors.
  *
  * @see DiskMemTileCache
  * @author Michael Bedward
@@ -32,10 +31,11 @@ import java.awt.image.RenderedImage;
  * @source $URL$
  * @version $Id$
  */
-public class TileNotResidentException extends DiskMemCacheException {
+public class DiskMemCacheException extends Exception {
 
-    TileNotResidentException(RenderedImage owner, int tileX, int tileY) {
-        super(owner, tileX, tileY, " is not resident in memory");
+    public DiskMemCacheException(RenderedImage owner, int tileX, int tileY, String msg) {
+        super(String.format("tile at %d,%d of image %s %s",
+                tileX, tileY, owner.toString(), msg));
     }
 
 }

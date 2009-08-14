@@ -20,12 +20,11 @@
 
 package jaitools.tilecache;
 
+import jaitools.utils.CollectionFactory;
 import java.awt.Point;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
-import java.io.File;
 import java.io.IOException;
-import java.lang.ref.SoftReference;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,12 +41,17 @@ import javax.media.jai.PlanarImage;
 import javax.media.jai.TileCache;
 
 /**
- * This class implements JAI {@linkplain javax.media.jai.TileCache}. It stores
+ * This class implements JAI {@linkplain javax.media.jai.TileCache}. It can store
  * cached tiles on disk to allow applications to work with very large volumes of
  * tiled image data without being limited by available memory.
  * <p>
- * The cache can also provide memory storage for a subset of tiles to avoid
- * excessive disk activity when the same tiles are being repeatedly accessed.
+ * A subset of tiles (by default, the most recently accessed) are cached in memory
+ * to reduce access time.
+ * <p>
+ * The default behaviour is to cache newly added tiles into memory. If the cache
+ * needs to free memory to accomodate a tile, it does so by removing lowest priority
+ * tiles from memory and caching them to disk. Optionally, the user can specify
+ * that newly added tiles are cached to disk immediately.
  *
  * @author Michael Bedward
  * @author Simone Giannecchini, GeoSolutions SAS
@@ -64,23 +68,6 @@ public class DiskMemTileCache extends Observable implements TileCache {
     public static final long DEFAULT_MEMORY_CAPACITY = 64L * 1024L * 1024L;
 
     public static final float DEFAULT_MEMORY_THRESHOLD = 0.75F;
-
-    /**
-     * Rules used with the {@linkplain #makeResident} method
-     */
-    private enum ResidencyRule {
-        /**
-         * Only make a tile resident if there is enough free memory
-         * without swapping any currently resident tiles to disk
-         */
-        NO_SWAP,
-
-        /**
-         * Force tile to be come resident, swapping other tiles to
-         * disk as necessary
-         */
-        FORCE
-    };
 
     // @todo use JAI ParameterList or some other ready-made class for this ?
     private static class ParamDesc {
@@ -112,35 +99,12 @@ public class DiskMemTileCache extends Observable implements TileCache {
 
     /**
      * Key for the parameter controlling whether newly added tiles
-     * automatically become resident in memory. The value must be
-     * one of
-     * {@linkplain #VALUE_NEW_TILES_RESIDENT_ALWAYS},
-     * {@linkplain #VALUE_NEW_TILES_RESIDENT_TRY} or
-     * {@linkplain #VALUE_NEW_TILES_RESIDENT_NEVER}
+     * are immediately cached to disk as well as in memory. The value
+     * must be one Boolean. If the value is {@code Boolean.FALSE} (the default),
+     * disk caching of tiles is deferred until required (ie. when
+     * memory needs to be freed for other tiles).
      */
-    public static final String KEY_NEW_TILES_RESIDENT = "newtilesres";
-
-    /**
-     * Value option for {@linkplain #KEY_NEW_TILES_RESIDENT} indicating
-     * that newly cached tiles should always become resident in memory
-     * even if currently-resident tiles must be swapped out to make
-     * space available.
-     */
-    public static final int VALUE_NEW_TILES_RESIDENT_ALWAYS = 1;
-
-    /**
-     * Value option for {@linkplain #KEY_NEW_TILES_RESIDENT} indicating
-     * that newly cached tiles should become resident in memory only
-     * if there is currently enough space available.
-     * <b>This is the default behaviour</b>.
-     */
-    public static final int VALUE_NEW_TILES_RESIDENT_TRY    = 2;
-
-    /**
-     * Value option for {@linkplain #KEY_NEW_TILES_RESIDENT} indicating
-     * that newly cached tiles do not automatically become resident in memory.
-     */
-    public static final int VALUE_NEW_TILES_RESIDENT_NEVER  = 3;
+    public static final String KEY_ALWAYS_DISK_CACHE = "diskcache";
 
 
     private static Map<String, ParamDesc> paramDescriptors;
@@ -151,7 +115,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
         desc = new ParamDesc(KEY_INITIAL_MEMORY_CAPACITY, Number.class, DEFAULT_MEMORY_CAPACITY);
         paramDescriptors.put( desc.key, desc );
 
-        desc = new ParamDesc(KEY_NEW_TILES_RESIDENT, Integer.class, VALUE_NEW_TILES_RESIDENT_TRY);
+        desc = new ParamDesc(KEY_ALWAYS_DISK_CACHE, Boolean.class, Boolean.FALSE);
         paramDescriptors.put( desc.key, desc );
     }
 
@@ -167,17 +131,13 @@ public class DiskMemTileCache extends Observable implements TileCache {
      */
     private float memThreshold;
 
-    /*
-     * A flag value for whether newly cached tiles are placed into memory
-     * always, when space is available, or never
-     */
-    private int newTilesResident;
+    private boolean writeNewTilesToDisk;
 
     // map of all tiles whether currently in memory or cached on disk
     private Map<Object, DiskCachedTile> tiles;
     
     // set of those tiles currently resident in memory
-    private Map<Object, SoftReference<Raster>> residentTiles;
+    private Map<Object, Raster> residentTiles;
 
     // A tile comparator used to determine priority of tiles in limited
     // memory storage
@@ -216,7 +176,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
 
         diagnosticsEnabled = false;
         tiles = new HashMap<Object, DiskCachedTile>();
-        residentTiles = new HashMap<Object, SoftReference<Raster>>();
+        residentTiles = CollectionFactory.newMap();
         curMemory = 0L;
         memThreshold = DEFAULT_MEMORY_THRESHOLD;
 
@@ -232,23 +192,12 @@ public class DiskMemTileCache extends Observable implements TileCache {
             }
         }
 
-        desc = paramDescriptors.get(KEY_NEW_TILES_RESIDENT);
-        newTilesResident = (Integer)desc.defaultValue;
+        desc = paramDescriptors.get(KEY_ALWAYS_DISK_CACHE);
+        writeNewTilesToDisk = (Boolean)desc.defaultValue;
         o = params.get(desc.key);
         if (o != null) {
             if (desc.typeOK(o)) {
-                int ival = (Integer)o;
-                switch (ival) {
-                    case VALUE_NEW_TILES_RESIDENT_ALWAYS:
-                    case VALUE_NEW_TILES_RESIDENT_NEVER:
-                    case VALUE_NEW_TILES_RESIDENT_TRY:
-                        newTilesResident = ival;
-                        break;
-
-                    default:
-                        throw new IllegalArgumentException(
-                                "Unrecognized option for cache parameter: KEY_NEW_TILES_RESIDENT");
-                }
+                writeNewTilesToDisk = (Boolean)o;
             }
         }
 
@@ -273,25 +222,11 @@ public class DiskMemTileCache extends Observable implements TileCache {
         }
 
         try {
-            DiskCachedTile tile = new DiskCachedTile(key, owner, tileX, tileY, data, tileCacheMetric);
+            DiskCachedTile tile = new DiskCachedTile(
+                    key, owner, tileX, tileY, data, writeNewTilesToDisk, tileCacheMetric);
             tiles.put(key, tile);
 
-            boolean resident = false;
-            switch (newTilesResident) {
-                case VALUE_NEW_TILES_RESIDENT_ALWAYS:
-                    resident = makeResident(tile, data, ResidencyRule.FORCE);
-                    break;
-                    
-                case VALUE_NEW_TILES_RESIDENT_TRY:
-                    resident = makeResident(tile, data, ResidencyRule.NO_SWAP);
-                    break;
-                    
-                case VALUE_NEW_TILES_RESIDENT_NEVER:
-                    // do nothing
-                    break;
-            }
-
-            if (resident) {
+            if ( makeResident(tile, data) ) {
                 tile.setAction(DiskCachedTile.TileAction.ACTION_ADDED_RESIDENT);
             } else {
                 tile.setAction(DiskCachedTile.TileAction.ACTION_ADDED);
@@ -322,15 +257,22 @@ public class DiskMemTileCache extends Observable implements TileCache {
 
         if (tile != null) {
             if (residentTiles.containsKey(key)) {
-                removeResidentTile(key, false);
+                try {
+                    removeResidentTile(key, false);
+
+                } catch (DiskCacheFailedException ex) {
+                    /*
+                     * It would be nicer to just throw this exception
+                     * upwards be we can't in the overidden method
+                     */
+                    Logger.getLogger(DiskMemTileCache.class.getName()).
+                            log(Level.SEVERE, null, ex);
+                }
             }
         }
 
         tiles.remove(key);
-        File f = tile.getFile();
-        if (f != null && f.exists()) {
-            f.delete();
-        }
+        tile.deleteDiskCopy();
 
         tile.setAction(DiskCachedTile.TileAction.ACTION_REMOVED);
         if (diagnosticsEnabled) {
@@ -359,28 +301,11 @@ public class DiskMemTileCache extends Observable implements TileCache {
         if (tile != null) {
 
             // is the tile resident ?
-            if (residentTiles.containsKey(key)) {
-                r = residentTiles.get(key).get();
-                if (r == null) {
-                    // tile data has been garbage collected
-                    // TODO: issue a warning ?
-
-                    residentTiles.remove(key);
-                    sortedResidentTiles.remove(tile);
-                    curMemory -= tile.getTileSize();
-
-                    tile.setAction(DiskCachedTile.TileAction.ACTION_GARBAGE_COLLECTED);
-                    if (diagnosticsEnabled) {
-                        setChanged();
-                        notifyObservers(tile);
-                    }
-                }
-            }
-
+            r = residentTiles.get(key);
             if (r == null) {
                 // tile needs to be read from disk
                 r = tile.readData();
-                if (makeResident(tile, r, ResidencyRule.FORCE)) {
+                if (makeResident(tile, r)) {
                     tile.setAction(DiskCachedTile.TileAction.ACTION_RESIDENT);
                     if (diagnosticsEnabled) {
                         setChanged();
@@ -426,14 +351,10 @@ public class DiskMemTileCache extends Observable implements TileCache {
         int k = 0;
         for (Object key : keys) {
             DiskCachedTile tile = tiles.get(key);
-            Raster r = null;
-            if (residentTiles.containsKey(tile)) {
-                r = residentTiles.get(tile).get();
-            }
-
+            Raster r = residentTiles.get(tile);
             if (r == null) {
                 r = tile.readData();
-                makeResident(tile, r, ResidencyRule.FORCE);
+                makeResident(tile, r);
             }
 
             rasters[k++] = r;
@@ -463,13 +384,15 @@ public class DiskMemTileCache extends Observable implements TileCache {
 
     /**
      * This method is not presently declared as synchronized because it simply calls
-     * the <code>addTile</code> method repeatedly.
+     * the {@code add} method repeatedly.
      *
      * @param owner the image that the tiles belong to
      * @param tileIndices an array of Points specifying the column-row coordinates
      * of each tile
      * @param tiles tile data in the form of Raster objects
      * @param tileCacheMetric optional metric (may be null)
+     *
+     * @see #add(java.awt.image.RenderedImage, int, int, java.awt.image.Raster, java.lang.Object) 
      */
     public void addTiles(RenderedImage owner,
                      Point[] tileIndices,
@@ -518,7 +441,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
         flushMemory();
         
         for (DiskCachedTile tile : tiles.values()) {
-            tile.getFile().delete();
+            tile.deleteDiskCopy();
             tile.setAction(DiskCachedTile.TileAction.ACTION_REMOVED);
             if (diagnosticsEnabled) {
                 setChanged();
@@ -533,13 +456,6 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * to disk is done.
      */
     public synchronized void flushMemory() {
-        /*
-         * @todo is this adequate to ensure garbage collection ?
-         */
-        for (SoftReference<Raster> wref : residentTiles.values()) {
-            wref.clear();
-        }
-
         residentTiles.clear();
         sortedResidentTiles.clear();
         curMemory = 0;
@@ -578,7 +494,17 @@ public class DiskMemTileCache extends Observable implements TileCache {
         Collections.sort(sortedResidentTiles, comparator);
         while (memCapacity - curMemory < memRequired) {
             Object key = sortedResidentTiles.get(sortedResidentTiles.size()-1).getTileId();
-            removeResidentTile(key, true);
+
+            try {
+                removeResidentTile(key, true);
+            } catch (DiskCacheFailedException ex) {
+                /*
+                 * It would be nicer to just throw this exception
+                 * upwards be we can't in the overidden method
+                 */
+                Logger.getLogger(DiskMemTileCache.class.getName()).
+                        log(Level.SEVERE, null, ex);
+            }
         }
     }
 
@@ -630,7 +556,16 @@ public class DiskMemTileCache extends Observable implements TileCache {
             Collections.sort(sortedResidentTiles, comparator);
             while (curMemory > newCapacity) {
                 Object key = sortedResidentTiles.get(sortedResidentTiles.size()-1).getTileId();
-                removeResidentTile(key, true);
+                try {
+                    removeResidentTile(key, true);
+                } catch (DiskCacheFailedException ex) {
+                    /*
+                     * It would be nicer to just throw this exception
+                     * upwards be we can't in the overidden method
+                     */
+                    Logger.getLogger(DiskMemTileCache.class.getName()).
+                            log(Level.SEVERE, null, ex);
+                }
             }
         }
     }
@@ -744,8 +679,10 @@ public class DiskMemTileCache extends Observable implements TileCache {
     /**
      * Inform the cache that the tile's data have changed. The tile should
      * be resident in memory as the result of a previous <code>getTile</code>
-     * request. If this is the case, the cache's disk copy of the tile's data
-     * will be refreshed. If the tile is not resident in memory, for instance
+     * request. If this is the case and the tile was previously written to
+     * disk, then the cache's disk copy of the tile will be refreshed.
+     * <P>
+     * If the tile is not resident in memory, for instance
      * because of memory swapping for other tile accesses, the disk copy
      * will not be refreshed and a <code>TileNotResidentException</code> is
      * thrown.
@@ -756,16 +693,22 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * @throws TileNotResidentException if the tile is not resident
      */
     public void setTileChanged(RenderedImage owner, int tileX, int tileY)
-            throws TileNotResidentException {
+            throws TileNotResidentException, DiskCacheFailedException {
 
         Object tileId = getTileId(owner, tileX, tileY);
-        SoftReference<Raster> ref = residentTiles.get(tileId);
-        if (ref == null || ref.get() == null) {
+        Raster r = residentTiles.get(tileId);
+        if (r == null) {
             throw new TileNotResidentException(owner, tileX, tileY);
         }
 
         DiskCachedTile tile = tiles.get(tileId);
-        tile.writeData(ref.get());
+        if (tile.cachedToDisk()) {
+            try {
+                tile.writeData(r);
+            } catch (IOException ioEx) {
+                throw new DiskCacheFailedException(owner, tileX, tileY);
+            }
+        }
     }
 
     /**
@@ -792,16 +735,11 @@ public class DiskMemTileCache extends Observable implements TileCache {
     /**
      * Add a raster to those resident in memory
      */
-    private boolean makeResident(DiskCachedTile tile, Raster data, ResidencyRule rule) {
+    private boolean makeResident(DiskCachedTile tile, Raster data) {
         if (tile.getTileSize() > memCapacity) {
             return false;
         }
         
-        if (rule == ResidencyRule.NO_SWAP &&
-                tile.getTileSize() > memCapacity - curMemory) {
-            return false;
-        }
-
         if (tile.getTileSize() > memCapacity - curMemory) {
             memoryControl();
 
@@ -814,7 +752,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
             }
         }
         
-        residentTiles.put(tile.getTileId(), new SoftReference<Raster>(data));
+        residentTiles.put(tile.getTileId(), data);
         curMemory += tile.getTileSize();
 
         /*
@@ -840,26 +778,22 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * @param writeData if true, and the tile is writable, its data will be
      * written to disk again; otherwise no writing is done.
      */
-    private void removeResidentTile(Object tileId, boolean writeData) {
+    private void removeResidentTile(Object tileId, boolean writeData) throws DiskCacheFailedException {
 
         DiskCachedTile tile = tiles.get(tileId);
-        SoftReference<Raster> ref = residentTiles.remove(tileId);
+        Raster raster = residentTiles.remove(tileId);
         sortedResidentTiles.remove(tile);
         curMemory -= tile.getTileSize();
 
-
-
         /**
          * If the tile is writable, ie. its data are represented
-         * by a WritableRaster, we renew the file copy of the data
-         * to preserve any changes
-         *
-         * TODO: consider how to detect when this is really necessary
+         * by a WritableRaster, we cache it to disk
          */
         if (writeData && tile.isWritable()) {
-            Raster r = ref.get();
-            if (r != null) {
-                tile.writeData(r);
+            try {
+                tile.writeData(raster);
+            } catch (IOException ioEx) {
+                throw new DiskCacheFailedException(tile.getOwner(), tile.getTileX(), tile.getTileY());
             }
         }
 

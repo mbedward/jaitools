@@ -143,7 +143,7 @@ public class BasicCacheVisitor implements DiskMemTileCacheVisitor {
             }
 
             if (pass && filters.containsKey(Key.RESIDENT)) {
-                if ( !isResident ) {
+                if ( ((Boolean)filters.get(Key.RESIDENT)).booleanValue() != isResident) {
                     pass = false;
                 }
             }
