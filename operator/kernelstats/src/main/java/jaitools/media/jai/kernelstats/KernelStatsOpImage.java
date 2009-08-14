@@ -20,8 +20,8 @@
 
 package jaitools.media.jai.kernelstats;
 
-import jaitools.numeric.Statistic;
 import jaitools.numeric.SampleStats;
+import jaitools.numeric.Statistic;
 import java.awt.Rectangle;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
