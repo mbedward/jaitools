@@ -12,13 +12,11 @@
  * Operator helper classes
   * [KernelFactory]
   * [KernelUtil]
- * Image scripting
-  * [Jiffle Jiffle]
-   * [JiffleLanguage Language guide]
-   * [JiffleIssues Issues and gotchas]
-   * [JiffleGettingStarted Getting started]
-   * [JiffleFAQ FAQ]
-   * [http://www.emilythecamel.com/projects/jai-tools/jiffle/apidocs/index.html API]
+ * [Jiffle Image scripting]
+  * [JiffleLanguage Language guide]
+  * [JiffleIssues Issues and gotchas]
+  * [JiffleGettingStarted Getting started]
+  * [JiffleFAQ FAQ]
  * Support and utility classes
    * [UtilsCollectionFactory CollectionFactory]
    * [UtilsTileCache DiskMemTileCache]
