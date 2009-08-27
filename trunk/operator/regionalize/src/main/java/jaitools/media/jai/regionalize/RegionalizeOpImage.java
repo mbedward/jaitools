@@ -90,8 +90,7 @@ public class RegionalizeOpImage extends PointOpImage {
          */
         singleBand = true;
 
-        filler = new FloodFiller(this, source, band, tolerance, diagonal);
-
+        filler = new FloodFiller(source, band, tolerance, diagonal);
         regions = CollectionFactory.newList();
     }
 
