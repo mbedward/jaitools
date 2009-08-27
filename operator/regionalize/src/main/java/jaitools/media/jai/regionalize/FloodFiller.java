@@ -54,7 +54,6 @@ import javax.media.jai.iterator.WritableRandomIter;
  */
 public class FloodFiller {
 
-    private RegionalizeOpImage opImage;
     private RandomIter srcIter;
     private int minSrcX;
     private int maxSrcX;
@@ -111,10 +110,8 @@ public class FloodFiller {
      * @param diagonal set to true to include sub-regions that are only connected
      * diagonally; set to false to require orthogonal connections
      */
-    public FloodFiller(RegionalizeOpImage opImage, RenderedImage src,
-            int band, double tolerance, boolean diagonal) {
+    public FloodFiller(RenderedImage src, int band, double tolerance, boolean diagonal) {
 
-        this.opImage = opImage;
         srcIter = RandomIterFactory.create(src, null);
 
         minSrcX = src.getMinX();
