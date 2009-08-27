@@ -31,15 +31,16 @@ import java.util.Map;
  * The data may come in several batches depending on whether the region
  * crosses image tile boundaries.
  * <p>
- * Note: the class name is intended to emphasize the difference between this
- * package-private class and the public Region and RegionData classes.
+ * Note: this class is used internally by the operator (specifically by
+ * {@code RegionalizeOpImage} and {@code FloodFiller}) and is not intended
+ * for use by client code.
  *
  * @author Michael Bedward
  * @since 1.0
  * @source $URL$
  * @version $Id$
  */
-class WorkingRegion {
+public class WorkingRegion {
     private int id;
     private double value;
     private int minx, maxx, miny, maxy;
@@ -54,7 +55,7 @@ class WorkingRegion {
      * @param value representative value of pixels in this region
      * @param segments list of line segments making up this region
      */
-    WorkingRegion(int id, double value, List<ScanSegment> segments) {
+    public WorkingRegion(int id, double value, List<ScanSegment> segments) {
         this.id = id;
         this.value = value;
         this.segments = segments;
@@ -89,7 +90,7 @@ class WorkingRegion {
     /**
      * Check if this region contains the given pixel coords
      */
-    boolean contains(int x, int y) {
+    public boolean contains(int x, int y) {
         if (x < minx || x > maxx || y < miny || y > maxy) {
             return false;
         }
@@ -111,7 +112,7 @@ class WorkingRegion {
      * it just addes the other region's segments and updates the index
      * and bounds as necessary.
      */
-    void expand(WorkingRegion cor) {
+    public void expand(WorkingRegion cor) {
         for (ScanSegment otherSeg : cor.segments) {
             if (otherSeg.startX < minx) minx = otherSeg.startX;
             if (otherSeg.endX > maxx) maxx = otherSeg.endX;
@@ -129,42 +130,42 @@ class WorkingRegion {
     /**
      * Package-private method. Get the ID of this region.
      */
-    int getID() {
+    public int getID() {
         return id;
     }
 
     /**
      * Package-private method. Get the max x coordinate within this region.
      */
-    int getMaxX() {
+    public int getMaxX() {
         return maxx;
     }
 
     /**
      * Package-private method. Get the max y coordinate of this region.
      */
-    int getMaxY() {
+    public int getMaxY() {
         return maxy;
     }
 
     /**
      * Package-private method. Get the min x coordinate of this region.
      */
-    int getMinX() {
+    public int getMinX() {
         return minx;
     }
 
     /**
      * Package-private method. Get the min y coordinate of this region.
      */
-    int getMinY() {
+    public int getMinY() {
         return miny;
     }
 
     /**
      * Package-private method. Get the number of pixels within this region.
      */
-    int getNumPixels() {
+    public int getNumPixels() {
         return numPixels;
     }
 
@@ -173,7 +174,7 @@ class WorkingRegion {
      * This is the value of the start pixel used in the regionalize
      * operation.
      */
-    double getValue() {
+    public double getValue() {
         return value;
     }
 
