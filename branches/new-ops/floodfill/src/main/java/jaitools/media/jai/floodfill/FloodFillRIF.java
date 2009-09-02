@@ -39,8 +39,8 @@ import javax.media.jai.ImageLayout;
  * 
  * @author Michael Bedward
  * @since 1.0
- * @source $URL: $
- * @version $Id: $
+ * @source $URL$
+ * @version $Id$
  */
 public class FloodFillRIF implements RenderedImageFactory {
 

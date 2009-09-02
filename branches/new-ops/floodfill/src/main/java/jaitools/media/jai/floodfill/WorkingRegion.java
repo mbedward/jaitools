@@ -37,8 +37,8 @@ import java.util.Map;
  *
  * @author Michael Bedward
  * @since 1.0
- * @source $URL: https://jai-tools.googlecode.com/svn/trunk/operator/regionalize/src/main/java/jaitools/media/jai/regionalize/WorkingRegion.java $
- * @version $Id: WorkingRegion.java 543 2009-08-27 06:14:09Z michael.bedward $
+ * @source $URL$
+ * @version $Id$
  */
 public class WorkingRegion {
     private int id;

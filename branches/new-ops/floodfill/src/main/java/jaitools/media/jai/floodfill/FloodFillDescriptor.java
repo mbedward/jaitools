@@ -71,8 +71,8 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * 
  * @author Michael Bedward
  * @since 1.0
- * @source $URL: https://jai-tools.googlecode.com/svn/trunk/operator/floodfill/src/main/java/jaitools/media/jai/floodfill/FloodFillDescriptor.java $
- * @version $Id: FloodFillDescriptor.java 531 2009-08-06 12:27:52Z michael.bedward $
+ * @source $URL$
+ * @version $Id$
  */
 public class FloodFillDescriptor extends OperationDescriptorImpl {
 

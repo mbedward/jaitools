@@ -49,8 +49,8 @@ import javax.media.jai.iterator.WritableRandomIter;
  *
  * @author Michael Bedward
  * @since 1.0
- * @source $URL: https://jai-tools.googlecode.com/svn/trunk/operator/regionalize/src/main/java/jaitools/media/jai/regionalize/FloodFiller.java $
- * @version $Id: FloodFiller.java 542 2009-08-27 06:02:26Z michael.bedward $
+ * @source $URL$
+ * @version $Id$
  */
 public class FloodFiller {
 

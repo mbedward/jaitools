@@ -41,8 +41,8 @@ import javax.media.jai.iterator.RectIterFactory;
  * 
  * @author Michael Bedward
  * @since 1.0
- * @source $URL: $
- * @version $Id: $
+ * @source $URL$
+ * @version $Id$
  */
 public class FloodFillOpImage extends PointOpImage {
 

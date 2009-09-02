@@ -27,8 +27,8 @@ package jaitools.media.jai.floodfill;
  *
  * @author Michael Bedward
  * @since 1.0
- * @source $URL: https://jai-tools.googlecode.com/svn/trunk/operator/regionalize/src/main/java/jaitools/media/jai/regionalize/ScanSegment.java $
- * @version $Id: ScanSegment.java 531 2009-08-06 12:27:52Z michael.bedward $
+ * @source $URL$
+ * @version $Id$
  */
 public class ScanSegment implements Comparable<ScanSegment> {
 
