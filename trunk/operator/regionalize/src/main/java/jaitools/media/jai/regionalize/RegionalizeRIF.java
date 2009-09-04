@@ -30,6 +30,7 @@ import java.awt.image.renderable.ParameterBlock;
 import java.awt.image.renderable.RenderedImageFactory;
 import javax.media.jai.BorderExtender;
 import javax.media.jai.ImageLayout;
+import javax.media.jai.JAI;
 
 /**
  * The image factory for the Regionalize operation.
@@ -66,11 +67,21 @@ public class RegionalizeRIF implements RenderedImageFactory {
             layout = new ImageLayout();
         }
 
+        int tileWidth = layout.getTileWidth(null);
+        if (tileWidth == 0) {
+            tileWidth = JAI.getDefaultTileSize().width;
+        }
+
+        int tileHeight = layout.getTileHeight(null);
+        if (tileHeight == 0) {
+            tileHeight = JAI.getDefaultTileSize().height;
+        }
+
         SampleModel sm = new ComponentSampleModel(
                 DataBuffer.TYPE_INT, 
-                src.getWidth(), 
-                src.getHeight(), 
-                1, src.getWidth(),  // pixel stride and scan-line stride
+                tileWidth,
+                tileHeight,
+                1, tileWidth,  // pixel stride and scan-line stride
                 new int[]{0});  // band offset
 
         layout.setSampleModel(sm);

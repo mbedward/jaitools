@@ -19,13 +19,20 @@
  */
 package jaitools.media.jai.regionalize;
 
+import jaitools.tilecache.DiskMemTileCache;
 import jaitools.utils.CollectionFactory;
+import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.awt.image.WritableRaster;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.media.jai.AreaOpImage;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.PlanarImage;
@@ -38,6 +45,19 @@ import javax.media.jai.iterator.RectIterFactory;
  * a user-specified tolerance, in the source image. Produces a
  * destination image of these regions where pixel values are equal
  * to region ID.
+ * <p>
+ * To avoid region numbering artefacts on image tile boundaries this
+ * operator imposes an order on tile computation (by column within row).
+ * If an arbitrary tile is requested by the caller, the operator first
+ * checks that all of the preceding tiles have been computed and cached,
+ * processing any that have not. The operator creates its own
+ * {@link ExecutorService} for sequential tile computations.
+ * <p>
+ * Each computed tile is cached using an instance of {@link DiskMemTileCache}.
+ * The caller can provide this to the operator via {@code RenderingHints}, or set
+ * it as the default {@code TileCache} using {@code JAI.getDefaultInstance().setTileCache()}.
+ * Otherwise the operator will create a {@code DiskMemTileCache} object for itself.
+ *
  *
  * @see RegionalizeDescriptor
  * @see RegionData
@@ -58,6 +78,27 @@ public class RegionalizeOpImage extends PointOpImage {
 
     private FloodFiller filler;
     private List<WorkingRegion> regions;
+
+    private ExecutorService executor;
+    private final Object computeLock;
+    private int nextTileX;
+    private int nextTileY;
+
+
+    private class ComputeTileTask implements Callable<Raster> {
+
+        int tileX, tileY;
+
+        ComputeTileTask(int tileX, int tileY) {
+            this.tileX = tileX;
+            this.tileY = tileY;
+        }
+
+        public Raster call() throws Exception {
+            return RegionalizeOpImage.this.computeTile(tileX, tileY);
+        }
+
+    }
 
     /**
      * Constructor
@@ -92,6 +133,19 @@ public class RegionalizeOpImage extends PointOpImage {
 
         filler = new FloodFiller(source, band, tolerance, diagonal);
         regions = CollectionFactory.newList();
+
+        /*
+         * We want to use DiskMemTileCache to cache all computed tiles. If the
+         * client hasn't supplied its own DiskMemTileCache we set one here.
+         */
+        if (!(this.cache instanceof DiskMemTileCache)) {
+            setTileCache(new DiskMemTileCache());
+        }
+
+        this.executor = Executors.newSingleThreadExecutor();
+
+        this.nextTileX = this.nextTileY = 0;
+        this.computeLock = new Object();
     }
 
     /**
@@ -157,6 +211,98 @@ public class RegionalizeOpImage extends PointOpImage {
         return names;
     }
 
+    /**
+     * Returns a tile of this image as a <code>Raster</code>.  If the
+     * requested tile is completely outside of this image's bounds,
+     * this method returns <code>null</code>.
+     *
+     * <p> This method attempts to retrieve the requested tile from the
+     * cache.  If the tile is not currently in the cache, it schedules
+     * the tile for computation and adds it to the cache once the tile
+     * has been computed.
+     *
+     * @param tileX  The X index of the tile.
+     * @param tileY  The Y index of the tile.
+     */
+    @Override
+    public Raster getTile(int tileX, int tileY) {
+        Raster tile = null;
+
+        if (tileX >= getMinTileX() && tileX <= getMaxTileX() &&
+            tileY >= getMinTileY() && tileY <= getMaxTileY()) {
+
+            tile = getTileFromCache(tileX, tileY);
+
+            if (tile == null) {
+                synchronized (computeLock) {
+                    boolean done = false;
+                    for (int y = nextTileY; !done && y < getNumYTiles(); y++) {
+                        for (int x = nextTileX; !done && x < getNumXTiles(); x++) {
+                            try {
+                                tile = executor.submit(new ComputeTileTask(x, y)).get();
+                                addTileToCache(x, y, tile);
+                                if (x == tileX && y == tileY) {
+                                    done = true;
+                                }
+
+                            } catch (ExecutionException execEx) {
+                                throw new IllegalStateException(execEx);
+
+                            } catch (InterruptedException intEx) {
+                                // @todo is this safe / sensible ?
+                                nextTileX = x;
+                                nextTileY = y;
+                                return null;
+                            }
+                        }
+                    }
+
+                    if (tileX < getNumXTiles() - 1 || tileY < getNumYTiles() - 1) {
+                        nextTileY = tileY;
+                        nextTileX = tileX + 1;
+
+                        if (nextTileX == getNumXTiles()) {
+                            nextTileX = 0;
+                            nextTileY = tileY + 1;
+                        }
+                        
+                    } else { // just to be tidy
+                        nextTileX = getNumXTiles();
+                        nextTileY = getNumYTiles();
+                    }
+                }
+            }
+        }
+
+        return tile;
+    }
+
+    /**
+     * Computes the image data of a tile.
+     *
+     * <p> When a tile is requested via the <code>getTile</code> method
+     * and that tile is not in this image's tile cache, this method is
+     * invoked to compute the the new tile's data.
+     *
+     * <p>
+     * <b>Note:</b> Even though this method is marked <code>public</code>,
+     * it should not be called by applications directly because this could
+     * break the operator's required tile computation order and thread
+     * safety.
+     *
+     * @param tileX  The X index of the tile.
+     * @param tileY  The Y index of the tile.
+     */
+    @Override
+    public Raster computeTile(int tileX, int tileY) {
+        WritableRaster dest = createWritableRaster(sampleModel,
+                new Point(tileXToX(tileX),
+                tileYToY(tileY)));
+
+        Rectangle destRect = getTileRect(tileX, tileY);
+        computeRect(new PlanarImage[]{getSourceImage(0)}, dest, destRect);
+        return dest;
+    }
 
     /**
      * Performs regionalization on a specified rectangle.
@@ -178,22 +324,7 @@ public class RegionalizeOpImage extends PointOpImage {
 
         srcX = destRect.x;
         srcY = destRect.y;
-
         filler.setDestination(dest, destRect);
-        List<WorkingRegion> carryOverRegions = filler.getCarryOverRegions();
-        for (WorkingRegion cor : carryOverRegions) {
-            boolean found = false;
-            for (WorkingRegion r : regions) {
-                if (r.getID() == cor.getID()) {
-                    r.expand(cor);
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                throw new IllegalStateException("carry-over region does not match any existing region");
-            }
-        }
 
         do {
             do {
