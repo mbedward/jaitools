@@ -51,9 +51,8 @@ public class RegionData {
     }
 
     /**
-     * Get the data for regions as an unmodifiable List of
+     * Returns the data for regions as an unmodifiable List of
      * {@linkplain Region} objects.
-     * @return
      */
     public List<Region> getData() {
         return Collections.unmodifiableList(recs);
