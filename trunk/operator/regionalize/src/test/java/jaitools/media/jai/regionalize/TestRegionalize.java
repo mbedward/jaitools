@@ -29,7 +29,6 @@ import javax.media.jai.PlanarImage;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -44,7 +43,6 @@ public class TestRegionalize {
     private static final int CHESSBOARD = 1;
     private int numRegions;
 
-    @Ignore
     @Test
     public void testRegionalizeDisjunct() throws Exception {
         System.out.println("   testing with disjunct raster regions");
@@ -76,7 +74,6 @@ public class TestRegionalize {
         }
     }
 
-    @Ignore
     @Test
     public void testRegionalizeDiagonal() throws Exception {
         System.out.println("   testing with chessboard pattern");
@@ -142,7 +139,6 @@ public class TestRegionalize {
         }
     }
 
-    @Ignore
     @Test
     public void testProperty() {
         System.out.println("   testing regiondata property");
