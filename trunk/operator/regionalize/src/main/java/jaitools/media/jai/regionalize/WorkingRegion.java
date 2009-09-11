@@ -107,7 +107,7 @@ public class WorkingRegion {
     }
 
     /**
-     * Package-private method. Merge the given region into this region.
+     * Merge the given region into this region.
      * At present, this method doesn't bother about merging scan segments,
      * it just addes the other region's segments and updates the index
      * and bounds as necessary.
@@ -128,49 +128,49 @@ public class WorkingRegion {
     }
 
     /**
-     * Package-private method. Get the ID of this region.
+     * Get the ID of this region.
      */
     public int getID() {
         return id;
     }
 
     /**
-     * Package-private method. Get the max x coordinate within this region.
+     * Get the max x coordinate within this region.
      */
     public int getMaxX() {
         return maxx;
     }
 
     /**
-     * Package-private method. Get the max y coordinate of this region.
+     * Get the max y coordinate of this region.
      */
     public int getMaxY() {
         return maxy;
     }
 
     /**
-     * Package-private method. Get the min x coordinate of this region.
+     * Get the min x coordinate of this region.
      */
     public int getMinX() {
         return minx;
     }
 
     /**
-     * Package-private method. Get the min y coordinate of this region.
+     * Get the min y coordinate of this region.
      */
     public int getMinY() {
         return miny;
     }
 
     /**
-     * Package-private method. Get the number of pixels within this region.
+     * Get the number of pixels within this region.
      */
     public int getNumPixels() {
         return numPixels;
     }
 
     /**
-     * Package-private method. Get the reference value of this region.
+     * Get the reference value of this region.
      * This is the value of the start pixel used in the regionalize
      * operation.
      */
