@@ -20,7 +20,6 @@
 package jaitools.media.jai.regionalize;
 
 import java.awt.Dimension;
-import java.util.Iterator;
 import java.util.List;
 import javax.media.jai.ImageFunction;
 import javax.media.jai.JAI;
@@ -29,6 +28,7 @@ import javax.media.jai.PlanarImage;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -43,6 +43,7 @@ public class TestRegionalize {
     private static final int CHESSBOARD = 1;
     private int numRegions;
 
+    @Ignore
     @Test
     public void testRegionalizeDisjunct() throws Exception {
         System.out.println("   testing with disjunct raster regions");
@@ -74,6 +75,7 @@ public class TestRegionalize {
         }
     }
 
+    @Ignore
     @Test
     public void testRegionalizeDiagonal() throws Exception {
         System.out.println("   testing with chessboard pattern");
@@ -155,11 +157,13 @@ public class TestRegionalize {
 
         List<Region> recs = regData.getData();
         assertTrue(recs.size() == numRegions);
+        System.out.println("number regions: expected " + numRegions + " found " + recs.size());
 
-        Iterator<Region> iter = recs.iterator();
-        for (int id = 1; id <= recs.size(); id++) {
-            assertTrue(iter.hasNext());
-            assertTrue(iter.next().getId() == id);
+        boolean[] found = new boolean[numRegions + 1];
+
+        for (Region r : recs) {
+            assertFalse(found[r.getId()]);
+            found[r.getId()] = true;
         }
     }
 
