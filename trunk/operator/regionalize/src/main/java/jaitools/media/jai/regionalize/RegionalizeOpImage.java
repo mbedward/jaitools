@@ -221,16 +221,11 @@ public class RegionalizeOpImage extends PointOpImage {
      * Returns a tile of this image as a <code>Raster</code>.  If the
      * requested tile is completely outside of this image's bounds,
      * this method returns <code>null</code>.
-     *
      * <p>
-     * This method attempts to retrieve the requested tile from the
-     * cache.  If the tile is not currently in the cache, it schedules
-     * the tile for computation and adds it to the cache once the tile
-     * has been computed. The regionalizing algorithm requires that
-     * tiles be computed sequentially (left to right, top to bottom).
-     * If those tiles preceding the one requested haven't been computed
-     * yet this method schedules them for computation before processing
-     * the requested tile.
+     * The nature of the regionalizing algorithm means that to compute
+     * <i>any</i> tile other than the first (top left) we must compute
+     * <i>all</i> tiles to avoid region numbering artefacts across
+     * tile boundaries.
      *
      * @param tileX  The X index of the tile.
      * @param tileY  The Y index of the tile.
@@ -252,7 +247,11 @@ public class RegionalizeOpImage extends PointOpImage {
                             try {
                                 tile = executor.submit(new ComputeTileTask(x, y)).get();
                                 addTileToCache(x, y, tile);
-                                if (x == tileX && y == tileY) {
+                                
+                                // for the first tile only we can stop here
+                                if (tileX == 0 && tileY == 0) {
+                                    nextTileX = 1;
+                                    nextTileY = 0;
                                     done = true;
                                 }
 
@@ -266,20 +265,6 @@ public class RegionalizeOpImage extends PointOpImage {
                                 return null;
                             }
                         }
-                    }
-
-                    if (tileX < getNumXTiles() - 1 || tileY < getNumYTiles() - 1) {
-                        nextTileY = tileY;
-                        nextTileX = tileX + 1;
-
-                        if (nextTileX == getNumXTiles()) {
-                            nextTileX = 0;
-                            nextTileY = tileY + 1;
-                        }
-                        
-                    } else { // just to be tidy
-                        nextTileX = getNumXTiles();
-                        nextTileY = getNumYTiles();
                     }
                 }
             }
@@ -303,30 +288,14 @@ public class RegionalizeOpImage extends PointOpImage {
 
         final int ABOVE = 0, CURRENT = 1;
 
-        Rectangle srcRect = sources[0].getBounds();
-        double[][] srcData = new double[3][srcRect.width];
-
         int tileX = XToTileX(destRect.x);
         int tileY = YToTileY(destRect.y);
 
         filler.setDestination(dest, destRect);
 
-        RectIter srcIter = RectIterFactory.create(sources[0], srcRect);
+        RectIter srcIter = RectIterFactory.create(sources[0], destRect);
         for (int i = 0; i < band; i++) {
             srcIter.nextBand();
-        }
-
-        /**
-         * Read the first two rows of the source image
-         */
-        for (int i = 0; i < 2; i++) {
-            int j = 0;
-            do {
-                srcData[i][j++] = srcIter.getSampleDouble();
-            } while (!srcIter.nextPixelDone());
-
-            srcIter.startPixels();
-            srcIter.nextLine();
         }
 
         Set<Integer> prevCheckedIDs = new HashSet<Integer>();
@@ -334,7 +303,7 @@ public class RegionalizeOpImage extends PointOpImage {
         /**
          * Processing loop
          */
-        for (int destY = destRect.y, row = 0; row < destRect.height; row++, destY++) {
+        for (int destY = destRect.y, row = 0; row < destRect.height; destY++, row++) {
             for (int destX = destRect.x, col = 0; col < destRect.width; destX++, col++) {
 
                 /*
@@ -345,7 +314,7 @@ public class RegionalizeOpImage extends PointOpImage {
 
                     int id;
                     int prevID = NO_REGION;
-                    double srcVal = srcData[CURRENT][col];
+                    double srcVal = srcIter.getSampleDouble();
                     WorkingRegion region = null;
                     double refVal = Double.NaN;
 
@@ -447,26 +416,18 @@ public class RegionalizeOpImage extends PointOpImage {
                         currentID++ ;
                     }
                 }
+
+                srcIter.nextPixelDone();
             }
 
-            // get the next row of source data
-            srcData[ABOVE] = srcData[CURRENT];
-            int k = 0;
-            do {
-                srcData[CURRENT][k++] = srcIter.getSampleDouble();
-            } while (!srcIter.nextPixelDone());
-
-            // advance with nextLineDone method to avoid a problem
-            // at the end of the processing loop
+            srcIter.startPixels();
             srcIter.nextLineDone();
         }
-
     }
 
     /**
-     * Check if the given pixel has already been processed by
-     * seeing if it is contained within the regions collected
-     * so far.
+     * Get the ID of the region that contains the given pixel
+     * position
      *
      * @return the id of the region that contains this pixel OR
      *         NO_REGION if the pixel hasn't been processed
