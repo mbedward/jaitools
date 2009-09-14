@@ -66,7 +66,7 @@ public class DiskMemImage
     private Set<TileObserver> tileObservers;
 
     /**
-     * Minimal onstructor. This will set default values for the image's
+     * Minimal constructor. This will set default values for the image's
      * min x and y coordinates (0), x and y tile offsets (0) and <code>ColorModel</code>
      * (<code>null</code>)
      *
@@ -84,6 +84,29 @@ public class DiskMemImage
              0, 0,           // tileGridXOffset, tileGridYOffset
              tileSampleModel,
              null            // ColorModel
+             );
+    }
+
+
+    /**
+     * Constructor. This will set default values for the image's
+     * min x and y coordinates (0), x and y tile offsets (0)
+     *
+     * @param width image width
+     * @param height image height
+     * @param tileSampleModel a <code>SampleModel</code> specifying the dimensions
+     * data type etc. for image tiles
+     */
+    public DiskMemImage(
+            int width, int height,
+            SampleModel tileSampleModel,
+            ColorModel colorModel) {
+
+        this(0, 0,           // minX, minY
+             width, height,
+             0, 0,           // tileGridXOffset, tileGridYOffset
+             tileSampleModel,
+             colorModel
              );
     }
 

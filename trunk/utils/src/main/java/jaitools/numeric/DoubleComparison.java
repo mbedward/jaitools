@@ -49,6 +49,10 @@ public class DoubleComparison {
      * @return true if zero; false otherwise
      */
     public static boolean dzero(double x, double tol) {
+        if (tol < TOL) {
+            return dzero(x);
+        }
+
         return Math.abs(x) < tol;
     }
 
@@ -76,6 +80,10 @@ public class DoubleComparison {
      * a value greater than 0 if x1 is greater than x2
      */
     public static int dcomp(double x1, double x2, double tol) {
+        if (tol < TOL) {
+            return dcomp(x1, x2);
+        }
+
         if (dzero(x1 - x2, tol)) {
             return 0;
         } else {
