@@ -92,6 +92,29 @@ public class DoubleComparison {
     }
 
     /**
+     * Test if two double values are equal within the default tolerance.
+     * This is a short-cut for {@code dzero(x1 - x2)}.
+     * @param x1 first value
+     * @param x2 second value
+     * @return true if the two values are equal; false otherwise
+     */
+    public static boolean dequal(double x1, double x2) {
+        return dzero(x1 - x2);
+    }
+
+    /**
+     * Test if two double values are equal within the specified tolerance.
+     * This is a short-cut for {@code dzero(x1 - x2, tol)}.
+     * @param x1 first value
+     * @param x2 second value
+     * @param the user-specified tolerance (<b>assumed</b> to be positive)
+     * @return true if the two values are equal; false otherwise
+     */
+    public static boolean dequal(double x1, double x2, double tol) {
+        return dzero(x1 - x2, tol);
+    }
+
+    /**
      * Convert a double value to integer taking into account the
      * default tolerance when checking if it is zero, ie. values
      * within TOL either side of 0 will produce a 0 return value
