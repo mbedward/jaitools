@@ -38,6 +38,8 @@ import javax.media.jai.AreaOpImage;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.PlanarImage;
 import javax.media.jai.PointOpImage;
+import javax.media.jai.iterator.RandomIter;
+import javax.media.jai.iterator.RandomIterFactory;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 
@@ -83,8 +85,6 @@ public class RegionalizeOpImage extends PointOpImage {
 
     private ExecutorService executor;
     private final Object computeLock;
-    private int nextTileX;
-    private int nextTileY;
 
 
     private class ComputeTileTask implements Callable<Raster> {
@@ -150,7 +150,6 @@ public class RegionalizeOpImage extends PointOpImage {
         this.executor = Executors.newSingleThreadExecutor();
         this.computeLock = new Object();
 
-        this.nextTileX = this.nextTileY = 0;
         this.currentID = 1;
     }
 
@@ -232,45 +231,49 @@ public class RegionalizeOpImage extends PointOpImage {
      */
     @Override
     public Raster getTile(int tileX, int tileY) {
-        Raster tile = null;
+        boolean upperLeftTile = false;
 
         if (tileX >= getMinTileX() && tileX <= getMaxTileX() &&
             tileY >= getMinTileY() && tileY <= getMaxTileY()) {
 
-            tile = getTileFromCache(tileX, tileY);
+            Raster tile = getTileFromCache(tileX, tileY);
 
             if (tile == null) {
                 synchronized (computeLock) {
+                    if (tileX == getMinTileX() && tileY == getMinTileY()) {
+                        upperLeftTile = true;
+                    }
+
                     boolean done = false;
-                    for (int y = nextTileY; !done && y < getNumYTiles(); y++) {
-                        for (int x = nextTileX; !done && x < getNumXTiles(); x++) {
-                            try {
-                                tile = executor.submit(new ComputeTileTask(x, y)).get();
-                                addTileToCache(x, y, tile);
-                                
-                                // for the first tile only we can stop here
-                                if (tileX == 0 && tileY == 0) {
-                                    nextTileX = 1;
-                                    nextTileY = 0;
-                                    done = true;
+                    for (int y = getMinTileY(); !done && y <= getMaxTileY(); y++) {
+                        for (int x = getMinTileX(); !done && x <= getMaxTileX(); x++) {
+                            if (getTileFromCache(x, y) == null) {
+                                try {
+                                    tile = executor.submit(new ComputeTileTask(x, y)).get();
+                                    addTileToCache(x, y, tile);
+
+                                    // for the first tile only we can stop here
+                                    if (upperLeftTile) {
+                                        done = true;
+                                    }
+
+                                } catch (ExecutionException execEx) {
+                                    throw new IllegalStateException(execEx);
+
+                                } catch (InterruptedException intEx) {
+                                    // @todo is this safe ?
+                                    return null;
                                 }
-
-                            } catch (ExecutionException execEx) {
-                                throw new IllegalStateException(execEx);
-
-                            } catch (InterruptedException intEx) {
-                                // @todo is this safe / sensible ?
-                                nextTileX = x;
-                                nextTileY = y;
-                                return null;
                             }
                         }
                     }
                 }
             }
+
+            return getTileFromCache(tileX, tileY);
         }
 
-        return tile;
+        return null;
     }
 
     /**
@@ -293,88 +296,58 @@ public class RegionalizeOpImage extends PointOpImage {
 
         filler.setDestination(dest, destRect);
 
-        RectIter srcIter = RectIterFactory.create(sources[0], destRect);
-        for (int i = 0; i < band; i++) {
-            srcIter.nextBand();
-        }
-
+        RectIter srcIter;
+        int id;
+        int prevID;
+        double srcVal;
+        WorkingRegion region;
+        double refVal;
         Set<Integer> prevCheckedIDs = new HashSet<Integer>();
 
-        /**
-         * Processing loop
-         */
-        for (int destY = destRect.y, row = 0; row < destRect.height; destY++, row++) {
-            for (int destX = destRect.x, col = 0; col < destRect.width; destX++, col++) {
+        RandomIter randIter = null;
 
+        /*
+         * Check adjecent edge pixels on tile(s) above (if any) for
+         * carry-over regions
+         */
+        if (tileY > getMinTileY()) {
+            randIter = RandomIterFactory.create(sources[0], null);
+
+            int destY = destRect.y;
+            for (int destX = destRect.x, col = 0; col < destRect.width; destX++, col++) {
                 /*
                  * Check that the pixel has not yet been included in a region
                  * by a previous flood fill
                  */
                 if (getRegionForPixel(destX, destY) == NO_REGION) {
 
-                    int id;
-                    int prevID = NO_REGION;
-                    double srcVal = srcIter.getSampleDouble();
-                    WorkingRegion region = null;
-                    double refVal = Double.NaN;
+                    prevID = NO_REGION;
+                    srcVal = randIter.getSampleDouble(destX, destY, band);
+                    region = null;
+                    refVal = Double.NaN;
+                    prevCheckedIDs.clear();
 
                     /*
-                     * If this is the top row of the destination, check for
-                     * connection with regions above
+                     * Check the N neighbour
                      */
-                    if (row == 0 && tileY > getMinTileY()) {
-                        id = getRegionForPixel(destX, destY - 1);
-                        assert(id != NO_REGION);
-                        refVal = regions.get(id).getValue();
-                        if (DoubleComparison.dzero(srcVal - refVal, tolerance)) {
-                            prevID = id;
-                        } else {
-                            prevCheckedIDs.add(id);
-                        }
-
-                        /*
-                         * If the N neighbour's region didn't match and we are
-                         * allowing diagonal connectedness, try the NE
-                         * and NW neighbours
-                         */
-                        if (prevID == NO_REGION && diagonal) {
-                            if (destX - 1 >= getMinX()) {
-                                id = getRegionForPixel(destX-1, destY - 1);
-                                assert(id != NO_REGION);
-                                if (!prevCheckedIDs.contains(id)) {
-                                    refVal = regions.get(id).getValue();
-                                    if (DoubleComparison.dzero(srcVal - refVal, tolerance)) {
-                                        prevID = id;
-                                    } else {
-                                        prevCheckedIDs.add(id);
-                                    }
-                                }
-                            }
-
-                            if (prevID == NO_REGION && destX + 1 <= getMaxX()) {
-                                id = getRegionForPixel(destX+1, destY - 1);
-                                assert(id != NO_REGION);
-                                if (!prevCheckedIDs.contains(id)) {
-                                    refVal = regions.get(id).getValue();
-                                    if (DoubleComparison.dzero(srcVal - refVal, tolerance)) {
-                                        prevID = id;
-                                    } else {
-                                        prevCheckedIDs.add(id);
-                                    }
-                                }
-                            }
-                        }
+                    id = getRegionForPixel(destX, destY - 1);
+                    assert (id != NO_REGION);
+                    refVal = regions.get(id).getValue();
+                    if (DoubleComparison.dzero(srcVal - refVal, tolerance)) {
+                        prevID = id;
+                    } else {
+                        prevCheckedIDs.add(id);
                     }
 
-                    if (prevID == NO_REGION) {
-                        /*
-                         * If this is the left edge of the destination, check for
-                         * connection with regions from the W and SW (if diagonal)
-                         * neighbours
-                         */
-                        if (col == 0 && tileX > getMinTileX()) {
-                            id = getRegionForPixel(destX-1, destY);
-                            assert(id != NO_REGION);
+                    /*
+                     * If the N neighbour's region didn't match and we are
+                     * allowing diagonal connectedness, try the NE
+                     * and NW neighbours
+                     */
+                    if (prevID == NO_REGION && diagonal) {
+                        if (destX - 1 >= getMinX()) {
+                            id = getRegionForPixel(destX - 1, destY - 1);
+                            assert (id != NO_REGION);
                             if (!prevCheckedIDs.contains(id)) {
                                 refVal = regions.get(id).getValue();
                                 if (DoubleComparison.dzero(srcVal - refVal, tolerance)) {
@@ -383,45 +356,135 @@ public class RegionalizeOpImage extends PointOpImage {
                                     prevCheckedIDs.add(id);
                                 }
                             }
+                        }
 
-                            if (prevID == NO_REGION && diagonal && destY+1 <= getMaxY()) {
-                                id = getRegionForPixel(destX-1, destY);
-                                assert(id != NO_REGION);
-                                if (!prevCheckedIDs.contains(id)) {
-                                    refVal = regions.get(id).getValue();
-                                    if (DoubleComparison.dzero(srcVal - refVal, tolerance)) {
-                                        prevID = id;
-                                    }
+                        if (prevID == NO_REGION && destX + 1 <= getMaxX()) {
+                            id = getRegionForPixel(destX + 1, destY - 1);
+                            assert (id != NO_REGION);
+                            if (!prevCheckedIDs.contains(id)) {
+                                refVal = regions.get(id).getValue();
+                                if (DoubleComparison.dzero(srcVal - refVal, tolerance)) {
+                                    prevID = id;
+                                } else {
+                                    prevCheckedIDs.add(id);
                                 }
                             }
                         }
                     }
 
-                    /**
-                     * If we found a matching region from a preceding tile
-                     * expand it by flood-filling this tile and merging the
-                     * previous and new working regions
-                     */
                     if (prevID != NO_REGION) {
+                        // carry over the region to this tile
                         assert(!Double.isNaN(refVal));
                         region = filler.fill(destX, destY, prevID, refVal);
                         regions.get(prevID).expand(region);
-
-                    } else {
-                        /*
-                         * Start a new region
-                         */
-                        region = filler.fill(destX, destY, currentID, srcVal);
-                        regions.put(currentID, region);
-                        currentID++ ;
                     }
                 }
+            }
+        }
 
-                srcIter.nextPixelDone();
+        /*
+         * Check adjecent edge pixels on tile(s) to the left (if any) for
+         * carry-over regions
+         */
+        if (tileX > getMinTileX()) {
+            if (randIter == null) {
+                randIter = RandomIterFactory.create(sources[0], null);
             }
 
-            srcIter.startPixels();
-            srcIter.nextLineDone();
+            int destX = destRect.x;
+            for (int destY = destRect.y, row = 0; row < destRect.height; destY++, row++) {
+                /*
+                 * Check that the pixel has not yet been included in a region
+                 * by a previous flood fill
+                 */
+                if (getRegionForPixel(destX, destY) == NO_REGION) {
+
+                    prevID = NO_REGION;
+                    srcVal = randIter.getSampleDouble(destX, destY, band);
+                    region = null;
+                    refVal = Double.NaN;
+                    prevCheckedIDs.clear();
+
+                    /*
+                     * Check the W neighbour
+                     */
+                    id = getRegionForPixel(destX - 1, destY);
+                    assert (id != NO_REGION);
+                    if (!prevCheckedIDs.contains(id)) {
+                        refVal = regions.get(id).getValue();
+                        if (DoubleComparison.dzero(srcVal - refVal, tolerance)) {
+                            prevID = id;
+                        } else {
+                            prevCheckedIDs.add(id);
+                        }
+                    }
+
+                    /*
+                     * If no match with the W neighbour, and allowing diagonal
+                     * connectedness, check the NW and SW neighbours
+                     */
+                    if (prevID == NO_REGION && diagonal) {
+                        // NW neighbour
+                        if (destY - 1 >= getMinY()) {
+                            id = getRegionForPixel(destX - 1, destY - 1);
+                            assert (id != NO_REGION);
+                            if (!prevCheckedIDs.contains(id)) {
+                                refVal = regions.get(id).getValue();
+                                if (DoubleComparison.dzero(srcVal - refVal, tolerance)) {
+                                    prevID = id;
+                                } else {
+                                    prevCheckedIDs.add(id);
+                                }
+                            }
+                        }
+
+                        if (prevID == NO_REGION && destY + 1 <= getMaxY()) {
+                            // SW neighbour
+                            id = getRegionForPixel(destX - 1, destY + 1);
+                            assert (id != NO_REGION);
+                            if (!prevCheckedIDs.contains(id)) {
+                                refVal = regions.get(id).getValue();
+                                if (DoubleComparison.dzero(srcVal - refVal, tolerance)) {
+                                    prevID = id;
+                                }
+                            }
+                        }
+                    }
+
+                    if (prevID != NO_REGION) {
+                        // carry over the region to this tile
+                        assert(!Double.isNaN(refVal));
+                        region = filler.fill(destX, destY, prevID, refVal);
+                        regions.get(prevID).expand(region);
+                    }
+                }
+            }
+        }
+
+        /**
+         * Process the remainder of this tile's pixels
+         */
+        RectIter rectIter = RectIterFactory.create(sources[0], destRect);
+        for (int i = 0; i < band; i++) {
+            rectIter.nextBand();
+        }
+
+        for (int destY = destRect.y, row = 0; row < destRect.height; destY++, row++) {
+            for (int destX = destRect.x, col = 0; col < destRect.width; destX++, col++) {
+
+                if (getRegionForPixel(destX, destY) == NO_REGION) {
+
+                    srcVal = rectIter.getSampleDouble();
+                    region = filler.fill(destX, destY, currentID, srcVal);
+                    regions.put(currentID, region);
+                    currentID++ ;
+                }
+
+                rectIter.nextPixelDone();
+            }
+
+            rectIter.startPixels();
+            rectIter.nextLineDone();
         }
     }
 

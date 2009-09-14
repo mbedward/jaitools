@@ -125,6 +125,8 @@ public class WorkingRegion {
             segments.add(otherSeg);
             addToIndex(otherSeg, segments.size()-1);
         }
+
+        numPixels += cor.numPixels;
     }
 
     /**
