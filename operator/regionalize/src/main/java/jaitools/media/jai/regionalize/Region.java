@@ -101,4 +101,9 @@ public class Region {
     public double getRefValue() {
         return value;
     }
+
+    @Override
+    public String toString() {
+        return String.format("Region(id=%d, ref value=%.4f, pixel count=%d)", id, value, numPixels);
+    }
 }

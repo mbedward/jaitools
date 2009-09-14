@@ -28,7 +28,7 @@ import javax.media.jai.PlanarImage;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
-import org.junit.Ignore;
+import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -38,61 +38,37 @@ import static org.junit.Assert.*;
  * @author Michael Bedward
  */
 public class TestRegionalize {
+    
+    private static final int WIDTH = 200;
+    private static final int HEIGHT = 200;
+    private static final int SQUARE_WIDTH = 25;
 
-    private static final int DIAMONDS = 0;
-    private static final int CHESSBOARD = 1;
-    private int numRegions;
-
-    @Ignore
-    @Test
-    public void testRegionalizeDisjunct() throws Exception {
-        System.out.println("   testing with disjunct raster regions");
-        final int width = 200, height = 200;
-
-        JAI.setDefaultTileSize(new Dimension(width/2, height/2));
-        PlanarImage img = createTestImage(DIAMONDS, width, height);
-        RenderedOp op = RegionalizeDescriptor.create(img, 0, 0d, false, null);
-
-        boolean[] found = new boolean[numRegions + 1];
-        for (int i = 0; i <= numRegions; i++) {
-            found[i] = false;
-        }
-
-        RectIter iter = RectIterFactory.create(op, null);
-        do {
-            do {
-                int id = iter.getSample(0);
-                if (id < 1 || id > numRegions) {
-                    fail("region ID out of range");
-                }
-                found[id] = true;
-            } while (!iter.nextPixelDone());
-            iter.startPixels();
-        } while (!iter.nextLineDone());
-
-        for (int i = 1; i <= numRegions; i++) {
-            assertTrue(String.format("missing region %d", i), found[i]);
-        }
+    @Before
+    public void setup() {
+        assert(WIDTH % SQUARE_WIDTH == 0);
+        assert(HEIGHT % SQUARE_WIDTH == 0);
+        
+        JAI.setDefaultTileSize(new Dimension(WIDTH/2, HEIGHT/2));
     }
 
-    @Ignore
     @Test
-    public void testRegionalizeDiagonal() throws Exception {
-        System.out.println("   testing with chessboard pattern");
-        int width = 80, height = 80, squareW = 10;
-        int expOrthoRegions = 64;
-        int expDiagRegions = 2;
+    public void testOrthogonal() throws Exception {
+        System.out.println("   testing orthogonal connectedness");
 
-        PlanarImage img = createTestImage(CHESSBOARD, width, height, squareW);
+        int expOrthoRegions = (WIDTH / SQUARE_WIDTH) * (HEIGHT / SQUARE_WIDTH);
 
-        /*
-         * First test orthogonal connectedness.
-         */
-        System.out.println("      - orthogonal connectedness");
-        RenderedOp op = RegionalizeDescriptor.create(img, 0, 0d, false, null);
+        PlanarImage img = createTestImage();
+
+        ParameterBlockJAI pb = new ParameterBlockJAI("regionalize");
+        pb.setSource("source0", img);
+        pb.setParameter("band", 0);
+        pb.setParameter("tolerance", 0.0d);
+        pb.setParameter("diagonal", false);
+
+        RenderedOp op = JAI.create("regionalize", pb);
 
         boolean[] found = new boolean[expOrthoRegions + 1];
-        for (int i = 0; i <= expOrthoRegions; i++) {
+        for (int i = 1; i <= expOrthoRegions; i++) {
             found[i] = false;
         }
 
@@ -101,7 +77,7 @@ public class TestRegionalize {
             do {
                 int id = iter.getSample(0);
                 if (id < 1 || id > expOrthoRegions) {
-                    fail("region ID out of range");
+                    fail(String.format("region ID %d out of range", id));
                 }
                 found[id] = true;
             } while (!iter.nextPixelDone());
@@ -111,32 +87,41 @@ public class TestRegionalize {
         for (int i = 1; i <= expOrthoRegions; i++) {
             assertTrue(String.format("missing region %d", i), found[i]);
         }
+    }
 
-        /*
-         * Now test diagonal connectedness. This should reduce
-         * the chessboard pattern to two regions
-         */
-        System.out.println("      - diagonal connectedness");
-        op = RegionalizeDescriptor.create(img, 0, 0d, true, null);
+    @Test
+    public void testDiagonal() {
+        System.out.println("   testing diagonal connectedness");
 
-        found = new boolean[expDiagRegions + 1];
-        for (int i = 0; i <= expDiagRegions; i++) {
+        int expNumRegions = 2;
+
+        PlanarImage img = createTestImage();
+
+        ParameterBlockJAI pb = new ParameterBlockJAI("regionalize");
+        pb.setSource("source0", img);
+        pb.setParameter("band", 0);
+        pb.setParameter("tolerance", 0.0d);
+        pb.setParameter("diagonal", true);
+        RenderedOp op = JAI.create("regionalize", pb);
+
+        boolean[] found = new boolean[expNumRegions + 1];
+        for (int i = 1; i <= expNumRegions; i++) {
             found[i] = false;
         }
 
-        iter = RectIterFactory.create(op, null);
+        RectIter iter = RectIterFactory.create(op, null);
         do {
             do {
                 int id = iter.getSample(0);
-                if (id < 1 || id > expDiagRegions) {
-                    fail("region ID out of range");
+                if (id < 1 || id > expNumRegions) {
+                    fail(String.format("region ID %d out of range", id));
                 }
                 found[id] = true;
             } while (!iter.nextPixelDone());
             iter.startPixels();
         } while (!iter.nextLineDone());
 
-        for (int i = 1; i <= expDiagRegions; i++) {
+        for (int i = 1; i <= expNumRegions; i++) {
             assertTrue(String.format("missing region %d", i), found[i]);
         }
     }
@@ -145,47 +130,42 @@ public class TestRegionalize {
     public void testProperty() {
         System.out.println("   testing regiondata property");
 
-        int width = 200, height = 200;
-        PlanarImage img = createTestImage(DIAMONDS, width, height);
-        RenderedOp op = RegionalizeDescriptor.create(img, 0, 0d, false, null);
+        PlanarImage img = createTestImage();
 
-        // here we are crudely forcing a rendering so that the
-        // property will be available
+        ParameterBlockJAI pb = new ParameterBlockJAI("regionalize");
+        pb.setSource("source0", img);
+        pb.setParameter("band", 0);
+        pb.setParameter("tolerance", 0.0d);
+        pb.setParameter("diagonal", false);
+
+        RenderedOp op = JAI.create("regionalize", pb);
+
+        // force rendering so the property will be available
         op.getData();
-
         RegionData regData = (RegionData) op.getProperty(RegionalizeDescriptor.REGION_DATA_PROPERTY);
 
         List<Region> recs = regData.getData();
-        assertTrue(recs.size() == numRegions);
-        System.out.println("number regions: expected " + numRegions + " found " + recs.size());
 
+        int numRegions = (WIDTH / SQUARE_WIDTH) * (HEIGHT / SQUARE_WIDTH);
         boolean[] found = new boolean[numRegions + 1];
 
         for (Region r : recs) {
             assertFalse(found[r.getId()]);
             found[r.getId()] = true;
         }
+
+        for (int i = 1; i < found.length; i++) {
+            assertTrue(found[i]);
+        }
     }
 
-    private PlanarImage createTestImage(int pattern, int width, int height, int ...extras) {
-
-        ImageFunction imageFn = null;
-        switch (pattern) {
-            case DIAMONDS:
-                imageFn = new DiamondImageFunction(width, height);
-                numRegions = ((DiamondImageFunction)imageFn).getNumDiamonds() + 1;
-                break;
-
-            case CHESSBOARD:
-                imageFn = new ChessboardImageFunction(extras[0]);
-                break;
-        }
-
+    private PlanarImage createTestImage() {
+        ImageFunction imageFn = new ChessboardImageFunction(SQUARE_WIDTH);
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ImageFunction");
         pb.setParameter("function", imageFn);
-        pb.setParameter("width", width);
-        pb.setParameter("height", height);
+        pb.setParameter("width", WIDTH);
+        pb.setParameter("height", HEIGHT);
         RenderedOp op = JAI.create("ImageFunction", pb);
 
         return op.getRendering();
