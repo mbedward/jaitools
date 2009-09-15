@@ -22,12 +22,10 @@ package jaitools.media.jai.regionalize;
 import jaitools.tilecache.DiskMemTileCache;
 import jaitools.tiledimage.DiskMemImage;
 import jaitools.utils.CollectionFactory;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
-import java.awt.image.WritableRaster;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
@@ -38,7 +36,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.media.jai.AreaOpImage;
 import javax.media.jai.ImageLayout;
-import javax.media.jai.PlanarImage;
 import javax.media.jai.PointOpImage;
 import javax.media.jai.TileCache;
 import javax.media.jai.iterator.RectIter;
@@ -365,42 +362,6 @@ public class RegionalizeOpImage extends PointOpImage {
         }
     }
 
-    /**
-     * Performs regionalization on a specified rectangle.
-     *
-     * @param sources an array of source {@code Rasters} - only one element
-     *        is expected here
-     *
-     * @param dest a WritableRaster tile containing the area to be computed.
-     *
-     * @param destRect the rectangle within dest to be processed.
-     */
-    @Override
-    protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
-
-        RectIter srcIter = RectIterFactory.create(sources[0], destRect);
-        for (int i = 0; i < band; i++) {
-            srcIter.nextBand();
-        }
-
-        for (int destY = destRect.y, row = 0; row < destRect.height; destY++, row++) {
-            for (int destX = destRect.x, col = 0; col < destRect.width; destX++, col++) {
-
-                if (getRegionForPixel(destX, destY) == NO_REGION) {
-
-                    double srcVal = srcIter.getSampleDouble();
-                    FillResult fill = filler.fill(destX, destY, currentID, srcVal);
-                    regions.put(currentID, new Region(fill));
-                    currentID++ ;
-                }
-
-                srcIter.nextPixelDone();
-            }
-
-            srcIter.startPixels();
-            srcIter.nextLineDone();
-        }
-    }
 
     /**
      * Get the ID of the region that contains the given pixel
