@@ -40,7 +40,6 @@ public class ScanSegment implements Comparable<ScanSegment> {
      * Constructor
      */
     public ScanSegment(int startX, int endX, int y) {
-        super();
         this.startX = startX;
         this.endX = endX;
         this.y = y;

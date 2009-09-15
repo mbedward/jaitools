@@ -19,12 +19,17 @@
  */
 package jaitools.media.jai.regionalize;
 
+import jaitools.tiledimage.DiskMemImage;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.image.ColorModel;
+import java.awt.image.RenderedImage;
+import java.awt.image.SampleModel;
 import java.util.List;
 import javax.media.jai.ImageFunction;
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
-import javax.media.jai.PlanarImage;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
@@ -38,17 +43,20 @@ import static org.junit.Assert.*;
  * @author Michael Bedward
  */
 public class TestRegionalize {
-    
+
     private static final int WIDTH = 200;
     private static final int HEIGHT = 200;
     private static final int SQUARE_WIDTH = 25;
+
+    private static final int TILE_WIDTH = WIDTH / 2;
+    private static final int TILE_HEIGHT = HEIGHT / 2;
 
     @Before
     public void setup() {
         assert(WIDTH % SQUARE_WIDTH == 0);
         assert(HEIGHT % SQUARE_WIDTH == 0);
-        
-        JAI.setDefaultTileSize(new Dimension(WIDTH/2, HEIGHT/2));
+
+        JAI.setDefaultTileSize(new Dimension(TILE_WIDTH, TILE_HEIGHT));
     }
 
     @Test
@@ -57,7 +65,7 @@ public class TestRegionalize {
 
         int expOrthoRegions = (WIDTH / SQUARE_WIDTH) * (HEIGHT / SQUARE_WIDTH);
 
-        PlanarImage img = createTestImage();
+        RenderedImage img = createChessboardImage();
 
         ParameterBlockJAI pb = new ParameterBlockJAI("regionalize");
         pb.setSource("source0", img);
@@ -95,7 +103,7 @@ public class TestRegionalize {
 
         int expNumRegions = 2;
 
-        PlanarImage img = createTestImage();
+        RenderedImage img = createChessboardImage();
 
         ParameterBlockJAI pb = new ParameterBlockJAI("regionalize");
         pb.setSource("source0", img);
@@ -130,7 +138,7 @@ public class TestRegionalize {
     public void testProperty() {
         System.out.println("   testing regiondata property");
 
-        PlanarImage img = createTestImage();
+        RenderedImage img = createChessboardImage();
 
         ParameterBlockJAI pb = new ParameterBlockJAI("regionalize");
         pb.setSource("source0", img);
@@ -142,9 +150,7 @@ public class TestRegionalize {
 
         // force rendering so the property will be available
         op.getData();
-        RegionData regData = (RegionData) op.getProperty(RegionalizeDescriptor.REGION_DATA_PROPERTY);
-
-        List<Region> recs = regData.getData();
+        List<Region> recs = (List<Region>) op.getProperty(RegionalizeDescriptor.REGION_DATA_PROPERTY);
 
         int numRegions = (WIDTH / SQUARE_WIDTH) * (HEIGHT / SQUARE_WIDTH);
         boolean[] found = new boolean[numRegions + 1];
@@ -159,7 +165,31 @@ public class TestRegionalize {
         }
     }
 
-    private PlanarImage createTestImage() {
+    /**
+     * Test regionalizing a U-shaped region that crosses tile edges.
+     * This image caused region numbering problems between tiles
+     * with previous algorithms.
+     */
+    @Test
+    public void testURegion() {
+        System.out.println("   testing image with U-shaped region");
+
+        RenderedImage img = createURegionImage();
+
+        ParameterBlockJAI pb = new ParameterBlockJAI("regionalize");
+        pb.setSource("source0", img);
+        pb.setParameter("band", 0);
+        pb.setParameter("tolerance", 0.0d);
+        pb.setParameter("diagonal", false);
+
+        RenderedOp op = JAI.create("regionalize", pb);
+        op.getData();
+
+        List<Region> recs = (List<Region>) op.getProperty(RegionalizeDescriptor.REGION_DATA_PROPERTY);
+        assertTrue(recs.size() == 2);
+    }
+
+    private RenderedImage createChessboardImage() {
         ImageFunction imageFn = new ChessboardImageFunction(SQUARE_WIDTH);
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ImageFunction");
@@ -168,6 +198,37 @@ public class TestRegionalize {
         pb.setParameter("height", HEIGHT);
         RenderedOp op = JAI.create("ImageFunction", pb);
 
-        return op.getRendering();
+        return op;
+    }
+
+    /**
+     * Create a tiled image that has a U shaped region within it that crosses
+     * tile boundaries.
+     *
+     * @return new image
+     */
+    private DiskMemImage createURegionImage() {
+        ColorModel cm = ColorModel.getRGBdefault();
+        SampleModel sm = cm.createCompatibleSampleModel(TILE_WIDTH, TILE_HEIGHT);
+        DiskMemImage img = new DiskMemImage(WIDTH, HEIGHT, sm, cm);
+        Graphics2D gr = img.createGraphics();
+
+        gr.setColor(Color.GRAY);
+        gr.fillRect(0, 0, WIDTH, HEIGHT);
+
+        int w = TILE_WIDTH / 3;
+        int h = TILE_HEIGHT / 3;
+
+        gr.setColor(Color.CYAN);
+
+        // draw the vertical parts of the U
+        gr.fillRect(w, h, w, img.getHeight() - 2*h);
+        gr.fillRect(img.getWidth() - 2*w, h, w, img.getHeight() - 2*h);
+
+        // draw the horizontal part of the U
+        gr.fillRect(w, img.getHeight() - 2*h, img.getWidth() - 2*w, h);
+
+        return img;
     }
 }
+

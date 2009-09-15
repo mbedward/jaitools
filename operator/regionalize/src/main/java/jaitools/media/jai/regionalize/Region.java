@@ -20,6 +20,8 @@
 
 package jaitools.media.jai.regionalize;
 
+import java.awt.Rectangle;
+
 /**
  * Holds summary data for a single region of uniform value identified in the image
  *
@@ -32,22 +34,21 @@ public class Region {
 
     private int id;
     private int numPixels;
-    private double value;
-    private int minx;
-    private int maxx;
-    private int miny;
-    private int maxy;
+    private double refValue;
+    Rectangle bounds;
 
     /**
      * Constructor is package-private.
      */
-    Region(WorkingRegion region) {
+    Region(FillResult region) {
         this.id = region.getID();
-        this.value = region.getValue();
-        this.minx = region.getMinX();
-        this.miny = region.getMinY();
-        this.maxx = region.getMaxX();
-        this.maxy = region.getMaxY();
+        this.refValue = region.getValue();
+
+        this.bounds = new Rectangle(
+                region.getMinX(), region.getMinY(),
+                region.getMaxX() - region.getMinX() + 1,
+                region.getMaxY() - region.getMinY() + 1);
+
         this.numPixels = region.getNumPixels();
     }
 
@@ -59,31 +60,12 @@ public class Region {
     }
 
     /**
-     * Get the max x coordinate of pixels within this region
+     * Get the bounding pixel coordinates of this region
+     *
+     * @return a copy of the region's bounding rectangle
      */
-    public int getMaxX() {
-        return maxx;
-    }
-
-    /**
-     * Get the max y coordinate of pixels within this region
-     */
-    public int getMaxY() {
-        return maxy;
-    }
-
-    /**
-     * Get the min x coordinate of pixels within this region
-     */
-    public int getMinX() {
-        return minx;
-    }
-
-    /**
-     * Get the min y coordinate of pixels within this region
-     */
-    public int getMinY() {
-        return miny;
+    public Rectangle getBounds() {
+        return new Rectangle(bounds);
     }
 
     /**
@@ -99,11 +81,11 @@ public class Region {
      * within the region.
      */
     public double getRefValue() {
-        return value;
+        return refValue;
     }
 
     @Override
     public String toString() {
-        return String.format("Region(id=%d, ref value=%.4f, pixel count=%d)", id, value, numPixels);
+        return String.format("Region(id=%d, ref value=%.4f, pixel count=%d)", id, refValue, numPixels);
     }
 }

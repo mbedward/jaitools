@@ -21,9 +21,9 @@
 package jaitools.media.jai.regionalize;
 
 import jaitools.numeric.DoubleComparison;
+import jaitools.tiledimage.DiskMemImage;
 import java.awt.Rectangle;
 import java.awt.image.RenderedImage;
-import java.awt.image.WritableRaster;
 import java.util.ArrayList;
 import java.util.Queue;
 import java.util.LinkedList;
@@ -40,7 +40,7 @@ import javax.media.jai.iterator.WritableRandomIter;
  * which was subsequently ported to Java by Owen Kaluza.
  * <b>Any bugs in the present code are not their fault</b>.
  * <p>
- * The version works with source and destination data in the form of Raster objects
+ * This version works with source and destination data in the form of Raster objects
  * which are accessed using JAI iterators.
  *
  * @author Michael Bedward
@@ -50,13 +50,11 @@ import javax.media.jai.iterator.WritableRandomIter;
  */
 public class FloodFiller {
 
+    private static final int DEST_BAND = 0;
+
     private RandomIter srcIter;
-    
     private WritableRandomIter destIter;
-    private int minDestX;
-    private int maxDestX;
-    private int minDestY;
-    private int maxDestY;
+    private Rectangle destBounds;
 
     private int fillValue;
     private double tolerance;
@@ -69,32 +67,30 @@ public class FloodFiller {
     private ScanSegment lastSegmentChecked;
 
     /**
-     * Create a FloodFiller to work with the given source and destination rasters
+     * Create a FloodFiller to work with the given source image
+     *
+     * @param regionImage an instance of {@code DiskMemImage} provided by the client
+     *        {@code RegionalizeOpImage} object
+     *
      * @param src source image
-     * @param band the soruce image band being processed
+     * 
+     * @param band the soruce image band to be processed
+     *
      * @param tolerance the maximum absolute difference in value for a pixel to be
-     * included in the region
+     *        included in the region
+     *
      * @param diagonal set to true to include sub-regions that are only connected
-     * diagonally; set to false to require orthogonal connections
+     *        diagonally; set to false to require orthogonal connections
      */
-    public FloodFiller(RenderedImage src, int band, double tolerance, boolean diagonal) {
-
-        srcIter = RandomIterFactory.create(src, null);
+    public FloodFiller(DiskMemImage regionImage, RenderedImage src, int band, double tolerance, boolean diagonal) {
 
         this.band = band;
         this.tolerance = tolerance;
         this.diagonal = diagonal;
-    }
+        this.destBounds = regionImage.getBounds();
 
-    /**
-     * Set the current destination raster
-     */
-    public void setDestination(WritableRaster dest, Rectangle bounds) {
-        destIter = RandomIterFactory.createWritable(dest, bounds);
-        minDestX = bounds.x;
-        minDestY = bounds.y;
-        maxDestX = bounds.x + bounds.width - 1;
-        maxDestY = bounds.y + bounds.height - 1;
+        this.srcIter = RandomIterFactory.create(src, null);
+        this.destIter = RandomIterFactory.createWritable(regionImage, null);
     }
 
     /**
@@ -108,19 +104,15 @@ public class FloodFiller {
      * @param y start pixel y coordinate
      * @param fillValue the value to write to the destination image for this region
      * @param refValue the reference value for this region
-     * @return a new {@linkplain WorkingRegion}
+     * @return a new {@linkplain FillResult}
      */
-    public WorkingRegion fill(int x, int y, int fillValue, double refValue) {
-        if (destIter == null) {
-            throw new RuntimeException("need to initialize destination iterator first");
-        }
+    public FillResult fill(int x, int y, int fillValue, double refValue) {
 
         this.fillValue = fillValue;
         this.refValue = refValue;
 
         segmentsPending = new LinkedList<ScanSegment>();
         segmentsFilled = new ArrayList<ScanSegment>();
-
 
         fillSegment(x, y);
 
@@ -137,7 +129,7 @@ public class FloodFiller {
                 endX = segment.endX;
             }
 
-            if (segment.y > minDestY) {
+            if (segment.y > destBounds.y) {
                 int xi = startX;
                 while (xi <= endX) {
                     newSegment = fillSegment(xi, segment.y - 1);
@@ -145,7 +137,7 @@ public class FloodFiller {
                 }
             }
             
-            if (segment.y < maxDestY) {
+            if (segment.y < destBounds.y + destBounds.height - 1) {
                 int xi = startX;
                 while (xi <= endX) {
                     newSegment = fillSegment(xi, segment.y + 1);
@@ -154,7 +146,7 @@ public class FloodFiller {
             }
         }
 
-        return new WorkingRegion(fillValue, refValue, segmentsFilled);
+        return new FillResult(fillValue, refValue, segmentsFilled);
     }
 
 
@@ -173,7 +165,8 @@ public class FloodFiller {
     private ScanSegment fillSegment(int x, int y) {
 
         // we rely on the y coord being checked prior to getting here
-        if (x < minDestX || x > maxDestX) {
+        int xo = x - destBounds.x;
+        if (xo < 0 || xo >= destBounds.width) {
             return null;
         }
 
@@ -181,9 +174,9 @@ public class FloodFiller {
         ScanSegment segment = null;
         int left = x, right = x, xi = x;
 
-        while (xi >= minDestX) {
+        while (xi >= destBounds.x) {
             if (checkPixel(xi, y) && !pixelDone(xi, y)) {
-                destIter.setSample(xi, y, band, fillValue);
+                destIter.setSample(xi, y, DEST_BAND, fillValue);
                 fill = true;
                 left = xi;
                 xi-- ;
@@ -197,9 +190,9 @@ public class FloodFiller {
         }
 
         xi = x+1;
-        while (xi <= maxDestX) {
+        while (xi < destBounds.x + destBounds.width) {
             if (checkPixel(xi, y) && !pixelDone(xi, y)) {
-                destIter.setSample(xi, y, band, fillValue);
+                destIter.setSample(xi, y, DEST_BAND, fillValue);
                 right = xi;
                 xi++ ;
             } else {

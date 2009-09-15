@@ -19,17 +19,19 @@
  */
 package jaitools.media.jai.regionalize;
 
-import jaitools.numeric.DoubleComparison;
 import jaitools.tilecache.DiskMemTileCache;
+import jaitools.tiledimage.DiskMemImage;
 import jaitools.utils.CollectionFactory;
+import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.awt.image.WritableRaster;
-import java.util.HashSet;
+import java.util.Arrays;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -38,8 +40,7 @@ import javax.media.jai.AreaOpImage;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.PlanarImage;
 import javax.media.jai.PointOpImage;
-import javax.media.jai.iterator.RandomIter;
-import javax.media.jai.iterator.RandomIterFactory;
+import javax.media.jai.TileCache;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 
@@ -72,19 +73,27 @@ import javax.media.jai.iterator.RectIterFactory;
  */
 public class RegionalizeOpImage extends PointOpImage {
 
-    private static final int NO_REGION = -1;
+    /**
+     * Destingation value indicating that the pixel does not
+     * belong to a region
+     */
+    public static final int NO_REGION = 0;
 
     private boolean singleBand;
     private boolean diagonal;
     private int band;
     private double tolerance;
 
+    private final DiskMemImage regionImage;
     private FloodFiller filler;
-    private Map<Integer, WorkingRegion> regions;
+    private Map<Integer, Region> regions;
     int currentID;
 
-    private ExecutorService executor;
-    private final Object computeLock;
+    private final ExecutorService executor;
+    private final Object getTileLock = new Object();
+    private final Object computeTileLock = new Object();
+
+    private boolean[] tileComputed;
 
 
     private class ComputeTileTask implements Callable<Raster> {
@@ -125,6 +134,10 @@ public class RegionalizeOpImage extends PointOpImage {
 
         super(source, layout, config, false);
 
+        if (getSampleModel().getDataType() != DataBuffer.TYPE_INT) {
+            throw new IllegalStateException("destination sample model must be TYPE_INT");
+        }
+
         this.band = band;
         this.tolerance = tolerance;
 
@@ -136,19 +149,19 @@ public class RegionalizeOpImage extends PointOpImage {
 
         this.diagonal = diagonal;
 
-        filler = new FloodFiller(source, band, tolerance, diagonal);
+        /*
+         * Any tile cache provided by the caller is ignored
+         */
+        regionImage = new DiskMemImage(getWidth(), getHeight(), getSampleModel());
+        setTileCache( regionImage.getTileCache() );
+
+        filler = new FloodFiller(regionImage, source, band, tolerance, diagonal);
         regions = CollectionFactory.newTreeMap();
 
-        /*
-         * We want to use DiskMemTileCache to cache all computed tiles. If the
-         * client hasn't supplied its own DiskMemTileCache we set one here.
-         */
-        if (!(this.cache instanceof DiskMemTileCache)) {
-            setTileCache(new DiskMemTileCache());
-        }
-
         this.executor = Executors.newSingleThreadExecutor();
-        this.computeLock = new Object();
+
+        tileComputed = new boolean[getNumXTiles() * getNumYTiles()];
+        Arrays.fill(tileComputed, false);  // paranoia
 
         this.currentID = 1;
     }
@@ -164,7 +177,10 @@ public class RegionalizeOpImage extends PointOpImage {
     @Override
     public Object getProperty(String name) {
         if (RegionalizeDescriptor.REGION_DATA_PROPERTY.equalsIgnoreCase(name)) {
-            return getRegionData();
+            List<Region> regionData = CollectionFactory.newList();
+            regionData.addAll(regions.values());
+            return regionData;
+
         } else {
             return super.getProperty(name);
         }
@@ -180,7 +196,7 @@ public class RegionalizeOpImage extends PointOpImage {
         if (props == null) {
             props = new Hashtable();
         }
-        props.put(RegionalizeDescriptor.REGION_DATA_PROPERTY, getRegionData());
+        props.put(RegionalizeDescriptor.REGION_DATA_PROPERTY, "dynamic");
         return props;
     }
 
@@ -190,7 +206,8 @@ public class RegionalizeOpImage extends PointOpImage {
     @Override
     public Class<?> getPropertyClass(String name) {
         if (RegionalizeDescriptor.REGION_DATA_PROPERTY.equalsIgnoreCase(name)) {
-            return RegionData.class;
+            return List.class;
+
         } else {
             return super.getPropertyClass(name);
         }
@@ -231,49 +248,121 @@ public class RegionalizeOpImage extends PointOpImage {
      */
     @Override
     public Raster getTile(int tileX, int tileY) {
-        boolean upperLeftTile = false;
+        Raster tile = null;
 
         if (tileX >= getMinTileX() && tileX <= getMaxTileX() &&
             tileY >= getMinTileY() && tileY <= getMaxTileY()) {
 
-            Raster tile = getTileFromCache(tileX, tileY);
+            if (tileComputed[getTileIndex(tileX, tileY)]) {
+                tile = regionImage.getTile(tileX, tileY);
+                
+            } else {
+                synchronized (getTileLock) {
+                    try {
+                        tile = executor.submit(new ComputeTileTask(tileX, tileY)).get();
 
-            if (tile == null) {
-                synchronized (computeLock) {
-                    if (tileX == getMinTileX() && tileY == getMinTileY()) {
-                        upperLeftTile = true;
-                    }
+                    } catch (ExecutionException execEx) {
+                        throw new IllegalStateException(execEx);
 
-                    boolean done = false;
-                    for (int y = getMinTileY(); !done && y <= getMaxTileY(); y++) {
-                        for (int x = getMinTileX(); !done && x <= getMaxTileX(); x++) {
-                            if (getTileFromCache(x, y) == null) {
-                                try {
-                                    tile = executor.submit(new ComputeTileTask(x, y)).get();
-                                    addTileToCache(x, y, tile);
-
-                                    // for the first tile only we can stop here
-                                    if (upperLeftTile) {
-                                        done = true;
-                                    }
-
-                                } catch (ExecutionException execEx) {
-                                    throw new IllegalStateException(execEx);
-
-                                } catch (InterruptedException intEx) {
-                                    // @todo is this safe ?
-                                    return null;
-                                }
-                            }
-                        }
+                    } catch (InterruptedException intEx) {
+                        // @todo is this safe ?
+                        return null;
                     }
                 }
             }
-
-            return getTileFromCache(tileX, tileY);
         }
 
-        return null;
+        return tile;
+    }
+
+    @Override
+    public Raster computeTile(int tileX, int tileY) {
+        Rectangle destRect = getTileRect(tileX, tileY);
+
+        synchronized (computeTileLock) {
+            RectIter srcIter = RectIterFactory.create(getSourceImage(0), destRect);
+            for (int i = 0; i < band; i++) {
+                srcIter.nextBand();
+            }
+
+            for (int destY = destRect.y, row = 0; row < destRect.height; destY++, row++) {
+                for (int destX = destRect.x, col = 0; col < destRect.width; destX++, col++) {
+
+                    if (getRegionForPixel(destX, destY) == NO_REGION) {
+
+                        double srcVal = srcIter.getSampleDouble();
+                        FillResult fill = filler.fill(destX, destY, currentID, srcVal);
+                        regions.put(currentID, new Region(fill));
+                        currentID++;
+                    }
+
+                    srcIter.nextPixelDone();
+                }
+
+                srcIter.startPixels();
+                srcIter.nextLineDone();
+            }
+            
+            tileComputed[getTileIndex(tileX, tileY)] = true;
+        }
+
+        return regionImage.getTile(tileX, tileY);
+    }
+
+
+
+    /**
+     * Convenience method to calculate a single value tile coordinate
+     * @param tileX tile X coordinate
+     * @param tileY tile Y coordinate
+     * @return single integer coordinate used to index fields in this class
+     */
+    private int getTileIndex(int tileX, int tileY) {
+        return (tileY - getMinTileY()) * getNumXTiles() + (tileX - getMinTileX());
+    }
+
+    /**
+     * This method is overridden to prevent it being used because the
+     * {@code RegionalizeOpImage} object should be soley responsible for
+     * creating tiles and caching them. If invoked an
+     * {@linkplain UnsupportedOperationException} will be thrown.
+     */
+    @Override
+    protected void addTileToCache(int tileX, int tileY, Raster tile) {
+        throw new UnsupportedOperationException("this method should not be called !");
+    }
+
+    /**
+     * This method is overridden to ensure that the cache is always addressed
+     * through the {@code DiskMemImage} being used by this operator, otherwise
+     * tile IDs calculated by the cache will vary with the perceived owner
+     * (the image or the operator) of the tile.
+     *
+     * @param tileX tile X coordinate
+     * @param tileY tile Y coordinate
+     * @return the requested tile
+     */
+    @Override
+    protected Raster getTileFromCache(int tileX, int tileY) {
+        return regionImage.getTile(tileX, tileY);
+    }
+
+
+    /**
+     * Set the tile cache. The supplied cache must be an instance of
+     * {@code DiskMemTileCache}.
+     *
+     * @param cache an instance of DiskMemTileCache
+     * @throws IllegalArgumentException if cache is null or not an instance
+     *         of {@code DiskMemTileCache}
+     */
+    @Override
+    public void setTileCache(TileCache cache) {
+        if (cache != null && cache instanceof DiskMemTileCache) {
+            super.setTileCache(cache);
+        } else {
+            throw new IllegalArgumentException("cache must be an instance of DiskMemTileCache");
+        }
     }
 
     /**
@@ -289,184 +378,9 @@ public class RegionalizeOpImage extends PointOpImage {
     @Override
     protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
 
-        final int ABOVE = 0, CURRENT = 1;
-
-        int tileX = XToTileX(destRect.x);
-        int tileY = YToTileY(destRect.y);
-
-        filler.setDestination(dest, destRect);
-
-        RectIter srcIter;
-        int id;
-        int prevID;
-        double srcVal;
-        WorkingRegion region;
-        double refVal;
-        Set<Integer> prevCheckedIDs = new HashSet<Integer>();
-
-        RandomIter randIter = null;
-
-        /*
-         * Check adjecent edge pixels on tile(s) above (if any) for
-         * carry-over regions
-         */
-        if (tileY > getMinTileY()) {
-            randIter = RandomIterFactory.create(sources[0], null);
-
-            int destY = destRect.y;
-            for (int destX = destRect.x, col = 0; col < destRect.width; destX++, col++) {
-                /*
-                 * Check that the pixel has not yet been included in a region
-                 * by a previous flood fill
-                 */
-                if (getRegionForPixel(destX, destY) == NO_REGION) {
-
-                    prevID = NO_REGION;
-                    srcVal = randIter.getSampleDouble(destX, destY, band);
-                    region = null;
-                    refVal = Double.NaN;
-                    prevCheckedIDs.clear();
-
-                    /*
-                     * Check the N neighbour
-                     */
-                    id = getRegionForPixel(destX, destY - 1);
-                    assert (id != NO_REGION);
-                    refVal = regions.get(id).getValue();
-                    if (DoubleComparison.dzero(srcVal - refVal, tolerance)) {
-                        prevID = id;
-                    } else {
-                        prevCheckedIDs.add(id);
-                    }
-
-                    /*
-                     * If the N neighbour's region didn't match and we are
-                     * allowing diagonal connectedness, try the NE
-                     * and NW neighbours
-                     */
-                    if (prevID == NO_REGION && diagonal) {
-                        if (destX - 1 >= getMinX()) {
-                            id = getRegionForPixel(destX - 1, destY - 1);
-                            assert (id != NO_REGION);
-                            if (!prevCheckedIDs.contains(id)) {
-                                refVal = regions.get(id).getValue();
-                                if (DoubleComparison.dzero(srcVal - refVal, tolerance)) {
-                                    prevID = id;
-                                } else {
-                                    prevCheckedIDs.add(id);
-                                }
-                            }
-                        }
-
-                        if (prevID == NO_REGION && destX + 1 <= getMaxX()) {
-                            id = getRegionForPixel(destX + 1, destY - 1);
-                            assert (id != NO_REGION);
-                            if (!prevCheckedIDs.contains(id)) {
-                                refVal = regions.get(id).getValue();
-                                if (DoubleComparison.dzero(srcVal - refVal, tolerance)) {
-                                    prevID = id;
-                                } else {
-                                    prevCheckedIDs.add(id);
-                                }
-                            }
-                        }
-                    }
-
-                    if (prevID != NO_REGION) {
-                        // carry over the region to this tile
-                        assert(!Double.isNaN(refVal));
-                        region = filler.fill(destX, destY, prevID, refVal);
-                        regions.get(prevID).expand(region);
-                    }
-                }
-            }
-        }
-
-        /*
-         * Check adjecent edge pixels on tile(s) to the left (if any) for
-         * carry-over regions
-         */
-        if (tileX > getMinTileX()) {
-            if (randIter == null) {
-                randIter = RandomIterFactory.create(sources[0], null);
-            }
-
-            int destX = destRect.x;
-            for (int destY = destRect.y, row = 0; row < destRect.height; destY++, row++) {
-                /*
-                 * Check that the pixel has not yet been included in a region
-                 * by a previous flood fill
-                 */
-                if (getRegionForPixel(destX, destY) == NO_REGION) {
-
-                    prevID = NO_REGION;
-                    srcVal = randIter.getSampleDouble(destX, destY, band);
-                    region = null;
-                    refVal = Double.NaN;
-                    prevCheckedIDs.clear();
-
-                    /*
-                     * Check the W neighbour
-                     */
-                    id = getRegionForPixel(destX - 1, destY);
-                    assert (id != NO_REGION);
-                    if (!prevCheckedIDs.contains(id)) {
-                        refVal = regions.get(id).getValue();
-                        if (DoubleComparison.dzero(srcVal - refVal, tolerance)) {
-                            prevID = id;
-                        } else {
-                            prevCheckedIDs.add(id);
-                        }
-                    }
-
-                    /*
-                     * If no match with the W neighbour, and allowing diagonal
-                     * connectedness, check the NW and SW neighbours
-                     */
-                    if (prevID == NO_REGION && diagonal) {
-                        // NW neighbour
-                        if (destY - 1 >= getMinY()) {
-                            id = getRegionForPixel(destX - 1, destY - 1);
-                            assert (id != NO_REGION);
-                            if (!prevCheckedIDs.contains(id)) {
-                                refVal = regions.get(id).getValue();
-                                if (DoubleComparison.dzero(srcVal - refVal, tolerance)) {
-                                    prevID = id;
-                                } else {
-                                    prevCheckedIDs.add(id);
-                                }
-                            }
-                        }
-
-                        if (prevID == NO_REGION && destY + 1 <= getMaxY()) {
-                            // SW neighbour
-                            id = getRegionForPixel(destX - 1, destY + 1);
-                            assert (id != NO_REGION);
-                            if (!prevCheckedIDs.contains(id)) {
-                                refVal = regions.get(id).getValue();
-                                if (DoubleComparison.dzero(srcVal - refVal, tolerance)) {
-                                    prevID = id;
-                                }
-                            }
-                        }
-                    }
-
-                    if (prevID != NO_REGION) {
-                        // carry over the region to this tile
-                        assert(!Double.isNaN(refVal));
-                        region = filler.fill(destX, destY, prevID, refVal);
-                        regions.get(prevID).expand(region);
-                    }
-                }
-            }
-        }
-
-        /**
-         * Process the remainder of this tile's pixels
-         */
-        RectIter rectIter = RectIterFactory.create(sources[0], destRect);
+        RectIter srcIter = RectIterFactory.create(sources[0], destRect);
         for (int i = 0; i < band; i++) {
-            rectIter.nextBand();
+            srcIter.nextBand();
         }
 
         for (int destY = destRect.y, row = 0; row < destRect.height; destY++, row++) {
@@ -474,17 +388,17 @@ public class RegionalizeOpImage extends PointOpImage {
 
                 if (getRegionForPixel(destX, destY) == NO_REGION) {
 
-                    srcVal = rectIter.getSampleDouble();
-                    region = filler.fill(destX, destY, currentID, srcVal);
-                    regions.put(currentID, region);
+                    double srcVal = srcIter.getSampleDouble();
+                    FillResult fill = filler.fill(destX, destY, currentID, srcVal);
+                    regions.put(currentID, new Region(fill));
                     currentID++ ;
                 }
 
-                rectIter.nextPixelDone();
+                srcIter.nextPixelDone();
             }
 
-            rectIter.startPixels();
-            rectIter.nextLineDone();
+            srcIter.startPixels();
+            srcIter.nextLineDone();
         }
     }
 
@@ -496,23 +410,13 @@ public class RegionalizeOpImage extends PointOpImage {
      *         NO_REGION if the pixel hasn't been processed
      */
     private int getRegionForPixel(int x, int y) {
-        for (WorkingRegion reg : regions.values()) {
-            if (reg.contains(x, y)) {
-                return reg.getID();
-            }
-        }
+        int tileX = XToTileX(x);
+        int tileY = YToTileY(y);
+        Raster tile = regionImage.getTile(tileX, tileY);
+        assert(tile != null);
 
-        return NO_REGION;
+        return tile.getSample(x, y, 0);
     }
 
-    private RegionData getRegionData() {
-        RegionData regionData = new RegionData();
-        
-        for (WorkingRegion r : regions.values()) {
-            regionData.addRegion(r);
-        }
-
-        return regionData;
-    }
 }
 
