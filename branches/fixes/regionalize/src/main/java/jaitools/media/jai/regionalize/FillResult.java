@@ -37,10 +37,10 @@ import java.util.Map;
  *
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
- * @version $Id$
+ * @source $URL: https://jai-tools.googlecode.com/svn/trunk/operator/regionalize/src/main/java/jaitools/media/jai/regionalize/FillResult.java $
+ * @version $Id: FillResult.java 552 2009-09-14 08:41:42Z michael.bedward $
  */
-public class WorkingRegion {
+public class FillResult {
     private int id;
     private double value;
     private int minx, maxx, miny, maxy;
@@ -55,7 +55,7 @@ public class WorkingRegion {
      * @param value representative value of pixels in this region
      * @param segments list of line segments making up this region
      */
-    public WorkingRegion(int id, double value, List<ScanSegment> segments) {
+    public FillResult(int id, double value, List<ScanSegment> segments) {
         this.id = id;
         this.value = value;
         this.segments = segments;
@@ -112,7 +112,7 @@ public class WorkingRegion {
      * it just addes the other region's segments and updates the index
      * and bounds as necessary.
      */
-    public void expand(WorkingRegion cor) {
+    public void expand(FillResult cor) {
         for (ScanSegment otherSeg : cor.segments) {
             if (otherSeg.startX < minx) minx = otherSeg.startX;
             if (otherSeg.endX > maxx) maxx = otherSeg.endX;
