@@ -21,11 +21,12 @@ package jaitools.demo.regionalize;
 
 import jaitools.demo.DemoImageProvider;
 import jaitools.demo.ImageReceiver;
-import jaitools.media.jai.regionalize.RegionData;
+import jaitools.media.jai.regionalize.Region;
 import jaitools.media.jai.regionalize.RegionalizeDescriptor;
 import jaitools.utils.ImageFrame;
 import jaitools.utils.ImageUtils;
 import java.awt.image.RenderedImage;
+import java.util.List;
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
@@ -108,16 +109,21 @@ public class RegionalizeDemo implements ImageReceiver {
          *
          * @todo remove this necessity
          */
-        orthoImg.getAsBufferedImage();
+        orthoImg.getData();
 
-        RegionData data = (RegionData) orthoImg.getProperty(RegionalizeDescriptor.REGION_DATA_PROPERTY);
-        int numRegions = data.getData().size();
+        /*
+         * Get summary data for regions and print it to the console
+         */
+        List<Region> regions = (List<Region>) orthoImg.getProperty(RegionalizeDescriptor.REGION_DATA_PROPERTY);
+        for (Region r : regions) {
+            System.out.println(r);
+        }
 
         /*
          * We use an ImageUtils method to make a nice colour image
          * of the regions to display
          */
-        RenderedImage displayImg = ImageUtils.createDisplayImage(orthoImg, numRegions);
+        RenderedImage displayImg = ImageUtils.createDisplayImage(orthoImg, regions.size());
 
         frame = new ImageFrame(displayImg, orthoImg, "Regions with orthogonal connection");
         frame.setVisible(true);
