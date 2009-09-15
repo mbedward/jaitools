@@ -57,14 +57,20 @@
                     <include>*</include>
                 </includes>
             </resource>
-
             <resource>
                 <targetPath>images</targetPath>
                 <directory>src/main/resources/images</directory>
                 <includes>
                     <include>*</include>
                 </includes>
-            </resource>	
+            </resource>
+            <resource>
+                <targetPath>scripts</targetPath>
+                <directory>src/main/resources/scripts</directory>
+                <includes>
+                    <include>**/*.jfl</include>
+                </includes>
+            </resource>
 		</resources>		
     </build>	
     <reporting>
