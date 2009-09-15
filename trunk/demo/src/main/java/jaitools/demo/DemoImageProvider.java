@@ -112,8 +112,8 @@ public class DemoImageProvider {
     public void requestImage(int choice, int width, int height, ImageReceiver receiver)
             throws Exception {
 
-        String name = "/example/" + scriptName[choice] + ".jfl";
-        URL url = getClass().getResource(name);
+        String name = "/scripts/" + scriptName[choice] + ".jfl";
+        URL url = DemoImageProvider.class.getResource(name);
         File file = new File(url.toURI());
 
         image = ImageUtils.createDoubleImage(width, height);
