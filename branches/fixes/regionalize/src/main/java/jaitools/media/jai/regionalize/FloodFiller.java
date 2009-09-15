@@ -50,6 +50,8 @@ import javax.media.jai.iterator.WritableRandomIter;
  */
 public class FloodFiller {
 
+    private static final int DEST_BAND = 0;
+
     private RandomIter srcIter;
     private WritableRandomIter destIter;
     private Rectangle destBounds;
@@ -174,7 +176,7 @@ public class FloodFiller {
 
         while (xi >= destBounds.x) {
             if (checkPixel(xi, y) && !pixelDone(xi, y)) {
-                destIter.setSample(xi, y, band, fillValue);
+                destIter.setSample(xi, y, DEST_BAND, fillValue);
                 fill = true;
                 left = xi;
                 xi-- ;
@@ -190,7 +192,7 @@ public class FloodFiller {
         xi = x+1;
         while (xi < destBounds.x + destBounds.width) {
             if (checkPixel(xi, y) && !pixelDone(xi, y)) {
-                destIter.setSample(xi, y, band, fillValue);
+                destIter.setSample(xi, y, DEST_BAND, fillValue);
                 right = xi;
                 xi++ ;
             } else {

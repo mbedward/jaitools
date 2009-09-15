@@ -77,7 +77,7 @@ public class RegionalizeOpImage extends PointOpImage {
      * Destingation value indicating that the pixel does not
      * belong to a region
      */
-    public static final int NO_REGION = -1;
+    public static final int NO_REGION = 0;
 
     private boolean singleBand;
     private boolean diagonal;
@@ -160,8 +160,8 @@ public class RegionalizeOpImage extends PointOpImage {
 
         this.executor = Executors.newSingleThreadExecutor();
 
-        // paranoia :-)
-        Arrays.fill(tileComputed, false);
+        tileComputed = new boolean[getNumXTiles() * getNumYTiles()];
+        Arrays.fill(tileComputed, false);  // paranoia
 
         this.currentID = 1;
     }
@@ -253,9 +253,10 @@ public class RegionalizeOpImage extends PointOpImage {
         if (tileX >= getMinTileX() && tileX <= getMaxTileX() &&
             tileY >= getMinTileY() && tileY <= getMaxTileY()) {
 
-            tile = regionImage.getWritableTile(tileX, tileY);
-
-            if (!tileComputed[getTileIndex(tileX, tileY)]) {
+            if (tileComputed[getTileIndex(tileX, tileY)]) {
+                tile = regionImage.getTile(tileX, tileY);
+                
+            } else {
                 synchronized (getTileLock) {
                     try {
                         tile = executor.submit(new ComputeTileTask(tileX, tileY)).get();
@@ -279,15 +280,6 @@ public class RegionalizeOpImage extends PointOpImage {
         Rectangle destRect = getTileRect(tileX, tileY);
 
         synchronized (computeTileLock) {
-            WritableRaster writableTile = regionImage.getWritableTile(tileX, tileY);
-
-            for (int y = writableTile.getMinY(), row = 0; row < writableTile.getHeight(); y++, row++) {
-                for (int x = writableTile.getMinX(), col = 0; col < writableTile.getWidth(); x++, col++) {
-                    writableTile.setSample(x, y, 0, NO_REGION);
-                }
-            }
-            regionImage.releaseWritableTile(tileX, tileY);
-
             RectIter srcIter = RectIterFactory.create(getSourceImage(0), destRect);
             for (int i = 0; i < band; i++) {
                 srcIter.nextBand();
@@ -310,8 +302,10 @@ public class RegionalizeOpImage extends PointOpImage {
                 srcIter.startPixels();
                 srcIter.nextLineDone();
             }
+            
+            tileComputed[getTileIndex(tileX, tileY)] = true;
         }
-        
+
         return regionImage.getTile(tileX, tileY);
     }
 
@@ -338,10 +332,21 @@ public class RegionalizeOpImage extends PointOpImage {
         throw new UnsupportedOperationException("this method should not be called !");
     }
 
+    /**
+     * This method is overridden to ensure that the cache is always addressed
+     * through the {@code DiskMemImage} being used by this operator, otherwise
+     * tile IDs calculated by the cache will vary with the perceived owner
+     * (the image or the operator) of the tile.
+     *
+     * @param tileX tile X coordinate
+     * @param tileY tile Y coordinate
+     * @return the requested tile
+     */
     @Override
-    public Raster[] getTiles(Point[] tileIndices) {
-        return super.getTiles(tileIndices);
+    protected Raster getTileFromCache(int tileX, int tileY) {
+        return regionImage.getTile(tileX, tileY);
     }
+
 
     /**
      * Set the tile cache. The supplied cache must be an instance of
@@ -407,7 +412,7 @@ public class RegionalizeOpImage extends PointOpImage {
     private int getRegionForPixel(int x, int y) {
         int tileX = XToTileX(x);
         int tileY = YToTileY(y);
-        Raster tile = getTileFromCache(tileX, tileY);
+        Raster tile = regionImage.getTile(tileX, tileY);
         assert(tile != null);
 
         return tile.getSample(x, y, 0);
