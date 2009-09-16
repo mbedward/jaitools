@@ -21,7 +21,7 @@
 package jaitools.tiledimage;
 
 import jaitools.tilecache.DiskMemTileCache;
-import jaitools.utils.CollectionFactory;
+import jaitools.CollectionFactory;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;

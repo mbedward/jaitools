@@ -5,7 +5,7 @@
 
 package jaitools.tilecache;
 
-import jaitools.utils.CollectionFactory;
+import jaitools.CollectionFactory;
 import java.awt.RenderingHints;
 import java.util.Collection;
 import java.util.Collections;

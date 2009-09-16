@@ -19,7 +19,7 @@
  */
 package jaitools.numeric;
 
-import jaitools.utils.CollectionFactory;
+import jaitools.CollectionFactory;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;

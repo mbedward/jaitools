@@ -20,7 +20,7 @@
 
 package jaitools.numeric;
 
-import jaitools.utils.CollectionFactory;
+import jaitools.CollectionFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;

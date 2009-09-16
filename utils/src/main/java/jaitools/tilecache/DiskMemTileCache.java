@@ -20,7 +20,7 @@
 
 package jaitools.tilecache;
 
-import jaitools.utils.CollectionFactory;
+import jaitools.CollectionFactory;
 import java.awt.Point;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
