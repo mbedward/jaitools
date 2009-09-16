@@ -21,11 +21,21 @@
 package jaitools.swing;
 
 import java.awt.BorderLayout;
+import java.awt.EventQueue;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JProgressBar;
+import javax.swing.SwingUtilities;
 
 /**
- * A progress bar in a frame for use in Jiffle demonstrations
+ * A progress bar in a frame with a title and optional label.
+ * This was written to be used with jai-tools demonstration
+ * programs.
+ * <p>
+ * The update methods {@linkplain #setProgress(float progress)}
+ * and {@linkplain #setLabel(String label)} may be called from
+ * any thread. If the calling thread is not the AWT event dispatch
+ * thread the updates will be passed to the dispatch thread.
  * 
  * @author Michael Bedward
  * @since 1.0
@@ -38,6 +48,8 @@ public class ProgressMeter extends JFrame {
     private static final int MAX_PROGRESS = 100;
     
     JProgressBar progBar;
+    JLabel label;
+    private boolean preset;
 
 
     /**
@@ -48,31 +60,81 @@ public class ProgressMeter extends JFrame {
     }
 
     /**
-     * Constructor
+     * Constructor. Sets the title but no label.
      */
     public ProgressMeter(String title) {
+        this(title, null);
+    }
+
+    /**
+     * Constructor. Sets the title and progress bar label.
+     */
+    public ProgressMeter(String title, String labelText) {
         setTitle(title);
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
         progBar = new JProgressBar(MIN_PROGRESS, MAX_PROGRESS);
         getContentPane().add(progBar, BorderLayout.CENTER);
+        
+        label = new JLabel("  ");
+        if (labelText != null && labelText.length() > 0) {
+            label.setText(labelText);
+        }
+        getContentPane().add(label, BorderLayout.SOUTH);
+
         setSize(400, 60);
         setLocationByPlatform(true);
     }
     
     /**
-     * Update the progress bar
+     * Update the progress bar.
      * 
-     * @param progress a value between 0 and 1
+     * @param progress a proportion value between 0 and 1
      */
-    public void update(float progress) {
-        progBar.setValue((int)Math.ceil(100 * progress));
+    public void setProgress(final float progress) {
+        final int barValue = (int)Math.ceil((MAX_PROGRESS - MIN_PROGRESS) * progress);
+
+        if (isVisible()) {
+            if (EventQueue.isDispatchThread()) {
+                progBar.setValue(barValue);
+
+            } else {
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        progBar.setValue(barValue);
+                    }
+                });
+            }
+
+        } else {
+            progBar.setValue(barValue);
+            preset = true;
+        }
+    }
+
+    /**
+     * Update the progress label
+     */
+    public void setLabel(final String text) {
+        if (!isVisible() || EventQueue.isDispatchThread()) {
+            label.setText(text);
+
+        } else {
+            SwingUtilities.invokeLater(new Runnable() {
+
+                public void run() {
+                    label.setText(text);
+                }
+            });
+        }
     }
 
     @Override
     public void setVisible(boolean b) {
         if (b == true) {
-            progBar.setValue(0);
+            if (!preset) {
+                progBar.setValue(MIN_PROGRESS);
+            }
         }
         super.setVisible(b);
     }

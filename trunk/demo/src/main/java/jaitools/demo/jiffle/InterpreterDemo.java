@@ -77,7 +77,7 @@ public class InterpreterDemo {
     public static void main(String[] args) throws Exception {
         InterpreterDemo demo = new InterpreterDemo();
         
-        URL url = demo.getClass().getResource("/example/ripple.jfl");
+        URL url = demo.getClass().getResource("/scripts/ripple.jfl");
         File f = new File(url.toURI());
 
         demo.compileAndRun(f);
@@ -104,7 +104,7 @@ public class InterpreterDemo {
             }
         });
         
-        progMeter = new ProgressMeter("Jiffle interpreter running");
+        progMeter = new ProgressMeter("Jiffle interpreter", "Running script...");
     }
 
     /**
@@ -168,7 +168,7 @@ public class InterpreterDemo {
     private void onProgress(final JiffleProgressEvent ev) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                progMeter.update(ev.getProgress());
+                progMeter.setProgress(ev.getProgress());
             }
         });
     }
