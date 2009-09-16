@@ -153,7 +153,7 @@ public class RegionalizeOpImage extends PointOpImage {
         regionImage = new DiskMemImage(getWidth(), getHeight(), getSampleModel());
         setTileCache( regionImage.getTileCache() );
 
-        filler = new FloodFiller(regionImage, source, band, tolerance, diagonal);
+        filler = new FloodFiller(source, band, regionImage, 0, tolerance, diagonal);
         regions = CollectionFactory.newTreeMap();
 
         this.executor = Executors.newSingleThreadExecutor();
