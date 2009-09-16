@@ -18,8 +18,9 @@
  * 
  */
 
-package jaitools.utils;
+package jaitools.imageutils;
 
+import jaitools.utils.*;
 import java.awt.Color;
 import java.awt.image.RenderedImage;
 import java.util.Collection;

@@ -18,7 +18,7 @@
  *
  */
 
-package jaitools.media.jai.regionalize;
+package jaitools.imageutils;
 
 import jaitools.numeric.DoubleComparison;
 import java.awt.Rectangle;
@@ -63,6 +63,51 @@ public class FloodFiller {
     private boolean diagonal;
     private double refValue;
     private int band;
+
+    public static class ScanSegment implements Comparable<ScanSegment> {
+
+        int startX;
+        int endX;
+        int y;
+
+        /**
+         * Constructor
+         */
+        public ScanSegment(int startX, int endX, int y) {
+            this.startX = startX;
+            this.endX = endX;
+            this.y = y;
+        }
+
+        /**
+         * Check if the given pixel location lies within this segment
+         */
+        public boolean contains(int x, int y) {
+            return this.y == y && startX <= x && endX >= x;
+        }
+
+        /**
+         * Compare to another segment. Comparison is done first by
+         * y coord, then by left x coord, then by right x coord.
+         */
+        public int compareTo(ScanSegment other) {
+            if (y < other.y) {
+                return -1;
+            } else if (y > other.y) {
+                return 1;
+            } else if (startX < other.startX) {
+                return -1;
+            } else if (startX > other.startX) {
+                return 1;
+            } else if (endX < other.endX) {
+                return -1;
+            } else if (endX > other.endX) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+    }
 
     private Queue<ScanSegment> segmentsPending;
     private List<ScanSegment> segmentsFilled;

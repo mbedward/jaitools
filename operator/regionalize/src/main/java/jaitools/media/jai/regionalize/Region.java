@@ -20,6 +20,7 @@
 
 package jaitools.media.jai.regionalize;
 
+import jaitools.imageutils.FillResult;
 import java.awt.Rectangle;
 
 /**

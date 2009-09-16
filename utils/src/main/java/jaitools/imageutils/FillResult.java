@@ -18,7 +18,7 @@
  *
  */
 
-package jaitools.media.jai.regionalize;
+package jaitools.imageutils;
 
 import jaitools.utils.CollectionFactory;
 import java.util.Collections;
@@ -45,7 +45,7 @@ public class FillResult {
     private double value;
     private int minx, maxx, miny, maxy;
 
-    private List<ScanSegment> segments;
+    private List<FloodFiller.ScanSegment> segments;
     private Map<Integer, List<Integer>> index;
     private int numPixels;
 
@@ -55,7 +55,7 @@ public class FillResult {
      * @param value representative value of pixels in this region
      * @param segments list of line segments making up this region
      */
-    public FillResult(int id, double value, List<ScanSegment> segments) {
+    public FillResult(int id, double value, List<FloodFiller.ScanSegment> segments) {
         this.id = id;
         this.value = value;
         this.segments = segments;
@@ -63,7 +63,7 @@ public class FillResult {
         
         Collections.sort(segments);
 
-        ScanSegment segment = segments.get(0);
+        FloodFiller.ScanSegment segment = segments.get(0);
         minx = segment.startX;
         maxx = segment.endX;
         miny = segment.y;
@@ -73,7 +73,7 @@ public class FillResult {
         addToIndex(segment, 0);
 
         if (segments.size() > 1) {
-            ListIterator<ScanSegment> iter = segments.listIterator(1);
+            ListIterator<FloodFiller.ScanSegment> iter = segments.listIterator(1);
             int k = 1;
             while (iter.hasNext()) {
                 segment = iter.next();
@@ -97,7 +97,7 @@ public class FillResult {
 
         List<Integer> indices = index.get(y);
         for (Integer i : indices) {
-            ScanSegment segment = segments.get(i);
+            FloodFiller.ScanSegment segment = segments.get(i);
             if (segment.contains(x, y)) {
                 return true;
             }
@@ -113,7 +113,7 @@ public class FillResult {
      * and bounds as necessary.
      */
     public void expand(FillResult cor) {
-        for (ScanSegment otherSeg : cor.segments) {
+        for (FloodFiller.ScanSegment otherSeg : cor.segments) {
             if (otherSeg.startX < minx) minx = otherSeg.startX;
             if (otherSeg.endX > maxx) maxx = otherSeg.endX;
             if (otherSeg.y < miny) {
@@ -184,7 +184,7 @@ public class FillResult {
      * Add a segment to the index. This is to improve the performance
      * of the {@linkplain #contains(int, int) } method
      */
-    private void addToIndex(ScanSegment segment, int segmentListPos) {
+    private void addToIndex(FloodFiller.ScanSegment segment, int segmentListPos) {
         List<Integer> indices = index.get(segment.y);
         if (indices == null) {
             indices = CollectionFactory.newList();
