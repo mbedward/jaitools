@@ -36,8 +36,8 @@ options {
 package jaitools.jiffle.parser;
 
 import java.util.List;
+import jaitools.CollectionFactory;
 import jaitools.jiffle.runtime.JiffleRunner;
-import jaitools.utils.CollectionFactory;
 
 import static jaitools.numeric.DoubleComparison.*;
 }

@@ -20,7 +20,7 @@
 
 package jaitools.jiffle.parser;
 
-import jaitools.utils.CollectionFactory;
+import jaitools.CollectionFactory;
 import java.util.Set;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;

@@ -24,7 +24,7 @@ import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.MultiPoint;
-import jaitools.utils.CollectionFactory;
+import jaitools.CollectionFactory;
 import java.awt.Point;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;

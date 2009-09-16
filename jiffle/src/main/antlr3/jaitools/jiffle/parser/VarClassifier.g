@@ -45,10 +45,10 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import jaitools.CollectionFactory;
 import jaitools.jiffle.ErrorCode;
 import jaitools.jiffle.runtime.JiffleRunner;
 import jaitools.jiffle.runtime.VarTable;
-import jaitools.utils.CollectionFactory;
 }
 
 @members {

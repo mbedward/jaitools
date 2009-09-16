@@ -19,6 +19,7 @@
  */
 package jaitools.jiffle;
 
+import jaitools.CollectionFactory;
 import jaitools.jiffle.parser.FunctionValidator;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
@@ -31,7 +32,6 @@ import jaitools.jiffle.parser.VarClassifier;
 import jaitools.jiffle.runtime.JiffleInterpreter;
 import jaitools.jiffle.runtime.JiffleRunner;
 import jaitools.jiffle.runtime.VarTable;
-import jaitools.utils.CollectionFactory;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;

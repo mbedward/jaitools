@@ -20,14 +20,14 @@
 
 package jaitools.demo;
 
+import jaitools.CollectionFactory;
+import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
 import jaitools.jiffle.runtime.JiffleCompletionEvent;
 import jaitools.jiffle.runtime.JiffleEventAdapter;
 import jaitools.jiffle.runtime.JiffleInterpreter;
 import jaitools.jiffle.runtime.JiffleProgressEvent;
-import jaitools.utils.CollectionFactory;
-import jaitools.utils.ImageUtils;
-import jaitools.utils.ProgressMeter;
+import jaitools.swing.ProgressMeter;
 import java.io.File;
 import java.net.URL;
 import java.util.Map;

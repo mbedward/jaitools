@@ -19,10 +19,8 @@
  */
 package jaitools.demo.jiffle;
 
-import jaitools.utils.ImageFrame;
-import jaitools.utils.ProgressMeter;
+import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.runtime.JiffleProgressEvent;
-import jaitools.utils.ImageUtils;
 import jaitools.jiffle.runtime.JiffleFailureEvent;
 import jaitools.jiffle.runtime.JiffleInterpreter;
 import jaitools.jiffle.Jiffle;
@@ -30,6 +28,8 @@ import jaitools.jiffle.JiffleCompilationException;
 import jaitools.jiffle.runtime.JiffleCompletionEvent;
 import jaitools.jiffle.runtime.JiffleEventListener;
 import jaitools.jiffle.runtime.JiffleInterpreterException;
+import jaitools.swing.ImageFrame;
+import jaitools.swing.ProgressMeter;
 import java.io.File;
 import java.net.URL;
 import java.util.HashMap;

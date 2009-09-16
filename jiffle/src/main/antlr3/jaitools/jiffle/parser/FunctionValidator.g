@@ -36,10 +36,10 @@ options {
 package jaitools.jiffle.parser;
 
 import java.util.Map;
+import jaitools.CollectionFactory;
 import jaitools.jiffle.ErrorCode;
 import jaitools.jiffle.runtime.FunctionTable;
 import jaitools.jiffle.runtime.JiffleRunner;
-import jaitools.utils.CollectionFactory;
 }
 
 @members {

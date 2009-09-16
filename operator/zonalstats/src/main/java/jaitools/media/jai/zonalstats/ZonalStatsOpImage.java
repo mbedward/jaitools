@@ -20,9 +20,9 @@
 
 package jaitools.media.jai.zonalstats;
 
+import jaitools.CollectionFactory;
 import jaitools.numeric.StreamingSampleStats;
 import jaitools.numeric.Statistic;
-import jaitools.utils.CollectionFactory;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;

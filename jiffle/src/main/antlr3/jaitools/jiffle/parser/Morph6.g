@@ -36,9 +36,9 @@ options {
 @header {
 package jaitools.jiffle.parser;
 
+import jaitools.CollectionFactory;
 import jaitools.jiffle.runtime.FunctionTable;
 import jaitools.jiffle.runtime.VarTable;
-import jaitools.utils.CollectionFactory;
 
 import static jaitools.numeric.DoubleComparison.*;
 }
