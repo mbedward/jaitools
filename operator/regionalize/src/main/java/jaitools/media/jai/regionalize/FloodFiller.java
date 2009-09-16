@@ -21,13 +21,15 @@
 package jaitools.media.jai.regionalize;
 
 import jaitools.numeric.DoubleComparison;
-import jaitools.tiledimage.DiskMemImage;
 import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
+import java.awt.image.WritableRenderedImage;
 import java.util.ArrayList;
 import java.util.Queue;
 import java.util.LinkedList;
 import java.util.List;
+import javax.media.jai.PlanarImage;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 import javax.media.jai.iterator.WritableRandomIter;
@@ -82,12 +84,28 @@ public class FloodFiller {
      * @param diagonal set to true to include sub-regions that are only connected
      *        diagonally; set to false to require orthogonal connections
      */
-    public FloodFiller(DiskMemImage regionImage, RenderedImage src, int band, double tolerance, boolean diagonal) {
+    public FloodFiller(WritableRenderedImage regionImage, RenderedImage src, int band, double tolerance, boolean diagonal) {
 
         this.band = band;
         this.tolerance = tolerance;
         this.diagonal = diagonal;
-        this.destBounds = regionImage.getBounds();
+
+        if (regionImage instanceof PlanarImage) {
+            this.destBounds = ((PlanarImage)regionImage).getBounds();
+
+        } else if (regionImage instanceof BufferedImage) {
+            BufferedImage bImg = (BufferedImage) regionImage;
+            this.destBounds = new Rectangle(
+                    bImg.getMinX(),
+                    bImg.getMinY(),
+                    bImg.getWidth(),
+                    bImg.getHeight());
+
+        } else {
+            // @todo I suppose we could try reflection instead of giving up here
+            
+            throw new IllegalArgumentException("regionImage arg must be a PlanarImage or a BufferedImage");
+        }
 
         this.srcIter = RandomIterFactory.create(src, null);
         this.destIter = RandomIterFactory.createWritable(regionImage, null);
