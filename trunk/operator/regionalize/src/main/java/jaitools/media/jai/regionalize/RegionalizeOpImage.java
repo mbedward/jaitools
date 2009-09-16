@@ -19,11 +19,11 @@
  */
 package jaitools.media.jai.regionalize;
 
+import jaitools.CollectionFactory;
 import jaitools.imageutils.FillResult;
 import jaitools.imageutils.FloodFiller;
 import jaitools.tilecache.DiskMemTileCache;
 import jaitools.tiledimage.DiskMemImage;
-import jaitools.utils.CollectionFactory;
 
 import java.awt.Rectangle;
 import java.awt.image.DataBuffer;

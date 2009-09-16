@@ -19,7 +19,7 @@
  */
 package jaitools.jiffle.runtime;
 
-import jaitools.utils.CollectionFactory;
+import jaitools.CollectionFactory;
 import jaitools.numeric.SampleStats;
 import java.util.List;
 import java.util.Map;

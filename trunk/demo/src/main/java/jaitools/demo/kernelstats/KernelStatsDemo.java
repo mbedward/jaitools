@@ -22,10 +22,10 @@ package jaitools.demo.kernelstats;
 
 import jaitools.demo.DemoImageProvider;
 import jaitools.demo.ImageReceiver;
-import jaitools.utils.ImageFrame;
+import jaitools.imageutils.ImageUtils;
 import jaitools.media.jai.kernel.KernelFactory;
 import jaitools.numeric.Statistic;
-import jaitools.utils.ImageUtils;
+import jaitools.swing.ImageFrame;
 import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
 import java.util.List;

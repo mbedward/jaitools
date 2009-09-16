@@ -20,10 +20,10 @@
 
 package jaitools.jiffle.runtime;
 
+import jaitools.CollectionFactory;
+import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
-import jaitools.utils.CollectionFactory;
 import jaitools.numeric.DoubleComparison;
-import jaitools.utils.ImageUtils;
 import java.util.Map;
 import javax.media.jai.TiledImage;
 import org.junit.Test;

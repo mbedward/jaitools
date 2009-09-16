@@ -20,8 +20,8 @@
 
 package jaitools.jiffle.runtime;
 
+import jaitools.CollectionFactory;
 import jaitools.jiffle.Jiffle;
-import jaitools.utils.CollectionFactory;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;

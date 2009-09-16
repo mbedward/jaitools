@@ -19,12 +19,12 @@
  */
 package jaitools.demo.zonalstats;
 
+import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
 import jaitools.jiffle.runtime.JiffleRunner;
 import jaitools.media.jai.zonalstats.ZonalStats;
 import jaitools.media.jai.zonalstats.ZonalStatsDescriptor;
 import jaitools.numeric.Statistic;
-import jaitools.utils.ImageUtils;
 import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
 import java.util.HashMap;

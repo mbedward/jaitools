@@ -20,10 +20,10 @@
 
 package jaitools.jiffle.runtime;
 
+import jaitools.CollectionFactory;
 import jaitools.jiffle.Jiffle;
 import jaitools.jiffle.Metadata;
 import jaitools.jiffle.parser.ImageCalculator;
-import jaitools.utils.CollectionFactory;
 import static jaitools.numeric.DoubleComparison.*;
 import java.awt.Rectangle;
 import java.util.List;

@@ -20,8 +20,8 @@
 
 package jaitools.jiffle.runtime;
 
+import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
-import jaitools.utils.ImageUtils;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;

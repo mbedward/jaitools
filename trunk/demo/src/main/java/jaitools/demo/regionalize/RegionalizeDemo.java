@@ -21,10 +21,10 @@ package jaitools.demo.regionalize;
 
 import jaitools.demo.DemoImageProvider;
 import jaitools.demo.ImageReceiver;
+import jaitools.imageutils.ImageUtils;
 import jaitools.media.jai.regionalize.Region;
 import jaitools.media.jai.regionalize.RegionalizeDescriptor;
-import jaitools.utils.ImageFrame;
-import jaitools.utils.ImageUtils;
+import jaitools.swing.ImageFrame;
 import java.awt.image.RenderedImage;
 import java.util.List;
 import javax.media.jai.JAI;

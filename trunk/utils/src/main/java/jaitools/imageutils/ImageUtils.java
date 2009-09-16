@@ -21,7 +21,6 @@
 package jaitools.imageutils;
 
 import jaitools.CollectionFactory;
-import jaitools.utils.*;
 import java.awt.Color;
 import java.awt.image.RenderedImage;
 import java.util.Collection;

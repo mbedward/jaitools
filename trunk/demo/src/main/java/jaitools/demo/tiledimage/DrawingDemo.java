@@ -20,8 +20,8 @@
 
 package jaitools.demo.tiledimage;
 
+import jaitools.swing.ImageFrame;
 import jaitools.tiledimage.DiskMemImage;
-import jaitools.utils.ImageFrame;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;

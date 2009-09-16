@@ -20,7 +20,7 @@
 
 package jaitools.jiffle.runtime;
 
-import jaitools.utils.CollectionFactory;
+import jaitools.CollectionFactory;
 import java.util.HashMap;
 import java.util.Map;
 

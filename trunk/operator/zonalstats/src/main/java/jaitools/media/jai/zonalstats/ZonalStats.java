@@ -20,9 +20,9 @@
 
 package jaitools.media.jai.zonalstats;
 
+import jaitools.CollectionFactory;
 import jaitools.numeric.StreamingSampleStats;
 import jaitools.numeric.Statistic;
-import jaitools.utils.CollectionFactory;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
