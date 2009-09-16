@@ -160,6 +160,21 @@ public class FloodFiller {
      * Fill the region connected to the specified start pixel.
      * A pixel belongs to this region if there is a path between it and the starting
      * pixel which passes only through pixels of value {@code v} within the range
+     * {@code start_pixel_value - tolerance <= v <= start_pixel_value + tolerance}.
+     *
+     * @param x start pixel x coordinate
+     * @param y start pixel y coordinate
+     * @param fillValue the value to write to the destination image for this region
+     * @return a new {@linkplain FillResult}
+     */
+    public FillResult fill(int x, int y, int fillValue) {
+        return fill(x, y, fillValue, srcIter.getSampleDouble(x, y, band));
+    }
+
+    /**
+     * Fill the region connected to the specified start pixel.
+     * A pixel belongs to this region if there is a path between it and the starting
+     * pixel which passes only through pixels of value {@code v} within the range
      * {@code v.ref - tolerance <= v <= v.ref + tolerance} where {@code v.ref} is the
      * reference value for the region
      *

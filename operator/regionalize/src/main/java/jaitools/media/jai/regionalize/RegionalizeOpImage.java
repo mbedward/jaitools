@@ -41,8 +41,6 @@ import javax.media.jai.AreaOpImage;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.PointOpImage;
 import javax.media.jai.TileCache;
-import javax.media.jai.iterator.RectIter;
-import javax.media.jai.iterator.RectIterFactory;
 
 /**
  * An operator to identify regions of uniform value, within
@@ -280,27 +278,16 @@ public class RegionalizeOpImage extends PointOpImage {
         Rectangle destRect = getTileRect(tileX, tileY);
 
         synchronized (computeTileLock) {
-            RectIter srcIter = RectIterFactory.create(getSourceImage(0), destRect);
-            for (int i = 0; i < band; i++) {
-                srcIter.nextBand();
-            }
-
             for (int destY = destRect.y, row = 0; row < destRect.height; destY++, row++) {
                 for (int destX = destRect.x, col = 0; col < destRect.width; destX++, col++) {
 
                     if (getRegionForPixel(destX, destY) == NO_REGION) {
 
-                        double srcVal = srcIter.getSampleDouble();
-                        FillResult fill = filler.fill(destX, destY, currentID, srcVal);
+                        FillResult fill = filler.fill(destX, destY, currentID);
                         regions.put(currentID, new Region(fill));
                         currentID++;
                     }
-
-                    srcIter.nextPixelDone();
                 }
-
-                srcIter.startPixels();
-                srcIter.nextLineDone();
             }
             
             tileComputed[getTileIndex(tileX, tileY)] = true;
