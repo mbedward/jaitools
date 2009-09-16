@@ -18,7 +18,7 @@
  *
  */
 
-package jaitools.utils;
+package jaitools.swing;
 
 /**
  * Interface for a frame (or other GUI class) with an associated

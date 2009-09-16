@@ -18,7 +18,7 @@
  * 
  */
 
-package jaitools.utils;
+package jaitools;
 
 import java.util.ArrayList;
 import java.util.HashMap;

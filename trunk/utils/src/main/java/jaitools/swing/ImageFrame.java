@@ -18,7 +18,7 @@
  *
  */
 
-package jaitools.utils;
+package jaitools.swing;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;

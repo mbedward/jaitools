@@ -18,7 +18,7 @@
  *
  */
 
-package jaitools.utils;
+package jaitools.swing;
 
 import com.sun.media.jai.widget.DisplayJAI;
 import java.awt.Point;
