@@ -21,6 +21,7 @@
 package jaitools.imageutils;
 
 import jaitools.CollectionFactory;
+import java.awt.Rectangle;
 import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
@@ -43,7 +44,7 @@ import java.util.Map;
 public class FillResult {
     private int id;
     private double value;
-    private int minx, maxx, miny, maxy;
+    private Rectangle bounds;
 
     private List<FloodFiller.ScanSegment> segments;
     private Map<Integer, List<Integer>> index;
@@ -64,10 +65,10 @@ public class FillResult {
         Collections.sort(segments);
 
         FloodFiller.ScanSegment segment = segments.get(0);
-        minx = segment.startX;
-        maxx = segment.endX;
-        miny = segment.y;
-        maxy = segment.y;
+        int minx = segment.startX;
+        int maxx = segment.endX;
+        int miny = segment.y;
+        int maxy = segment.y;
 
         numPixels = segment.endX - segment.startX + 1;
         addToIndex(segment, 0);
@@ -85,13 +86,15 @@ public class FillResult {
                 addToIndex(segment, k++);
             }
         }
+
+        bounds = new Rectangle(minx, miny, maxx - minx + 1, maxy - miny + 1);
     }
 
     /**
      * Check if this region contains the given pixel coords
      */
     public boolean contains(int x, int y) {
-        if (x < minx || x > maxx || y < miny || y > maxy) {
+        if (!bounds.contains(x, y)) {
             return false;
         }
 
@@ -112,21 +115,15 @@ public class FillResult {
      * it just addes the other region's segments and updates the index
      * and bounds as necessary.
      */
-    public void expand(FillResult cor) {
-        for (FloodFiller.ScanSegment otherSeg : cor.segments) {
-            if (otherSeg.startX < minx) minx = otherSeg.startX;
-            if (otherSeg.endX > maxx) maxx = otherSeg.endX;
-            if (otherSeg.y < miny) {
-                miny = otherSeg.y;
-            } else if (otherSeg.y > maxy) {
-                maxy = otherSeg.y;
-            }
+    public void expand(FillResult other) {
+        bounds = bounds.union(other.bounds);
 
+        for (FloodFiller.ScanSegment otherSeg : other.segments) {
             segments.add(otherSeg);
             addToIndex(otherSeg, segments.size()-1);
         }
 
-        numPixels += cor.numPixels;
+        numPixels += other.numPixels;
     }
 
     /**
@@ -137,31 +134,11 @@ public class FillResult {
     }
 
     /**
-     * Get the max x coordinate within this region.
+     * Get the bounds of this region
+     * @return a copy of the bounds
      */
-    public int getMaxX() {
-        return maxx;
-    }
-
-    /**
-     * Get the max y coordinate of this region.
-     */
-    public int getMaxY() {
-        return maxy;
-    }
-
-    /**
-     * Get the min x coordinate of this region.
-     */
-    public int getMinX() {
-        return minx;
-    }
-
-    /**
-     * Get the min y coordinate of this region.
-     */
-    public int getMinY() {
-        return miny;
+    public Rectangle getBounds() {
+        return new Rectangle(bounds);
     }
 
     /**

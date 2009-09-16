@@ -41,16 +41,11 @@ public class Region {
     /**
      * Constructor is package-private.
      */
-    Region(FillResult region) {
-        this.id = region.getID();
-        this.refValue = region.getValue();
-
-        this.bounds = new Rectangle(
-                region.getMinX(), region.getMinY(),
-                region.getMaxX() - region.getMinX() + 1,
-                region.getMaxY() - region.getMinY() + 1);
-
-        this.numPixels = region.getNumPixels();
+    Region(FillResult fill) {
+        this.id = fill.getID();
+        this.refValue = fill.getValue();
+        this.bounds = fill.getBounds();
+        this.numPixels = fill.getNumPixels();
     }
 
     /**

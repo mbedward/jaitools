@@ -8,7 +8,7 @@ package jaitools.imageutils;
 import jaitools.tiledimage.DiskMemImage;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.Polygon;
+import java.awt.Rectangle;
 import java.awt.image.ColorModel;
 import java.awt.image.ComponentSampleModel;
 import java.awt.image.DataBuffer;
@@ -37,6 +37,11 @@ public class FloodFillerTest {
     public void testFill() {
         System.out.println("   flood fill with single image");
 
+        boolean diagonal;
+        int fillValue;
+        FloodFiller filler = null;
+        FillResult fill = null;
+
         SampleModel sm = new ComponentSampleModel(
                 DataBuffer.TYPE_BYTE,
                 TILE_WIDTH,
@@ -59,19 +64,28 @@ public class FloodFillerTest {
 
         // diagonal fill into first rectangle should fill
         // second rectangle as well
-        boolean diagonal = true;
-        int fillValue = 64;
-        FloodFiller filler = new FloodFiller(image, image, 0, 0, diagonal);
-        FillResult fill = filler.fill(TILE_WIDTH / 2, TILE_WIDTH / 2, fillValue);
+        diagonal = true;
+        fillValue = 64;
+        filler = new FloodFiller(image, 0, image, 0, 0, diagonal);
+        fill = filler.fill(TILE_WIDTH / 2, TILE_WIDTH / 2, fillValue);
         assertTrue(fill.getNumPixels() == 2 * (TILE_WIDTH/2) * (TILE_WIDTH/2));
 
         // orthogonal fill into first rectangle should not fill
         // second rectangle
         diagonal = false;
         fillValue = 128;
-        filler = new FloodFiller(image, image, 0, 0, diagonal);
+        filler = new FloodFiller(image, 0, image, 0, 0, diagonal);
         fill = filler.fill(TILE_WIDTH / 2, TILE_WIDTH / 2, fillValue);
         assertTrue(fill.getNumPixels() == (TILE_WIDTH/2) * (TILE_WIDTH/2));
+
+        // fill with a specified radius
+        diagonal = false;
+        fillValue = 192;
+        filler = new FloodFiller(image, 0, image, 0, 0, diagonal);
+        fill = filler.fillRadius(TILE_WIDTH/2, TILE_WIDTH/2, fillValue, TILE_WIDTH/2);
+
+        assertTrue(fill.getBounds().width == TILE_WIDTH / 2);
+        assertTrue(fill.getBounds().height == TILE_WIDTH / 2);
     }
 
 }

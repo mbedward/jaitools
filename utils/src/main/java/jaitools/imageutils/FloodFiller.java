@@ -22,6 +22,7 @@ package jaitools.imageutils;
 
 import jaitools.numeric.DoubleComparison;
 import java.awt.Rectangle;
+import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.awt.image.WritableRenderedImage;
@@ -30,6 +31,8 @@ import java.util.Queue;
 import java.util.LinkedList;
 import java.util.List;
 import javax.media.jai.PlanarImage;
+import javax.media.jai.ROI;
+import javax.media.jai.ROIShape;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 import javax.media.jai.iterator.WritableRandomIter;
@@ -52,18 +55,21 @@ import javax.media.jai.iterator.WritableRandomIter;
  */
 public class FloodFiller {
 
-    private static final int DEST_BAND = 0;
-
     private RandomIter srcIter;
-    private WritableRandomIter destIter;
+    private WritableRenderedImage destImage;
     private Rectangle destBounds;
 
     private int fillValue;
     private double tolerance;
     private boolean diagonal;
     private double refValue;
-    private int band;
+    private int srcBand;
+    private int destBand;
+    private double fillRadius;
+    private boolean usingRadius;
+    private ROI roi;
 
+    
     public static class ScanSegment implements Comparable<ScanSegment> {
 
         int startX;
@@ -128,10 +134,14 @@ public class FloodFiller {
      * @param diagonal set to true to include sub-regions that are only connected
      *        diagonally; set to false to require orthogonal connections
      */
-    public FloodFiller(WritableRenderedImage targetImage, RenderedImage sourceImage,
-            int sourceBand, double tolerance, boolean diagonal) {
+    public FloodFiller(
+            RenderedImage sourceImage, int sourceBand,
+            WritableRenderedImage targetImage, int targetBand,
+            double tolerance, boolean diagonal) {
 
-        this.band = sourceBand;
+        this.srcBand = sourceBand;
+        this.destImage = targetImage;
+        this.destBand = targetBand;
         this.tolerance = tolerance;
         this.diagonal = diagonal;
 
@@ -153,7 +163,9 @@ public class FloodFiller {
         }
 
         this.srcIter = RandomIterFactory.create(sourceImage, null);
-        this.destIter = RandomIterFactory.createWritable(targetImage, null);
+
+        // Note: the destination iterator is created in the fillRadius
+        // method to avoid tile ownership problems
     }
 
     /**
@@ -163,36 +175,101 @@ public class FloodFiller {
      * {@code start_pixel_value - tolerance <= v <= start_pixel_value + tolerance}.
      *
      * @param x start pixel x coordinate
+     *
      * @param y start pixel y coordinate
+     *
      * @param fillValue the value to write to the destination image for this region
+     *
      * @return a new {@linkplain FillResult}
      */
     public FillResult fill(int x, int y, int fillValue) {
-        return fill(x, y, fillValue, srcIter.getSampleDouble(x, y, band));
+        return fill(x, y, fillValue, srcIter.getSampleDouble(x, y, srcBand));
+    }
+
+    /**
+     * Fill the region connected to the specified start pixel and lying within
+     * {@code radius} pixels of the start pixel.
+     * <p>
+     * A pixel belongs to this region if there is a path between it and the starting
+     * pixel which passes only through pixels of value {@code v} within the range
+     * {@code start_pixel_value - tolerance <= v <= start_pixel_value + tolerance}.
+     *
+     * @param x start pixel x coordinate
+     *
+     * @param y start pixel y coordinate
+     *
+     * @param fillValue the value to write to the destination image for this region
+     *
+     * @param radius maximum distance (pixels) that a candidate pixel can be from
+     *        the start pixel
+     *
+     * @return a new {@linkplain FillResult}
+     */
+    public FillResult fillRadius(int x, int y, int fillValue, double radius) {
+        return fillRadius(x, y, fillValue, srcIter.getSampleDouble(x, y, srcBand), radius);
     }
 
     /**
      * Fill the region connected to the specified start pixel.
      * A pixel belongs to this region if there is a path between it and the starting
      * pixel which passes only through pixels of value {@code v} within the range
-     * {@code v.ref - tolerance <= v <= v.ref + tolerance} where {@code v.ref} is the
-     * reference value for the region
+     * {@code refValue - tolerance <= v <= refValue + tolerance}.
      *
      * @param x start pixel x coordinate
+     *
      * @param y start pixel y coordinate
+     *
      * @param fillValue the value to write to the destination image for this region
-     * @param refValue the reference value for this region
+     *
+     * @param refValue the source image reference value for the region
+     *
      * @return a new {@linkplain FillResult}
      */
     public FillResult fill(int x, int y, int fillValue, double refValue) {
+        return fillRadius(x, y, fillValue, refValue, Double.NaN);
+    }
+
+    /**
+     * Fill the region connected to the specified start pixel and lying within
+     * {@code radius} pixels of the start pixel.
+     * <p>
+     * A pixel belongs to this region if there is a path between it and the starting
+     * pixel which passes only through pixels of value {@code v} within the range
+     * {@code refValue - tolerance <= v <= refValue + tolerance}.
+     *
+     * @param x start pixel x coordinate
+     *
+     * @param y start pixel y coordinate
+     *
+     * @param fillValue the value to write to the destination image for this region
+     *
+     * @param refValue the source image reference value for the region
+     *
+     * @param radius maximum distance (pixels) that a candidate pixel can be from
+     *        the start pixel
+     *
+     * @return a new {@linkplain FillResult}
+     */
+    public FillResult fillRadius(int x, int y, int fillValue, double refValue, double radius) {
 
         this.fillValue = fillValue;
         this.refValue = refValue;
+        this.fillRadius = radius;
 
+        if (!Double.isNaN(radius)) {
+            Ellipse2D shp = new Ellipse2D.Double(x-radius, y-radius, 2*radius, 2*radius);
+            roi = new ROIShape(shp);
+            roi = roi.intersect(new ROIShape(destBounds));
+
+        } else {
+            roi = new ROIShape(destBounds);
+        }
+
+        WritableRandomIter destIter = RandomIterFactory.createWritable(destImage, null);
         segmentsPending = new LinkedList<ScanSegment>();
         segmentsFilled = new ArrayList<ScanSegment>();
 
-        fillSegment(x, y);
+        fillSegment(x, y, destIter);
 
         ScanSegment segment;
         ScanSegment newSegment;
@@ -210,7 +287,7 @@ public class FloodFiller {
             if (segment.y > destBounds.y) {
                 int xi = startX;
                 while (xi <= endX) {
-                    newSegment = fillSegment(xi, segment.y - 1);
+                    newSegment = fillSegment(xi, segment.y - 1, destIter);
                     xi = newSegment != null ? newSegment.endX+1 : xi+1;
                 }
             }
@@ -218,12 +295,13 @@ public class FloodFiller {
             if (segment.y < destBounds.y + destBounds.height - 1) {
                 int xi = startX;
                 while (xi <= endX) {
-                    newSegment = fillSegment(xi, segment.y + 1);
+                    newSegment = fillSegment(xi, segment.y + 1, destIter);
                     xi = newSegment != null ? newSegment.endX+1 : xi+1;
                 }
             }
         }
 
+        destIter.done();
         return new FillResult(fillValue, refValue, segmentsFilled);
     }
 
@@ -240,11 +318,9 @@ public class FloodFiller {
      * @param y start pixel y coord
      * @return one of FILL_NEW_SEGMENT, FILL_NONE or FILL_NEED_NEXT_RASTER
      */
-    private ScanSegment fillSegment(int x, int y) {
+    private ScanSegment fillSegment(int x, int y, WritableRandomIter destIter) {
 
-        // we rely on the y coord being checked prior to getting here
-        int xo = x - destBounds.x;
-        if (xo < 0 || xo >= destBounds.width) {
+        if (!roi.contains(x, y)) {
             return null;
         }
 
@@ -252,9 +328,9 @@ public class FloodFiller {
         ScanSegment segment = null;
         int left = x, right = x, xi = x;
 
-        while (xi >= destBounds.x) {
+        while (roi.contains(xi, y)) {
             if (checkPixel(xi, y)) {
-                destIter.setSample(xi, y, DEST_BAND, fillValue);
+                destIter.setSample(xi, y, destBand, fillValue);
                 fill = true;
                 left = xi;
                 xi-- ;
@@ -268,9 +344,9 @@ public class FloodFiller {
         }
 
         xi = x+1;
-        while (xi < destBounds.x + destBounds.width) {
+        while (roi.contains(xi, y)) {
             if (checkPixel(xi, y)) {
-                destIter.setSample(xi, y, DEST_BAND, fillValue);
+                destIter.setSample(xi, y, destBand, fillValue);
                 right = xi;
                 xi++ ;
             } else {
@@ -318,7 +394,7 @@ public class FloodFiller {
          * Now test if the pixel's value is within range
          * of the flood fill reference value
          */
-        double val = srcIter.getSampleDouble(x, y, band);
+        double val = srcIter.getSampleDouble(x, y, srcBand);
         return DoubleComparison.dcomp(Math.abs(val - refValue), tolerance) <= 0;
     }
 
