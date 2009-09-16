@@ -1,11 +1,11 @@
 /*
  * Copyright 2009 Michael Bedward
- * 
+ *
  * This file is part of jai-tools.
  *
  * jai-tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of the 
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * jai-tools is distributed in the hope that it will be useful,
@@ -13,9 +13,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public 
+ * You should have received a copy of the GNU Lesser General Public
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 
 package jaitools.media.jai.regionalize;
@@ -71,12 +71,11 @@ public class FloodFiller {
     /**
      * Create a FloodFiller to work with the given source image
      *
-     * @param regionImage an instance of {@code DiskMemImage} provided by the client
-     *        {@code RegionalizeOpImage} object
+     * @param targetImage the image to which flood fill values are written
      *
-     * @param src source image
-     * 
-     * @param band the soruce image band to be processed
+     * @param sourceimage the source image - may be the same as the targetImage
+     *
+     * @param sourceBand the source image band to be processed
      *
      * @param tolerance the maximum absolute difference in value for a pixel to be
      *        included in the region
@@ -84,17 +83,18 @@ public class FloodFiller {
      * @param diagonal set to true to include sub-regions that are only connected
      *        diagonally; set to false to require orthogonal connections
      */
-    public FloodFiller(WritableRenderedImage regionImage, RenderedImage src, int band, double tolerance, boolean diagonal) {
+    public FloodFiller(WritableRenderedImage targetImage, RenderedImage sourceImage,
+            int sourceBand, double tolerance, boolean diagonal) {
 
-        this.band = band;
+        this.band = sourceBand;
         this.tolerance = tolerance;
         this.diagonal = diagonal;
 
-        if (regionImage instanceof PlanarImage) {
-            this.destBounds = ((PlanarImage)regionImage).getBounds();
+        if (targetImage instanceof PlanarImage) {
+            this.destBounds = ((PlanarImage)targetImage).getBounds();
 
-        } else if (regionImage instanceof BufferedImage) {
-            BufferedImage bImg = (BufferedImage) regionImage;
+        } else if (targetImage instanceof BufferedImage) {
+            BufferedImage bImg = (BufferedImage) targetImage;
             this.destBounds = new Rectangle(
                     bImg.getMinX(),
                     bImg.getMinY(),
@@ -103,12 +103,12 @@ public class FloodFiller {
 
         } else {
             // @todo I suppose we could try reflection instead of giving up here
-            
+
             throw new IllegalArgumentException("regionImage arg must be a PlanarImage or a BufferedImage");
         }
 
-        this.srcIter = RandomIterFactory.create(src, null);
-        this.destIter = RandomIterFactory.createWritable(regionImage, null);
+        this.srcIter = RandomIterFactory.create(sourceImage, null);
+        this.destIter = RandomIterFactory.createWritable(targetImage, null);
     }
 
     /**
@@ -154,7 +154,7 @@ public class FloodFiller {
                     xi = newSegment != null ? newSegment.endX+1 : xi+1;
                 }
             }
-            
+
             if (segment.y < destBounds.y + destBounds.height - 1) {
                 int xi = startX;
                 while (xi <= endX) {
@@ -193,7 +193,7 @@ public class FloodFiller {
         int left = x, right = x, xi = x;
 
         while (xi >= destBounds.x) {
-            if (checkPixel(xi, y) && !pixelDone(xi, y)) {
+            if (checkPixel(xi, y)) {
                 destIter.setSample(xi, y, DEST_BAND, fillValue);
                 fill = true;
                 left = xi;
@@ -209,7 +209,7 @@ public class FloodFiller {
 
         xi = x+1;
         while (xi < destBounds.x + destBounds.width) {
-            if (checkPixel(xi, y) && !pixelDone(xi, y)) {
+            if (checkPixel(xi, y)) {
                 destIter.setSample(xi, y, DEST_BAND, fillValue);
                 right = xi;
                 xi++ ;
@@ -227,38 +227,39 @@ public class FloodFiller {
 
 
     /**
-     * Check if a pixel's value is within the fill tolerance
+     * Test if a pixel is a candidate to be filled.
+     *
      * @param x pixel x
      * @param y pixel y
-     * @return true if within tolerance; false otherwise
+     *
+     * @return true if a fill candidate; false otherwise
      */
     private boolean checkPixel(int x, int y) {
-        double val = srcIter.getSampleDouble(x, y, band);
-        return DoubleComparison.dcomp(Math.abs(val - refValue), tolerance) <= 0;
-    }
 
-    /**
-     * Check if we have already processed the given pixel
-     * @param x pixel x
-     * @param y pixel y
-     * @return true if already processed; false otherwise
-     */
-    private boolean pixelDone(int x, int y) {
+        /*
+         * First check if the pixel has already been filled
+         */
         if (lastSegmentChecked != null) {
             if (lastSegmentChecked.contains(x, y)) {
-                return true;
+                return false;
             }
         }
 
         for (ScanSegment segment : segmentsFilled) {
             if (segment.contains(x, y)) {
                 lastSegmentChecked = segment;
-                return true;
+                return false;
             }
         }
 
         lastSegmentChecked = null;
-        return false;
+
+        /*
+         * Now test if the pixel's value is within range
+         * of the flood fill reference value
+         */
+        double val = srcIter.getSampleDouble(x, y, band);
+        return DoubleComparison.dcomp(Math.abs(val - refValue), tolerance) <= 0;
     }
 
 }
