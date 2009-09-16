@@ -64,7 +64,7 @@ public class KernelStatsDemo implements ImageReceiver {
     }
 
     public void receiveImage(RenderedImage image) {
-        ImageFrame frame = new ImageFrame(image, "KernelStats demo");
+        ImageFrame frame = new ImageFrame(image, "KernelStats: source image");
         frame.setVisible(true);
 
         calculateStats(image);
@@ -99,7 +99,7 @@ public class KernelStatsDemo implements ImageReceiver {
         List<RenderedImage> statImages = ImageUtils.getBandsAsImages(multibandImg);
         int k = 0;
         for (RenderedImage statImg : statImages) {
-            ImageFrame frame = new ImageFrame(statImg, stats[k++].toString());
+            ImageFrame frame = new ImageFrame(statImg, "KernelStats: " + stats[k++].toString());
             frame.setVisible(true);
         }
 

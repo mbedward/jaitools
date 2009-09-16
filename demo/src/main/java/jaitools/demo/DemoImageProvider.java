@@ -154,7 +154,7 @@ public class DemoImageProvider {
 
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                job.progMeter.update(ev.getProgress());
+                job.progMeter.setProgress(ev.getProgress());
             }
         });
     }
