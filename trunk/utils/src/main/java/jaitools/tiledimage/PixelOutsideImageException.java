@@ -26,8 +26,8 @@ package jaitools.tiledimage;
  *
  * @author Michael Bedward
  * @since 1.0
- * @source $URL $
- * @version $Id $
+ * @source $URL$
+ * @version $Id$
  */
 public class PixelOutsideImageException extends IndexOutOfBoundsException {
 
