@@ -61,33 +61,43 @@ public class FillResult {
         this.value = value;
         this.segments = segments;
         this.index = CollectionFactory.newMap();
-        
-        Collections.sort(segments);
 
-        FloodFiller.ScanSegment segment = segments.get(0);
-        int minx = segment.startX;
-        int maxx = segment.endX;
-        int miny = segment.y;
-        int maxy = segment.y;
+        if (segments.isEmpty()) {
+            numPixels = 0;
+            bounds = new Rectangle();
 
-        numPixels = segment.endX - segment.startX + 1;
-        addToIndex(segment, 0);
+        } else {
+            Collections.sort(segments);
 
-        if (segments.size() > 1) {
-            ListIterator<FloodFiller.ScanSegment> iter = segments.listIterator(1);
-            int k = 1;
-            while (iter.hasNext()) {
-                segment = iter.next();
-                maxy = segment.y;
-                if (segment.startX < minx) minx = segment.startX;
-                if (segment.endX > maxx) maxx = segment.endX;
+            FloodFiller.ScanSegment segment = segments.get(0);
+            int minx = segment.startX;
+            int maxx = segment.endX;
+            int miny = segment.y;
+            int maxy = segment.y;
 
-                numPixels += (segment.endX - segment.startX + 1);
-                addToIndex(segment, k++);
+            numPixels = segment.endX - segment.startX + 1;
+            addToIndex(segment, 0);
+
+            if (segments.size() > 1) {
+                ListIterator<FloodFiller.ScanSegment> iter = segments.listIterator(1);
+                int k = 1;
+                while (iter.hasNext()) {
+                    segment = iter.next();
+                    maxy = segment.y;
+                    if (segment.startX < minx) {
+                        minx = segment.startX;
+                    }
+                    if (segment.endX > maxx) {
+                        maxx = segment.endX;
+                    }
+
+                    numPixels += (segment.endX - segment.startX + 1);
+                    addToIndex(segment, k++);
+                }
             }
-        }
 
-        bounds = new Rectangle(minx, miny, maxx - minx + 1, maxy - miny + 1);
+            bounds = new Rectangle(minx, miny, maxx - minx + 1, maxy - miny + 1);
+        }
     }
 
     /**
