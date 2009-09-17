@@ -370,7 +370,167 @@ public class DiskMemImage
     }
 
 
+    /**
+     * Return the image value for the given pixel and band
+     * as an integer
+     *
+     * @param x pixel x coordinate
+     * @param y pixel y coordinate
+     * @param b band index (from 0)
+     *
+     * @return image value as an integer
+     * @throws PixelOutsideImageException if the pixel coordinates or band index
+     *         are out of range for the image
+     */
+    public int getSample(int x, int y, int b) throws PixelOutsideImageException {
+        int tileX = XToTileX(x);
+        int tileY = YToTileY(y);
+        Raster t = getTile(tileX, tileY);
+        if (t == null) {
+            throw new PixelOutsideImageException(x, y, b);
+        }
+        return t.getSample(x, y, b);
+    }
+
+    /**
+     * Return the image value for the given pixel and band
+     * as a float
+     *
+     * @param x pixel x coordinate
+     * @param y pixel y coordinate
+     * @param b band index (from 0)
+     *
+     * @return image value as a float
+     * @throws PixelOutsideImageException if the pixel coordinates or band index
+     *         are out of range for the image
+     */
+    public float getSampleFloat(int x, int y, int b) throws PixelOutsideImageException {
+        int tileX = XToTileX(x);
+        int tileY = YToTileY(y);
+        Raster t = getTile(tileX, tileY);
+        if (t == null) {
+            throw new PixelOutsideImageException(x, y, b);
+        }
+        return t.getSampleFloat(x, y, b);
+    }
+
+    /**
+     * Return the image value for the given pixel and band
+     * as a double
+     *
+     * @param x pixel x coordinate
+     * @param y pixel y coordinate
+     * @param b band index (from 0)
+     *
+     * @return image value as a double
+     * @throws PixelOutsideImageException if the pixel coordinates or band index
+     *         are out of range for the image
+     */
+    public double getSampleDouble(int x, int y, int b) throws PixelOutsideImageException {
+        int tileX = XToTileX(x);
+        int tileY = YToTileY(y);
+        Raster t = getTile(tileX, tileY);
+        if (t == null) {
+            throw new PixelOutsideImageException(x, y, b);
+        }
+        return t.getSampleDouble(x, y, b);
+    }
+
+    /**
+     * Set the image value for the given pixel and band as
+     * an integer
+     *
+     * @param x pixel x coordinate
+     * @param y pixel y coordinate
+     * @param b band index (from 0)
+     * @param value the new value
+     *
+     * @throws PixelOutsideImageException if the pixel coordinates or band index
+     *         are out of range for the image
+     */
+    public void setSample(int x, int y, int b, int value) throws PixelOutsideImageException {
+        int tileX = XToTileX(x);
+        int tileY = YToTileY(y);
+        try {
+            WritableRaster t = getWritableTile(tileX, tileY);
+            if (t == null) {
+                throw new PixelOutsideImageException(x, y, b);
+            }
+            t.setSample(x, y, b, value);
+
+        } finally {
+            releaseWritableTile(tileX, tileY);
+        }
+    }
+
+    /**
+     * Set the image value for the given pixel and band as
+     * a float
+     *
+     * @param x pixel x coordinate
+     * @param y pixel y coordinate
+     * @param b band index (from 0)
+     * @param value the new value
+     *
+     * @throws PixelOutsideImageException if the pixel coordinates or band index
+     *         are out of range for the image
+     */
+    public void setSample(int x, int y, int b, float value) throws PixelOutsideImageException {
+        int tileX = XToTileX(x);
+        int tileY = YToTileY(y);
+        try {
+            WritableRaster t = getWritableTile(tileX, tileY);
+            if (t == null) {
+                throw new PixelOutsideImageException(x, y, b);
+            }
+            t.setSample(x, y, b, value);
+
+        } finally {
+            releaseWritableTile(tileX, tileY);
+        }
+    }
+
+    /**
+     * Set the image value for the given pixel and band as
+     * a double
+     *
+     * @param x pixel x coordinate
+     * @param y pixel y coordinate
+     * @param b band index (from 0)
+     * @param value the new value
+     *
+     * @throws PixelOutsideImageException if the pixel coordinates or band index
+     *         are out of range for the image
+     */
+    public void setSample(int x, int y, int b, double value) throws PixelOutsideImageException {
+        int tileX = XToTileX(x);
+        int tileY = YToTileY(y);
+        try {
+            WritableRaster t = getWritableTile(tileX, tileY);
+            if (t == null) {
+                throw new PixelOutsideImageException(x, y, b);
+            }
+            t.setSample(x, y, b, value);
+
+        } finally {
+            releaseWritableTile(tileX, tileY);
+        }
+    }
+
+    /**
+     * Copy data from the given {@code Raster} object into this
+     * image. The bounds of {@code data} will be used to
+     * place the data and only that portion of {@code data}
+     * within this image's bounds will be copied.
+     *
+     * @param data the data to copy
+     * @throws IllegalArgumentException if {@code data} is {@code null}
+     */
     public void setData(Raster data) {
+        if (data == null) {
+            throw new IllegalArgumentException("The data argument must not be null");
+        }
+
         Rectangle rBounds = data.getBounds();
         Rectangle common = rBounds.intersection(getBounds());
         if (common.isEmpty()) {

@@ -38,8 +38,8 @@ import java.util.Map;
  *
  * @author Michael Bedward
  * @since 1.0
- * @source $URL: https://jai-tools.googlecode.com/svn/trunk/operator/regionalize/src/main/java/jaitools/media/jai/regionalize/FillResult.java $
- * @version $Id: FillResult.java 552 2009-09-14 08:41:42Z michael.bedward $
+ * @source $URL$
+ * @version $Id$
  */
 public class FillResult {
     private int id;

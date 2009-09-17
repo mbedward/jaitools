@@ -44,12 +44,69 @@ import static org.junit.Assert.*;
 public class ImageWritingTest extends TiledImageTestBase {
 
     private static final int TILE_WIDTH = 128;
-    private static final int XTILES = 5;
+    private static final int XTILES = 2;
     private static final int YTILES = 3;
 
     @Before
     public void setup() {
         image = makeImage(TILE_WIDTH, XTILES, YTILES);
+    }
+
+    /**
+     * Test setting and getting individual pixel / band values
+     * as integers
+     */
+    @Test
+    public void testPixelInt() {
+        System.out.println("   setting and getting int values");
+
+        Rectangle bounds = new Rectangle(TILE_WIDTH / 2, TILE_WIDTH / 2, TILE_WIDTH, TILE_WIDTH);
+        int numBands = image.getNumBands();
+        int numValues = 256 - numBands;
+
+        int val = 0;
+        for (int y = bounds.y, ny=0; ny < bounds.height; y++, ny++) {
+            for (int x = bounds.x, nx = 0; nx < bounds.width; x++, nx++) {
+                for (int band = 0; band < numBands; band++) {
+                    image.setSample(x, y, band, val + band);
+                }
+                val = (val + 1) % numValues ;
+            }
+        }
+
+        val = 0;
+        for (int y = bounds.y, ny=0; ny < bounds.height; y++, ny++) {
+            for (int x = bounds.x, nx = 0; nx < bounds.width; x++, nx++) {
+                for (int band = 0; band < numBands; band++) {
+                    int obs = image.getSample(x, y, band);
+                    assertTrue(obs == (val + band));
+                }
+                val = (val + 1) % numValues ;
+            }
+        }
+
+        /*
+         * Out of bounds test
+         */
+        boolean gotException = false;
+        try {
+            image.getSample(image.getMinX() - 1, 0, 0);
+        } catch (PixelOutsideImageException ex) {
+            gotException = true;
+        } catch (Exception ex) {
+            fail("unexpected Exception type: " + ex.getClass().getSimpleName());
+        }
+        assertTrue(gotException);
+
+        gotException = false;
+        try {
+            image.setSample(image.getMinX() - 1, 0, 0, 0);
+        } catch (PixelOutsideImageException ex) {
+            gotException = true;
+        } catch (Exception ex) {
+            fail("unexpected Exception type: " + ex.getClass().getSimpleName());
+        }
+        assertTrue(gotException);
     }
 
     /**
@@ -138,7 +195,6 @@ public class ImageWritingTest extends TiledImageTestBase {
                 }
             }
         }
-
     }
 
 }
