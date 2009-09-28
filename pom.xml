@@ -4,7 +4,7 @@
 
     <groupId>jaitools</groupId>
     <artifactId>jaitools</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0-RC0</version>
 
     <packaging>pom</packaging>
     <name>JAI-tools - Extends the Java Advanced Imaging library</name>
