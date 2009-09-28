@@ -28,10 +28,10 @@ import jaitools.jiffle.runtime.JiffleEventAdapter;
 import jaitools.jiffle.runtime.JiffleInterpreter;
 import jaitools.jiffle.runtime.JiffleProgressEvent;
 import jaitools.swing.ProgressMeter;
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.net.URL;
 import java.util.Map;
-import javax.media.jai.TiledImage;
 import javax.swing.SwingUtilities;
 
 /**
@@ -59,7 +59,7 @@ public class DemoImageProvider {
     private static DemoImageProvider instance;
 
     private JiffleInterpreter interp;
-    private TiledImage image;
+    private RenderedImage image;
 
     private static class Job {
         ImageReceiver receiver;
@@ -118,7 +118,7 @@ public class DemoImageProvider {
 
         image = ImageUtils.createDoubleImage(width, height);
 
-        Map<String, TiledImage> imgParams = CollectionFactory.newMap();
+        Map<String, RenderedImage> imgParams = CollectionFactory.newMap();
         imgParams.put("result", image);
 
         try {

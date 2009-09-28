@@ -50,7 +50,7 @@ public class ZonalStatsDemo {
 
     private RenderedImage dataImg;
     private RenderedImage zoneImg;
-    Map<String, TiledImage> imgParams;
+    Map<String, RenderedImage> imgParams;
 
     /**
      * Main method: constructs an instance of this class (which
@@ -116,8 +116,8 @@ public class ZonalStatsDemo {
         dataImg = ImageUtils.createDoubleImage(500, 500);
         TiledImage zoneDoubleImg = ImageUtils.createDoubleImage(500, 500);
 
-        imgParams = new HashMap<String, TiledImage>();
-        imgParams.put("dataImg", (TiledImage)dataImg);
+        imgParams = new HashMap<String, RenderedImage>();
+        imgParams.put("dataImg", dataImg);
         imgParams.put("zoneImg", zoneDoubleImg);
 
         Jiffle jif = new Jiffle(
