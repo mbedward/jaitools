@@ -18,7 +18,7 @@ import java.util.Map.Entry;
  * to examine cache contents.
  * <p>
  * Example of use:
- * <pre>{@code
+ * <pre><code>
  * // Query the cache for tiles that belong to a given image
  * // and that are currently resident in memory
  * DiskMemTileCache cache = ...
@@ -35,7 +35,7 @@ import java.util.Map.Entry;
  * for (DiskCachedTile tile : visitor.getTiles()) {
  *     System.out.println(String.format("tile %d,%d", tile.getTileX(), tile.getTileY()));
  * }
- * }</pre>
+ * </code></pre>
  *
  * @author Michael Bedward
  * @since 1.0

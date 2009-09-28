@@ -55,7 +55,7 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
  * steps.  If compilation is successful the Jiffle object will now contain
  * an executable form of the script which can be run directly by passing the object
  * to a new instance of {@link JiffleRunner} as in this example:
- * <pre>{@code \u0000
+ * <pre><code>
  *  TiledImage inImg = ...  // get an input image
  * 
  *  // create an image to write output values to
@@ -84,12 +84,12 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
  *  if (success) {
  *     // display result ...
  *  }
- * }</pre>
+ * </code></pre>
  * 
  * Alternatively, the compiled Jiffle can be run indirectly by submitting the
  * script to a {@link JiffleInterpreter} object which runs each submitted script 
  * in a separate thread.
- * <pre>{@code 
+ * <pre><code>
  *  public class Foo
  *      private JiffleInterpreter interp;
  * 
@@ -141,7 +141,7 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
  *          System.out.println("Bummer...");
  *      }
  *  }
- * }</pre>
+ * </code></pre>
  * 
  * @author Michael Bedward
  * @since 1.0

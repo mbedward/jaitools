@@ -36,16 +36,15 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * a source image value range to a destination image value.
  * <p>
  * Example of use...
- * <pre>{@code \u0000
+ * <pre><code>
  *
- * /*
- *  * Perform a lookup as follows:
- *  *   Src Value     Dest Value
- *  *     x < 5            1
- *  *   5 <= x < 10        2
- *  *  10 <= x <= 20       3
- *  *  any other value    99
- *  *\\/
+ * // Perform a lookup as follows:
+ * //   Src Value     Dest Value
+ * //     x < 5            1
+ * //   5 <= x < 10        2
+ * //  10 <= x <= 20       3
+ * //  any other value    99
+ * 
  * RenderedImage myIntImg = ...
  *
  * RangeLookupTable<Integer> table = new RangeLookupTable<Integer>(99);
@@ -63,7 +62,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * pb.setSource("source0", myIntImg);
  * pb.setParameter("table", table);
  * RenderedImage luImg = JAI.create("rangelookup", pb);
- * }</pre>
+ * </code></pre>
  *
  * @see Range
  * @see RangeLookupTable

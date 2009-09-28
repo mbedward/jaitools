@@ -51,7 +51,7 @@ import java.util.Map;
  * the data prior to streaming it.
  * <p>
  * Example of use:
- * <pre>{@code \u0000
+ * <pre><code>
  * StreamingSampleStats strmStats = new StreamingSampleStats();
  *
  * // set the statistics that will be calculated
@@ -74,7 +74,7 @@ import java.util.Map;
  *     System.out.println(String.format("%s: %.4f", s, strmStats.getStatisticValue(s)));
  * }
  * 
- * }</pre>
+ * </code></pre>
  * 
  * @author Michael Bedward
  * @since 1.0

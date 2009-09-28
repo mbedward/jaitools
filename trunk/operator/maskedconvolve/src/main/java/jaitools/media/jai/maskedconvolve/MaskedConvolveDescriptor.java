@@ -46,7 +46,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * is required it is prefereable to use the "Convolve" operator for faster processing.
  * <p>
  * Example of use:
- * <pre>{@code \u0000
+ * <pre><code>
  * RenderedImage img = ...
  * 
  * float[] kernelData = new float[]{  // for neighbourhood sum
@@ -71,7 +71,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * RenderingHints hints = new RenderingHints(JAI.KEY_BORDER_EXTENDER, extender);
  *
  * RenderedOp dest = JAI.create("maskedconvolve", pb, hints);
- *}</pre>
+ *</code></pre>
  * 
  * @see <a href="http://java.sun.com/products/java-media/jai/forDevelopers/jai-apidocs/javax/media/jai/operator/ConvolveDescriptor.html">
  * ConvolveDescriptor</a>
