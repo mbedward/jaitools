@@ -6,4 +6,20 @@
 
 ==Description==
 
-Docs coming soon
+This is a simple Swing image display widget used in the jai-tools example programs. Image pixel values for the mouse cursor position are displayed in the status bar.
+
+==Examples of use==
+
+To display an image...
+{{{
+RenderedImage img = ...
+ImageFrame frame = new ImageFrame(img, "Image is everything");
+frame.setVisible(true);
+}}}
+
+To display one image, but take the pixel values displayed by the status bar from another image with the same bounds...
+{{{
+RenderedImage dataImage = ...
+RenderedImage displayImage = ...
+ImageFrame frame = new ImageFrame(displayImage, dataImage, "Image is everything");
+}}}
