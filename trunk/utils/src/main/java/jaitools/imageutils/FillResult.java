@@ -28,13 +28,11 @@ import java.util.ListIterator;
 import java.util.Map;
 
 /**
- * Holds data for a single region sa it is extracted from the source image.
- * The data may come in several batches depending on whether the region
- * crosses image tile boundaries.
+ * This class is used by the {@code RegionalizeOpImage} and {@code FloodFiller}
+ * to record data describing an image region that has just been flood-filled.
  * <p>
- * Note: this class is used internally by the operator (specifically by
- * {@code RegionalizeOpImage} and {@code FloodFiller}) and is not intended
- * for use by client code.
+ * Although public, it is not intended for general use unless you are modifying
+ * or sub-classing the flood fill classes.
  *
  * @author Michael Bedward
  * @since 1.0

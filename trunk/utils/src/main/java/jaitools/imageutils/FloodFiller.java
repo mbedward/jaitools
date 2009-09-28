@@ -45,8 +45,8 @@ import javax.media.jai.iterator.WritableRandomIter;
  * which was subsequently ported to Java by Owen Kaluza.
  * <b>Any bugs in the present code are not their fault</b>.
  * <p>
- * This version works with source and destination data in the form of Raster objects
- * which are accessed using JAI iterators.
+ * This version works with a source {@code RenderedImage} and a destination
+ * {@code WritableRenderedImage}, both of which are accessed using JAI iterators.
  *
  * @author Michael Bedward
  * @since 1.0

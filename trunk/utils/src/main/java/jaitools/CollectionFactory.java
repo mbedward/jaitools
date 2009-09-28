@@ -34,10 +34,10 @@ import java.util.TreeSet;
  * Convenience methods to create generic collections
  * following the DRY (Don't Repeat Yourself) principle.
  * Examples of use:
- * <code>
- * List<Integer> list1 = CollectionFactory.newList();
- * List<List<String>> list2 = CollectionFactory.newList();
- * </code>
+ * <pre><code>
+ * List&lt;Integer&gt; list1 = CollectionFactory.newList();
+ * List&lt;List&lt;String&gt;&gt; list2 = CollectionFactory.newList();
+ * </code></pre>
  * 
  * @author Michael Bedward
  * @since 1.0
@@ -46,14 +46,14 @@ import java.util.TreeSet;
  */
 public class CollectionFactory {
     /**
-     * Magic method to create a generic Map
+     * Magic method to create a generic {@code Map}
      * <p>
      * Example of use:
-     * <code>
-     * Map<MyObject> foo = CollectionFactory.newMap();
-     * </code>
+     * <pre><code>
+     * Map&lt;MyObject&gt; foo = CollectionFactory.newMap();
+     * </code></pre>
      * 
-     * @return a new Map<K,V> instance
+     * @return a new Map&lt;K,V&gt; instance
      */
     public static <K, V> Map<K, V> newMap() {
         return new HashMap<K, V>();
@@ -63,11 +63,11 @@ public class CollectionFactory {
      * Magic methid to create a TreeMap
      * <p>
      * Example of use:
-     * <code>
-     * Map<MyObject> foo = CollectionFactory.newTreeMap();
-     * </code>
+     * <pre><code>
+     * Map&lt;MyObject&gt; foo = CollectionFactory.newTreeMap();
+     * </code></pre>
      * 
-     * @return a new TreeMap<K,V> instance
+     * @return a new TreeMap&lt;K,V&gt; instance
      */
     public static <K, V> TreeMap<K, V> newTreeMap() {
         return new TreeMap<K, V>();
@@ -77,11 +77,11 @@ public class CollectionFactory {
      * Magic method to create a generic ArrayList
      * <p>
      * Example of use:
-     * <code>
-     * List<MyObject> foo = CollectionFactory.newList();
-     * </code>
+     * <pre><code>
+     * List&lt;MyObject&gt; foo = CollectionFactory.newList();
+     * </code></pre>
      * 
-     * @return a new ArrayList<T> instance
+     * @return a new ArrayList&lt;T&gt; instance
      */
     public static <T> List<T> newList() {
         return new ArrayList<T>();
@@ -91,11 +91,11 @@ public class CollectionFactory {
      * Magic method to create a generic Stack.
      * <p>
      * Example of use:
-     * <code>
-     * Stack<MyObject> foo = CollectionFactory.newStack();
-     * </code>
+     * <pre><code>
+     * Stack&lt;MyObject&gt; foo = CollectionFactory.newStack();
+     * </code></pre>
      * 
-     * @return a new Stack<T> instance
+     * @return a new &lt;T&gt; instance
      */
     public static <T> Stack<T> newStack() {
         return new Stack<T>();
@@ -105,25 +105,25 @@ public class CollectionFactory {
      * Magic method to create a generic Set
      * <p>
      * Example of use:
-     * <code>
-     * Set<MyObject> foo = CollectionFactory.newSet();
-     * </code>
+     * <pre><code>
+     * Set&lt;MyObject&gt; foo = CollectionFactory.newSet();
+     * </code></pre>
      * 
-     * @return a new HashSet<T> instance
+     * @return a new HashSet&lt;T&gt; instance
      */
     public static <T> Set<T> newSet() {
         return new HashSet<T>();
     }
 
     /** 
-     * Magic method to create a generic Set
+     * Magic method to create a generic {@code TreeSet}
      * <p>
      * Example of use:
-     * <code>
-     * Set<MyObject> foo = CollectionFactory.newTreeSet();
-     * </code>
+     * <pre><code>
+     * Set&lt;MyObject&gt; foo = CollectionFactory.newTreeSet();
+     * </code></pre>
      * 
-     * @return a new Set<T> instance
+     * @return a new Set&lt;T&gt; instance
      */
     public static <T> TreeSet<T> newTreeSet() {
         return new TreeSet<T>();

@@ -40,7 +40,7 @@ import javax.swing.SwingUtilities;
 /**
  * Demonstrates the use of JiffleIterpreter to run a script.
  * <br>
- * There are two options for running executing a Jiffle script...
+ * There are two options for running a Jiffle script...
  * <ol type="1">
  * <li>Directly, by creating an instance of {@link jaitools.jiffle.runtime.JiffleRunner}
  * <li>Indirectly, by submitting a Jiffle object to an instance of
