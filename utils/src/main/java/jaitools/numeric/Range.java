@@ -21,10 +21,11 @@ package jaitools.numeric;
 
 
 /**
- * Defines a range of numeric values to be used with a {@linkplain RangeLookupTable}
- * object.  This class has much less functionality than JAI's
- * {@linkplain javax.media.jai.util.Range} but has the convenience of generic
- * typing.
+ * Defines a range of numeric values that is used with {@linkplain RangeLookupTable}
+ * and the {@linkplain jaitools.media.jai.RangeLookup} operator.
+ * <p>
+ * This class and the associated {@linkplain RangeComparator} do not depend on JAI and
+ * so may also be used for general applications.
  *
  * @author Michael Bedward
  * @since 1.0

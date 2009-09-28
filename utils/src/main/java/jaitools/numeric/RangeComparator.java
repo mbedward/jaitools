@@ -26,6 +26,21 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * A comparator for {@linkplain Range} objects capable of discerning the 18 different possible
+ * interval comparisons as described by:
+ * <blockquote>
+ * Brian Hayes (2003) A lucid interval. <br>
+ * American Scientist 91(6):484-488. <p>
+ *
+ * Available at: http://www.cs.utep.edu/interval-comp/hayes.pdf
+ * </blockquote>
+ *
+ * Constants describing each of these possible comparisons are defined in the
+ * {@linkplain RangeComparator.Result} class.
+ * <p>
+ * Normally, client code will not need to use the methods defined in this class
+ * directly but will work through the {@linkplain Range} class.
+ *
  * @author Michael Bedward
  * @since 1.0
  * @source $URL$
@@ -38,27 +53,117 @@ public class RangeComparator<T extends Number & Comparable> {
     public static final int GT = 1;
     private static final int UNDEFINED = LT - 1;
 
-    // Hayes' comparison types
+    /**
+     * This enum defines names, notation and descriptions for the 18 different
+     * possible interval comparisons as described by:
+     * <blockquote>
+     * Brian Hayes (2003) A lucid interval. <br>
+     * American Scientist 91(6):484-488. <p>
+     *
+     * Available at: http://www.cs.utep.edu/interval-comp/hayes.pdf
+     * </blockquote>
+     *
+     * The meaning of each of the four characters in the notation describing the
+     * comparison between interval X and interval Y is as follows:
+     * <ol type="1">
+     * <li> Min X compared to Max Y
+     * <li> Min X compared to Min Y
+     * <li> Max X compared to Max Y
+     * <li> Max X compared to Min Y
+     * </ol>
+     * So, for instance {@code X <<=> Y} means interval X starts below and extends to
+     * the maximum of interval Y.
+     */
     public enum Result {
+        /** Interval X is entirely less than interval Y. <br>
+         *  Notation: {@code <<<<}
+         */
+        LLLL("<<<<", "is entirely less than"),
 
-        LLLL("<<<<", "is completely less than"),
+        /** Interval X extends to minimum of interval Y. <br>
+         *  Notation: {@code <<<=}
+         */
         LLLE("<<<=", "extends to min of"),
+
+        /** Interval X starts below and extends within interval Y. <br>
+         *  Notation: {@code <<<>}
+         */
         LLLG("<<<>", "starts below and extends within"),
+
+        /** Interval X starts below and extends to maximum of interval Y. <br>
+         *  Notation: {@code <<=>}
+         */
         LLEG("<<=>", "starts below and extends to max of"),
+
+        /** Interval X starts with and extends beyond interval Y. <br>
+         *  Notation: {@code <=>>}
+         */
         LEGG("<=>>", "starts with and extends beyond"),
+
+        /** Interval X starts below and has maximum at point location Y. <br>
+         *  Notation: {@code <<==}
+         */
         LLEE("<<==", "starts below and has max at point location of"),
+
+        /** Interval X extends from point location Y. <br>
+         *  Notation: {@code ==>>}
+         */
         EEGG("==>>", "extends from point location of"),
+
+        /** Interval X is exactly equal to finite interval Y. <br>
+         *  Notation: {@code <==>}
+         */
         LEEG("<==>", "is exactly equal to finite interval"),
+
+        /** Point X is exactly equal to point Y. <br>
+         *  Notation: {@code ====}
+         */
         EEEE("====", "is exactly equal to point"),
+
+        /** Interval X strictly encloses interval Y. <br>
+         *  Notation: {@code <<>>}
+         */
         LLGG("<<>>", "strictly encloses"),
+
+        /** Interval X is enclosed by interval Y. <br>
+         *  Notation: {@code <><>}
+         */
         LGLG("<><>", "is strictly enclosed by"),
+
+        /** Interval X starts within and extends beyond interval Y. <br>
+         *  Notation: {@code <>>>}
+         */
         LGGG("<>>>", "starts within and extends beyond"),
+
+        /** Interval X starts within and extends to maximum of interval Y. <br>
+         *  Notation: {@code <>=>}
+         */
         LGEG("<>=>", "starts within and extends to max of"),
+
+        /** Interval X starts with and extends beyond interval Y. <br>
+         *  Notation: {@code <=<>}
+         */
         LELG("<=<>", "starts with and ends within"),
+
+        /** X is a point at maximum of interval Y. <br>
+         *  Notation: {@code =>=>}
+         */
         EGEG("=>=>", "is a point at max of"),
+
+        /** X is a point at minimum of interval Y. <br>
+         *  Notation: {@code <=<=}
+         */
         LELE("<=<=", "is a point at min of"),
+
+        /** Interval X extends from maximum of interval Y. <br>
+         *  Notation: {@code =>>>}
+         */
         EGGG("=>>>", "extends from max of"),
-        GGGG(">>>>", "is completely greater than");
+
+        /** Interval X is entirely greater than interval Y. <br>
+         *  Notation: {@code >>>>}
+         */
+        GGGG(">>>>", "is entirely greater than");
 
         private static Map<String, Result> lookup = CollectionFactory.newMap();
         static {
@@ -71,6 +176,11 @@ public class RangeComparator<T extends Number & Comparable> {
         private String desc;
         private boolean[] flags;
 
+        /**
+         * Private constructor
+         * @param notation Haye's notation for the comparison
+         * @param desc brief description
+         */
         private Result(String notation, String desc) {
             this.notation = notation;
             this.desc = desc;
@@ -212,17 +322,18 @@ public class RangeComparator<T extends Number & Comparable> {
      * @param r the Result value
      * @return true if r represents an intersection; false otherwise
      */
-    static boolean isIntersection(Result r) {
+    public static boolean isIntersection(Result r) {
         return !(r == Result.LLLL || r == Result.GGGG);
     }
 
     /**
-     * Compare two Range objects and return a Result that describes the
-     * relationship between them from the point of view of the first Range
+     * Compare two Range objects and return the {@linkplain RangeComparator.Result}
+     * that describes the relationship between them from the point of view of the first Range
      *
      * @param r1 the first Range
      * @param r2 the second Range
-     * @return a Result enum constant
+     * 
+     * @return a {@linkplain RangeComparator.Result} constant
      */
     public Result compare(Range<T> r1, Range<T> r2) {
 
@@ -369,6 +480,15 @@ public class RangeComparator<T extends Number & Comparable> {
     }
 
 
+    /**
+     * Helper for {@linkplain #compare(jaitools.numeric.Range, jaitools.numeric.Range) } used
+     * when one or both of the intervals are degenerate (point) intervals.
+     *
+     * @param r1 first interval
+     * @param r2 second interval
+     *
+     * @return a {@linkplain RangeComparator.Result} constant
+     */
     private Result pointCompare(Range<T> r1, Range<T> r2) {
         int[] compFlags = new int[4];
 

@@ -21,7 +21,7 @@
 package jaitools.numeric;
 
 /**
- * Double value comparisons within a set tolerance
+ * Various double value comparisons that take into account a tolerance factor.
  * 
  * @author Michael Bedward
  * @since 1.0
