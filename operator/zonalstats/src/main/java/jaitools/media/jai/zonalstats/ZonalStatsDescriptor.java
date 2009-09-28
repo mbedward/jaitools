@@ -48,7 +48,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * referred to via the {@linkplain #ZONAL_STATS_PROPERTY_NAME} constant.
  * <p>
  * Example of use...
- * <pre>{@code 
+ * <pre><code>
  * RenderedImage myData = ...
  * RenderedImage myZones = ...
  * 
@@ -78,7 +78,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  *     }
  * }
  * 
- * }</pre>
+ * </code></pre>
  * This operator uses {@linkplain jaitools.numeric.StreamingSampleStats} for its
  * calculations, allowing it to handle very large images for statistics other than
  * {@linkplain jaitools.numeric.Statistic#MEDIAN}, for which the

@@ -37,7 +37,7 @@ import java.util.concurrent.Future;
  * jiffle is communicated via {@link JiffleEvent} objects.
  * <p>
  * Example of use:
- * <pre>{@code \u0000
+ * <pre><code>
  * class Foo {
  * 
  *     public Foo() {
@@ -74,7 +74,7 @@ import java.util.concurrent.Future;
  *     }
  * }
  * 
- * }</pre>
+ * </code></pre>
  * 
  * @author Michael Bedward
  * @since 1.0

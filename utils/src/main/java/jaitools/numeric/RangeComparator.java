@@ -95,12 +95,12 @@ public class RangeComparator<T extends Number & Comparable> {
          * Return a description for this comparison type. The description is
          * worded so that it makes grammatical sense when placed between two
          * Range object names. For example...
-         * <pre>{@code \u0000
+         * <pre><code>
          * Range<Integer> r1 = ...
          * Range<Integer> r2 = ...
          * RangeComparator.Result comp = r1.compareTo(r2);
          * System.out.println(String.format("Range r1 %s Range r2", comp.getDesc()));
-         * }</pre>
+         * </code></pre>
          * @return
          */
         public String getDesc() {
@@ -124,7 +124,7 @@ public class RangeComparator<T extends Number & Comparable> {
          * that have the given end-point comparison flag at the specified position.
          * Repeated calls of this method can be used for incremental matching;
          * for example...
-         * <pre>{@code \u0000
+         * <pre><code>
          * // first call uses two-arg method to select from all Types that have
          * // the given flag at pos 0 (Types with names L***)
          * List<Result> types = match(RangeComparator.LT, 0);
@@ -136,7 +136,7 @@ public class RangeComparator<T extends Number & Comparable> {
          * for (Result t : types) {
          *     System.out.println(t.toString() + ": " + t.getDesc());
          * }
-         * }</pre>
+         * </code></pre>
          *
          * @param op one of the RangeComparator constants: LT, EQ, GT
          * @param pos flag position 0-3

@@ -33,6 +33,22 @@ package jaitools.numeric;
  */
 public class Range<T extends Number & Comparable> {
 
+    /**
+     * Integer flag value for negative infinity. Can be used as an
+     * argument to the {@linkplain #Range} constructor for point
+     * (degenerate) intervals.
+     */
+    public static final int NEG_INF = -1;
+
+    /**
+     * Integer flag value for positive infinity. Can be used as an
+     * argument to the {@linkplain #Range} constructor for point
+     * (degenerate) intervals.
+     */
+    public static final int INF = 1;
+
+    private static final int FINITE = 0;
+    
     private T minValue;
     private boolean minIncluded;
     private boolean minOpen;
@@ -42,21 +58,21 @@ public class Range<T extends Number & Comparable> {
     private boolean maxOpen;
     private int maxType;
     private boolean isPoint;
-    private static final int FINITE = 0;
-    public static final int NEG_INF = -1;
-    public static final int INF = 1;
+
 
     /**
      * Static create method. This just relieves the tedium of having to specify
      * the type parameter on both sides of the creation expression. So instead
      * of this...
-     * <pre>{@code \u0000
+     * <pre><code>
+     * 
      *    Range<Integer> r = new Range<Integer>(10, false, 20, true);
-     * }</pre>
+     * </code></pre>
      * you can do this...
-     * <pre>{@code \u0000
+     * <pre><code>
+     *
      *    Range<Integer> r = Range.create(10, false, 20, true);
-     * }</pre>
+     * </code></pre>
      * which is infinitesimally better.
      *
      * @param minValue the lower bound; passing null for this parameter
@@ -216,13 +232,14 @@ public class Range<T extends Number & Comparable> {
      * set to the relevant POSITIVE_INFINITY or NEGATIVE_INFINITY. For
      * other types such as Integer which lack infinity flag values a
      * point range at infinity can be created as in this example...
-     * <pre>{@code \u0000
+     * <pre><code>
+     *
      *    Range<Integer> rInf = new Range<Integer>(null, Range.INF);
      *    Range<Integer> rNegInf = new Range<Integer>(null, Range.NEG_INF);
      *
      *    // or with the static create method...
      *    Range<Integer> rInf2 = Range.create(null, Range.INF);
-     * }</pre>
+     * </code></pre>
      * <p>
      * For a point interval at positive or negative infinity the following apply:
      * <ul>

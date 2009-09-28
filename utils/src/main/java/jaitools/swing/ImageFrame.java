@@ -35,10 +35,10 @@ import javax.swing.JTextField;
  * <p>
  * Typical use is:
  *
- * <pre>{@code \u0000
+ * <pre><code>
  * ImageFrame frame = new ImageFrame();
  * frame.displayImage(imageToLookAt, imageWithData, "My beautiful image");
- * }</pre>
+ * </code></pre>
  *
  * Note: the default close operation for the frame is JFrame.EXIT_ON_CLOSE.
  * 

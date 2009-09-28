@@ -40,7 +40,7 @@ import org.antlr.runtime.RecognitionException;
  * Executes a compiled script contained within a Jiffle object.
  * You can run a script directly by creating an instance of this
  * class and calling its run method as in the following example...
- * <pre>{@code \u0000
+ * <pre><code>
  *  TiledImage inImg = ...  // get an input image
  * 
  *  // create an image to write output values to
@@ -69,7 +69,7 @@ import org.antlr.runtime.RecognitionException;
  *  if (success) {
  *     // display result ...
  *  }
- * }</pre>
+ * </code></pre>
  * 
  * @author Michael Bedward
  * @since 1.0
