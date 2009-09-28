@@ -19,6 +19,7 @@
  */
 package jaitools.demo.jiffle;
 
+import jaitools.CollectionFactory;
 import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.runtime.JiffleProgressEvent;
 import jaitools.jiffle.runtime.JiffleFailureEvent;
@@ -30,9 +31,9 @@ import jaitools.jiffle.runtime.JiffleEventListener;
 import jaitools.jiffle.runtime.JiffleInterpreterException;
 import jaitools.swing.ImageFrame;
 import jaitools.swing.ProgressMeter;
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.Map;
 import javax.media.jai.TiledImage;
 import javax.swing.SwingUtilities;
@@ -119,7 +120,7 @@ public class InterpreterDemo {
         TiledImage tImg = ImageUtils.createDoubleImage(imgWidth, imgHeight);
 
         // link the variable name used in the script (result) to the image
-        Map<String, TiledImage> imgParams = new HashMap<String, TiledImage>();
+        Map<String, RenderedImage> imgParams = CollectionFactory.newMap();
         imgParams.put("result", tImg);
 
         try {
@@ -147,7 +148,7 @@ public class InterpreterDemo {
      */
     private void onCompletion(JiffleCompletionEvent ev) {
         progMeter.setVisible(false);
-        TiledImage img = ev.getJiffle().getImage("result");
+        RenderedImage img = ev.getJiffle().getImage("result");
 
         ImageFrame frame = new ImageFrame(img, "Jiffle image demo");
         frame.setVisible(true);

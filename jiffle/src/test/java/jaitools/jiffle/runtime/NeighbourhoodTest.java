@@ -24,6 +24,7 @@ import jaitools.CollectionFactory;
 import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
 import jaitools.numeric.DoubleComparison;
+import java.awt.image.RenderedImage;
 import java.util.Map;
 import javax.media.jai.TiledImage;
 import org.junit.Test;
@@ -42,7 +43,7 @@ public class NeighbourhoodTest {
         TiledImage testImg = createTestImage(width, height);
         
         TiledImage tImg = ImageUtils.createDoubleImage(width, height);
-        Map<String, TiledImage> imgParams = CollectionFactory.newMap();
+        Map<String, RenderedImage> imgParams = CollectionFactory.newMap();
         imgParams.put("testImg", testImg);
         imgParams.put("result", tImg);
         
@@ -78,7 +79,7 @@ public class NeighbourhoodTest {
      */
     private TiledImage createTestImage(int width, int height) throws Exception {
         TiledImage tImg = ImageUtils.createDoubleImage(width, height);
-        Map<String, TiledImage> imgParams = CollectionFactory.newMap();
+        Map<String, RenderedImage> imgParams = CollectionFactory.newMap();
         imgParams.put("result", tImg);
         
         Jiffle jiffle = new Jiffle("result = y()", imgParams);

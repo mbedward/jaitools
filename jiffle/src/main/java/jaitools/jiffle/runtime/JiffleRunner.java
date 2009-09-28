@@ -26,11 +26,14 @@ import jaitools.jiffle.Metadata;
 import jaitools.jiffle.parser.ImageCalculator;
 import static jaitools.numeric.DoubleComparison.*;
 import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
+import java.awt.image.WritableRenderedImage;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import javax.media.jai.TiledImage;
+import javax.media.jai.PlanarImage;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 import javax.media.jai.iterator.WritableRandomIter;
@@ -41,13 +44,13 @@ import org.antlr.runtime.RecognitionException;
  * You can run a script directly by creating an instance of this
  * class and calling its run method as in the following example...
  * <pre><code>
- *  TiledImage inImg = ...  // get an input image
+ *  RenderedImage inImg = ...  // get an input image
  * 
  *  // create an image to write output values to
  *  TiledImage outImg = JiffleUtilities.createDoubleImage(100, 100);
  *       
  *  // relate variable names in script to image objects
- *  Map<String, TiledImage> imgParams = new HashMap<String, TiledImage>();
+ *  Map<String, RenderedImage> imgParams = CollectionFactory.newMap();
  *  imgParams.put("result", outImg);
  *  imgParams.put("img1", inImg);
  *
@@ -135,7 +138,7 @@ public class JiffleRunner {
      * image var as a reference - change this later when
      * allowing images with different bounds
      */
-    TiledImage refImg;
+    RenderedImage refImg;
     int refImgSize;
     
     /*
@@ -209,8 +212,8 @@ public class JiffleRunner {
         vars = new VarTable();
         funcs = new FunctionTable();
 
-        setHandlers();
         setSpecialVars();
+        setHandlers();
         finished = false;
         numPixelsProcessed = 0;
         propComplete = 0.0f;
@@ -369,21 +372,36 @@ public class JiffleRunner {
     private void setHandlers() {
         handlerTable = CollectionFactory.newMap();
 
-        for (Entry<String, TiledImage> e : metadata.getImageParams().entrySet()) {
+        for (Entry<String, RenderedImage> e : metadata.getImageParams().entrySet()) {
             ImageHandler h = new ImageHandler();
-            TiledImage img = e.getValue();
+            RenderedImage image = e.getValue();
+            Rectangle bounds = null;
 
-            h.x = h.xmin = img.getMinX();
-            h.y = h.ymin = img.getMinY();
-            h.xmax = img.getMaxX() - 1;
-            h.ymax = img.getMaxY() - 1;
+            h.x = h.xmin = image.getMinX();
+            h.y = h.ymin = image.getMinY();
             h.band = 0;
             h.isOutput = metadata.getOutputImageVars().contains(e.getKey());
 
+            if (image instanceof PlanarImage) {
+                PlanarImage pImage = (PlanarImage)image;
+                bounds = pImage.getBounds();
+                h.xmax = pImage.getMaxX() - 1;
+                h.ymax = pImage.getMaxY() - 1;
+
+            } else if (image instanceof BufferedImage) {
+                BufferedImage bImage = (BufferedImage)image;
+                bounds = new Rectangle(
+                        bImage.getMinX(), bImage.getMinY(),
+                        bImage.getWidth(), bImage.getHeight());
+
+                h.xmax = bounds.x + bounds.width - 2;
+                h.ymax = bounds.y + bounds.height - 2;
+            }
+
             if (h.isOutput) {
-                h.iter = RandomIterFactory.createWritable(img, img.getBounds());
+                h.iter = RandomIterFactory.createWritable((WritableRenderedImage)image, bounds);
             } else {
-                h.iter = RandomIterFactory.create(img, img.getBounds());
+                h.iter = RandomIterFactory.create(image, bounds);
             }
 
             handlerTable.put(e.getKey(), h);
@@ -403,7 +421,17 @@ public class JiffleRunner {
         outVars.addAll(metadata.getOutputImageVars());
         refImg = metadata.getImageParams().get(outVars.get(0));
         
-        Rectangle bounds = refImg.getBounds();
+        Rectangle bounds = null;
+        if (refImg instanceof PlanarImage) {
+            bounds = ((PlanarImage)refImg).getBounds();
+
+        } else if (refImg instanceof BufferedImage) {
+            BufferedImage bImage = (BufferedImage)refImg;
+            bounds = new Rectangle(
+                    bImage.getMinX(), bImage.getMinY(),
+                    bImage.getWidth(), bImage.getHeight());
+        }
+
         refImgSize = bounds.width * bounds.height;
         
         vars.set(proxyTable.get("x").varName, bounds.x);
@@ -436,10 +464,10 @@ public class JiffleRunner {
                 
                 // @todo remove this hack
                 if (firstImg) {
-                    vars.set("_x", h.x);
-                    vars.set("_y", h.y);
-                    vars.set("_col", h.x + 1);
-                    vars.set("_row", h.y + 1);
+                    vars.set("_x", h.x - h.xmin);
+                    vars.set("_y", h.y - h.ymin);
+                    vars.set("_col", h.x - h.xmin + 1);
+                    vars.set("_row", h.y - h.ymin + 1);
                     firstImg = false;
                     
                     publishProgress();
