@@ -32,6 +32,7 @@ import jaitools.jiffle.parser.VarClassifier;
 import jaitools.jiffle.runtime.JiffleInterpreter;
 import jaitools.jiffle.runtime.JiffleRunner;
 import jaitools.jiffle.runtime.VarTable;
+import java.awt.image.RenderedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -39,7 +40,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import javax.media.jai.TiledImage;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
@@ -56,13 +56,13 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
  * an executable form of the script which can be run directly by passing the object
  * to a new instance of {@link JiffleRunner} as in this example:
  * <pre><code>
- *  TiledImage inImg = ...  // get an input image
+ * RenderedImage inImg = ...  // get an input image
  * 
  *  // create an image to write output values to
  *  TiledImage outImg = JiffleUtilities.createDoubleImage(100, 100);
  *       
  *  // relate variable names in script to image objects
- *  Map<String, TiledImage> imgParams = new HashMap<String, TiledImage>();
+ *  Map<String, RenderedImage> imgParams = CollectionFactory.newMap();
  *  imgParams.put("result", outImg);
  *  imgParams.put("img1", inImg);
  *
@@ -112,9 +112,9 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
  *          // create an image to write output data to
  *          TiledImage tImg = JiffleUtilities.createDoubleImage(imgWidth, imgHeight);
  *
- *          Map<String, TiledImage> imgParams = new HashMap<String, TiledImage>();
+ *          Map<String, RenderedImage> imgParams = CollectionFactory.newMap();
  *          imgParams.put("result", tImg);
- *          // ...plus other entries if there are input image variables 
+ *          // ...plus other entries if there are input images
  *
  *          // compile the script and submit it to the interpreter
  *          try {
@@ -131,7 +131,7 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
  *
  *      // Respond to completion events
  *      private void onCompletion(JiffleCompletionEvent ev) {
- *          TiledImage img = ev.getJiffle().getImage("result");
+ *          RenderedImage img = ev.getJiffle().getImage("result");
  * 
  *          // display or write image ...
  *      }
@@ -155,7 +155,7 @@ public class Jiffle {
     private CommonTokenStream tokens;
     private CommonTree runtimeAST;
     
-    private Map<String, TiledImage> imageParams;
+    private Map<String, RenderedImage> imageParams;
     private Set<String> vars;
     private Set<String> unassignedVars;
     private Set<String> outputImageVars;
@@ -169,24 +169,25 @@ public class Jiffle {
      * the script.
      * 
      * @param script input jiffle statement(s)
-     * @param imgParams a Map of iamge variable name : image object pairs
+     * @param params variable names and their corresponding images
      * @throws JiffleCompilationException on error compiling the script
      */
-    public Jiffle(String script, Map<String, TiledImage> imgParams)
+    public Jiffle(String script, Map<String, RenderedImage> params)
             throws JiffleCompilationException {
 
-        init(script, imgParams);
+        init(script, params);
     }
 
     /**
      * Constructor: reads a script from a text file and compiles it.
      * 
      * @param scriptFile text file containing the Jiffle script
-     * @param imgParams a Map of iamge variable name : image object pairs
+     * @param params variable names and their corresponding images
+     *
      * @throws IOException on error reading the script file
      * @throws JiffleCompilationException on error compiling the script
      */
-    public Jiffle(File scriptFile, Map<String, TiledImage> imgParams)
+    public Jiffle(File scriptFile, Map<String, RenderedImage> params)
             throws JiffleCompilationException, IOException {
 
         BufferedReader reader = new BufferedReader(new FileReader(scriptFile));
@@ -201,18 +202,19 @@ public class Jiffle {
         }
         String prog = sb.toString();
         
-        init(prog, imgParams);
+        init(prog, params);
     }
 
     /**
      * Helper function for constructors
      * @param script input jiffle statements
-     * @param imgParams Map of image variable name : image reference pairs
+     * @param params variable names and their corresponding images
      */
-    private void init(String script, Map<String, TiledImage> imgParams) 
+    private void init(String script, Map<String, RenderedImage> params)
             throws JiffleCompilationException {
+
         this.imageParams = CollectionFactory.newMap();
-        this.imageParams.putAll(imgParams);
+        this.imageParams.putAll(params);
 
         // add extra new line just in case last statement hits EOF
         this.script = new String(script + "\n");
@@ -224,7 +226,7 @@ public class Jiffle {
      * @param varName image variable name
      * @return image object
      */
-    public TiledImage getImage(String varName) {
+    public RenderedImage getImage(String varName) {
         return imageParams.get(varName);
     }
 
@@ -243,11 +245,11 @@ public class Jiffle {
      * parameters are replaced. This can be used when re-running
      * a compiled script to work with new input and/or output images.
      * 
-     * @param map variable names and their corresponding images
+     * @param params variable names and their corresponding images
      */
-    public void setImageParams(Map<String, TiledImage> map) {
+    public void setImageParams(Map<String, RenderedImage> params) {
         imageParams = CollectionFactory.newMap();
-        imageParams.putAll(map);
+        imageParams.putAll(params);
     }
 
     /**

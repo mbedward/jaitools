@@ -20,11 +20,13 @@
 
 package jaitools.jiffle.runtime;
 
+import jaitools.CollectionFactory;
 import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
-import java.util.HashMap;
+import java.awt.image.RenderedImage;
 import java.util.Map;
 import java.util.Random;
+import javax.media.jai.PlanarImage;
 import javax.media.jai.TiledImage;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
@@ -75,10 +77,10 @@ public class JiffleRunnerTest {
         
         double inValue = 10d;
         
-        TiledImage inImg = ImageUtils.createDoubleImage(10, 10, new double[]{inValue});
-        TiledImage outImg = ImageUtils.createDoubleImage(10, 10, 1);
+        PlanarImage inImg = ImageUtils.createDoubleImage(10, 10, new double[]{inValue});
+        PlanarImage outImg = ImageUtils.createDoubleImage(10, 10, 1);
         
-        Map<String, TiledImage> imgParams = new HashMap<String, TiledImage>();
+        Map<String, RenderedImage> imgParams = CollectionFactory.newMap();
         imgParams.put("out", outImg);
         imgParams.put("in", inImg);
         
@@ -161,7 +163,7 @@ public class JiffleRunnerTest {
         // out image initially filled with zeroes
         TiledImage outImg = ImageUtils.createDoubleImage(width, width);
         
-        Map<String, TiledImage> imgParams = new HashMap<String, TiledImage>();
+        Map<String, RenderedImage> imgParams = CollectionFactory.newMap();
         imgParams.put("in1", inImg1);
         imgParams.put("in2", inImg2);
         imgParams.put("out", outImg);
@@ -279,7 +281,7 @@ public class JiffleRunnerTest {
         // out image initially filled with zeroes
         TiledImage outImg = ImageUtils.createDoubleImage(width, width);
 
-        Map<String, TiledImage> imgParams = new HashMap<String, TiledImage>();
+        Map<String, RenderedImage> imgParams = CollectionFactory.newMap();
         imgParams.put("in1", inImg1);
         imgParams.put("in2", inImg2);
         imgParams.put("out", outImg);

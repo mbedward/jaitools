@@ -22,10 +22,10 @@ package jaitools.jiffle;
 
 import jaitools.jiffle.parser.VarClassifier;
 import java.awt.Rectangle;
+import java.awt.image.RenderedImage;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import javax.media.jai.TiledImage;
 
 /**
  * A container for information about variables gathered by 
@@ -39,7 +39,7 @@ import javax.media.jai.TiledImage;
  */
 public class Metadata {
     
-    private Map<String, TiledImage> imageParams;
+    private Map<String, RenderedImage> imageParams;
     private Rectangle outImgBounds;
     private Set<String> outImgVars;
     private Set<String> localVars;
@@ -52,7 +52,7 @@ public class Metadata {
      * @param imageParams Map of variable : image object supplied by the user
      * with the script
      */
-    Metadata(Map<String, TiledImage> imageParams) {
+    Metadata(Map<String, RenderedImage> imageParams) {
         this.imageParams = imageParams;
     }
 
@@ -71,7 +71,7 @@ public class Metadata {
     /**
      * Returns an unmodifiable view of the image parameters
      */
-    public Map<String, TiledImage> getImageParams() {
+    public Map<String, RenderedImage> getImageParams() {
         return Collections.unmodifiableMap(imageParams);
     }
     
