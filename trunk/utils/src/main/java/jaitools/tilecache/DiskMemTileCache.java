@@ -21,6 +21,7 @@
 package jaitools.tilecache;
 
 import jaitools.CollectionFactory;
+
 import java.awt.Point;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
@@ -33,6 +34,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Observable;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -52,6 +55,15 @@ import javax.media.jai.TileCache;
  * needs to free memory to accomodate a tile, it does so by removing lowest priority
  * tiles from memory and caching them to disk. Optionally, the user can specify
  * that newly added tiles are cached to disk immediately.
+ * <p>
+ * Unlike the standard JAI {@code TileCache} implementation, resident tiles are cached
+ * using strong references. This is to support the use of this class with
+ * {@linkplain jaitools.tiledimage.DiskMemImage} as well as operations that need to
+ * cache tiles that are expensive to create (e.g. output of a time-consuming analysis).
+ * A disadvantage of this design is that when the cache is being used for easily
+ * generated tiles it can end up unnecessarily holding memory that is more urgently
+ * required by other parts of an application. To avoid this happening, the cache can
+ * be set to auto-flush resident tiles at regular intervals.
  *
  * @author Michael Bedward
  * @author Simone Giannecchini, GeoSolutions SAS
@@ -65,9 +77,25 @@ import javax.media.jai.TileCache;
  */
 public class DiskMemTileCache extends Observable implements TileCache {
 
+    /**
+     * The default memory capacity in bytes (64 * 2^20 = 64Mb)
+     * @see #setMemoryCapacity(long)
+     */
     public static final long DEFAULT_MEMORY_CAPACITY = 64L * 1024L * 1024L;
 
+    /**
+     * The default memory threshold value (0.75)
+     * @see #setMemoryThreshold(float)
+     */
     public static final float DEFAULT_MEMORY_THRESHOLD = 0.75F;
+
+    /**
+     * The default interval after which the cache will flush if
+     * auto-flushing of resident tiles is enabled
+     * @see #setAutoFlushMemoryInterval(long)
+     * @see #setAutoFlushMemoryEnabled(boolean)
+     */
+    public static final long DEFAULT_AUTO_FLUSH_MEMORY_INTERVAL = 2500;
 
     // @todo use JAI ParameterList or some other ready-made class for this ?
     private static class ParamDesc {
@@ -94,6 +122,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * tile cache. This determines the maximum number of tiles that can
      * be resident concurrently. The value must be numeric and will be
      * treated as Long.
+     * @see #setMemoryCapacity(long)
+     * @see #DEFAULT_MEMORY_CAPACITY
      */
     public static final String KEY_INITIAL_MEMORY_CAPACITY = "memcapacity";
 
@@ -106,6 +136,23 @@ public class DiskMemTileCache extends Observable implements TileCache {
      */
     public static final String KEY_ALWAYS_DISK_CACHE = "diskcache";
 
+    /**
+     * Key for the parameter controlling whether the cache will auto-flush
+     * memory-resident tiles. The value must be Boolean. If the value is
+     * {@code Boolean.TRUE}, auto-flushing of resident tiles will be enabled
+     * when the cache is created. The default is {@code Boolean.FALSE}.
+     * @see #setAutoFlushMemoryEnabled(boolean)
+     */
+    public static final String KEY_AUTO_FLUSH_MEMORY_ENABLED = "enableautoflush";
+
+    /**
+     * Key for the cache auto-flush interval parameter. The value must be numeric
+     * and represents the interval, in milliseconds, between auto-flushes of
+     * resident tiles. Values less than or equal to zero are ignored.
+     * @see #setAutoFlushMemoryInterval(long)
+     * @see #DEFAULT_AUTO_FLUSH_MEMORY_INTERVAL
+     */
+    public static final String KEY_AUTO_FLUSH_MEMORY_INTERVAL = "autoflushinterval";
 
     private static Map<String, ParamDesc> paramDescriptors;
     static {
@@ -116,6 +163,12 @@ public class DiskMemTileCache extends Observable implements TileCache {
         paramDescriptors.put( desc.key, desc );
 
         desc = new ParamDesc(KEY_ALWAYS_DISK_CACHE, Boolean.class, Boolean.FALSE);
+        paramDescriptors.put( desc.key, desc );
+
+        desc = new ParamDesc(KEY_AUTO_FLUSH_MEMORY_ENABLED, Boolean.class, Boolean.FALSE);
+        paramDescriptors.put( desc.key, desc );
+
+        desc = new ParamDesc(KEY_AUTO_FLUSH_MEMORY_INTERVAL, Number.class, DEFAULT_AUTO_FLUSH_MEMORY_INTERVAL);
         paramDescriptors.put( desc.key, desc );
     }
 
@@ -154,6 +207,25 @@ public class DiskMemTileCache extends Observable implements TileCache {
 
     // whether to send cache diagnostics to observers
     private boolean diagnosticsEnabled;
+
+    /**
+     * Variables used for auto-flushing of resident tiles
+     */
+    private static final String TIMER_THREAD_NAME = "cache_auto_flush";
+    private Timer autoFlushTimer;
+    private long autoFlushInterval = DEFAULT_AUTO_FLUSH_MEMORY_INTERVAL;
+    private long timeToFlush;
+
+    private class AutoFlushTask extends TimerTask {
+
+        @Override
+        public void run() {
+            long now = System.currentTimeMillis();
+            if (now > timeToFlush) {
+                flushMemory();
+            }
+        }
+    };
 
 
     /**
@@ -201,19 +273,72 @@ public class DiskMemTileCache extends Observable implements TileCache {
             }
         }
 
+        desc = paramDescriptors.get(KEY_AUTO_FLUSH_MEMORY_INTERVAL);
+        autoFlushInterval = ((Number)desc.defaultValue).longValue();
+        o = params.get(desc.key);
+        if (o != null) {
+            if (desc.typeOK(o)) {
+                long lval = ((Number)o).longValue();
+                if (lval > 0) {
+                    autoFlushInterval = lval;
+                }
+            }
+        }
+
+        desc = paramDescriptors.get(KEY_AUTO_FLUSH_MEMORY_ENABLED);
+        o = params.get(desc.key);
+        if (o != null) {
+            if (desc.typeOK(o)) {
+                setAutoFlushMemoryEnabled((Boolean)o);
+            }
+        }
+
         comparator = new TileAccessTimeComparator();
         sortedResidentTiles = new ArrayList<DiskCachedTile>();
     }
 
+    /**
+     * Deletes all disk-cached tiles when the cache is garbage collected
+     *
+     * @throws Throwable
+     */
+    @Override
+    protected void finalize() throws Throwable {
+        if (autoFlushTimer != null) {
+            autoFlushTimer.cancel();
+        }
+
+        flush();
+    }
+
+    /**
+     * Add a tile to the cache if not already present.
+     *
+     * @param owner the image that this tile belongs to
+     * @param tileX the tile column
+     * @param tileY the tile row
+     * @param data the tile data
+     */
     public void add(RenderedImage owner, int tileX, int tileY, Raster data) {
         add(owner, tileX, tileY, data, null);
     }
-
+		 
+    /**
+     * Add a tile to the cache if not already present.
+     *
+     * @param owner the image that this tile belongs to
+     * @param tileX the tile column
+     * @param tileY the tile row
+     * @param data the tile data
+     * @param tileCacheMetric optional tile cache metric (may be {@code null}
+     */
     public synchronized void add(RenderedImage owner,
                 int tileX,
                 int tileY,
                 Raster data,
                 Object tileCacheMetric) {
+
+        resetAutoFlushMemoryTimer();
 
         Object key = getTileId(owner, tileX, tileY);
         if (tiles.containsKey(key)) {
@@ -252,6 +377,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * @param tileY the tile row
      */
     public synchronized void remove(RenderedImage owner, int tileX, int tileY) {
+        resetAutoFlushMemoryTimer();
+
         Object key = getTileId(owner, tileX, tileY);
         DiskCachedTile tile = tiles.get(key);
 
@@ -293,6 +420,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * @return the requested tile or null if the tile was not cached
      */
     public synchronized Raster getTile(RenderedImage owner, int tileX, int tileY) {
+        resetAutoFlushMemoryTimer();
+
         Raster r = null;
 
         Object key = getTileId(owner, tileX, tileY);
@@ -303,8 +432,18 @@ public class DiskMemTileCache extends Observable implements TileCache {
             // is the tile resident ?
             r = residentTiles.get(key);
             if (r == null) {
-                // tile needs to be read from disk
+                /*
+                 * The tile is not resident. Attempt
+                 * to read it from the disk.
+                 */
                 r = tile.readData();
+                if (r == null) {
+                    /* The tile was not cached on disk. It may have
+                     * been resident only, and then flushed.
+                     */
+                    return null;
+                }
+                
                 if (makeResident(tile, r)) {
                     tile.setAction(DiskCachedTile.TileAction.ACTION_RESIDENT);
                     if (diagnosticsEnabled) {
@@ -334,6 +473,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * @return an array of tile Rasters
      */
     public synchronized Raster[] getTiles(RenderedImage owner) {
+        resetAutoFlushMemoryTimer();
+
         int minX = owner.getMinTileX();
         int minY = owner.getMinTileY();
         int numX = owner.getNumXTiles();
@@ -695,6 +836,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
     public void setTileChanged(RenderedImage owner, int tileX, int tileY)
             throws TileNotResidentException, DiskCacheFailedException {
 
+        resetAutoFlushMemoryTimer();
+
         Object tileId = getTileId(owner, tileX, tileY);
         Raster r = residentTiles.get(tileId);
         if (r == null) {
@@ -709,6 +852,73 @@ public class DiskMemTileCache extends Observable implements TileCache {
                 throw new DiskCacheFailedException(owner, tileX, tileY);
             }
         }
+    }
+
+    /**
+     * Enable or disable auto-flushing of the cache with the
+     * currently set auto-flush interval
+     *
+     * @param state true to enable auto-flushing; false to disable
+     * @see #setAutoFlushMemoryInterval(long)
+     */
+    public void setAutoFlushMemoryEnabled(boolean state) {
+        if (state) {
+            if (autoFlushTimer == null) {
+                autoFlushTimer = new Timer(TIMER_THREAD_NAME, true);
+                autoFlushTimer.schedule(new AutoFlushTask(), autoFlushInterval, autoFlushInterval);
+            }
+        } else {
+            if (autoFlushTimer != null) {
+                autoFlushTimer.cancel();
+                autoFlushTimer = null;
+            }
+        }
+    }
+
+    /**
+     * Query whether auto-flushing is currently enabled
+     *
+     * @return true if the cache is auto-flushing; false otherwise
+     */
+    public boolean isAutoFlushMemoryEnabled() {
+        return (autoFlushTimer != null);
+    }
+
+    /**
+     * Set the interval, in milliseconds, to elapse between each automatic
+     * flush of the cache.
+     *
+     * @param interval interval in milliseconds
+     *        (values less than or equal to zero are ignored)
+     */
+    public void setAutoFlushMemoryInterval(long interval) {
+        if (interval > 0 && interval != autoFlushInterval) {
+            autoFlushInterval = interval;
+
+            if (autoFlushTimer != null) {
+                autoFlushTimer.cancel();
+                autoFlushTimer = new Timer(TIMER_THREAD_NAME, true);
+                autoFlushTimer.schedule(new AutoFlushTask(), autoFlushInterval, autoFlushInterval);
+            }
+        }
+    }
+
+    /**
+     * Get the current auto-flush interval
+     *
+     * @return interval in milliseconds
+     */
+    public long getAutoFlushMemoryInterval() {
+        return autoFlushInterval;
+    }
+
+    /**
+     * Called by the cache when its contents are modified or accessed to
+     * ensure that the next auto-flush (if enabled) will not occur before
+     * the set auto-flush interval has elapsed.
+     */
+    private void resetAutoFlushMemoryTimer() {
+        timeToFlush = System.currentTimeMillis() + autoFlushInterval;
     }
 
     /**
@@ -736,6 +946,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * Add a raster to those resident in memory
      */
     private boolean makeResident(DiskCachedTile tile, Raster data) {
+        resetAutoFlushMemoryTimer();
+
         if (tile.getTileSize() > memCapacity) {
             return false;
         }
@@ -779,6 +991,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * written to disk again; otherwise no writing is done.
      */
     private void removeResidentTile(Object tileId, boolean writeData) throws DiskCacheFailedException {
+        resetAutoFlushMemoryTimer();
 
         DiskCachedTile tile = tiles.get(tileId);
         Raster raster = residentTiles.remove(tileId);

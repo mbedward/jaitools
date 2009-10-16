@@ -380,7 +380,7 @@ public final class DiskCachedTile implements CachedTile {
         RenderedImage img = owner.get();
         Raster raster = null;
 
-        if (img != null) {
+        if (file != null && img != null) {
             try {
                 strm = ImageIO.createImageInputStream(file);
 

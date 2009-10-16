@@ -27,6 +27,7 @@ import javax.media.jai.TileCache;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -86,6 +87,8 @@ public class TileCacheTest {
 
         assertTrue(cache.getMemoryCapacity() == DiskMemTileCache.DEFAULT_MEMORY_CAPACITY);
         assertTrue(cache.getMemoryThreshold() - DiskMemTileCache.DEFAULT_MEMORY_THRESHOLD < FLOAT_TOL);
+        assertTrue(cache.getAutoFlushMemoryInterval() == DiskMemTileCache.DEFAULT_AUTO_FLUSH_MEMORY_INTERVAL);
+        assertFalse(cache.isAutoFlushMemoryEnabled());
     }
 
 
@@ -226,6 +229,32 @@ public class TileCacheTest {
 
         cache.flush();
         assertTrue(cache.getNumTiles() == 0);
+    }
+
+    /**
+     * Test auto-flushing of resident tiles
+     */
+    @Test
+    public void testAutoFlush() {
+        System.out.println("   cache auto-flush:");
+
+        RenderedOp op = helper.simpleJAIOp(2, 2);
+        cache.setAutoFlushMemoryInterval(1000);
+        cache.setAutoFlushMemoryEnabled(true);
+
+        for (int i = 0; i < 5; i++) {
+            System.out.println(String.format("    - cycle %d", i+1));
+            op.getNewRendering().getTiles();
+            assertTrue(cache.getNumResidentTiles() == 4);
+
+            try {
+                Thread.sleep(2 * cache.getAutoFlushMemoryInterval());
+            } catch (InterruptedException ex) {
+                fail("test interrupted");
+            }
+
+            assertTrue(cache.getNumResidentTiles() == 0);
+        }
     }
 
     /**
