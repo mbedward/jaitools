@@ -84,9 +84,9 @@ public class DiskMemImage
 
     /**
      * The default memory capacity of the common tile cache in bytes
-     * (512 * 1024 * 1024 = 512 Mb)
+     * (256 * 1024 * 1024 = 256 Mb)
      */
-    public static final long DEFAULT_COMMON_CACHE_SIZE = 512L * 1024 * 1024;
+    public static final long DEFAULT_COMMON_CACHE_SIZE = 256L * 1024 * 1024;
     
     /** TileCache which will be shared bewtween all Images */
     private static DiskMemTileCache commonCache = null;
