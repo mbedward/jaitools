@@ -1,0 +1,82 @@
+#summary Demonstrates basic use of the DiskMemTileCache class.
+
+= !DiskMemTileCache demo =
+
+*module:* demo <br>
+*package:* jaitools.demo.tilecache
+
+This program demonstrates basic use of the [UtilsTileCache DiskMemTileCache] class. 
+
+The program begins by creating a new tile cache with a very small memory capacity:
+{{{
+/*
+ * We set the memory capacity of the cache to be too small for all tiles
+ * to be in memory concurrently in order to demonstrate cache actions.
+ */
+Map<String, Object> cacheParams = new HashMap<String, Object>();
+cacheParams.put(DiskMemTileCache.KEY_INITIAL_MEMORY_CAPACITY, 1L * 1024 * 1024);
+
+/*
+ * Create a new instance of DiskMemTileCache and add this as an observer
+ * so that we are notified about cache actions
+ */
+DiskMemTileCache cache = new DiskMemTileCache(cacheParams);
+cache.setDiagnostics(true);
+cache.addObserver(this);
+}}}
+
+The program then creates images with simple JAI operations. We specify that we want to use the custom tile cache by setting a rendering hint...
+
+{{{
+Map<RenderingHints.Key, Object> imgParams = new HashMap<RenderingHints.Key, Object>();
+...  // other hints set
+imgParams.put(JAI.KEY_TILE_CACHE, cache);
+
+RenderingHints hints = new RenderingHints(imgParams);
+}}}
+
+We could also have set the cache as JAI's default tile cache like this...
+{{{
+JAI.getDefaultInstance().setTileCache( cache );
+}}}
+
+When image tiles are added to the cache with its initial small memory capacity, the cache will swap tiles out to disk storage when it needs to free memory for each new tile. The program output (printed to the console) indicates this:
+{{{
+Requesting tiles. Cache has only enough memory capacity
+for 2 tiles
+
+Tile at java.awt.Point[x=0,y=0] added to cache and placed into memory
+Tile at java.awt.Point[x=256,y=0] added to cache and placed into memory
+Tile at java.awt.Point[x=256,y=0] removed from memory
+Tile at java.awt.Point[x=0,y=128] added to cache and placed into memory
+Tile at java.awt.Point[x=0,y=0] removed from memory
+Tile at java.awt.Point[x=128,y=0] added to cache and placed into memory
+Tile at java.awt.Point[x=0,y=128] removed from memory
+Tile at java.awt.Point[x=256,y=128] added to cache and placed into memory
+Tile at java.awt.Point[x=128,y=0] removed from memory
+Tile at java.awt.Point[x=128,y=128] added to cache and placed into memory
+6 tiles cached; 2 resident in memory
+}}}
+
+Next the example is repeated after increasing the memory capacity of the cache like this:
+{{{
+cache.setMemoryCapacity(5L * 1024 * 1024);
+}}}
+
+And the program output now shows that all tiles are stored in memory:
+{{{
+Repeating the tile request after increasing the
+memory capacity of the cache
+
+Tile at java.awt.Point[x=0,y=0] placed into memory
+Tile at java.awt.Point[x=0,y=0] accessed
+Tile at java.awt.Point[x=128,y=0] placed into memory
+Tile at java.awt.Point[x=128,y=0] accessed
+Tile at java.awt.Point[x=256,y=0] placed into memory
+Tile at java.awt.Point[x=256,y=0] accessed
+Tile at java.awt.Point[x=0,y=128] placed into memory
+Tile at java.awt.Point[x=0,y=128] accessed
+Tile at java.awt.Point[x=128,y=128] accessed
+Tile at java.awt.Point[x=256,y=128] accessed
+6 tiles cached; 6 resident in memory
+}}}
