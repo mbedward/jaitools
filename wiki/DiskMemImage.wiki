@@ -9,7 +9,7 @@
 
 This class serves the same purpose as JAI's standard !TiledImage class: namely, a writable image that can accommodate a variety of data types, an optional !ColorModel, and data arranged in tiles. However, unlike !TiledImage, !DiskMemImage uses disk as well as memory storage to allow very large images to be handled in limited memory.
 
-Each instance of !DiskMemImage uses its own [UtilsTileCache DiskMemTileCache] to store image data on disk and hold the most recently accessed tiles in memory. The amount of memory used for tile storage can be controlled.
+By default, each instance of !DiskMemImage uses its own [UtilsTileCache DiskMemTileCache] to store image data on disk and hold the most recently accessed tiles in memory. The amount of memory used for tile storage can be controlled. You can also request that multiple !DiskMemImages share a common tile cache.
 
 !DiskMemImage implements the !WritableRenderedImage and !PlanarImage interfaces.
 
@@ -54,4 +54,22 @@ WritableRaster writing = img.getWritableTile(tileX, tileY);
 ... 
 // release the tile when finished
 img.releaseWritableTile(tileX, tileY);
+}}}
+
+You can specify that multiple images use a common tile cache like this...
+{{{
+// two images using a common DiskMemTileCache
+DiskMemImage img1 = ...
+img1.useCommonTileCache( true );
+
+DiskMemImage img2 = ...
+img2.useCommonTileCache( true );
+
+// some image operations that result in tile caching
+...
+
+// query some attributes of the common cache
+int numTiles = DiskMemImage.getCommonCache().getNumTiles();
+long memInUse = DiskMemImage.getCommonCache().getCurrentMemory();
+}}}
 }}}
