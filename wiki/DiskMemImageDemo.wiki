@@ -53,3 +53,5 @@ And display it with an !ImageFrame...
 ImageFrame frame = new ImageFrame(img, "Image of 4 square tiles");
 frame.setVisible(true);
 }}}
+
+http://jai-tools.googlecode.com/svn/wiki/images/drawingdemo.gif
