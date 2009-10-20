@@ -32,6 +32,8 @@ import java.awt.image.SampleModel;
 import java.awt.image.TileObserver;
 import java.awt.image.WritableRaster;
 import java.awt.image.WritableRenderedImage;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,10 +42,34 @@ import javax.media.jai.PlanarImage;
 
 /**
  * A tiled image class similar to JAI's standard {@code TiledImage} that uses a
- * {@code DiskMemTileCache} to manage its data. All images tiles are cached on disk
- * with a subset (most recently used) also being cached in memory for faster access.
- * This allows very large images to be handled that would otherwise exhaust
- * the system's memory, albeit at the cost of disk I/O leading to slower tile access.
+ * {@code DiskMemTileCache} to manage its data. Image tiles are cached in memory 
+ * and, if the volume of image data is greater than available memory, also on disk
+ * as temporary files. When a tile is accessed it is swapped into memory if not 
+ * already resident. Thus, very large images can be handled, albeit at the cost of
+ * disk I/O.
+ * <p>
+ * By default, each {@code DiskMemImage} uses its own tile cache but it is also
+ * possible for images to share a common tile cache as shown here:
+ * <pre><code>
+ *     DiskMemImage image1 = new DiskMemImage(...);
+ *     image1.useCommonTileCache(true);
+ *
+ *     DiskMemImage image2 = new DiskMemImage(...);
+ *     image2.useCommonTileCache(true);
+ *
+ *     DiskMemImage image3 = new DiskMemImage(...);
+ * </code></pre>
+ * In the example above, image1 and image2 will share a common tile cache while
+ * image3 will use a separate, exclusive tile cache. You can test whether an
+ * image is using the common cache like this:
+ * <pre><code>
+ *     boolean usingCommonCache = image.isUsingCommonTileCache();
+ * </code></pre>
+ * The memory capacity of the common cache can be set like this:
+ * <pre><code>
+ *     long memCapacity = 128 * 1024 * 1024; // 128 Mb
+ *     DiskMemImage.getCommonCache().setMemoryCapacity(memCapacity);
+ * </code></pre>
  *
  * @see DiskMemTileCache
  * 
@@ -55,8 +81,53 @@ import javax.media.jai.PlanarImage;
 public class DiskMemImage
         extends PlanarImage
         implements WritableRenderedImage {
+
+    /**
+     * The default memory capacity of the common tile cache in bytes
+     * (512 * 1024 * 1024 = 512 Mb)
+     */
+    public static final long DEFAULT_COMMON_CACHE_SIZE = 512L * 1024 * 1024;
     
+    /** TileCache which will be shared bewtween all Images */
+    private static DiskMemTileCache commonCache = null;
+
+    /**
+     * Get the common tile cache. The common cache may not be in use
+     * by any existing images.
+     *
+     * @return the common tile cache
+     *
+     * @see #isUsingCommonCache()
+     * @see #setUseCommonCache(boolean)
+     */
+    public static DiskMemTileCache getCommonTileCache() {
+        if (commonCache == null) {
+            commonCache = createNewCache();
+        }
+        return commonCache;
+    }
+
+    /**
+     * Create a new tile cache.
+     *
+     * @return a new instance of {@code DiskMemTileCache}
+     */
+    private static DiskMemTileCache createNewCache() {
+        Map<String, Object> cacheParams = new HashMap<String, Object>();
+        cacheParams.put(DiskMemTileCache.KEY_INITIAL_MEMORY_CAPACITY, Long.valueOf(DEFAULT_COMMON_CACHE_SIZE));
+        cacheParams.put(DiskMemTileCache.KEY_ALWAYS_DISK_CACHE, Boolean.FALSE);
+        DiskMemTileCache cache = new DiskMemTileCache(cacheParams);
+        cache.setDiagnostics(false);
+
+        return cache;
+    }
+
+    /**
+     * The tile cache in use by this image. It may or may not be the 
+     * common tile cache.
+     */
     private DiskMemTileCache tileCache;
+
     private Rectangle tileGrid;
     private boolean[][] tileInUse;
     private int numTilesInUse;
@@ -200,13 +271,15 @@ public class DiskMemImage
         tileInUse = new boolean[tileGrid.width][tileGrid.height];
         numTilesInUse = 0;
 
-        tileCache = new DiskMemTileCache();
-
         DataBuffer db = tileSampleModel.createDataBuffer();
         tileMemorySize = DataBuffer.getDataTypeSize(db.getDataType()) / 8L *
                 db.getSize() * db.getNumBanks();
 
         tileObservers = CollectionFactory.newSet();
+
+        // just to remind us that we are deferring creation of
+        // the tile cache
+        tileCache = null;
     }
 
     /**
@@ -221,10 +294,10 @@ public class DiskMemImage
     public Raster getTile(int tileX, int tileY) {
         Raster r = null;
         if (tileGrid.contains(tileX, tileY)) {
-            r = tileCache.getTile(this, tileX, tileY);
+            r = getTileCache().getTile(this, tileX, tileY);
             if (r == null) {
                 r = createTile(tileX, tileY);
-                tileCache.add(this, tileX, tileY, r);
+                getTileCache().add(this, tileX, tileY, r);
             }
         }
 
@@ -262,10 +335,10 @@ public class DiskMemImage
                 return null;
             }
 
-            r = (WritableRaster) tileCache.getTile(this, tileX, tileY);
+            r = (WritableRaster) getTileCache().getTile(this, tileX, tileY);
             if (r == null) {
                 r = createTile(tileX, tileY);
-                tileCache.add(this, tileX, tileY, r);
+                getTileCache().add(this, tileX, tileY, r);
             }
 
             tileInUse[tileX - tileGrid.x][tileY - tileGrid.y] = true;
@@ -306,7 +379,7 @@ public class DiskMemImage
                  * if the system runs very low on memory.
                  */
                 try {
-                    tileCache.setTileChanged(this, tileX, tileY);
+                    getTileCache().setTileChanged(this, tileX, tileY);
 
                 } catch (Exception ex) {
                     Logger.getLogger(DiskMemImage.class.getName()).
@@ -591,23 +664,11 @@ public class DiskMemImage
     /**
      * Returns the maximum amount of memory, in bytes, that this
      * image will use for in-memory storage of its data. Since
-     * this class uses a dedicated <code>DiskMemTileCache</code>
-     * object, all image data are cached on disk during the lifetime
-     * of the image, with tiles being loaded into memory as required.
+     * this class uses a <code>DiskMemTileCache</code> this is not
+     * the limit of image size.
      */
     public long getMemoryCapacity() {
-        return tileCache.getMemoryCapacity();
-    }
-
-    /**
-     * Set the maximum amount of memory, in bytes, that this image
-     * will use for in-memory storage of its tiles. All tiles are
-     * also cached on disk during the lifetime of the image.
-     *
-     * @param memCapacity maximum memory capacity for image tiles (in bytes)
-     */
-    public void setMemoryCapacity(long memCapacity) {
-        tileCache.setMemoryCapacity(memCapacity);
+        return getTileCache().getMemoryCapacity();
     }
 
     /**
@@ -621,21 +682,94 @@ public class DiskMemImage
     }
 
     /**
+     * Set whether this image will use the common tile cache. Any tiles
+     * belonging to this image that are already cached will be transferred
+     * from the image's current tile cache to the common cache (if {@code useCommon}
+     * is {@code true}) or to a new exclusive tile cache ((if {@code useCommon}
+     * is {@code false}).
+     * <p>
+     * By default, the image will use an exclusive cache.
+     *
+     * @param useCommon true to set this image to use the common tile cache; false
+     *        for the image to use its own exclusive cache.
+     *
+     * @see #getCommonTileCache()
+     * @see #isUsingCommonCache()
+     */
+    public void setUseCommonCache(boolean useCommon) {
+        if (useCommon && !isUsingCommonCache()) {
+            /*
+             * transfer any existing tiles to the common cache
+             */
+            if (tileCache != null) {
+                for (int y = getMinTileY(), ny = 0; ny < getNumYTiles(); y++, ny++) {
+                    for (int x = getMinTileX(), nx = 0; nx < getNumXTiles(); x++, nx++) {
+                        Raster tile = tileCache.getTile(this, x, y);
+                        if (tile != null) {
+                            getCommonTileCache().add(this, x, y, (WritableRaster)tile);
+                            tileCache.remove(this, x, y);
+                        }
+                    }
+                }
+            }
+            tileCache = getCommonTileCache();
+
+        } else if (isUsingCommonCache()) {
+            /*
+             * transfer any existing tiles from the common cache to
+             * this images new exclusive cache
+             */
+            DiskMemTileCache newCache = createNewCache();
+            for (int y = getMinTileY(), ny = 0; ny < getNumYTiles(); y++, ny++) {
+                for (int x = getMinTileX(), nx = 0; nx < getNumXTiles(); x++, nx++) {
+                    Raster tile = getCommonTileCache().getTile(this, x, y);
+                    if (tile != null) {
+                        newCache.add(this, x, y, (WritableRaster)tile);
+                        getCommonTileCache().remove(this, x, y);
+                    }
+                }
+            }
+            tileCache = newCache;
+        }
+    }
+
+    /**
      * Retrieve a reference to the <code>DiskMemTileCache</code> instance
      * that is being used by this image. This method is intended for client
      * code that wishes to query cache state or receive cache diagnostic
      * messages (via the <code>Observer</code> interface). It is probably <b>not</b>
-     * a good idea to manipulate the cache state directly !
+     * a good idea to manipulate the cache state directly.
      *
-     * @return a live reference to the cache being used exclusively by this image
+     * @return a live reference to the cache being used by this image
+     * @see #isUsingCommonCache()
      * @see DiskMemTileCache
      */
     public DiskMemTileCache getTileCache() {
+        if (tileCache == null) {
+            tileCache = createNewCache();
+        }
+
         return tileCache;
     }
 
+    /**
+     * Check if this image is using the common tile cache.
+     *
+     * @return true if using the common tile cache; false otherwise
+     * @see #setUseCommonCache(boolean)
+     */
+    public boolean isUsingCommonCache() {
+        return tileCache != null && tileCache == commonCache;
+    }
+
+    /**
+     * Create a new image tile
+     * @param tileX the tile's column in the tile grid
+     * @param tileY the tile's row in the tile grid
+     * @return the new tile
+     */
     private WritableRaster createTile(int tileX, int tileY) {
-        assert(tileCache.getTile(this, tileX, tileY) == null);
+        assert(getTileCache().getTile(this, tileX, tileY) == null);
 
         Point location = new Point(tileXToX(tileX), tileYToY(tileY));
         return createWritableRaster(getSampleModel(), location);

@@ -66,6 +66,7 @@ public class ImageGraphicsTest extends TiledImageTestBase {
     private final int ALPHA_INDEX = 3;
 
     private long tileMemSize;
+    private DiskMemImage image;
     private Graphics2D gr;
 
     @Before
