@@ -32,8 +32,6 @@ import java.awt.image.SampleModel;
  */
 public abstract class TiledImageTestBase {
 
-    protected DiskMemImage image;
-
     protected DiskMemImage makeImage(int tileWidth, int xTiles, int yTiles) {
         ColorModel cm = ColorModel.getRGBdefault();
         SampleModel sm = cm.createCompatibleSampleModel(tileWidth, tileWidth);

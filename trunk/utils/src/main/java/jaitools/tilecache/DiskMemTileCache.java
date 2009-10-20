@@ -390,7 +390,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
                 } catch (DiskCacheFailedException ex) {
                     /*
                      * It would be nicer to just throw this exception
-                     * upwards be we can't in the overidden method
+                     * upwards but we can't in the overidden method
                      */
                     Logger.getLogger(DiskMemTileCache.class.getName()).
                             log(Level.SEVERE, null, ex);
@@ -398,7 +398,6 @@ public class DiskMemTileCache extends Observable implements TileCache {
             }
         }
 
-        tiles.remove(key);
         tile.deleteDiskCopy();
 
         tile.setAction(DiskCachedTile.TileAction.ACTION_REMOVED);
@@ -406,6 +405,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
             setChanged();
             notifyObservers(tile);
         }
+
+        tiles.remove(key);
     }
 
     
@@ -492,7 +493,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
         int k = 0;
         for (Object key : keys) {
             DiskCachedTile tile = tiles.get(key);
-            Raster r = residentTiles.get(tile);
+            Raster r = residentTiles.get(tile.getTileId());
             if (r == null) {
                 r = tile.readData();
                 makeResident(tile, r);
@@ -711,8 +712,24 @@ public class DiskMemTileCache extends Observable implements TileCache {
         }
     }
 
+    /**
+     * Get the amount of memory, in bytes, allocated for storage of
+     * resident tiles.
+     *
+     * @return resident tile memory capacity in bytes
+     */
     public long getMemoryCapacity() {
         return memCapacity;
+    }
+
+    /**
+     * Get the amount of memory currently being used for storage of
+     * memory-resident tiles
+     *
+     * @return current memory use in bytes
+     */
+    public long getCurrentMemory() {
+        return curMemory;
     }
 
     /**

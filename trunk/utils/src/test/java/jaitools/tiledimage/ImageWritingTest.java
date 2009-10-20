@@ -47,6 +47,8 @@ public class ImageWritingTest extends TiledImageTestBase {
     private static final int XTILES = 2;
     private static final int YTILES = 3;
 
+    private DiskMemImage image;
+
     @Before
     public void setup() {
         image = makeImage(TILE_WIDTH, XTILES, YTILES);
