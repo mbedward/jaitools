@@ -1,14 +1,16 @@
-#summary Small, demo programs for JAI-tools components
+#summary Small, example programs for JAI-tools components
 
-=Demo programs=
+=Example programs=
 
 These are short programs that illustrate the use of the JAI-tools operators, utility classes and the Jiffle language.
 
-You can download or browse the source of the demos [http://code.google.com/p/jai-tools/source/checkout here].
+You can download or browse the source of the examples [http://code.google.com/p/jai-tools/source/checkout here].
 
-The following pages describe each of the demo programs...
+The following pages describe each of the example programs...
 
-* [DiskMemTileCacheDemo DiskMemTileCache] demo
+* [DiskMemTileCacheDemo DiskMemTileCache] example
+
+* [DiskMemImageDemo DiskMemImage] example
 
 * [KernelStatsDemo KernelStats] operator
 
