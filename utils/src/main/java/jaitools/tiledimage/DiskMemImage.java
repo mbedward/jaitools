@@ -108,6 +108,21 @@ public class DiskMemImage
     }
 
     /**
+     * Sets a new common cache. If a common cache has already been
+     * initialized (either with this method or via {@linkplain #setUseCommonCache})
+     * this method does nothing.
+     *
+     * @param newCache the cache instance to use as the common tile
+     *        cache for {@code DiskMemImage} objects ({@code null}
+     *        arguments are ignored)
+     */
+    public static void setCommonTileCache(DiskMemTileCache newCache) {
+        if (newCache != null && commonCache == null) {
+            commonCache = newCache;
+        }
+    }
+
+    /**
      * Create a new tile cache.
      *
      * @return a new instance of {@code DiskMemTileCache}
@@ -124,17 +139,60 @@ public class DiskMemImage
 
     /**
      * The tile cache in use by this image. It may or may not be the 
-     * common tile cache.
+     * common tile cache. Ahthough this is a {@code protected} field,
+     * it is recommended that sub-classes use {@linkplain #getTileCache()}
+     * for general purposes.
      */
-    private DiskMemTileCache tileCache;
+    protected DiskMemTileCache tileCache;
 
-    private Rectangle tileGrid;
-    private boolean[][] tileInUse;
-    private int numTilesInUse;
+    /**
+     * Defines the valid range of tile x and y coordinates.
+     *
+     * @see #getMinTileX()
+     * @see #getMinTileY()
+     * @see #getMaxTileX()
+     * @see #getMaxTileY()
+     * @see #getNumXTiles()
+     * @see #getNumYTiles()
+     */
+    protected Rectangle tileGrid;
 
-    private long tileMemorySize;
+    /**
+     * A 2D array with dimensions corresponding to the tile grid width
+     * and height. It flags which tiles are currently checked out for
+     * writing.
+     *
+     * @see #getWritableTile(int, int)
+     * @see #releaseWritableTile(int, int)
+     * @see #getWritableTileIndices()
+     * @see #isTileWritable(int, int)
+     */
+    protected boolean[][] tileInUse;
 
-    private Set<TileObserver> tileObservers;
+    /**
+     * The number of tiles that are currently checked out
+     * for writing
+     *
+     * @see #getWritableTileIndices()
+     */
+    protected int numTilesInUse;
+
+    /**
+     * The amount of memory (in bytes) required to hold
+     * the data for an image tile
+     * 
+     * @see #getTileMemorySize()
+     */
+    protected long tileMemorySize;
+
+    /**
+     * The set of tile observers currently registered with
+     * this image
+     *
+     * @see #addTileObserver(java.awt.image.TileObserver)
+     * @see #removeTileObserver(java.awt.image.TileObserver)
+     */
+    protected Set<TileObserver> tileObservers;
 
     /**
      * Minimal constructor. This will set default values for the image's
@@ -672,7 +730,7 @@ public class DiskMemImage
     }
 
     /**
-     * Returns the amount of memory (bytes) required to store a single image
+     * Returns the amount of memory (bytes) required to store a single
      * tile's data
      *
      * @return tile memory size in bytes
