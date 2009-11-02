@@ -18,6 +18,8 @@ Two control options are provided:
 
 The two options may be used together. If neither masking option is required it is preferable to use the standard JAI Convolve operator for faster processing.
 
+If there is no convolution result for a destination image pixel, either because it was not included in a destination mask or had no kernel values included in a source mask, it will be set to a flag value. This can be specified using the `nilValue` parameter (default is 0).
+
 ==Example of use==
 {{{
 RenderedImage img = ...
