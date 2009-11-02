@@ -62,16 +62,19 @@ public class MaskedConvolveRIF implements RenderedImageFactory {
         BorderExtender extender = RIFUtil.getBorderExtenderHint(renderHints);
 
         KernelJAI unRotatedKernel =
-                (KernelJAI) paramBlock.getObjectParameter(MaskedConvolveDescriptor.KERNEL_ARG_INDEX);
+                (KernelJAI) paramBlock.getObjectParameter(MaskedConvolveDescriptor.KERNEL_ARG);
         KernelJAI kJAI = unRotatedKernel.getRotatedKernel();
 
-        ROI roi = (ROI) paramBlock.getObjectParameter(MaskedConvolveDescriptor.ROI_ARG_INDEX);
+        ROI roi = (ROI) paramBlock.getObjectParameter(MaskedConvolveDescriptor.ROI_ARG);
         
         Boolean maskSrc = 
-                (Boolean) paramBlock.getObjectParameter(MaskedConvolveDescriptor.MASKSRC_ARG_INDEX);
+                (Boolean) paramBlock.getObjectParameter(MaskedConvolveDescriptor.MASKSRC_ARG);
         
         Boolean maskDest = 
-                (Boolean) paramBlock.getObjectParameter(MaskedConvolveDescriptor.MASKDEST_ARG_INDEX);
+                (Boolean) paramBlock.getObjectParameter(MaskedConvolveDescriptor.MASKDEST_ARG);
+
+        Number nilValue =
+                (Number) paramBlock.getObjectParameter(MaskedConvolveDescriptor.NIL_VALUE_ARG);
         
         return new MaskedConvolveOpImage(paramBlock.getRenderedSource(0),
                 extender,
@@ -80,7 +83,8 @@ public class MaskedConvolveRIF implements RenderedImageFactory {
                 kJAI,
                 roi,
                 maskSrc,
-                maskDest);
+                maskDest,
+                nilValue);
     }
 }
 
