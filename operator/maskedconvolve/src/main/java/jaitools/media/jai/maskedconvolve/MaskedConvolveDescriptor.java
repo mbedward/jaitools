@@ -45,6 +45,11 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * </ul>The two options may be used together. If neither masking option
  * is required it is prefereable to use the "Convolve" operator for faster processing.
  * <p>
+ * If there is no convolution result for a destination image pixel, either because it
+ * was not included in a destination mask or had no kernel values included in a
+ * source mask, it will be set to a flag value. This can be set using the {@code nilValue}
+ * parameter (default is 0).
+ *
  * Example of use:
  * <pre><code>
  * RenderedImage img = ...
@@ -64,6 +69,8 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * pb.setSource("source0", op0);
  * pb.setParameter("kernel", kernel);
  * pb.setParameter("roi", roi);
+ * pb.setParameter("nilValue", Integer.valueOf(-1));
+ * 
  * // no need to set masksource and maskdest params if we want to
  * // use their default values (TRUE)
  * 
@@ -83,28 +90,32 @@ import javax.media.jai.registry.RenderedRegistryMode;
  */
 public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
 
-    static final int KERNEL_ARG_INDEX = 0;
-    static final int ROI_ARG_INDEX = 1;
-    static final int MASKSRC_ARG_INDEX = 2;
-    static final int MASKDEST_ARG_INDEX = 3;
+    static final int KERNEL_ARG = 0;
+    static final int ROI_ARG = 1;
+    static final int MASKSRC_ARG = 2;
+    static final int MASKDEST_ARG = 3;
+    static final int NIL_VALUE_ARG = 4;
 
     private static final String[] paramNames =
         {"kernel",
          "roi",
          "masksource",
-         "maskdest"};
+         "maskdest",
+         "nilvalue"};
 
     private static final Class[] paramClasses =
         {javax.media.jai.KernelJAI.class,
          javax.media.jai.ROI.class,
          Boolean.class,
-         Boolean.class};
+         Boolean.class,
+         Number.class};
 
     private static final Object[] paramDefaults =
         {NO_PARAMETER_DEFAULT,
          NO_PARAMETER_DEFAULT,
          Boolean.TRUE,
-         Boolean.TRUE};
+         Boolean.TRUE,
+         Integer.valueOf(0)};
 
     /** Constructor. */
     public MaskedConvolveDescriptor() {
@@ -115,15 +126,19 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
                     {"Description", "Convolve a rendered image masked by an associated ROI"},
                     {"DocURL", "http://code.google.com/p/jai-tools/"},
                     {"Version", "0.0.1"},
-                    {"arg0Desc", "kernel - a JAI Kernel object"},
-                    {"arg1Desc", "roi - an ROI object which must have the same pixel bounds" +
-                        "as the source iamge"},
-                    {"arg2Desc", "masksource (Boolean, default=true):" +
+                    {"arg0Desc", paramNames[0] + " - a JAI Kernel object"},
+                    {"arg1Desc", paramNames[1] + " - an ROI object which must have the same " +
+                             "pixel bounds as the source iamge"},
+                    {"arg2Desc", paramNames[2] + " (Boolean, default=true):" +
                              "if TRUE (default) only the values of source pixels where" +
                              "roi.contains is true contribute to the convolution"},
-                    {"arg3Desc", "maskdest (Boolean): " +
+                    {"arg3Desc", paramNames[3] + " (Boolean): " +
                              "if TRUE (default) convolution is only performed" +
-                             "for pixels where roi.contains is true"}
+                             "for pixels where roi.contains is true"},
+                    {"arg4Desc", paramNames[4] + " (Number): " +
+                             "the value to write to the destination image for pixels where " +
+                             "there is no convolution result"}
+
                 },
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
                 
@@ -140,15 +155,25 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
     /**
      * Convenience method which constructs a {@link ParameterBlockJAI} and
      * invokes {@code JAI.create("maskedconvolve", params) }
+     * 
      * @param source0 the image to be convolved
+     *
      * @param kernel convolution kernel
+     *
      * @param roi the roi controlling convolution (must have the same pixel bounds
-     * as the source image)
+     *        as the source image)
+     *
      * @param maskSource if TRUE only the values of source pixels where
-     * {@code roi.contains} is true contribute to the convolution
-     * @param maskDest if TRUE convolution is only performed for pixels where 
-     * {@code roi.contains} is true
+     *        {@code roi.contains} is true contribute to the convolution
+     *
+     * @param maskDest if TRUE convolution is only performed for pixels where
+     *        {@code roi.contains} is true
+     *
+     * @param nilValue value to write to the destination image for pixels where
+     *        there is no convolution result
+     * 
      * @param hints useful for specifying a border extender; may be null
+     *
      * @return the RenderedOp destination
      * @throws IllegalArgumentException if any args are null
      */
@@ -158,16 +183,18 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
             ROI roi,
             Boolean maskSource,
             Boolean maskDest,
+            Number nilValue,
             RenderingHints hints) {
         ParameterBlockJAI pb =
                 new ParameterBlockJAI("MaskedConvolve",
                 RenderedRegistryMode.MODE_NAME);
 
         pb.setSource("source0", source0);
-        pb.setParameter("kernel", kernel);
-        pb.setParameter("roi", roi);
-        pb.setParameter("masksource", maskSource);
-        pb.setParameter("maskdest", maskDest);
+        pb.setParameter(paramNames[KERNEL_ARG], kernel);
+        pb.setParameter(paramNames[ROI_ARG], roi);
+        pb.setParameter(paramNames[MASKSRC_ARG], maskSource);
+        pb.setParameter(paramNames[MASKDEST_ARG], maskDest);
+        pb.setParameter(paramNames[NIL_VALUE_ARG], nilValue);
 
         return JAI.create("MaskedConvolve", pb, hints);
     }
