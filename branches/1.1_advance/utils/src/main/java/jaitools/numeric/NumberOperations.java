@@ -567,7 +567,7 @@ public class NumberOperations {
 
     /**
      * Creates a new Byte taking its value (unsigned and possibly clamped)
-     * form {@code source}
+     * from {@code source}
      *
      * @param source the value to copy
      *
@@ -587,7 +587,7 @@ public class NumberOperations {
 
     /**
      * Creates a new Short taking its value (possibly clamped)
-     * form {@code source}
+     * from {@code source}
      *
      * @param source the value to copy
      *
@@ -607,7 +607,7 @@ public class NumberOperations {
 
     /**
      * Creates a new Integer taking its value (possibly clamped)
-     * form {@code source}
+     * from {@code source}
      *
      * @param source the value to copy
      *
@@ -627,7 +627,7 @@ public class NumberOperations {
 
     /**
      * Creates a new Long taking its value (possibly clamped)
-     * form {@code source}
+     * from {@code source}
      *
      * @param source the value to copy
      *
@@ -640,7 +640,7 @@ public class NumberOperations {
 
     /**
      * Creates a new Float taking its value (possibly clamped)
-     * form {@code source}
+     * from {@code source}
      *
      * @param source the value to copy
      *
@@ -653,7 +653,7 @@ public class NumberOperations {
 
     /**
      * Creates a new Double taking its value (possibly clamped)
-     * form {@code source}
+     * from {@code source}
      *
      * @param source the value to copy
      *
