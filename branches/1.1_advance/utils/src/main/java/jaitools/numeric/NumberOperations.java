@@ -225,14 +225,72 @@ public class NumberOperations {
     }
 
     /**
+     * Safely convert the argument to an {@code int} value. The following conventions apply:
+     * <ul>
+     * <li> Byte values are handled as unsigned (e.g. range 0 - 255)
+     * <li> Float or Double NaN arguments are converted to 0
+     * <li> Float or Double POSITIVE_INFINITY is converted to Integer.MAX_VALUE
+     * <li> Float or Double NEGATIVE_INFINITY is converted to Integer.MIN_VALUE
+     * </ul>
+     * 
+     * @param number the object to convert
+     *
+     * @return the object value as an {@code int}
+     */
+    public static int intValue(Number number) {
+        ClassInfo ci = ClassInfo.get(number.getClass());
+        int value = 0;
+
+        switch (ci) {
+            case BYTE:
+                value = number.intValue() & 0xff;
+                break;
+
+            case SHORT:
+            case INTEGER:
+                value = number.intValue();
+                break;
+
+            case LONG:
+                value = (int) Math.min(Math.max(number.longValue(), Integer.MIN_VALUE), Integer.MAX_VALUE);
+                break;
+
+            case FLOAT:
+                Float f = (Float) number;
+                if (f.isNaN()) {
+                    value = 0;
+                } else if (f.isInfinite()) {
+                    value = f.equals(Float.NEGATIVE_INFINITY) ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+                } else {
+                    value = (int) Math.max( Math.min(number.floatValue(), Integer.MAX_VALUE), Integer.MIN_VALUE );
+                }
+
+            case DOUBLE:
+                Double d = (Double) number;
+                if (d.isNaN()) {
+                    value = 0;
+                } else if (d.isInfinite()) {
+                    value = d.equals(Double.NEGATIVE_INFINITY) ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+                } else {
+                    value = (int) Math.max( Math.min(number.doubleValue(), Integer.MAX_VALUE), Integer.MIN_VALUE );
+                }
+
+            default:
+                throw new IllegalStateException("Unrecognized number class: " + number.getClass().getName());
+        }
+
+        return value;
+    }
+
+    /**
      * Safely convert the argument to a {@code long} value. The following conventions apply:
      * <ul>
      * <li> Byte values are handled as unsigned (e.g. range 0 - 255)
-     * <li> Float or Double NaN arguments is converted to 0
+     * <li> Float or Double NaN arguments are converted to 0
      * <li> Float or Double POSITIVE_INFINITY is converted to Long.MAX_VALUE
      * <li> Float or Double NEGATIVE_INFINITY is converted to Long.MIN_VALUE
      * </ul>
-     * 
+     *
      * @param number the object to convert
      *
      * @return the object value as a {@code long}
