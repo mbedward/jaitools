@@ -14,7 +14,7 @@ Because it lends itself to being an easy to learn, application scripting languag
 
 ===Can it deal with large images ?===
 
-Jiffle uses JAI iterators for input and output so you can work with large tiled images.
+You can use Jiffle with DiskMemImage to work with very large images. 
 
 ===What image data types does Jiffle deal with ?===
 
