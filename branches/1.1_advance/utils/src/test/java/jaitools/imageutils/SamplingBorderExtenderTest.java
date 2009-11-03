@@ -25,37 +25,50 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.DataBuffer;
 import java.awt.image.WritableRaster;
-import javax.media.jai.JAI;
-import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.PlanarImage;
 import javax.media.jai.RasterFactory;
+import javax.media.jai.TiledImage;
+import javax.media.jai.iterator.RectIter;
+import javax.media.jai.iterator.RectIterFactory;
+import javax.media.jai.iterator.WritableRectIter;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
- * Unit tests for RandomBorderExtender
+ * Unit tests for SamplingBorderExtender
  *
  * @author Michael Bedward
  * @since 1.1
  * @source $URL$
  * @version $Id$
  */
-public class RandomBorderExtenderTest {
+public class SamplingBorderExtenderTest {
 
     private static final int SOURCE_WIDTH = 100;
     private static final int BUFFER_WIDTH = 2;
+    private static final int SAMPLE_DISTANCE = 5;
 
     private static PlanarImage sourceImage;
 
     @BeforeClass
     public static void setup() {
-       ParameterBlockJAI pb = new ParameterBlockJAI("constant");
-        pb.setParameter("width", (float)SOURCE_WIDTH);
-        pb.setParameter("height", (float)SOURCE_WIDTH);
-        pb.setParameter("bandValues", new Integer[] { 0 });
+        TiledImage timg = ImageUtils.createDoubleImage(SOURCE_WIDTH, SOURCE_WIDTH);
+        WritableRectIter iter = RectIterFactory.createWritable(timg, null);
+        double y = 0d;
+        double x = 0d;
+        do {
+            do {
+                iter.setSample(x + y);
+            } while (!iter.nextPixelDone());
 
-        sourceImage = JAI.create("constant", pb);
+            iter.startPixels();
+            x = 0d;
+            y++ ;
+
+        } while (!iter.nextLineDone());
+
+        sourceImage = timg;
     }
 
     @Test
@@ -64,10 +77,10 @@ public class RandomBorderExtenderTest {
 
         WritableRaster raster = createRaster(DataBuffer.TYPE_BYTE);
 
-        RandomBorderExtender ex = new RandomBorderExtender(-10, 10);
+        SamplingBorderExtender ex = new SamplingBorderExtender(SAMPLE_DISTANCE);
         ex.extend(raster, sourceImage);
 
-        checkResultAsInt(raster, sourceImage.getBounds(), 0, 10);
+        checkResultAsInt(raster, sourceImage.getBounds());
     }
 
     @Test
@@ -76,10 +89,10 @@ public class RandomBorderExtenderTest {
 
         WritableRaster raster = createRaster(DataBuffer.TYPE_SHORT);
 
-        RandomBorderExtender ex = new RandomBorderExtender(-10, 10);
+        SamplingBorderExtender ex = new SamplingBorderExtender(SAMPLE_DISTANCE);
         ex.extend(raster, sourceImage);
 
-        checkResultAsInt(raster, sourceImage.getBounds(), -10, 10);
+        checkResultAsInt(raster, sourceImage.getBounds());
     }
 
     @Test
@@ -87,11 +100,7 @@ public class RandomBorderExtenderTest {
         System.out.println("   image type USHORT");
 
         WritableRaster raster = createRaster(DataBuffer.TYPE_USHORT);
-
-        RandomBorderExtender ex = new RandomBorderExtender(-10, 10);
-        ex.extend(raster, sourceImage);
-
-        checkResultAsInt(raster, sourceImage.getBounds(), 0, 10);
+        checkResultAsInt(raster, sourceImage.getBounds());
     }
 
     @Test
@@ -99,11 +108,7 @@ public class RandomBorderExtenderTest {
         System.out.println("   image type INT");
 
         WritableRaster raster = createRaster(DataBuffer.TYPE_INT);
-
-        RandomBorderExtender ex = new RandomBorderExtender(-10, 10);
-        ex.extend(raster, sourceImage);
-
-        checkResultAsInt(raster, sourceImage.getBounds(), -10, 10);
+        checkResultAsInt(raster, sourceImage.getBounds());
     }
 
     @Test
@@ -111,11 +116,7 @@ public class RandomBorderExtenderTest {
         System.out.println("   image type FLOAT");
 
         WritableRaster raster = createRaster(DataBuffer.TYPE_FLOAT);
-
-        RandomBorderExtender ex = new RandomBorderExtender(-10, 10);
-        ex.extend(raster, sourceImage);
-
-        checkResultAsDouble(raster, sourceImage.getBounds(), -10, 10);
+        checkResultAsDouble(raster, sourceImage.getBounds());
     }
 
     @Test
@@ -123,31 +124,68 @@ public class RandomBorderExtenderTest {
         System.out.println("   image type DOUBLE");
 
         WritableRaster raster = createRaster(DataBuffer.TYPE_DOUBLE);
-
-        RandomBorderExtender ex = new RandomBorderExtender(-10, 10);
-        ex.extend(raster, sourceImage);
-
-        checkResultAsDouble(raster, sourceImage.getBounds(), -10, 10);
+        checkResultAsDouble(raster, sourceImage.getBounds());
     }
 
-    private void checkResultAsInt(WritableRaster raster, Rectangle srcRectangle, int minValue, int maxValue) {
+    private void checkResultAsInt(WritableRaster raster, Rectangle srcRectangle) {
+        SamplingBorderExtender ex = new SamplingBorderExtender(SAMPLE_DISTANCE);
+        ex.extend(raster, sourceImage);
+
+        Rectangle samplingArea = new Rectangle(0, 0, 2*SAMPLE_DISTANCE + 1, 2*SAMPLE_DISTANCE + 1);
+        RectIter iter;
+
         for (int y = raster.getMinY(), ny = 0; ny < raster.getHeight(); y++, ny++) {
             for (int x = raster.getMinX(), nx = 0; nx < raster.getWidth(); x++, nx++) {
                 if (!srcRectangle.contains(x, y)) {
                     int value = raster.getSample(x, y, 0);
-                    assertTrue(value >= minValue && value < maxValue);
+
+                    samplingArea.setLocation(x - SAMPLE_DISTANCE, y - SAMPLE_DISTANCE);
+                    Rectangle xRect = samplingArea.intersection(srcRectangle);
+                    iter = RectIterFactory.create(sourceImage, xRect);
+
+                    boolean found = false;
+                    do {
+                        do {
+                            if (iter.getSample() == value) {
+                                found = true;
+                            }
+                        } while (!found && !iter.nextPixelDone());
+                        iter.startPixels();
+                    } while (!found && !iter.nextLineDone());
+
+                    assertTrue(found);
                 }
             }
         }
     }
 
-    private void checkResultAsDouble(WritableRaster raster, Rectangle srcRectangle, double minValue, double maxValue) {
+    private void checkResultAsDouble(WritableRaster raster, Rectangle srcRectangle) {
+        SamplingBorderExtender ex = new SamplingBorderExtender(SAMPLE_DISTANCE);
+        ex.extend(raster, sourceImage);
+
+        Rectangle samplingArea = new Rectangle(0, 0, 2*SAMPLE_DISTANCE + 1, 2*SAMPLE_DISTANCE + 1);
+        RectIter iter;
+
         for (int y = raster.getMinY(), ny = 0; ny < raster.getHeight(); y++, ny++) {
             for (int x = raster.getMinX(), nx = 0; nx < raster.getWidth(); x++, nx++) {
                 if (!srcRectangle.contains(x, y)) {
                     double value = raster.getSampleDouble(x, y, 0);
-                    assertTrue(DoubleComparison.dcomp(value, minValue) >= 0);
-                    assertTrue(DoubleComparison.dcomp(value, maxValue) < 0);
+
+                    samplingArea.setLocation(x - SAMPLE_DISTANCE, y - SAMPLE_DISTANCE);
+                    Rectangle xRect = samplingArea.intersection(srcRectangle);
+                    iter = RectIterFactory.create(sourceImage, xRect);
+
+                    boolean found = false;
+                    do {
+                        do {
+                            if (DoubleComparison.dequal(value, iter.getSample())) {
+                                found = true;
+                            }
+                        } while (!found && !iter.nextPixelDone());
+                        iter.startPixels();
+                    } while (!found && !iter.nextLineDone());
+
+                    assertTrue(found);
                 }
             }
         }

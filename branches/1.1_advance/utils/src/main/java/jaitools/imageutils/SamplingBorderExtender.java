@@ -94,7 +94,7 @@ public class SamplingBorderExtender extends BorderExtender {
 
     private void extendAsByte(WritableRaster raster, PlanarImage sourceImage) {
         Rectangle bounds = sourceImage.getBounds();
-        Rectangle samplingBounds = new Rectangle(0, 0, 2 * maxDistance + 1, 2 * maxDistance);
+        Rectangle samplingBounds = new Rectangle(0, 0, 2 * maxDistance + 1, 2 * maxDistance + 1);
         RandomIter srcIter = RandomIterFactory.create(sourceImage, bounds);
 
         int[] pixel = new int[raster.getNumBands()];
@@ -107,7 +107,7 @@ public class SamplingBorderExtender extends BorderExtender {
                     int sy = rand.nextInt(sourceSamplingBounds.height) + sourceSamplingBounds.y;
                     srcIter.getPixel(sx, sy, pixel);
                     for (int b = 0; b < raster.getNumBands(); b++) {
-                        raster.setSample(x, y, b, clamp(pixel[b] & 0xff, 0, 255));
+                        raster.setSample(x, y, b, pixel[b] & 0xff);
                     }
                 }
             }
@@ -116,7 +116,7 @@ public class SamplingBorderExtender extends BorderExtender {
 
     private void extendAsShort(WritableRaster raster, PlanarImage sourceImage) {
         Rectangle bounds = sourceImage.getBounds();
-        Rectangle samplingBounds = new Rectangle(0, 0, 2 * maxDistance + 1, 2 * maxDistance);
+        Rectangle samplingBounds = new Rectangle(0, 0, 2 * maxDistance + 1, 2 * maxDistance + 1);
         RandomIter srcIter = RandomIterFactory.create(sourceImage, bounds);
 
         int[] pixel = new int[raster.getNumBands()];
@@ -138,7 +138,7 @@ public class SamplingBorderExtender extends BorderExtender {
 
     private void extendAsUShort(WritableRaster raster, PlanarImage sourceImage) {
         Rectangle bounds = sourceImage.getBounds();
-        Rectangle samplingBounds = new Rectangle(0, 0, 2 * maxDistance + 1, 2 * maxDistance);
+        Rectangle samplingBounds = new Rectangle(0, 0, 2 * maxDistance + 1, 2 * maxDistance + 1);
         RandomIter srcIter = RandomIterFactory.create(sourceImage, bounds);
 
         int[] pixel = new int[raster.getNumBands()];
@@ -160,7 +160,7 @@ public class SamplingBorderExtender extends BorderExtender {
 
     private void extendAsInt(WritableRaster raster, PlanarImage sourceImage) {
         Rectangle bounds = sourceImage.getBounds();
-        Rectangle samplingBounds = new Rectangle(0, 0, 2 * maxDistance + 1, 2 * maxDistance);
+        Rectangle samplingBounds = new Rectangle(0, 0, 2 * maxDistance + 1, 2 * maxDistance + 1);
         RandomIter srcIter = RandomIterFactory.create(sourceImage, bounds);
 
         int[] pixel = new int[raster.getNumBands()];
@@ -180,7 +180,7 @@ public class SamplingBorderExtender extends BorderExtender {
 
     private void extendAsFloat(WritableRaster raster, PlanarImage sourceImage) {
         Rectangle bounds = sourceImage.getBounds();
-        Rectangle samplingBounds = new Rectangle(0, 0, 2 * maxDistance + 1, 2 * maxDistance);
+        Rectangle samplingBounds = new Rectangle(0, 0, 2 * maxDistance + 1, 2 * maxDistance + 1);
         RandomIter srcIter = RandomIterFactory.create(sourceImage, bounds);
 
         float[] pixel = new float[raster.getNumBands()];
@@ -200,7 +200,7 @@ public class SamplingBorderExtender extends BorderExtender {
 
     private void extendAsDouble(WritableRaster raster, PlanarImage sourceImage) {
         Rectangle bounds = sourceImage.getBounds();
-        Rectangle samplingBounds = new Rectangle(0, 0, 2 * maxDistance + 1, 2 * maxDistance);
+        Rectangle samplingBounds = new Rectangle(0, 0, 2 * maxDistance + 1, 2 * maxDistance + 1);
         RandomIter srcIter = RandomIterFactory.create(sourceImage, bounds);
 
         double[] pixel = new double[raster.getNumBands()];
