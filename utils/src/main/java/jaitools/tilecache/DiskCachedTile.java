@@ -27,6 +27,7 @@ import java.awt.image.DataBufferDouble;
 import java.awt.image.DataBufferFloat;
 import java.awt.image.DataBufferInt;
 import java.awt.image.DataBufferShort;
+import java.awt.image.DataBufferUShort;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.awt.image.WritableRaster;
@@ -506,8 +507,13 @@ public final class DiskCachedTile implements CachedTile {
                     break;
 
                     case DataBuffer.TYPE_USHORT: {
-                        throw new UnsupportedOperationException("Unsigned short image data not supported yet");
+                        short[][] bankData = new short[numBanks][dataLen];
+                        for (int i = 0; i < numBanks; i++) {
+                            strm.readFully(bankData[i], 0, dataLen);
+                        }
+                        dataBuf = new DataBufferUShort(bankData, dataLen);
                     }
+                    break;
 
                     default:
                         throw new UnsupportedOperationException("Unsupported image data type");
@@ -564,7 +570,7 @@ public final class DiskCachedTile implements CachedTile {
             switch (dataBuf.getDataType()) {
                 case DataBuffer.TYPE_BYTE:
                      {
-                        byte[] bankData = new byte[dataLen];
+                        byte[] bankData;
                         for (int i = 0; i < numBanks; i++) {
                             bankData = ((DataBufferByte) dataBuf).getData(i);
                             strm.write(bankData);
@@ -574,7 +580,7 @@ public final class DiskCachedTile implements CachedTile {
 
                 case DataBuffer.TYPE_DOUBLE:
                      {
-                        double[] bankData = new double[dataLen];
+                        double[] bankData;
                         for (int i = 0; i < numBanks; i++) {
                             bankData = ((DataBufferDouble) dataBuf).getData(i);
                             strm.writeDoubles(bankData, 0, dataLen);
@@ -584,7 +590,7 @@ public final class DiskCachedTile implements CachedTile {
 
                 case DataBuffer.TYPE_FLOAT:
                      {
-                        float[] bankData = new float[dataLen];
+                        float[] bankData;
                         for (int i = 0; i < numBanks; i++) {
                             bankData = ((DataBufferFloat) dataBuf).getData(i);
                             strm.writeFloats(bankData, 0, dataLen);
@@ -594,7 +600,7 @@ public final class DiskCachedTile implements CachedTile {
 
                 case DataBuffer.TYPE_INT:
                      {
-                        int[] bankData = new int[dataLen];
+                        int[] bankData;
                         for (int i = 0; i < numBanks; i++) {
                             bankData = ((DataBufferInt) dataBuf).getData(i);
                             strm.writeInts(bankData, 0, dataLen);
@@ -604,7 +610,7 @@ public final class DiskCachedTile implements CachedTile {
 
                 case DataBuffer.TYPE_SHORT:
                      {
-                        short[] bankData = new short[dataLen];
+                        short[] bankData;
                         for (int i = 0; i < numBanks; i++) {
                             bankData = ((DataBufferShort) dataBuf).getData(i);
                             strm.writeShorts(bankData, 0, dataLen);
@@ -612,9 +618,15 @@ public final class DiskCachedTile implements CachedTile {
                     }
                     break;
 
-                case DataBuffer.TYPE_USHORT: {
-                    throw new UnsupportedOperationException("Unsigned short image data not supported yet");
-                }
+                case DataBuffer.TYPE_USHORT:
+                    {
+                        short[] bankData;
+                        for (int i = 0; i < numBanks; i++) {
+                            bankData = ((DataBufferShort) dataBuf).getData(i);
+                            strm.writeShorts(bankData, 0, dataLen);
+                        }
+                    }
+                    break;
 
                 default:
                     throw new UnsupportedOperationException("Unsupported image data type");
