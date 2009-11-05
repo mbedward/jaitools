@@ -75,6 +75,8 @@ public class MaskedConvolveRIF implements RenderedImageFactory {
 
         Number nilValue =
                 (Number) paramBlock.getObjectParameter(MaskedConvolveDescriptor.NIL_VALUE_ARG);
+
+        int minCells = paramBlock.getIntParameter(MaskedConvolveDescriptor.MIN_CELLS_ARG);
         
         return new MaskedConvolveOpImage(paramBlock.getRenderedSource(0),
                 extender,
@@ -84,7 +86,8 @@ public class MaskedConvolveRIF implements RenderedImageFactory {
                 roi,
                 maskSrc,
                 maskDest,
-                nilValue);
+                nilValue,
+                minCells);
     }
 }
 

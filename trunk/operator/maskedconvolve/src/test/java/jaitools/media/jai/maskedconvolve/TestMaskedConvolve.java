@@ -38,6 +38,8 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
+ * Unit tests for the MaskedConvolve operator
+ * 
  * @author Michael Bedward
  */
 public class TestMaskedConvolve {

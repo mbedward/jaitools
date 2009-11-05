@@ -63,7 +63,19 @@ public class MaskedConvolveOpImage extends AreaOpImage {
     private float[] kernelData;
     private int kernelW,  kernelH;
     private int kernelKeyX, kernelKeyY;
-    
+
+    /* Records which kernel cells have non-zero values */
+    private boolean[] kernelActive;
+
+    /**
+     * The tolerance used when marking kernel cells as active
+     * (ie. having a non-zero value that contributes to the
+     * convolution result) or inactive. Cells with an absolute
+     * value less than this tolerance will be treated as
+     * inactive (zero).
+     */
+    public final static float KERNEL_TOL = 1.0e-6F;
+
     /* ROI and options */
     private ROI roi;
     private boolean maskSrc;
@@ -74,6 +86,13 @@ public class MaskedConvolveOpImage extends AreaOpImage {
      * convolution result
      */
     Number nilValueNumber;
+
+    /*
+     * The minimum number of non-zero kernel cells that must overlap
+     * unmasked source image cells for a convolution result to be written
+     * to the destination image
+     */
+    private int minKernelCells;
 
     /**
      * Constructor
@@ -99,7 +118,8 @@ public class MaskedConvolveOpImage extends AreaOpImage {
             ROI roi,
             Boolean maskSrc,
             Boolean maskDest,
-            Number nilValue) {
+            Number nilValue,
+            int minCells) {
         
         super(source,
                 layout,
@@ -134,10 +154,21 @@ public class MaskedConvolveOpImage extends AreaOpImage {
         }
 
         kernelData = kernel.getKernelData();
+        kernelActive = new boolean[kernelData.length];
+        for (int i = 0; i < kernelData.length; i++) {
+            if (Math.abs(kernelData[i]) > KERNEL_TOL) {
+                kernelActive[i] = true;
+            } else {
+                kernelActive[i] = false;
+            }
+        }
+
         kernelW = kernel.getWidth();
         kernelH = kernel.getHeight();
         kernelKeyX = kernel.getXOrigin();
         kernelKeyY = kernel.getYOrigin();
+
+        minKernelCells = minCells;
     }
 
     /**
@@ -238,28 +269,30 @@ public class MaskedConvolveOpImage extends AreaOpImage {
 
                 for (int i = 0; i < destWidth; i++, destX++) {
                     int val = 0;
-                    boolean cellResult = false;
+                    int count = 0;
                     if (!maskDest || roi.contains(destX, destY)) {
                         int srcY = destY - kernelKeyY;
-                        float f = 0.5F;
-                        int kernelVerticalOffset = 0;
+                        float fval = 0.5F;
+                        int kernelOffset = 0;
                         int imageVerticalOffset = srcPixelOffset;
                         for (int u = 0; u < kernelH; u++, srcY++) {
                             int srcX = destX - kernelKeyX;
                             int imageOffset = imageVerticalOffset;
                             for (int v = 0; v < kernelW; v++, srcX++) {
-                                if (!maskSrc || roi.contains(srcX, srcY)) {
-                                    f += ((int) srcBandDat[imageOffset] & 0xff) * kernelData[kernelVerticalOffset + v];
-                                    cellResult = true;
+                                if (kernelActive[kernelOffset + v]) {
+                                    if (!maskSrc || roi.contains(srcX, srcY)) {
+                                        fval += ((int) srcBandDat[imageOffset] & 0xff) * kernelData[kernelOffset + v];
+                                        count++;
+                                    }
                                 }
                                 imageOffset += srcPixelStride;
                             }
-                            kernelVerticalOffset += kernelW;
+                            kernelOffset += kernelW;
                             imageVerticalOffset += srcScanlineStride;
                         }
 
-                        if (cellResult) {
-                            val = (int) f;
+                        if (count >= minKernelCells) {
+                            val = (int) fval;
                         } else {
                             val = nilValue;
                         }
@@ -301,28 +334,30 @@ public class MaskedConvolveOpImage extends AreaOpImage {
 
                 for (int i = 0; i < destWidth; i++, x++) {
                     int val = 0;
-                    boolean cellResult = false;
+                    int count = 0;
                     if (!maskDest || roi.contains(x, y)) {
                         int srcY = y - kernelKeyY;
-                        float f = 0.5F;
-                        int kernelVerticalOffset = 0;
+                        float fval = 0.5F;
+                        int kernelOffset = 0;
                         int imageVerticalOffset = srcPixelOffset;
                         for (int u = 0; u < kernelH; u++, srcY++) {
                             int srcX = x - kernelKeyX;
                             int imageOffset = imageVerticalOffset;
                             for (int v = 0; v < kernelW; v++, srcX++) {
-                                if (!maskSrc || roi.contains(srcX, srcY)) {
-                                    f += srcBand[imageOffset] * kernelData[kernelVerticalOffset + v];
-                                    cellResult = true;
+                                if (kernelActive[kernelOffset + v]) {
+                                    if (!maskSrc || roi.contains(srcX, srcY)) {
+                                        fval += srcBand[imageOffset] * kernelData[kernelOffset + v];
+                                        count++ ;
+                                    }
                                 }
                                 imageOffset += srcPixelStride;
                             }
-                            kernelVerticalOffset += kernelW;
+                            kernelOffset += kernelW;
                             imageVerticalOffset += srcScanlineStride;
                         }
 
-                        if (cellResult) {
-                            val = (int) f;
+                        if (count >= minKernelCells) {
+                            val = (int) fval;
                         } else {
                             val = nilValue;
                         }
@@ -363,28 +398,30 @@ public class MaskedConvolveOpImage extends AreaOpImage {
 
                 for (int i = 0; i < destWidth; i++, x++) {
                     int val = 0;
-                    boolean cellResult = false;
+                    int count = 0;
                     if (!maskDest || roi.contains(x, y)) {
                         int srcY = y - kernelKeyY;
-                        float f = 0.5F;
-                        int kernelVerticalOffset = 0;
+                        float fval = 0.5F;
+                        int kernelOffset = 0;
                         int imageVerticalOffset = srcPixelOffset;
                         for (int u = 0; u < kernelH; u++, srcY++) {
                             int srcX = x - kernelKeyX;
                             int imageOffset = imageVerticalOffset;
                             for (int v = 0; v < kernelW; v++, srcX++) {
-                                if (!maskSrc || roi.contains(srcX, srcY)) {
-                                    f += (srcBand[imageOffset] & 0xffff) * kernelData[kernelVerticalOffset + v];
-                                    cellResult = true;
+                                if (kernelActive[kernelOffset + v]) {
+                                    if (!maskSrc || roi.contains(srcX, srcY)) {
+                                        fval += (srcBand[imageOffset] & 0xffff) * kernelData[kernelOffset + v];
+                                        count++ ;
+                                    }
                                 }
                                 imageOffset += srcPixelStride;
                             }
-                            kernelVerticalOffset += kernelW;
+                            kernelOffset += kernelW;
                             imageVerticalOffset += srcScanlineStride;
                         }
 
-                        if (cellResult) {
-                            val = (int) f;
+                        if (count >= minKernelCells) {
+                            val = (int) fval;
                         } else {
                             val = nilValue;
                         }
@@ -424,29 +461,31 @@ public class MaskedConvolveOpImage extends AreaOpImage {
                 int dstPixelOffset = dstScanlineOffset;
 
                 for (int i = 0; i < destWidth; i++, x++) {
-                    float f = 0.5F;
-                    boolean cellResult = false;
+                    float fval = 0.5F;
+                    int count = 0;
                     if (!maskDest || roi.contains(x, y)) {
                         int srcY = y - kernelKeyY;
-                        int kernelVerticalOffset = 0;
+                        int kernelOffset = 0;
                         int imageVerticalOffset = srcPixelOffset;
                         for (int u = 0; u < kernelH; u++, srcY++) {
                             int srcX = x - kernelKeyX;
                             int imageOffset = imageVerticalOffset;
                             for (int v = 0; v < kernelW; v++, srcX++) {
-                                if (!maskSrc || roi.contains(srcX, srcY)) {
-                                    f += (srcBand[imageOffset]) * kernelData[kernelVerticalOffset + v];
-                                    cellResult = true;
+                                if (kernelActive[kernelOffset + v]) {
+                                    if (!maskSrc || roi.contains(srcX, srcY)) {
+                                        fval += (srcBand[imageOffset]) * kernelData[kernelOffset + v];
+                                        count++ ;
+                                    }
                                 }
                                 imageOffset += srcPixelStride;
                             }
-                            kernelVerticalOffset += kernelW;
+                            kernelOffset += kernelW;
                             imageVerticalOffset += srcScanlineStride;
                         }
                     }
 
-                    if (cellResult) {
-                        destBand[dstPixelOffset] = (int) f;
+                    if (count >= minKernelCells) {
+                        destBand[dstPixelOffset] = (int) fval;
                     } else {
                         destBand[dstPixelOffset] = nilValue;
                     }
@@ -479,29 +518,31 @@ public class MaskedConvolveOpImage extends AreaOpImage {
                 int dstPixelOffset = dstScanlineOffset;
 
                 for (int i = 0; i < destWidth; i++, x++) {
-                    float f = 0.0F;
-                    boolean cellResult = false;
+                    float fval = 0.0F;
+                    int count = 0;
                     if (!maskDest || roi.contains(x, y)) {
                         int srcY = y - kernelKeyY;
-                        int kernelVerticalOffset = 0;
+                        int kernelOffset = 0;
                         int imageVerticalOffset = srcPixelOffset;
                         for (int u = 0; u < kernelH; u++, srcY++) {
                             int srcX = x - kernelKeyX;
                             int imageOffset = imageVerticalOffset;
                             for (int v = 0; v < kernelW; v++, srcX++) {
-                                if (!maskSrc || roi.contains(srcX, srcY)) {
-                                    f += (srcBand[imageOffset]) * kernelData[kernelVerticalOffset + v];
-                                    cellResult = true;
+                                if (kernelActive[kernelOffset + v]) {
+                                    if (!maskSrc || roi.contains(srcX, srcY)) {
+                                        fval += (srcBand[imageOffset]) * kernelData[kernelOffset + v];
+                                        count++ ;
+                                    }
                                 }
                                 imageOffset += srcPixelStride;
                             }
-                            kernelVerticalOffset += kernelW;
+                            kernelOffset += kernelW;
                             imageVerticalOffset += srcScanlineStride;
                         }
                     }
 
-                    if (cellResult) {
-                        destBand[dstPixelOffset] = f;
+                    if (count >= minKernelCells) {
+                        destBand[dstPixelOffset] = fval;
                     } else {
                         destBand[dstPixelOffset] = nilValue;
                     }
@@ -534,29 +575,31 @@ public class MaskedConvolveOpImage extends AreaOpImage {
                 int dstPixelOffset = dstScanlineOffset;
 
                 for (int i = 0; i < destWidth; i++, x++) {
-                    double f = 0.0D;
-                    boolean cellResult = false;
+                    double dval = 0.0D;
+                    int count = 0;
                     if (!maskDest || roi.contains(x, y)) {
                         int srcY = y - kernelKeyY;
-                        int kernelVerticalOffset = 0;
+                        int kernelOffset = 0;
                         int imageVerticalOffset = srcPixelOffset;
                         for (int u = 0; u < kernelH; u++, srcY++) {
                             int srcX = x - kernelKeyX;
                             int imageOffset = imageVerticalOffset;
                             for (int v = 0; v < kernelW; v++, srcX++) {
-                                if (!maskSrc || roi.contains(srcX, srcY)) {
-                                    f += (srcBand[imageOffset]) * kernelData[kernelVerticalOffset + v];
-                                    cellResult = true;
+                                if (kernelActive[kernelOffset + v]) {
+                                    if (!maskSrc || roi.contains(srcX, srcY)) {
+                                        dval += (srcBand[imageOffset]) * kernelData[kernelOffset + v];
+                                        count++;
+                                    }
                                 }
                                 imageOffset += srcPixelStride;
                             }
-                            kernelVerticalOffset += kernelW;
+                            kernelOffset += kernelW;
                             imageVerticalOffset += srcScanlineStride;
                         }
                     }
 
-                    if (cellResult) {
-                        destBand[dstPixelOffset] = f;
+                    if (count >= minKernelCells) {
+                        destBand[dstPixelOffset] = dval;
                     } else {
                         destBand[dstPixelOffset] = nilValue;
                     }
