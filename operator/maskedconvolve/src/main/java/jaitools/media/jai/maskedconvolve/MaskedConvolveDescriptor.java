@@ -22,6 +22,7 @@ package jaitools.media.jai.maskedconvolve;
 
 import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
+import java.awt.image.renderable.ParameterBlock;
 import javax.media.jai.JAI;
 import javax.media.jai.KernelJAI;
 import javax.media.jai.OperationDescriptorImpl;
@@ -49,6 +50,16 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * was not included in a destination mask or had no kernel values included in a
  * source mask, it will be set to a flag value. This can be set using the {@code nilValue}
  * parameter (default is 0).
+     * @param minCells the minimum number of non-zero kernel cells that be positioned over
+     *        unmasked source image cells for convolution to be performed for the target cell;
+     *        any of the following are accepted: <ol type = "1">
+     *        <li> "ANY" (case-insensitive) (or the constant {@linkplain #MIN_CELLS_ANY});
+     *             this is the default
+     *        <li> "ALL" (case-insensitive) (or the constant {@linkplain #MIN_CELLS_ALL});
+     *        <li> a {@code Number} with value between one and the number of non-zero kernel
+     *             cells (inclusive)
+     *        <li> a {@code String} representing a numeric value
+     *        </ol>
  *
  * Example of use:
  * <pre><code>
@@ -90,32 +101,57 @@ import javax.media.jai.registry.RenderedRegistryMode;
  */
 public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
 
+    /**
+     * Constant that can be used for the minCells parameter to specify
+     * convolution will be performed for a terget cell if any non-zero kernel
+     * cells overlap with unmasked source image cells. This is the default
+     * parameter value.
+     */
+    public static final String MIN_CELLS_ANY = "ANY";
+
+    /**
+     * Constant that can be used for the minCells parameter to require
+     * all non-zero kernel cells to overlap with unmasked source image
+     * cells for convolution to be performed for a terget cell
+     */
+    public static final String MIN_CELLS_ALL = "ALL";
+
+    /** Default value for nilValue parameter (0) */
+    public static final Number DEFAULT_NIL_VALUE = Integer.valueOf(0);
+
     static final int KERNEL_ARG = 0;
     static final int ROI_ARG = 1;
     static final int MASKSRC_ARG = 2;
     static final int MASKDEST_ARG = 3;
     static final int NIL_VALUE_ARG = 4;
+    static final int MIN_CELLS_ARG = 5;
 
-    private static final String[] paramNames =
-        {"kernel",
-         "roi",
-         "masksource",
-         "maskdest",
-         "nilvalue"};
+    private static final String[] paramNames = {
+        "kernel",
+        "roi",
+        "maskSource",
+        "maskDest",
+        "nilValue",
+        "minCells"
+    };
 
-    private static final Class[] paramClasses =
-        {javax.media.jai.KernelJAI.class,
+    private static final Class[] paramClasses = {
+         javax.media.jai.KernelJAI.class,
          javax.media.jai.ROI.class,
          Boolean.class,
          Boolean.class,
-         Number.class};
+         Number.class,
+         Object.class
+    };
 
-    private static final Object[] paramDefaults =
-        {NO_PARAMETER_DEFAULT,
+    private static final Object[] paramDefaults = {
+         NO_PARAMETER_DEFAULT,
          NO_PARAMETER_DEFAULT,
          Boolean.TRUE,
          Boolean.TRUE,
-         Integer.valueOf(0)};
+         DEFAULT_NIL_VALUE,
+         MIN_CELLS_ANY
+    };
 
     /** Constructor. */
     public MaskedConvolveDescriptor() {
@@ -137,7 +173,10 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
                              "for pixels where roi.contains is true"},
                     {"arg4Desc", paramNames[4] + " (Number): " +
                              "the value to write to the destination image for pixels where " +
-                             "there is no convolution result"}
+                             "there is no convolution result"},
+                    {"arg5Desc", paramNames[5] + " (String or Number, default=MIN_CELLS_ANY):" +
+                             "the minimum number of non-zero kernel cells that must overlap" +
+                             "unmasked source image cells for convolution to be performed"}
 
                 },
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
@@ -153,8 +192,12 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
     }
 
     /**
-     * Convenience method which constructs a {@link ParameterBlockJAI} and
-     * invokes {@code JAI.create("maskedconvolve", params) }
+     * Constructs a {@link ParameterBlockJAI} and
+     * invokes {@code JAI.create("maskedconvolve", params) }.
+     * <p>
+     * <b>Note:</b> with this method only integer values can be passed for the {@code minCells}
+     * argument. To use the Strings "ANY" or "ALL" or the constants described in the class docs
+     * use the {@code JAI.create} method with a parameter block rather than this method.
      * 
      * @param source0 the image to be convolved
      *
@@ -171,6 +214,9 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
      *
      * @param nilValue value to write to the destination image for pixels where
      *        there is no convolution result
+     *
+     * @param minCells the minimum number of non-zero kernel cells that be positioned over
+     *        unmasked source image cells for convolution to be performed for the target cell
      * 
      * @param hints useful for specifying a border extender; may be null
      *
@@ -184,6 +230,7 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
             Boolean maskSource,
             Boolean maskDest,
             Number nilValue,
+            int minCells,
             RenderingHints hints) {
         ParameterBlockJAI pb =
                 new ParameterBlockJAI("MaskedConvolve",
@@ -195,8 +242,115 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
         pb.setParameter(paramNames[MASKSRC_ARG], maskSource);
         pb.setParameter(paramNames[MASKDEST_ARG], maskDest);
         pb.setParameter(paramNames[NIL_VALUE_ARG], nilValue);
+        pb.setParameter(paramNames[MIN_CELLS_ARG], Integer.valueOf(minCells));
 
         return JAI.create("MaskedConvolve", pb, hints);
     }
+
+    @Override
+    protected boolean validateParameters(String modeName, ParameterBlock pb, StringBuffer msg) {
+
+        final String minCellsErrorMsg = "minCells must be ANY, ALL or a numeric value" +
+                " between 1 and the number of non-zero kernel cells";
+
+        boolean ok = super.validateParameters(modeName, pb, msg);
+        if (ok) {
+            KernelJAI kernel = (KernelJAI) pb.getObjectParameter(KERNEL_ARG);
+            Object minCells = pb.getObjectParameter(MIN_CELLS_ARG);
+            int minCellsValue = parseMinCells(minCells, kernel);
+            if (minCellsValue >= 1) {
+                pb.set(Integer.valueOf(minCellsValue), MIN_CELLS_ARG);
+
+            } else {
+                msg.append(minCellsErrorMsg);
+                ok = false;
+            }
+        }
+        return ok;
+    }
+
+    /**
+     * Attempt to parse the Object value of the minCells parameter.
+     *
+     * @param minCells Object from the parameter block
+     *
+     * @param numActiveKernelCells upper limit on the numeric value
+     *
+     * @return the parsed value as an int or -1 if parsing failed or the
+     *         parsed value was out of range
+     */
+    private int parseMinCells(Object minCells, KernelJAI kernel) {
+        int value = -1;
+
+        int numActiveKernelCells = numActiveKernelCells(kernel);
+
+        if (minCells instanceof String) {
+            /*
+             * First try to parse it as a String
+             */
+            String s = (String) minCells;
+            if (s.trim().equalsIgnoreCase(MaskedConvolveDescriptor.MIN_CELLS_ALL)) {
+                value = numActiveKernelCells;
+            }
+
+            if (s.trim().equalsIgnoreCase(MaskedConvolveDescriptor.MIN_CELLS_ANY)) {
+                value = 1;
+            }
+
+            if (value < 0) {
+                /*
+                 * Try it as the String value of a number
+                 */
+                try {
+                    int n = Double.valueOf(s).intValue();
+                    if (n > 0 && n <= numActiveKernelCells) {
+                        value = n;
+                    }
+
+                } catch (NumberFormatException ex) {
+                    // do nothing
+                }
+            }
+
+            /*
+             * Try it as a Number object
+             */
+        } else if (minCells instanceof Number) {
+            int n = ((Number) minCells).intValue();
+            if (n > 0 && n <= numActiveKernelCells) {
+                value = n;
+            }
+
+        } else {
+            /*
+             * Don't know what it is but we don't like it !
+             */
+        }
+
+        return value;
+    }
+
+    /**
+     * Counts the number of active cells (those with non-zero values) in the kernel.
+     * A round-off tolerance of 1.0e-6 is used.
+     *
+     * @param kernel the kernel
+     *
+     * @return the number of non-zero cells
+     */
+    private int numActiveKernelCells(KernelJAI kernel) {
+        final float TOL = 1.0e-6F;
+        float[] data = kernel.getKernelData();
+
+        int n = 0;
+        for (float cellValue : data) {
+            if (Math.abs(cellValue) > TOL) {
+                n++ ;
+            }
+        }
+
+        return n;
+    }
+
 }
 
