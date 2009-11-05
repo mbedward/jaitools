@@ -161,7 +161,7 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
                     {"Vendor", "jaitools"},
                     {"Description", "Convolve a rendered image masked by an associated ROI"},
                     {"DocURL", "http://code.google.com/p/jai-tools/"},
-                    {"Version", "0.0.1"},
+                    {"Version", "1.0.0"},
                     {"arg0Desc", paramNames[0] + " - a JAI Kernel object"},
                     {"arg1Desc", paramNames[1] + " - an ROI object which must have the same " +
                              "pixel bounds as the source iamge"},
