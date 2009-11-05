@@ -165,7 +165,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
                     {"Vendor", "jaitools.media.jai"},
                     {"Description", "Calculate neighbourhood statistics"},
                     {"DocURL", "http://code.google.com/p/jai-tools/"},
-                    {"Version", "1.0-SHAPSHOT"},
+                    {"Version", "1.0.0"},
                     {"arg0Desc", "stats - an array of Statistic constants specifying the " +
                              "statistics required"},
                     {"arg1Desc", "band (default 0) - the band of the data image to process"},
