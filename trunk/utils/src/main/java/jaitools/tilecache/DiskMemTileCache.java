@@ -382,19 +382,21 @@ public class DiskMemTileCache extends Observable implements TileCache {
         Object key = getTileId(owner, tileX, tileY);
         DiskCachedTile tile = tiles.get(key);
 
-        if (tile != null) {
-            if (residentTiles.containsKey(key)) {
-                try {
-                    removeResidentTile(key, false);
+        if (tile == null) {
+            return;
+        }
 
-                } catch (DiskCacheFailedException ex) {
-                    /*
-                     * It would be nicer to just throw this exception
-                     * upwards but we can't in the overidden method
-                     */
-                    Logger.getLogger(DiskMemTileCache.class.getName()).
-                            log(Level.SEVERE, null, ex);
-                }
+        if (residentTiles.containsKey(key)) {
+            try {
+                removeResidentTile(key, false);
+
+            } catch (DiskCacheFailedException ex) {
+                /*
+                 * It would be nicer to just throw this exception
+                 * upwards but we can't in the overidden method
+                 */
+                Logger.getLogger(DiskMemTileCache.class.getName()).
+                        log(Level.SEVERE, null, ex);
             }
         }
 
