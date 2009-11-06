@@ -117,7 +117,7 @@ returns a floored double, logical functions return 1.0d for true and 0.0d for fa
 
 ===Variable names===
 
-Variable names are case-sensitive and must start with a letter, optionally followed by any combination of letters, numbers and underscores and dots...
+Variable names are case-sensitive and must start with a letter, optionally followed by any combination of letters, numbers, underscores and periods.
 
 The following are examples of valid variable names...
 {{{
@@ -138,8 +138,7 @@ foo-dash
 
 ===Image variables===
 
-In a script, image objects are represented by variables. The user defines the mappings of variable name -> image object and provides these when compiling the script
-(for more details see the Jiffle class in the [http://jai-tools.googlecode.com/svn/trunk/jiffle/apidocs/index.html API docs]).
+In a script, image objects are represented by variables. The user defines the mappings of variable name -> image object and provides these when compiling the script.
 
 A reference to an image variable in a script is read as _value of the current pixel in this image_
 
