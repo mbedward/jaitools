@@ -195,6 +195,6 @@ NULL is also defined as a constant and is not case sensitive.
 
 = ANTLR grammar for jiffle =
 
-*Note:* the ANTLR lexer / parser grammar file, Jiffle.g, with header sections and tree construction elements can be found in the svn repository [http://jai-tools.googlecode.com/svn/trunk/jiffle/src/main/antlr/jaitools/jiffle/parser/Jiffle.g here]
+*Note:* the ANTLR lexer / parser grammar file, Jiffle.g, with header sections and tree construction elements can be found in the svn repository [http://jai-tools.googlecode.com/svn/trunk/jiffle/src/main/antlr3/jaitools/jiffle/parser/Jiffle.g here]
 
 *Please treat this grammar as preliminary and assume that it contains errors*
