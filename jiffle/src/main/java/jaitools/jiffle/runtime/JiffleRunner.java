@@ -460,8 +460,6 @@ public class JiffleRunner {
                     }
                 }
 
-                numPixelsProcessed++ ;
-                
                 // @todo remove this hack
                 if (firstImg) {
                     vars.set("_x", h.x - h.xmin);
@@ -469,7 +467,8 @@ public class JiffleRunner {
                     vars.set("_col", h.x - h.xmin + 1);
                     vars.set("_row", h.y - h.ymin + 1);
                     firstImg = false;
-                    
+
+                    numPixelsProcessed++ ;
                     publishProgress();
                 }
             }
