@@ -159,7 +159,7 @@ anImage[xOffset, yOffset]
 
 For xOffset: negative values are to the left of the current pixel; positive values are to the right.
 
-For yOffset: negative values are above the current pixel; negative values are below.
+For yOffset: negative values are above the current pixel; positive values are below.
 
 {{{
 // look for pixels in an input image which have the same
