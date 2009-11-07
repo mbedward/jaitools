@@ -32,7 +32,7 @@ http://jai-tools.googlecode.com/svn/wiki/jgrass/jgrass_02.png
 Lets' try something easy such as dividing a map by two:
 
 {{{
-elevation.dem / 2.0
+$elevation.dem$ / 2.0
 }}}
 
 and the result is NOT as expected:
@@ -41,14 +41,13 @@ http://jai-tools.googlecode.com/svn/wiki/jgrass/jgrass_03.png
 
 Don't be missleaded by the colormap. That can be changed in any moment and when a map is created in JGrass a default rainbow colormap is created.
 
-PROBLEM: the problem lies in the fact that the resulting map is shifted versus north. What happens here?
 
 == Cutting of the peaks ==
 
 Let's cut of everything over 1500 meters and make a big nice mall with large parking place:
 
 {{{
-if(elevation.dem > 1500, 1500, elevation.dem )
+if($elevation.dem$ > 1500, 1500, $elevation.dem$ )
 }}}
 
 And the result... difficult to state the difference, right?
@@ -64,16 +63,12 @@ Do you see the parking place?
 There would be another way to see if everything went well: subtracting start and destination map:
 
 {{{
-elevation.dem - peaks_off
+$elevation.dem$ - $peaks_off$
 }}}
 
 Which would result in: 
 
 http://jai-tools.googlecode.com/svn/wiki/jgrass/jgrass_06.png
-
-PROBLEM: Is this exactly what we expected?
-Not completely, since the small white borders of the original map, which are novalues, are used to do the difference and end up to be 0. Instead there should be novalue as before. THIS NEEDS TO BE CHECKED ON BOTH SIDES (JGrass & Jiffle)
-
 
 
 == Nested if statements ==
@@ -85,27 +80,36 @@ Ok let's try something more complex.
 Easier to say or to do?
 
 {{{
-if( elevation.dem > 800 && elevation.dem < 1200, if( slope < 10, if( aspect > 45 && aspect < 135, 1.0, null() ), null() ), null() ) 
+if( $pit$ > 800 && $pit$ < 1200, if( $slope$ < 10, if( $aspect$ > 45 && $aspect$ < 135, 1.0, null() ), null() ), null() )
 }}}
 
 I get:
 
-http://jai-tools.googlecode.com/svn/wiki/jgrass/jgrass_07.png
+http://jai-tools.googlecode.com/svn/wiki/jgrass/jgrass_nested_ifs.png
 
-which might even look right, but to be sure, let's do some tests and also compare with the GRASS mapcalc.
-
-By selecting two random points of the map, I find a wrong calculated point:
-
-http://jai-tools.googlecode.com/svn/wiki/jgrass/jgrass_08.png
-
-Our mapcalc equation states that the resulting map can only have 1.0 and novalues, but here we find also a 0.0. I am pretty sure that this is due to the fact that calculations are done also on novalues, which sometimes leads to 0.0 in differences, which it should always give novalue. This can happen while processing the nested ifs.
-
-By using the same equation in grass, we indeed get a slightly different map, without the additional 0.0 that are created in Jiffle.
-
-Here the GRASS created map overlayed in green, to highlight all the values that should not be there:
-
-http://jai-tools.googlecode.com/svn/wiki/jgrass/jgrass_09.png
+As can be seen in the raster queries done on the map, in fact the pixels follow the constraints given in the function supplied.
 
 
+== The ripples ==
 
+You may have seen Micheals short ripples generation script, that leads to the generation of:
+
+http://jai-tools.googlecode.com/svn/wiki/images/demo_ripple.gif
+
+What about doing the same in JGrass putting a map into the game?
+
+So the script would be:
+{{{
+xc = width() / 2;
+yc = height() / 2;
+dx = (x()-xc)/xc;
+dy = (y()-yc)/yc;
+d = sqrt(dx^2 + dy^2);
+
+ripples =  isnull($elevation$) ? null() : $elevation$ * sin(8 * PI * d)
+}}}
+
+An see what happens... adding a bit of alpha and the aspect map, we get a huge lake into spearfish:
+
+http://jai-tools.googlecode.com/svn/wiki/jgrass/jgrass_ripple.png
 
