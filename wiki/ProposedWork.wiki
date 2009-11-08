@@ -1,0 +1,28 @@
+#summary Proposals for features in future versions of jai-tools
+
+<wiki:toc max_depth="3" />
+
+= Version 1.1 =
+
+== Support and utilities module (utils) ==
+
+=== New !BorderExtender classes ===
+
+Two new !BorderExtender classes will be added to the utils module to provide options not covered by JAI's standard extenders. They are:
+
+ * RandomBorderExtender to generate pixel values drawn from a uniform random distribution (later add support for other distributions)
+
+ * SamplingBorderExtender to generate pixel values by sampling the local area of the source image within a set distance of each border pixel
+
+== Jiffle ==
+
+=== Simplify compilation of Jiffle scripts ===
+
+Jiffle scripts are 'compiled' into a runtime form (Abstract Syntax Tree) using a sequence of parsing and tree re-writing steps, each of which is defined by an ANTLR grammar file. Each of the existing grammar files clones all of  the previous grammar, even when the the step that the file defines is only working with a small subset.
+
+The latest version of ANTLR makes this process simpler by allowing grammar subsets (known as tree patterns) to be used. This will make the Jiffle grammar files much shorter, and therefore easier to understand, modify and debug.
+
+=== Add support for other image data types ===
+
+Add support for other images data types for both input and output. Add the ability to specify the type of the output image, perhaps via a RenderingHint.
+
