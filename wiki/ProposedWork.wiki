@@ -10,9 +10,9 @@
 
 Two new !BorderExtender classes will be added to the utils module to provide options not covered by JAI's standard extenders. They are:
 
- * RandomBorderExtender to generate pixel values drawn from a uniform random distribution (later add support for other distributions)
+ * !RandomBorderExtender to generate pixel values drawn from a uniform random distribution (later add support for other distributions)
 
- * SamplingBorderExtender to generate pixel values by sampling the local area of the source image within a set distance of each border pixel
+ * !SamplingBorderExtender to generate pixel values by sampling the local area of the source image within a set distance of each border pixel
 
 == Jiffle ==
 
@@ -25,4 +25,3 @@ The latest version of ANTLR makes this process simpler by allowing grammar subse
 === Add support for other image data types ===
 
 Add support for other images data types for both input and output. Add the ability to specify the type of the output image, perhaps via a RenderingHint.
-
