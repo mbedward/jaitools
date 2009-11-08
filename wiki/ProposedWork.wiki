@@ -24,4 +24,4 @@ The latest version of ANTLR makes this process simpler by allowing grammar subse
 
 === Add support for other image data types ===
 
-Add support for other images data types for both input and output. Add the ability to specify the type of the output image, perhaps via a RenderingHint.
+Add support for other images data types for both input and output. Add the ability to specify the type of the output image, perhaps via a !RenderingHint.
