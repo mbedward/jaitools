@@ -2,7 +2,7 @@
 
 <wiki:toc max_depth="3" />
 
-= Version 1.1 =
+= Proposals for Version 1.1 =
 
 == Support and utilities module (utils) ==
 
