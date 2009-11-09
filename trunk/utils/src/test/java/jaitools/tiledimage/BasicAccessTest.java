@@ -70,13 +70,6 @@ public class BasicAccessTest extends TiledImageTestBase {
         Rectangle bounds = r.getBounds();
         assertTrue(bounds.x == TILE_WIDTH);
         assertTrue(bounds.y == TILE_WIDTH);
-
-        r = image.getWritableTile(1, 1);
-        assertTrue(r == null);
-
-        image.releaseWritableTile(1, 1);
-        r = image.getWritableTile(1, 1);
-        assertTrue(r != null);
     }
 
 
