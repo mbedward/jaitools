@@ -181,7 +181,6 @@ FALSE           : F A L S E
                 ;
                 
 NULL            : N U L L
-                |
                 ;
 
 /* Operators sorted and grouped by precedence order */
