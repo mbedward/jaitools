@@ -159,15 +159,15 @@ public class DiskMemImage
 
     /**
      * A 2D array with dimensions corresponding to the tile grid width
-     * and height. It flags which tiles are currently checked out for
-     * writing.
+     * and height that records, for each tile, the number of writers
+     * that have the tile checked out currently
      *
      * @see #getWritableTile(int, int)
      * @see #releaseWritableTile(int, int)
      * @see #getWritableTileIndices()
      * @see #isTileWritable(int, int)
      */
-    protected boolean[][] tileInUse;
+    protected int[][] numWriters;
 
     /**
      * The number of tiles that are currently checked out
@@ -326,7 +326,7 @@ public class DiskMemImage
                 getMaxTileX() - getMinTileX() + 1,
                 getMaxTileY() - getMinTileY() + 1);
 
-        tileInUse = new boolean[tileGrid.width][tileGrid.height];
+        numWriters = new int[tileGrid.width][tileGrid.height];
         numTilesInUse = 0;
 
         DataBuffer db = tileSampleModel.createDataBuffer();
@@ -385,12 +385,9 @@ public class DiskMemImage
     public WritableRaster getWritableTile(int tileX, int tileY) {
         WritableRaster r = null;
         if (tileGrid.contains(tileX, tileY)) {
-            if (tileInUse[tileX - tileGrid.x][tileY - tileGrid.y]) {
-                // TODO: throw an exception here ?
-                Logger.getLogger(DiskMemImage.class.getName()).log(Level.WARNING,
-                        String.format("Attempting to get tile %d,%d for writing while it is already checked-out",
-                        tileX, tileY));
-                return null;
+            numWriters[tileX - tileGrid.x][tileY - tileGrid.y]++ ;
+            if (numWriters[tileX - tileGrid.x][tileY - tileGrid.y] == 1) {
+                numTilesInUse++ ;
             }
 
             r = (WritableRaster) getTileCache().getTile(this, tileX, tileY);
@@ -398,9 +395,6 @@ public class DiskMemImage
                 r = createTile(tileX, tileY);
                 getTileCache().add(this, tileX, tileY, r);
             }
-
-            tileInUse[tileX - tileGrid.x][tileY - tileGrid.y] = true;
-            numTilesInUse++ ;
 
             for (TileObserver obs : tileObservers) {
                 obs.tileUpdate(this, tileX, tileY, true);
@@ -427,30 +421,32 @@ public class DiskMemImage
      */
     public void releaseWritableTile(int tileX, int tileY) {
         if (tileGrid.contains(tileX, tileY)) {
-            if (tileInUse[tileX - tileGrid.x][tileY - tileGrid.y]) {
-                tileInUse[tileX - tileGrid.x][tileY - tileGrid.y] = false;
+            numWriters[tileX - tileGrid.x][tileY - tileGrid.y]-- ;
+            if (numWriters[tileX - tileGrid.x][tileY - tileGrid.y] < 0) {
+                Logger.getLogger(
+                        DiskMemImage.class.getName()).log(Level.SEVERE,
+                            String.format("Tile %d,%d released more times than it has been checked out",
+                                tileX, tileY));
+
+            } else if (numWriters[tileX - tileGrid.x][tileY - tileGrid.y] == 0) {
                 numTilesInUse--;
+            }
 
-                /*
-                 * TODO: Consider skipping this step. It is mostly here as a
-                 * precaution against the cached tile being garbage collected
-                 * if the system runs very low on memory.
-                 */
-                try {
-                    getTileCache().setTileChanged(this, tileX, tileY);
+            /*
+             * TODO: Consider skipping this step. It is mostly here as a
+             * precaution against the cached tile being garbage collected
+             * if the system runs very low on memory.
+             */
+            try {
+                getTileCache().setTileChanged(this, tileX, tileY);
 
-                } catch (Exception ex) {
-                    Logger.getLogger(DiskMemImage.class.getName()).
-                            log(Level.SEVERE, null, ex);
-                }
-
-                for (TileObserver obs : tileObservers) {
-                    obs.tileUpdate(this, tileX, tileY, false);
-                }
-
-            } else {
+            } catch (Exception ex) {
                 Logger.getLogger(DiskMemImage.class.getName()).
-                        log(Level.WARNING, "Attempting to release a tile that was not checked-out");
+                        log(Level.SEVERE, null, ex);
+            }
+
+            for (TileObserver obs : tileObservers) {
+                obs.tileUpdate(this, tileX, tileY, false);
             }
         }
     }
@@ -465,7 +461,7 @@ public class DiskMemImage
      * writing; false otherwise.
      */
     public boolean isTileWritable(int tileX, int tileY) {
-        return tileInUse[tileX - tileGrid.x][tileY - tileGrid.y];
+        return numWriters[tileX - tileGrid.x][tileY - tileGrid.y] > 0;
     }
 
     /**
@@ -482,7 +478,7 @@ public class DiskMemImage
             int k = 0;
             for (int y = tileGrid.y, ny = 0; ny < tileGrid.height; y++, ny++) {
                 for (int x = tileGrid.x, nx = 0; nx < tileGrid.width; x++, nx++) {
-                    if (tileInUse[nx][ny]) {
+                    if (numWriters[nx][ny] > 0) {
                         indices[k++] = new Point(x, y);
                     }
                 }
