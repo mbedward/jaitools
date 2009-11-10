@@ -44,7 +44,6 @@ tokens {
     IMAGE_VAR;
     LOCAL_VAR;
     NON_LOCAL_VAR;
-
     CONSTANT;
 
     IMAGE_POS_LOOKUP;
