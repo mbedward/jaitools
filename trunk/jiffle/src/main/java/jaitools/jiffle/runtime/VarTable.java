@@ -75,8 +75,13 @@ public class VarTable {
         constants.put("NaN", Double.NaN);
     }
     
-    public static boolean isConstant(String varName) {
-        return constants.containsKey(varName);
+    public static boolean isConstant(String name) {
+        return constants.containsKey(name);
+    }
+
+    public static double getConstant(String name) {
+        Double value = constants.get(name);
+        return value == null ? Double.NaN : value.doubleValue();
     }
     
     private HashMap<String, Number> lookup = null;
@@ -166,6 +171,10 @@ public class VarTable {
         Number n = lookup.get(id);
         if (n == null) {
             throw new IllegalArgumentException();
+        }
+
+        if (isConstant(id)) {
+            return getConstant(id);
         }
 
         return n.doubleValue();

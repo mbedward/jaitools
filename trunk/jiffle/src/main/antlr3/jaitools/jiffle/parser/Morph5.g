@@ -98,6 +98,7 @@ expr returns [Double value]
                   -> ^(ASSIGN assign_op assignable_var expr)
                   
                 | ^(FUNC_CALL ID expr_list)
+                
                 | ^(QUESTION expr expr expr)
                 
                 /* we evalute prefixed expressions here to catch
@@ -137,9 +138,6 @@ expr returns [Double value]
                 | FIXED_VALUE 
                   {$value = getFixedValue($FIXED_VALUE);}
               
-                | CONSTANT
-                  {$value = varTable.get($CONSTANT.text);}
-                
                 ;
                 
                 

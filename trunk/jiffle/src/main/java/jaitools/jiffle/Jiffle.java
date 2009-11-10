@@ -46,6 +46,8 @@ import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.tree.BufferedTreeNodeStream;
 import org.antlr.runtime.tree.CommonTree;
 import org.antlr.runtime.tree.CommonTreeNodeStream;
+import org.antlr.runtime.tree.TreeAdaptor;
+import org.antlr.runtime.tree.TreeIterator;
 
 /**
  * This class is the starting point for compiling and running a Jiffle script.
@@ -349,7 +351,7 @@ public class Jiffle {
     private boolean checkFunctionCalls() throws JiffleCompilationException {
         FunctionValidator validator = null;
         try {
-            CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
+            FixedTreeNodeStream nodes = new FixedTreeNodeStream(primaryAST);
             nodes.setTokenStream(tokens);
             validator = new FunctionValidator(nodes);
             validator.start();
@@ -379,7 +381,7 @@ public class Jiffle {
     private boolean classifyVars() throws JiffleCompilationException {
         VarClassifier classifier = null;
         try {
-            CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
+            FixedTreeNodeStream nodes = new FixedTreeNodeStream(primaryAST);
             nodes.setTokenStream(tokens);
             classifier = new VarClassifier(nodes);
             classifier.setImageVars(imageParams.keySet());
@@ -415,45 +417,80 @@ public class Jiffle {
         CommonTree tree;
         
         try {
-            CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
+            FixedTreeNodeStream nodes = new FixedTreeNodeStream(primaryAST);
             nodes.setTokenStream(tokens);
             
             Morph1 m1 = new Morph1(nodes);
             m1.setMetadata(metadata);
             Morph1.start_return m1Ret = m1.start();
             tree = (CommonTree) m1Ret.getTree();
+
+            System.out.println("After morph1");
+            System.out.println(tree.toStringTree());
+            System.out.println();
             
-            nodes = new CommonTreeNodeStream(tree);
+            nodes = new FixedTreeNodeStream(tree);
             Morph4 m4 = new Morph4(nodes);
             Morph4.start_return m4Ret = m4.start();
             tree = (CommonTree) m4Ret.getTree();
             
+            System.out.println("After morph4");
+            System.out.println(tree.toStringTree());
+            System.out.println();
+
             Morph5 m5;
             VarTable varTable = new VarTable();
             do {
-                nodes = new CommonTreeNodeStream(tree);
+                nodes = new FixedTreeNodeStream(tree);
                 m5 = new Morph5(nodes);
                 m5.setVarTable(varTable);
                 Morph5.start_return m5Ret = m5.start();
                 tree = (CommonTree) m5Ret.getTree();
             } while (m5.getCount() > 0);
 
-            nodes = new CommonTreeNodeStream(tree);
+            System.out.println("After morph5");
+            System.out.println(tree.toStringTree());
+            System.out.println();
+
+            nodes = new FixedTreeNodeStream(tree);
             Morph6 m6 = new Morph6(nodes);
             m6.setVarTable(varTable);
             Morph6.start_return m6Ret = m6.start();
             tree = (CommonTree) m6Ret.getTree();
             
-            nodes = new CommonTreeNodeStream(tree);
+            System.out.println("After morph6");
+            System.out.println(tree.toStringTree());
+            System.out.println();
+
+            nodes = new FixedTreeNodeStream(tree);
             MakeRuntime rt = new MakeRuntime(nodes);
             MakeRuntime.start_return rtRet = rt.start();
             tree = (CommonTree) rtRet.getTree();
-            
+
+            System.out.println("After MakeRuntime");
+            System.out.println(tree.toStringTree());
+            System.out.println();
+
         } catch (RecognitionException ex) {
             throw new RuntimeException(ex);
         }        
         
         return tree;
+    }
+
+    class FixedTreeNodeStream extends CommonTreeNodeStream {
+
+        public FixedTreeNodeStream(Object tree) {
+            super(tree);
+            it = new TreeIterator(tree);
+            it.eof = this.eof;
+        }
+
+        public FixedTreeNodeStream(TreeAdaptor adaptor, Object tree) {
+            super(adaptor, tree);
+            it = new TreeIterator(adaptor, tree);
+            it.eof = this.eof;
+        }
     }
     
 }

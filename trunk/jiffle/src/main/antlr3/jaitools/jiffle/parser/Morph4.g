@@ -42,6 +42,8 @@ tokens {
 
 @header {
 package jaitools.jiffle.parser;
+
+import jaitools.jiffle.runtime.VarTable;
 }
 
 @members {
@@ -73,6 +75,7 @@ expr            : ^(ASSIGN assign_op assignable_var expr)
                 | TRUE -> FIXED_VALUE<FixedValueNode>[1.0d]
                 | FALSE -> FIXED_VALUE<FixedValueNode>[0.0d]
                 | NULL -> FIXED_VALUE<FixedValueNode>[Double.NaN]
+                | CONSTANT -> FIXED_VALUE<FixedValueNode>[VarTable.getConstant($CONSTANT.text)]
                 ;
                 
 assignable_var  : POS_VAR
@@ -84,7 +87,6 @@ non_assignable_var :
                   image_input
                 | IMAGE_POS_LOOKUP
                 | IMAGE_INFO_LOOKUP
-                | CONSTANT
                 ;
                 
 image_input     : IMAGE_VAR
