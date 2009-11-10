@@ -128,7 +128,7 @@ public class ZonalStatsOpImage extends NullOpImage {
 
     @Override
     public Object getProperty(String name) {
-        if (ZonalStatsDescriptor.ZONAL_STATS_PROPERTY_NAME.equalsIgnoreCase(name)) {
+        if (ZonalStatsDescriptor.ZONAL_STATS_PROPERTY.equalsIgnoreCase(name)) {
             return getZonalStats();
         } else {
             return super.getProperty(name);

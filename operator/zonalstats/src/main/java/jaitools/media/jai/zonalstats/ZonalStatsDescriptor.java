@@ -45,7 +45,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * {@linkplain javax.media.jai.operator.HistogramDescriptor} where the source image is
  * simply passed through to the destination image and the results of the operation are
  * retrieved as a property. For this operator the property name can be reliably
- * referred to via the {@linkplain #ZONAL_STATS_PROPERTY_NAME} constant.
+ * referred to via the {@linkplain #ZONAL_STATS_PROPERTY} constant.
  * <p>
  * Example of use...
  * <pre><code>
@@ -67,7 +67,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * RenderedOp op = JAI.create("ZonalStats", pb);
  * 
  * ZonalStats results = (ZonalStats) op.getProperty(
- *     ZonalStatsDescriptor.ZONAL_STATS_PROPERTY_NAME);
+ *     ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
  * 
  * // print results to console
  * for (Integer zone : results.getZones()) {
@@ -116,10 +116,10 @@ import javax.media.jai.registry.RenderedRegistryMode;
  */
 public class ZonalStatsDescriptor extends OperationDescriptorImpl {
 
-    public static String ZONAL_STATS_PROPERTY_NAME = "ZonalStats";
+    public static String ZONAL_STATS_PROPERTY = "ZonalStatsProperty";
 
-    static final int DATA_SOURCE_INDEX = 0;
-    static final int ZONE_SOURCE_INDEX = 1;
+    static final int DATA_IMAGE = 0;
+    static final int ZONE_IMAGE = 1;
     
     private static final String[] srcImageNames =
         {"dataImage",
@@ -131,10 +131,10 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
         {RenderedImage.class, RenderedImage.class}
     };
 
-    static final int STATS_ARG_INDEX = 0;
-    static final int BAND_ARG_INDEX = 1;
-    static final int ROI_ARG_INDEX = 2;
-    static final int ZONE_TRANSFORM_ARG_INDEX = 3;
+    static final int STATS_ARG = 0;
+    static final int BAND_ARG = 1;
+    static final int ROI_ARG = 2;
+    static final int ZONE_TRANSFORM = 3;
 
     private static final String[] paramNames =
         {"stats",
@@ -165,13 +165,25 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
                     {"Vendor", "jaitools.media.jai"},
                     {"Description", "Calculate neighbourhood statistics"},
                     {"DocURL", "http://code.google.com/p/jai-tools/"},
-                    {"Version", "1.0-SHAPSHOT"},
-                    {"arg0Desc", "stats - an array of Statistic constants specifying the " +
-                             "statistics required"},
-                    {"arg1Desc", "band (default 0) - the band of the data image to process"},
-                    {"arg2Desc", "roi (default null) - an optional ROI for masking the data image"},
-                    {"arg3Desc", "zoneTransform (default null) - an optional AffineTransform to " +
-                             "from dataImage pixel coords to zoneImage pixel coords"}
+                    {"Version", "1.0.0"},
+
+                    {"arg0Desc", String.format(
+                             "%s - an array of Statistic constants specifying the " +
+                             "statistics required", 
+                             paramNames[STATS_ARG])},
+
+                    {"arg1Desc", String.format(
+                             "%s (default %s) - the band of the data image to process",
+                             paramNames[BAND_ARG], paramDefaults[BAND_ARG])},
+
+                    {"arg2Desc", String.format(
+                             "%s (default ) - an optional ROI for masking the data image",
+                             paramNames[ROI_ARG], paramDefaults[ROI_ARG])},
+
+                    {"arg3Desc", String.format(
+                             "%s (default %s) - an optional AffineTransform to " +
+                             "from dataImage pixel coords to zoneImage pixel coords",
+                             paramNames[ZONE_TRANSFORM], paramDefaults[ZONE_TRANSFORM])}
                 },
 
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
@@ -242,8 +254,9 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
             return false;
         }
 
-        int band = pb.getIntParameter(BAND_ARG_INDEX);
-        if (band < 0 || band >= pb.getNumSources()) {
+        int band = pb.getIntParameter(BAND_ARG);
+        RenderedImage dataImg = (RenderedImage) pb.getSource(DATA_IMAGE);
+        if (band < 0 || band >= dataImg.getSampleModel().getNumBands()) {
             msg.append("band arg out of bounds for source image: " + band);
             return false;
         }
