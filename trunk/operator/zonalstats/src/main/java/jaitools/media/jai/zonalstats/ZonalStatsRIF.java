@@ -65,9 +65,9 @@ public class ZonalStatsRIF implements RenderedImageFactory {
         if (layout == null) layout = new ImageLayout();
 
         Statistic[] stats =
-                (Statistic[]) paramBlock.getObjectParameter(ZonalStatsDescriptor.STATS_ARG_INDEX);
+                (Statistic[]) paramBlock.getObjectParameter(ZonalStatsDescriptor.STATS_ARG);
 
-        int band = paramBlock.getIntParameter(ZonalStatsDescriptor.BAND_ARG_INDEX);
+        int band = paramBlock.getIntParameter(ZonalStatsDescriptor.BAND_ARG);
 
         SampleModel sm = layout.getSampleModel(null);
         if (sm == null || sm.getNumBands() != stats.length) {
@@ -94,14 +94,14 @@ public class ZonalStatsRIF implements RenderedImageFactory {
             }
         }
 
-        ROI roi = (ROI) paramBlock.getObjectParameter(ZonalStatsDescriptor.ROI_ARG_INDEX);
+        ROI roi = (ROI) paramBlock.getObjectParameter(ZonalStatsDescriptor.ROI_ARG);
 
         AffineTransform zoneTransform =
-                (AffineTransform) paramBlock.getObjectParameter(ZonalStatsDescriptor.ZONE_TRANSFORM_ARG_INDEX);
+                (AffineTransform) paramBlock.getObjectParameter(ZonalStatsDescriptor.ZONE_TRANSFORM);
 
         return new ZonalStatsOpImage(
-                paramBlock.getRenderedSource(ZonalStatsDescriptor.DATA_SOURCE_INDEX),
-                paramBlock.getRenderedSource(ZonalStatsDescriptor.ZONE_SOURCE_INDEX),
+                paramBlock.getRenderedSource(ZonalStatsDescriptor.DATA_IMAGE),
+                paramBlock.getRenderedSource(ZonalStatsDescriptor.ZONE_IMAGE),
                 renderHints,
                 layout,
                 stats,
