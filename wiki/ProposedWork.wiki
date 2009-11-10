@@ -50,9 +50,8 @@ The latest version of ANTLR makes this process simpler by allowing grammar subse
 
 Add support for other images data types for both input and output. Add the ability to specify the type of the output image, perhaps via a !RenderingHint.
 
-== ZonalStats operator ==
+== !ZonalStats operator ==
 
 Make the zone image optional - if not provided the source image is treated as being in a single zone. This will allow the operator to also be used to calculate statistics selectively for areas defined in an ROI.
 
 Relax the requirement that the zone image should cover the whole source image. If the zone image is provided treat any source image pixels that are beyond the bounds of the zone image as ignored.
-
