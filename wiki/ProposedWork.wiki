@@ -8,6 +8,26 @@ This page is where you can suggest features that you'd like to see in future ver
 
 == Support and utilities module (utils) ==
 
+=== !JAITools create method ===
+
+I *hate* having to repeat the operator name all the time...
+{{{
+ParameterBlockJAI pb = new ParameterBlockJAI("MaskedConvolve");
+
+... set source and parameters then...
+
+JAI.create("MaskedConvolve", pb, hints);  // grrrr... why repeat the op name ?
+}}}
+
+Instead I propose adding create method to the !JAITools class that provide !DRY (Don't Repeat Yourself) behaviour...
+{{{
+ParameterBlockJAI pb = new ParameterBlockJAI("MaskedConvolve");
+
+... set source and parameters then...
+
+JAITools.create(pb, hints);  // sigh of contentment...
+}}}
+
 === New !BorderExtender classes ===
 
 Two new !BorderExtender classes will be added to the utils module to provide options not covered by JAI's standard extenders. They are:
@@ -15,6 +35,8 @@ Two new !BorderExtender classes will be added to the utils module to provide opt
  * !RandomBorderExtender to generate pixel values drawn from a uniform random distribution (later add support for other distributions)
 
  * !SamplingBorderExtender to generate pixel values by sampling the local area of the source image within a set distance of each border pixel
+
+(first cut versions of these are in the [http://jai-tools.googlecode.com/svn/branches/1.1_advance 1.1 work-in-advance branch])
 
 == Jiffle ==
 
@@ -27,3 +49,10 @@ The latest version of ANTLR makes this process simpler by allowing grammar subse
 === Add support for other image data types ===
 
 Add support for other images data types for both input and output. Add the ability to specify the type of the output image, perhaps via a !RenderingHint.
+
+== ZonalStats operator ==
+
+Make the zone image optional - if not provided the source image is treated as being in a single zone. This will allow the operator to also be used to calculate statistics selectively for areas defined in an ROI.
+
+Relax the requirement that the zone image should cover the whole source image. If the zone image is provided treat any source image pixels that are beyond the bounds of the zone image as ignored.
+
