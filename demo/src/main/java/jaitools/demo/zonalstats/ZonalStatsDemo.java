@@ -92,7 +92,7 @@ public class ZonalStatsDemo {
 
         RenderedOp zsImg = JAI.create("zonalstats", pb);
 
-        ZonalStats results = (ZonalStats) zsImg.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY_NAME);
+        ZonalStats results = (ZonalStats) zsImg.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
         for (Integer zone : results.getZones()) {
             System.out.println("Zone " + zone);
             Map<Statistic, Double> zoneResults = results.getZoneStats(zone);
