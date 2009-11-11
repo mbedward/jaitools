@@ -23,9 +23,9 @@ package jaitools.media.jai.zonalstats;
 import jaitools.CollectionFactory;
 import jaitools.numeric.StreamingSampleStats;
 import jaitools.numeric.Statistic;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.awt.image.RenderedImage;
 import java.util.Map;
 import java.util.SortedSet;
@@ -190,22 +190,24 @@ public class ZonalStatsOpImage extends NullOpImage {
 
         } else {
             RandomIter zoneIter = RandomIterFactory.create(zoneImage, dataImageBounds);
-            Point dataPos = new Point();
-            Point zonePos = new Point();
+            Point2D.Double dataPos = new Point2D.Double();
+            Point2D.Double zonePos = new Point2D.Double();
             dataPos.y = dataImage.getMinY();
             do {
+                dataPos.x = dataImage.getMinX();
                 do {
                     if (roi == null | roi.contains(dataPos)) {
                         double value = dataIter.getSampleDouble(srcBand);
                         zoneTransform.transform(dataPos, zonePos);
-                        int zone = zoneIter.getSample(zonePos.x, zonePos.y, 0);
+                        int zone = zoneIter.getSample((int)zonePos.x, (int)zonePos.y, 0);
                         results.get(zone).addSample(value);
                     }
-                    dataPos.x++;
+                    dataPos.x++ ;
                 } while (!dataIter.nextPixelDone());
 
                 dataIter.startPixels();
-                dataPos.y++;
+                dataPos.y++ ;
+
             } while (!dataIter.nextLineDone());
         }
 
