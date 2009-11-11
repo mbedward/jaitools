@@ -104,7 +104,7 @@ public class KernelStatsDescriptor extends OperationDescriptorImpl {
                     {"Vendor", "jaitools.media.jai"},
                     {"Description", "Calculate neighbourhood statistics"},
                     {"DocURL", "http://code.google.com/p/jai-tools/"},
-                    {"Version", "1.0-SHAPSHOT"},
+                    {"Version", "1.0.0"},
                     {"arg0Desc", "stats - an array of KernelStatistic constants specifying the " +
                              "statistics required"},
                     {"arg1Desc", "kernel - a JAI Kernel object"},
