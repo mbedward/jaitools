@@ -70,16 +70,22 @@ public class ZonalStatsOpImage extends NullOpImage {
 
     /**
      * Constructor
-     * @param dataImage a RenderedImage from which data values will be read
-     * @param zoneImage a RenderedImage of integral data type defining the zones for which
-     * to calculate summary data
+     *
+     * @param dataImage a {@code RenderedImage} from which data values will be read
+     *
+     * @param zoneImage an optional {@code RenderedImage} of integral data type that defines
+     *        the zones for which to calculate summary data
+     * 
      * @param config configurable attributes of the image (see {@link AreaOpImage})
-     * @param layout an optional ImageLayout object; if the layout specifies a SampleModel
-     * and / or ColorModel that are not valid for the requested data (e.g. wrong number
-     * of bands) these will be overridden.
-     * @param stats an array of Statistic constants naming the data required
+     *
+     * @param layout an optional {@code ImageLayout} object
+     *
+     * @param stats an array of {@code Statistic} constants specifying the data required
+     *
      * @param band the data image band to process
-     * @param roi an optional ROI for data image masking
+     *
+     * @param roi an optional {@code ROI} for data image masking
+     *
      * @see ZonalStatsDescriptor
      * @see Statistic
      */
@@ -137,6 +143,12 @@ public class ZonalStatsOpImage extends NullOpImage {
         }
     }
 
+    /**
+     * Delegates calculation of statistics to either {@linkplain #compileZonalStatistics()}
+     * or {@linkplain #compileUnzonedStatistics()}.
+     *
+     * @return the results as a new instance of {@code ZonalStats}
+     */
     private ZonalStats compileStatistics() {
         if (zoneImage != null) {
             return compileZonalStatistics();
@@ -145,6 +157,11 @@ public class ZonalStatsOpImage extends NullOpImage {
         }
     }
 
+    /**
+     * Used to calculate statistics when a zone image was provided.
+     *
+     * @return the results as a new instance of {@code ZonalStats}
+     */
     private ZonalStats compileZonalStatistics() {
         buildZoneList();
 
@@ -212,6 +229,11 @@ public class ZonalStatsOpImage extends NullOpImage {
     }
 
 
+    /**
+     * Used to calculate statistics when no zone image was provided.
+     *
+     * @return the results as a new instance of {@code ZonalStats}
+     */
     private ZonalStats compileUnzonedStatistics() {
         buildZoneList();
         Integer zoneID = zones.first();
@@ -242,6 +264,16 @@ public class ZonalStatsOpImage extends NullOpImage {
         return zonalStats;
     }
 
+    /**
+     * Get the specified property.
+     * <p>
+     * Use this method to retrieve the calculated statistics as a {@code ZonalStats}
+     * object by setting {@code name} to {@linkplain ZonalStatsDescriptor#ZONAL_STATS_PROPERTY}.
+     *
+     * @param name property name
+     *
+     * @return the requested property
+     */
     @Override
     public Object getProperty(String name) {
         if (ZonalStatsDescriptor.ZONAL_STATS_PROPERTY.equalsIgnoreCase(name)) {
@@ -251,11 +283,29 @@ public class ZonalStatsOpImage extends NullOpImage {
         }
     }
 
+
+    /**
+     * Get the class of the given property. For
+     * {@linkplain ZonalStatsDescriptor#ZONAL_STATS_PROPERTY} this will return
+     * {@code ZonalStats.class}.
+     *
+     * @param name property name
+     *
+     * @return the property class
+     */
     @Override
     public Class getPropertyClass(String name) {
-        return ZonalStats.class;
+        if (ZonalStatsDescriptor.ZONAL_STATS_PROPERTY.equalsIgnoreCase(name)) {
+            return ZonalStats.class;
+        } else {
+            return super.getPropertyClass(name);
+        }
     }
 
+    /**
+     * Get all property names
+     * @return property names as an array of Strings
+     */
     @Override
     public String[] getPropertyNames() {
         String[] names;
