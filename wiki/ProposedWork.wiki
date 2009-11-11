@@ -38,6 +38,13 @@ Two new !BorderExtender classes will be added to the utils module to provide opt
 
 (first cut versions of these are in the [http://jai-tools.googlecode.com/svn/branches/1.1_advance 1.1 work-in-advance branch])
 
+=== Extended iterator classes ===
+
+Extended JAI's standard iterator classes to add:
+
+ * getX() and getY()  and getBand() methods for coordinates of the position
+ * constructor that takes an ROI argument to create an iterator that skips pixels not contained in the ROI
+
 == Jiffle ==
 
 === Simplify compilation of Jiffle scripts ===
