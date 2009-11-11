@@ -137,15 +137,6 @@ public class ZonalStatsOpImage extends NullOpImage {
         }
     }
 
-    @Override
-    public Object getProperty(String name) {
-        if (ZonalStatsDescriptor.ZONAL_STATS_PROPERTY.equalsIgnoreCase(name)) {
-            return compileStatistics();
-        } else {
-            return super.getProperty(name);
-        }
-    }
-
     private ZonalStats compileStatistics() {
         if (zoneImage != null) {
             return compileZonalStatistics();
@@ -252,6 +243,15 @@ public class ZonalStatsOpImage extends NullOpImage {
     }
 
     @Override
+    public Object getProperty(String name) {
+        if (ZonalStatsDescriptor.ZONAL_STATS_PROPERTY.equalsIgnoreCase(name)) {
+            return compileStatistics();
+        } else {
+            return super.getProperty(name);
+        }
+    }
+
+    @Override
     public Class getPropertyClass(String name) {
         return ZonalStats.class;
     }
@@ -271,7 +271,7 @@ public class ZonalStatsOpImage extends NullOpImage {
             names = new String[1];
         }
 
-        names[k] = "ZonalStats";
+        names[k] = ZonalStatsDescriptor.ZONAL_STATS_PROPERTY;
         return names;
     }
 
