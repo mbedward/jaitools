@@ -21,8 +21,11 @@
 package jaitools.media.jai.zonalstats;
 
 import jaitools.numeric.Statistic;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.Shape;
 import java.awt.geom.AffineTransform;
+import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
 import javax.media.jai.JAI;
@@ -32,14 +35,26 @@ import javax.media.jai.ROI;
 import javax.media.jai.registry.RenderedRegistryMode;
 
 /**
- * An {@code OperationDescriptor} for the "ZonalStats" operation.
- * <p>
  * Calculates a range of summary statistics for zones, defined in a zone image,
- * based on values in a data image. The zone image must be of integral data
- * type and a zone must be defined for every data image pixel. By default, the
- * zone image is expected to have the same bounds as the data image. If this is not
- * the case an {@linkplain java.awt.geom.AffineTransform} can be provided to transform
- * from data image coordinates to zone image coordinates.
+ * based on values in a data image. The operator can also be used without a zone
+ * image, in which case it will treat all data image pixels as being in the same
+ * zone (labelled zone 0).
+ * <p>
+ * Optionally, an ROI can be provided to define which pixels in the data image
+ * will contribute to the zonal statistics.
+ * <p>
+ * Note that the source names for this operator are "dataImage" and "zoneImage"
+ * rather than the more typical JAI names "source0", "source1".
+ * <p>
+ * If a zone image is provided it must be of integral data type. By default, an
+ * identity mapping is used between zone and data images, ie. zone image pixel at
+ * <i>x, y</i> is mapped to the data image pixel at <i>x, y</i>. Any data image
+ * pixels that do not have a corresponding zone image pixel are ignored, thus the
+ * zone image bounds can be a subset of the data image bounds.
+ * <p>
+ * The user can also provide an {@linkplain AffineTransform} to map data image
+ * positions to zone image positions. For example, multiple data image pixels
+ * could be mapped to a single zone image pixel.
  * <p>
  * Use of this operator is similar to the standard JAI statistics operators such as
  * {@linkplain javax.media.jai.operator.HistogramDescriptor} where the source image is
@@ -47,28 +62,33 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * retrieved as a property. For this operator the property name can be reliably
  * referred to via the {@linkplain #ZONAL_STATS_PROPERTY} constant.
  * <p>
+ * The operator uses the {@linkplain jaitools.numeric.StreamingSampleStats} class for its
+ * calculations, allowing it to handle very large images for statistics other than
+ * {@linkplain jaitools.numeric.Statistic#MEDIAN}, for which the
+ * {@linkplain jaitools.numeric.Statistic#APPROX_MEDIAN} alternative is provided.
+ * <p>
  * Example of use...
  * <pre><code>
  * RenderedImage myData = ...
  * RenderedImage myZones = ...
- * 
+ *
  * ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
  * pb.setSource("dataImage", myData);
  * pb.setSource("zoneImage", myZones);
- * 
+ *
  * Statistic[] stats = {
  *     Statistic.MIN,
  *     Statistic.MAX,
  *     Statistic.MEAN,
  *     Statistic.SDEV
  * };
- * 
+ *
  * pb.setParameter("stats", stats);
  * RenderedOp op = JAI.create("ZonalStats", pb);
- * 
+ *
  * ZonalStats results = (ZonalStats) op.getProperty(
  *     ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
- * 
+ *
  * // print results to console
  * for (Integer zone : results.getZones()) {
  *     System.out.println("Zone " + zone);
@@ -77,19 +97,72 @@ import javax.media.jai.registry.RenderedRegistryMode;
  *         System.out.println(String.format("%12s: %.4f", e.getKey(), e.getValue()));
  *     }
  * }
- * 
+ *
  * </code></pre>
- * This operator uses {@linkplain jaitools.numeric.StreamingSampleStats} for its
- * calculations, allowing it to handle very large images for statistics other than
- * {@linkplain jaitools.numeric.Statistic#MEDIAN}, for which the
- * {@linkplain jaitools.numeric.Statistic#APPROX_MEDIAN} alternative is provided.
- * <p>
- * Optionally, an ROI can be provided to define which pixels in the data image
- * will contribute to the zonal statistics.
- * <p>
- * Note that the source names for this operator are "dataImage" and "zoneImage"
- * rather than the more typical JAI names "source0", "source1".
- * <p>
+ * Using the operator to calculate statistics for an area within the data image...
+ * <pre><code>
+ * RenderedImage myData = ...
+ * Rectangle areaBounds = ...
+ * ROI roi = new ROIShape(areaBounds);
+ *
+ * ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
+ * pb.setSource("dataImage", myData);
+ * pb.setParameter("roi", roi);
+ *
+ * Statistic[] stats = {
+ *     Statistic.MIN,
+ *     Statistic.MAX,
+ *     Statistic.MEAN,
+ *     Statistic.SDEV
+ * };
+ *
+ * pb.setParameter("stats", stats);
+ * RenderedOp op = JAI.create("ZonalStats", pb);
+ *
+ * ZonalStats results = (ZonalStats) op.getProperty(
+ *     ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+ *
+ * // print results: since we didn't use a zone image all
+ * // results will be labelled as zone 0
+ * Map<Statistic, Double> results = results.getZoneStats(0);
+ * for (Entry<Statistic, Double> e : results.entrySet()) {
+ *     System.out.println(String.format("%12s: %.4f", e.getKey(), e.getValue()));
+ * }
+ *
+ * </code></pre>
+ * Using an {@code AffineTransform} to map data image position to zone image position...
+ * <pre><code>
+ * RenderedImage myData = ...
+ * RenderedImage myZones = ...
+ *
+ * ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
+ * pb.setSource("dataImage", myData);
+ * pb.setSource("zoneImage", myZones);
+ *
+ * Statistic[] stats = {
+ *     Statistic.MIN,
+ *     Statistic.MAX,
+ *     Statistic.MEAN,
+ *     Statistic.SDEV
+ * };
+ *
+ * pb.setParameter("stats", stats);
+ *
+ * AffineTransform
+ *
+ * RenderedOp op = JAI.create("ZonalStats", pb);
+ *
+ * ZonalStats results = (ZonalStats) op.getProperty(
+ *     ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+ *
+ * // print results: since we didn't use a zone image all
+ * // results will be labelled as zone 0
+ * Map<Statistic, Double> results = results.getZoneStats(0);
+ * for (Entry<Statistic, Double> e : results.entrySet()) {
+ *     System.out.println(String.format("%12s: %.4f", e.getKey(), e.getValue()));
+ * }
+ *
+ * </code></pre>
  * <b>Parameters</b>
  * <table border="1">
  * <tr align="right">
@@ -108,7 +181,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * <td>zoneTransform</td><td>AffineTransform</td><td>null (identity transform)</td>
  * </tr>
  * </table>
- * 
+ *
  * @author Michael Bedward
  * @since 1.0
  * @source $URL$
@@ -116,6 +189,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  */
 public class ZonalStatsDescriptor extends OperationDescriptorImpl {
 
+    /** Property name used to retrieve the results */
     public static String ZONAL_STATS_PROPERTY = "ZonalStatsProperty";
 
     static final int DATA_IMAGE = 0;
@@ -245,8 +319,14 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
     }
 
     /**
-     * Validate the arguments set in the parameter block and return true
-     * if all are OK; false otherwise
+     * Checks parameters for the following:
+     * <ul>
+     * <li> Number of sources is 1 or 2
+     * <li> Data image band is valid
+     * <li> Zone image, if provided, is an integral data type
+     * <li> Zone image, if provided, overlaps the data image, taking into
+     *      account any {@code AffineTransform}
+     * </ul>
      */
     @Override
     public boolean validateArguments(String modeName, ParameterBlock pb, StringBuffer msg) {
@@ -260,6 +340,42 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
         if (band < 0 || band >= dataImg.getSampleModel().getNumBands()) {
             msg.append("band arg out of bounds for source image: " + band);
             return false;
+        }
+
+        if (pb.getNumSources() == 2) {
+            RenderedImage zoneImg = pb.getRenderedSource(ZONE_IMAGE);
+            int dataType = zoneImg.getSampleModel().getDataType();
+            boolean integralType = false;
+            if (dataType == DataBuffer.TYPE_BYTE ||
+                dataType == DataBuffer.TYPE_INT ||
+                dataType == DataBuffer.TYPE_SHORT ||
+                dataType == DataBuffer.TYPE_USHORT) {
+                integralType = true;
+            }
+
+            if (!integralType) {
+                msg.append("The zone image must be an integral data type");
+                return false;
+            }
+
+            Rectangle dataBounds = new Rectangle(
+                    dataImg.getMinX(), dataImg.getMinY(),
+                    dataImg.getWidth(), dataImg.getHeight());
+
+            Rectangle zoneBounds = new Rectangle(
+                    zoneImg.getMinX(), zoneImg.getMinY(),
+                    zoneImg.getWidth(), zoneImg.getHeight());
+
+            AffineTransform tr = (AffineTransform) pb.getObjectParameter(ZONE_TRANSFORM);
+            if (tr != null && !tr.isIdentity()) {
+                zoneBounds = tr.createTransformedShape(zoneBounds).getBounds();
+            }
+            Rectangle xRect = new Rectangle();
+            Rectangle.intersect(dataBounds, zoneBounds, xRect);
+            if (xRect.isEmpty()) {
+                msg.append("Zone image bounds are outside the data image bounds");
+                return false;
+            }
         }
 
         return true;
