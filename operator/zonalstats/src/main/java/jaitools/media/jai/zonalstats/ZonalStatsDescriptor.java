@@ -79,6 +79,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  *     Statistic.MIN,
  *     Statistic.MAX,
  *     Statistic.MEAN,
+ *     Statistic.APPROX_MEDIAN,
  *     Statistic.SDEV
  * };
  *
@@ -112,6 +113,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  *     Statistic.MIN,
  *     Statistic.MAX,
  *     Statistic.MEAN,
+ *     Statistic.APPROX_MEDIAN,
  *     Statistic.SDEV
  * };
  *
@@ -142,6 +144,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  *     Statistic.MIN,
  *     Statistic.MAX,
  *     Statistic.MEAN,
+ *     Statistic.APPROX_MEDIAN,
  *     Statistic.SDEV
  * };
  *
@@ -180,6 +183,9 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * <td>zoneTransform</td><td>AffineTransform</td><td>null (identity transform)</td>
  * </tr>
  * </table>
+ *
+ * @see jaitools.numeric.Statistic
+ * @see jaitools.numeric.StreamingSampleStats
  *
  * @author Michael Bedward
  * @since 1.0
