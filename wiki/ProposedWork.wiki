@@ -8,7 +8,7 @@ This page is where you can suggest features that you'd like to see in future ver
 
 == Support and utilities module (utils) ==
 
-=== !JAITools create method ===
+=== JAITools create method ===
 
 I *hate* having to repeat the operator name all the time...
 {{{
