@@ -40,7 +40,13 @@ import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 
 /**
- * An operator to calculate neighbourhood data on a source image.
+ * Calculates image summary statistics for a data image within zones defined by
+ * a integral valued zone image. If a zone image is not provided all data image
+ * pixels are treated as being in the same zone (zone 0).
+ * <p>
+ * An {@code ROI} can be provided to specify a subset of the data image that will
+ * be included in the calculations.
+ *
  * @see ZonalStatsDescriptor Description of the algorithm and example
  * 
  * @author Michael Bedward
@@ -154,9 +160,9 @@ public class ZonalStatsOpImage extends NullOpImage {
         Map<Integer, StreamingSampleStats> results = CollectionFactory.newTreeMap();
 
         for (Integer zone : zones) {
-            StreamingSampleStats rss = new StreamingSampleStats();
-            rss.setStatistics(stats);
-            results.put(zone, rss);
+            StreamingSampleStats sampleStats = new StreamingSampleStats();
+            sampleStats.setStatistics(stats);
+            results.put(zone, sampleStats);
         }
 
         RectIter dataIter = RectIterFactory.create(dataImage, null);
