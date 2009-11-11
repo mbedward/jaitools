@@ -40,9 +40,15 @@ import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 
 /**
- * An operator to calculate neighbourhood data on a source image.
+ * Calculates image summary statistics for a data image within zones defined by
+ * a integral valued zone image. If a zone image is not provided all data image
+ * pixels are treated as being in the same zone (zone 0).
+ * <p>
+ * An {@code ROI} can be provided to specify a subset of the data image that will
+ * be included in the calculations.
+ *
  * @see ZonalStatsDescriptor Description of the algorithm and example
- * 
+ *
  * @author Michael Bedward
  * @since 1.0
  * @source $URL$
@@ -112,30 +118,43 @@ public class ZonalStatsOpImage extends NullOpImage {
     /**
      * Compiles the set of zone ID values from the zone image. Note, we are
      * assuming that the zone values are in band 0.
-     * 
-     * @param zoneImage the zone image
+     * <p>
+     * If a zone image wasn't provided we treat all data image pixels as
+     * belonging to zone 0.
      */
     private void buildZoneList() {
         zones = CollectionFactory.newTreeSet();
-        RectIter iter = RectIterFactory.create(zoneImage, null);
-        do {
+        if (zoneImage != null) {
+            RectIter iter = RectIterFactory.create(zoneImage, null);
             do {
-                zones.add(iter.getSample());
-            } while (!iter.nextPixelDone());
-            iter.startPixels();
-        } while (!iter.nextLineDone());
+                do {
+                    zones.add(iter.getSample());
+                } while (!iter.nextPixelDone());
+                iter.startPixels();
+            } while (!iter.nextLineDone());
+        } else {
+            zones.add(0);
+        }
     }
 
     @Override
     public Object getProperty(String name) {
         if (ZonalStatsDescriptor.ZONAL_STATS_PROPERTY.equalsIgnoreCase(name)) {
-            return getZonalStats();
+            return compileStatistics();
         } else {
             return super.getProperty(name);
         }
     }
 
-    private ZonalStats getZonalStats() {
+    private ZonalStats compileStatistics() {
+        if (zoneImage != null) {
+            return compileZonalStatistics();
+        } else {
+            return compileUnzonedStatistics();
+        }
+    }
+
+    private ZonalStats compileZonalStatistics() {
         buildZoneList();
 
         Map<Integer, StreamingSampleStats> results = CollectionFactory.newTreeMap();
@@ -160,13 +179,12 @@ public class ZonalStatsOpImage extends NullOpImage {
                         results.get(zone).addSample(value);
                     }
                     zoneIter.nextPixelDone(); // safe call
-                    x++ ;
+                    x++;
                 } while (!dataIter.nextPixelDone());
 
                 dataIter.startPixels();
                 zoneIter.startPixels();
                 zoneIter.nextLineDone(); // safe call
-                y++ ;
 
             } while (!dataIter.nextLineDone());
 
@@ -202,6 +220,37 @@ public class ZonalStatsOpImage extends NullOpImage {
         return zonalStats;
     }
 
+
+    private ZonalStats compileUnzonedStatistics() {
+        buildZoneList();
+        Integer zoneID = zones.first();
+
+        StreamingSampleStats sampleStats = new StreamingSampleStats();
+        sampleStats.setStatistics(stats);
+
+        RectIter dataIter = RectIterFactory.create(dataImage, null);
+        int y = dataImage.getMinY();
+        do {
+            int x = dataImage.getMinX();
+            do {
+                if (roi == null || roi.contains(x, y)) {
+                    double value = dataIter.getSampleDouble(srcBand);
+                    sampleStats.addSample(value);
+                }
+                x++;
+            } while (!dataIter.nextPixelDone());
+
+            dataIter.startPixels();
+            y++ ;
+
+        } while (!dataIter.nextLineDone());
+
+
+        ZonalStats zonalStats = new ZonalStats(stats, zones);
+        zonalStats.setZoneResults(zoneID, sampleStats);
+        return zonalStats;
+    }
+
     @Override
     public Class getPropertyClass(String name) {
         return ZonalStats.class;
@@ -225,7 +274,6 @@ public class ZonalStatsOpImage extends NullOpImage {
         names[k] = "ZonalStats";
         return names;
     }
-
 
 }
 

@@ -52,15 +52,19 @@ public class ZonalStatsRIF implements RenderedImageFactory {
     /**
      * Create a new instance of ZonalStatsOpImage in the rendered layer.
      *
-     * @param paramBlock specifies the source image and the following parameters:
-     * "stats", "band", "roi", "zoneTransform"
+     * @param paramBlock specifies the source image, the optional zone image,
+     * and the following parameters: "stats", "band", "roi", "zoneTransform"
      *
      * @param renderHints optional RenderingHints object
      */
     public RenderedImage create(ParameterBlock paramBlock, RenderingHints renderHints) {
-        
+
         RenderedImage dataImage = paramBlock.getRenderedSource(ZonalStatsDescriptor.DATA_IMAGE);
-        RenderedImage zoneImage = paramBlock.getRenderedSource(ZonalStatsDescriptor.ZONE_IMAGE);
+        RenderedImage zoneImage = null;
+
+        if (paramBlock.getNumSources() == 2) {
+            zoneImage = paramBlock.getRenderedSource(ZonalStatsDescriptor.ZONE_IMAGE);
+        }
 
         ImageLayout layout = RIFUtil.getImageLayoutHint(renderHints);
         if (layout == null) layout = new ImageLayout();
