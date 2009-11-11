@@ -55,12 +55,14 @@ import static org.junit.Assert.*;
 public class ZonalStatsTest {
     
     private static final int WIDTH = 256;
+    private static final int MIN_DATUM = -5;
+    private static final int MAX_DATUM =  5;
     private static RenderedImage dataImage;
     private static Random rand = new Random();
 
     @BeforeClass
     public static void setup() {
-        dataImage = createConstantImage(new Double[]{0d});
+        dataImage = createRandomImage(MIN_DATUM, MAX_DATUM);
     }
 
     @Test
@@ -164,15 +166,14 @@ public class ZonalStatsTest {
     public void testMin() {
         System.out.println("   test min");
 
-        final int min = -5, max = 5;
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
-        pb.setSource("dataImage", createRandomImage(min, max));
+        pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{ Statistic.MIN });
         RenderedOp op = JAI.create("ZonalStats", pb);
         ZonalStats result = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
         Map<Statistic, Double> stats = result.getZoneStats(0);
         assertTrue(stats.containsKey(Statistic.MIN));
-        assertTrue(stats.get(Statistic.MIN).intValue() == min);
+        assertTrue(stats.get(Statistic.MIN).intValue() == MIN_DATUM);
     }
 
 
@@ -180,40 +181,39 @@ public class ZonalStatsTest {
     public void testMax() {
         System.out.println("   test max");
 
-        final int min = -5, max = 5;
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
-        pb.setSource("dataImage", createRandomImage(min, max));
+        pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{ Statistic.MAX });
         RenderedOp op = JAI.create("ZonalStats", pb);
         ZonalStats result = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
         Map<Statistic, Double> stats = result.getZoneStats(0);
         assertTrue(stats.containsKey(Statistic.MAX));
-        assertTrue(stats.get(Statistic.MAX).intValue() == max);
+        assertTrue(stats.get(Statistic.MAX).intValue() == MAX_DATUM);
     }
 
     @Test
     public void testMean() {
         System.out.println("   test mean");
 
-        final int min = -5, max = 5;
-        final double expMean = 0d, TOL = 0.01d;
-        final int trials = 3;
-        boolean withinTolerance = false;
+        double expMean = 0d;
 
-        for (int i = 1; i <= trials && !withinTolerance; i++) {
-            ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
-            pb.setSource("dataImage", createRandomImage(min, max));
-            pb.setParameter("stats", new Statistic[]{Statistic.MEAN});
-            RenderedOp op = JAI.create("ZonalStats", pb);
-            ZonalStats result = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
-            Map<Statistic, Double> stats = result.getZoneStats(0);
-            assertTrue(stats.containsKey(Statistic.MEAN));
-            if ( DoubleComparison.dequal(stats.get(Statistic.MEAN), expMean, TOL) ) {
-                withinTolerance = true;
-            }
-        }
+        RectIter iter = RectIterFactory.create(dataImage, null);
+        do {
+            do {
+                expMean += iter.getSample();
+            } while (!iter.nextPixelDone());
+            iter.startPixels();
+        } while (!iter.nextLineDone());
+        expMean /= (WIDTH * WIDTH);
 
-        assertTrue(withinTolerance);
+        ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
+        pb.setSource("dataImage", dataImage);
+        pb.setParameter("stats", new Statistic[]{Statistic.MEAN});
+        RenderedOp op = JAI.create("ZonalStats", pb);
+        ZonalStats result = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+        Map<Statistic, Double> stats = result.getZoneStats(0);
+        assertTrue(stats.containsKey(Statistic.MEAN));
+        assertTrue(DoubleComparison.dequal(expMean, stats.get(Statistic.MEAN)));
     }
 
 
@@ -221,52 +221,62 @@ public class ZonalStatsTest {
     public void testStdDev() {
         System.out.println("   test standard deviation");
 
-        final int min = -5, max = 5;
-        final double expSD = 3.16d, TOL = 0.01d;
-        final int trials = 3;
-        boolean withinTolerance = false;
+        double expSD;
+        double mOld = 0d, mNew;
+        double variance = 0d;
 
-        for (int i = 1; i <= trials && !withinTolerance; i++) {
-            ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
-            pb.setSource("dataImage", createRandomImage(min, max));
-            pb.setParameter("stats", new Statistic[]{Statistic.SDEV});
-            RenderedOp op = JAI.create("ZonalStats", pb);
-            ZonalStats result = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
-            Map<Statistic, Double> stats = result.getZoneStats(0);
-            assertTrue(stats.containsKey(Statistic.SDEV));
-            if ( DoubleComparison.dequal(stats.get(Statistic.SDEV), expSD, TOL) ) {
-                withinTolerance = true;
-            }
-        }
+        RectIter iter = RectIterFactory.create(dataImage, null);
+        long n = 0;
+        do {
+            do {
+                double val = iter.getSample();
+                n++ ;
+                if (n == 1) {
+                    mOld = mNew = val;
+                } else {
+                    mNew = mOld + (val - mOld) / n;
+                    variance = variance + (val - mOld) * (val - mNew);
+                    mOld = mNew;
+                }
+            } while (!iter.nextPixelDone());
+            iter.startPixels();
+        } while (!iter.nextLineDone());
 
-        assertTrue(withinTolerance);
+        expSD = Math.sqrt(variance / (n-1));
+
+        ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
+        pb.setSource("dataImage", dataImage);
+        pb.setParameter("stats", new Statistic[]{Statistic.SDEV});
+        RenderedOp op = JAI.create("ZonalStats", pb);
+        ZonalStats result = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+        Map<Statistic, Double> stats = result.getZoneStats(0);
+        assertTrue(stats.containsKey(Statistic.SDEV));
+        assertTrue(DoubleComparison.dequal(expSD, stats.get(Statistic.SDEV)));
     }
 
     @Test
     public void testRange() {
         System.out.println("   test range");
 
-        final int min = -5, max = 5;
-
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
-        pb.setSource("dataImage", createRandomImage(min, max));
+        pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{Statistic.RANGE});
         RenderedOp op = JAI.create("ZonalStats", pb);
         ZonalStats result = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
         Map<Statistic, Double> stats = result.getZoneStats(0);
 
         assertTrue(stats.containsKey(Statistic.RANGE));
-        assertTrue(max - min == stats.get(Statistic.RANGE).intValue());
+        assertTrue(stats.get(Statistic.RANGE).intValue() == MAX_DATUM - MIN_DATUM);
     }
 
     @Test
     public void testExactMedian() {
         System.out.println("   test exact median");
 
-        final int min = -5, max = 5, expMedian = 0;
+        final int expMedian = 0;
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
-        pb.setSource("dataImage", createRandomImage(min, max));
+        pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{Statistic.MEDIAN});
         RenderedOp op = JAI.create("ZonalStats", pb);
         ZonalStats result = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
@@ -280,10 +290,10 @@ public class ZonalStatsTest {
     public void testApproxMedian() {
         System.out.println("   test approximate median");
 
-        final int min = -5, max = 5, expMedian = 0;
+        final int expMedian = 0;
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
-        pb.setSource("dataImage", createRandomImage(min, max));
+        pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{Statistic.APPROX_MEDIAN});
         RenderedOp op = JAI.create("ZonalStats", pb);
         ZonalStats result = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
@@ -311,7 +321,7 @@ public class ZonalStatsTest {
         return JAI.create("constant", pb, hints).getRendering();
     }
 
-    private PlanarImage createRandomImage(int min, int max) {
+    private static PlanarImage createRandomImage(int min, int max) {
         SampleModel sm = new ComponentSampleModel(
                 DataBuffer.TYPE_INT, WIDTH, WIDTH, 1, WIDTH, new int[]{0});
 
