@@ -250,12 +250,13 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
      */
     @Override
     public boolean validateArguments(String modeName, ParameterBlock pb, StringBuffer msg) {
-        if (!super.validateArguments(modeName, pb, msg)) {
+        if (pb.getNumSources() == 0 || pb.getNumSources() > 2) {
+            msg.append("ZonalStats operator takes 1 or 2 source images");
             return false;
         }
 
         int band = pb.getIntParameter(BAND_ARG);
-        RenderedImage dataImg = (RenderedImage) pb.getSource(DATA_IMAGE);
+        RenderedImage dataImg = pb.getRenderedSource(DATA_IMAGE);
         if (band < 0 || band >= dataImg.getSampleModel().getNumBands()) {
             msg.append("band arg out of bounds for source image: " + band);
             return false;

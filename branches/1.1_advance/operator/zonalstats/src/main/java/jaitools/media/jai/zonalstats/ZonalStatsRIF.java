@@ -52,15 +52,20 @@ public class ZonalStatsRIF implements RenderedImageFactory {
     /**
      * Create a new instance of ZonalStatsOpImage in the rendered layer.
      *
-     * @param paramBlock specifies the source image and the following parameters:
-     * "stats", "band", "roi", "zoneTransform"
+     * @param paramBlock specifies the source image, the optional zone image,
+     * and the following parameters: "stats", "band", "roi", "zoneTransform"
      *
      * @param renderHints optional RenderingHints object
      */
     public RenderedImage create(ParameterBlock paramBlock, RenderingHints renderHints) {
         
-        RenderedImage source = paramBlock.getRenderedSource(0);
+        RenderedImage dataImage = paramBlock.getRenderedSource(ZonalStatsDescriptor.DATA_IMAGE);
+        RenderedImage zoneImage = null;
 
+        if (paramBlock.getNumSources() == 2) {
+            zoneImage = paramBlock.getRenderedSource(ZonalStatsDescriptor.ZONE_IMAGE);
+        }
+        
         ImageLayout layout = RIFUtil.getImageLayoutHint(renderHints);
         if (layout == null) layout = new ImageLayout();
 
@@ -72,7 +77,7 @@ public class ZonalStatsRIF implements RenderedImageFactory {
         SampleModel sm = layout.getSampleModel(null);
         if (sm == null || sm.getNumBands() != stats.length) {
 
-            int dataType = source.getSampleModel().getDataType();
+            int dataType = dataImage.getSampleModel().getDataType();
             if (dataType != DataBuffer.TYPE_FLOAT && dataType != DataBuffer.TYPE_DOUBLE) {
                 for (Statistic stat : stats) {
                     if (!stat.supportsIntegralResult()) {
@@ -83,9 +88,9 @@ public class ZonalStatsRIF implements RenderedImageFactory {
             }
 
             sm = RasterFactory.createComponentSampleModel(
-                    source.getSampleModel(),
+                    dataImage.getSampleModel(),
                     dataType,
-                    source.getWidth(), source.getHeight(), stats.length);
+                    dataImage.getWidth(), dataImage.getHeight(), stats.length);
 
             layout.setSampleModel(sm);
             if (layout.getColorModel(null) != null) {
@@ -100,8 +105,7 @@ public class ZonalStatsRIF implements RenderedImageFactory {
                 (AffineTransform) paramBlock.getObjectParameter(ZonalStatsDescriptor.ZONE_TRANSFORM);
 
         return new ZonalStatsOpImage(
-                paramBlock.getRenderedSource(ZonalStatsDescriptor.DATA_IMAGE),
-                paramBlock.getRenderedSource(ZonalStatsDescriptor.ZONE_IMAGE),
+                dataImage, zoneImage,
                 renderHints,
                 layout,
                 stats,

@@ -112,30 +112,43 @@ public class ZonalStatsOpImage extends NullOpImage {
     /**
      * Compiles the set of zone ID values from the zone image. Note, we are
      * assuming that the zone values are in band 0.
-     * 
-     * @param zoneImage the zone image
+     * <p>
+     * If a zone image wasn't provided we treat all data image pixels as
+     * belonging to zone 0.
      */
     private void buildZoneList() {
         zones = CollectionFactory.newTreeSet();
-        RectIter iter = RectIterFactory.create(zoneImage, null);
-        do {
+        if (zoneImage != null) {
+            RectIter iter = RectIterFactory.create(zoneImage, null);
             do {
-                zones.add(iter.getSample());
-            } while (!iter.nextPixelDone());
-            iter.startPixels();
-        } while (!iter.nextLineDone());
+                do {
+                    zones.add(iter.getSample());
+                } while (!iter.nextPixelDone());
+                iter.startPixels();
+            } while (!iter.nextLineDone());
+        } else {
+            zones.add(0);
+        }
     }
 
     @Override
     public Object getProperty(String name) {
         if (ZonalStatsDescriptor.ZONAL_STATS_PROPERTY.equalsIgnoreCase(name)) {
-            return getZonalStats();
+            return compileStatistics();
         } else {
             return super.getProperty(name);
         }
     }
 
-    private ZonalStats getZonalStats() {
+    private ZonalStats compileStatistics() {
+        if (zoneImage != null) {
+            return compileZonalStatistics();
+        } else {
+            return compileUnzonedStatistics();
+        }
+    }
+
+    private ZonalStats compileZonalStatistics() {
         buildZoneList();
 
         Map<Integer, StreamingSampleStats> results = CollectionFactory.newTreeMap();
@@ -150,7 +163,6 @@ public class ZonalStatsOpImage extends NullOpImage {
         if (zoneTransform == null) {  // Idenity transform assumed
             RectIter zoneIter = RectIterFactory.create(zoneImage, dataImageBounds);
 
-            boolean done;
             do {
                 do {
                     double value = dataIter.getSampleDouble(srcBand);
@@ -190,6 +202,31 @@ public class ZonalStatsOpImage extends NullOpImage {
             zonalStats.setZoneResults(zone, results.get(zone));
         }
 
+        return zonalStats;
+    }
+
+
+    private ZonalStats compileUnzonedStatistics() {
+        buildZoneList();
+        Integer zoneID = zones.first();
+
+        StreamingSampleStats sampleStats = new StreamingSampleStats();
+        sampleStats.setStatistics(stats);
+
+        RectIter dataIter = RectIterFactory.create(dataImage, null);
+        do {
+            do {
+                double value = dataIter.getSampleDouble(srcBand);
+                sampleStats.addSample(value);
+            } while (!dataIter.nextPixelDone());
+
+            dataIter.startPixels();
+
+        } while (!dataIter.nextLineDone());
+
+
+        ZonalStats zonalStats = new ZonalStats(stats, zones);
+        zonalStats.setZoneResults(zoneID, sampleStats);
         return zonalStats;
     }
 
