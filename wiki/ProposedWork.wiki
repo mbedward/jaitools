@@ -19,7 +19,7 @@ ParameterBlockJAI pb = new ParameterBlockJAI("MaskedConvolve");
 JAI.create("MaskedConvolve", pb, hints);  // grrrr... why repeat the op name ?
 }}}
 
-Instead I propose adding create method to the !JAITools class that provide !DRY (Don't Repeat Yourself) behaviour...
+Instead I propose adding create method to the JAITools class that provide DRY (Don't Repeat Yourself) behaviour...
 {{{
 ParameterBlockJAI pb = new ParameterBlockJAI("MaskedConvolve");
 
