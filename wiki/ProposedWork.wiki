@@ -59,6 +59,8 @@ Add support for other images data types for both input and output. Add the abili
 
 == !ZonalStats operator ==
 
+*Note* these changes have now been implemented in version 1.0
+
 Make the zone image optional - if not provided the source image is treated as being in a single zone. This will allow the operator to also be used to calculate statistics selectively for areas defined in an ROI.
 
 Relax the requirement that the zone image should cover the whole source image. If the zone image is provided treat any source image pixels that are beyond the bounds of the zone image as ignored.
