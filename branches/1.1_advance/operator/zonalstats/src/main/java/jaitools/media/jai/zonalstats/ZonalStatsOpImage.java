@@ -163,12 +163,17 @@ public class ZonalStatsOpImage extends NullOpImage {
         if (zoneTransform == null) {  // Idenity transform assumed
             RectIter zoneIter = RectIterFactory.create(zoneImage, dataImageBounds);
 
+            int y = dataImage.getMinY();
             do {
+                int x = dataImage.getMinX();
                 do {
-                    double value = dataIter.getSampleDouble(srcBand);
-                    int zone = zoneIter.getSample();
-                    results.get(zone).addSample(value);
+                    if (roi == null || roi.contains(x, y)) {
+                        double value = dataIter.getSampleDouble(srcBand);
+                        int zone = zoneIter.getSample();
+                        results.get(zone).addSample(value);
+                    }
                     zoneIter.nextPixelDone(); // safe call
+                    x++;
                 } while (!dataIter.nextPixelDone());
 
                 dataIter.startPixels();
@@ -183,16 +188,18 @@ public class ZonalStatsOpImage extends NullOpImage {
             Point zonePos = new Point();
             dataPos.y = dataImage.getMinY();
             do {
-                dataPos.x = dataImage.getMinX();
                 do {
-                    double value = dataIter.getSampleDouble(srcBand);
-                    zoneTransform.transform(dataPos, zonePos);
-                    int zone = zoneIter.getSample(zonePos.x, zonePos.y, 0);
-                    results.get(zone).addSample(value);
+                    if (roi == null | roi.contains(dataPos)) {
+                        double value = dataIter.getSampleDouble(srcBand);
+                        zoneTransform.transform(dataPos, zonePos);
+                        int zone = zoneIter.getSample(zonePos.x, zonePos.y, 0);
+                        results.get(zone).addSample(value);
+                    }
+                    dataPos.x++;
                 } while (!dataIter.nextPixelDone());
 
                 dataIter.startPixels();
-
+                dataPos.y++;
             } while (!dataIter.nextLineDone());
         }
 
@@ -214,13 +221,19 @@ public class ZonalStatsOpImage extends NullOpImage {
         sampleStats.setStatistics(stats);
 
         RectIter dataIter = RectIterFactory.create(dataImage, null);
+        int y = dataImage.getMinY();
         do {
+            int x = dataImage.getMinX();
             do {
-                double value = dataIter.getSampleDouble(srcBand);
-                sampleStats.addSample(value);
+                if (roi == null || roi.contains(x, y)) {
+                    double value = dataIter.getSampleDouble(srcBand);
+                    sampleStats.addSample(value);
+                }
+                x++;
             } while (!dataIter.nextPixelDone());
 
             dataIter.startPixels();
+            y++ ;
 
         } while (!dataIter.nextLineDone());
 
