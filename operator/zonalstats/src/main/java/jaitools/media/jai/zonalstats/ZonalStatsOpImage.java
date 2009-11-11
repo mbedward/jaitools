@@ -141,27 +141,32 @@ public class ZonalStatsOpImage extends NullOpImage {
         Map<Integer, StreamingSampleStats> results = CollectionFactory.newTreeMap();
 
         for (Integer zone : zones) {
-            StreamingSampleStats rss = new StreamingSampleStats();
-            rss.setStatistics(stats);
-            results.put(zone, rss);
+            StreamingSampleStats sampleStats = new StreamingSampleStats();
+            sampleStats.setStatistics(stats);
+            results.put(zone, sampleStats);
         }
 
         RectIter dataIter = RectIterFactory.create(dataImage, null);
         if (zoneTransform == null) {  // Idenity transform assumed
             RectIter zoneIter = RectIterFactory.create(zoneImage, dataImageBounds);
 
-            boolean done;
+            int y = dataImage.getMinY();
             do {
+                int x = dataImage.getMinX();
                 do {
-                    double value = dataIter.getSampleDouble(srcBand);
-                    int zone = zoneIter.getSample();
-                    results.get(zone).addSample(value);
+                    if (roi == null || roi.contains(x, y)) {
+                        double value = dataIter.getSampleDouble(srcBand);
+                        int zone = zoneIter.getSample();
+                        results.get(zone).addSample(value);
+                    }
                     zoneIter.nextPixelDone(); // safe call
+                    x++ ;
                 } while (!dataIter.nextPixelDone());
 
                 dataIter.startPixels();
                 zoneIter.startPixels();
                 zoneIter.nextLineDone(); // safe call
+                y++ ;
 
             } while (!dataIter.nextLineDone());
 
@@ -173,13 +178,17 @@ public class ZonalStatsOpImage extends NullOpImage {
             do {
                 dataPos.x = dataImage.getMinX();
                 do {
-                    double value = dataIter.getSampleDouble(srcBand);
-                    zoneTransform.transform(dataPos, zonePos);
-                    int zone = zoneIter.getSample(zonePos.x, zonePos.y, 0);
-                    results.get(zone).addSample(value);
+                    if (roi == null | roi.contains(dataPos)) {
+                        double value = dataIter.getSampleDouble(srcBand);
+                        zoneTransform.transform(dataPos, zonePos);
+                        int zone = zoneIter.getSample(zonePos.x, zonePos.y, 0);
+                        results.get(zone).addSample(value);
+                    }
+                    dataPos.x++ ;
                 } while (!dataIter.nextPixelDone());
 
                 dataIter.startPixels();
+                dataPos.y++ ;
 
             } while (!dataIter.nextLineDone());
         }
