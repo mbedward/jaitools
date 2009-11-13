@@ -2,9 +2,9 @@
 
 = Introduction =
 
-The jiffle language is intended to make it easier to create images from expressions 
-consisting of mathematical and logical operators, pre-defined and user-defined constants,
-and data from input images.
+The Jiffle scripting language allows you to create images from expressions consisting of mathematical and logical operators, pre-defined and user-defined constants, and data from input images. Using Jiffle you can do many of the things that you otherwise might write a JAI !ImageFunction to accomplish, but with much less code.
+
+Jiffle is based on r.mapcalc language which was developed for raster algebra in the GRASS GIS. More information about GRASS and r.mapcalc is available at the [http://grass.osgeo.org/" OSGeo GRASS] web site.
 
 == Examples ==
 
