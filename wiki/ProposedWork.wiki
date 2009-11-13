@@ -1,4 +1,5 @@
 #summary Proposals for features in future versions of jai-tools
+#labels Featured
 
 This page is where you can suggest features that you'd like to see in future versions of the library.  If you're not sure exactly where to put something just add it at the end of the page with enough detail so that everyone will know what you're talking about, then go to the [http://groups.google.com/group/jai-tools mailing list] and let us know.
 
