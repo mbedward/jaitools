@@ -49,6 +49,8 @@ public class Range<T extends Number & Comparable> {
     public static final int INF = 1;
 
     private static final int FINITE = 0;
+
+    private static final int NAN = -9999;
     
     private T minValue;
     private boolean minIncluded;
@@ -141,16 +143,27 @@ public class Range<T extends Number & Comparable> {
             // assume negative infinity
             minType = NEG_INF;
 
-        } else if (minValue instanceof Double && Double.isInfinite(minValue.doubleValue())) {
-            if (Double.compare(minValue.doubleValue(), Double.POSITIVE_INFINITY) == 0) {
-                minType = INF;
-            } else {
+        } else if (minValue instanceof Double) {
+            if (Double.isInfinite(minValue.doubleValue())) {
+                if (Double.compare(minValue.doubleValue(), Double.POSITIVE_INFINITY) == 0) {
+                    minType = INF;
+                } else {
+                    minType = NEG_INF;
+                }
+            } else if (Double.isNaN(minValue.doubleValue())) {
+                // assume negative infinity
                 minType = NEG_INF;
             }
-        } else if (minValue instanceof Float && Float.isInfinite(minValue.floatValue())) {
-            if (Float.compare(minValue.floatValue(), Float.POSITIVE_INFINITY) == 0) {
-                minType = INF;
-            } else {
+
+        } else if (minValue instanceof Float) {
+            if (Float.isInfinite(minValue.floatValue())) {
+                if (Float.compare(minValue.floatValue(), Float.POSITIVE_INFINITY) == 0) {
+                    minType = INF;
+                } else {
+                    minType = NEG_INF;
+                }
+            } else if (Float.isNaN(minValue.floatValue())) {
+                // assume negative infinity
                 minType = NEG_INF;
             }
         }
@@ -171,17 +184,27 @@ public class Range<T extends Number & Comparable> {
             // assume positive infinity
             maxType = INF;
 
-        } else if (maxValue instanceof Double && Double.isInfinite(maxValue.doubleValue())) {
-            if (Double.compare(maxValue.doubleValue(), Double.POSITIVE_INFINITY) == 0) {
+        } else if (maxValue instanceof Double) {
+            if (Double.isInfinite(maxValue.doubleValue())) {
+                if (Double.compare(maxValue.doubleValue(), Double.POSITIVE_INFINITY) == 0) {
+                    maxType = INF;
+                } else {
+                    maxType = NEG_INF;
+                }
+            } else if (Double.isNaN(maxValue.doubleValue())) {
+                // assume positive infinity
                 maxType = INF;
-            } else {
-                maxType = NEG_INF;
             }
-        } else if (maxValue instanceof Float && Float.isInfinite(maxValue.floatValue())) {
-            if (Float.compare(maxValue.floatValue(), Float.POSITIVE_INFINITY) == 0) {
+        } else if (maxValue instanceof Float) {
+            if (Float.isInfinite(maxValue.floatValue())) {
+                if (Float.compare(maxValue.floatValue(), Float.POSITIVE_INFINITY) == 0) {
+                    maxType = INF;
+                } else {
+                    maxType = NEG_INF;
+                }
+            } else if (Float.isNaN(maxValue.floatValue())) {
+                // assume positive infinity
                 maxType = INF;
-            } else {
-                maxType = NEG_INF;
             }
         }
 
@@ -209,9 +232,11 @@ public class Range<T extends Number & Comparable> {
                             "min and max endpoints included");
                 }
             }
+
         } else if (minType == maxType) { // both at +ve or -ve Inf
             isPoint = true;
-        } else if (minType > maxType) { // Inf endpoints wrong way round
+
+        } else if (minType == INF &&  maxType == NEG_INF) { // Inf endpoints wrong way round
             throw new IllegalArgumentException(
                     "invalid to have min endpoint at Inf  and max endpoint at Neg Inf");
         }
@@ -263,17 +288,25 @@ public class Range<T extends Number & Comparable> {
 
             bound = inf[0];
 
-        } else if (value instanceof Double && Double.isInfinite(value.doubleValue())) {
-            if (Double.compare(value.doubleValue(), Double.POSITIVE_INFINITY) == 0) {
-                bound = INF;
-            } else {
-                bound = NEG_INF;
+        } else if (value instanceof Double) {
+            if (Double.isInfinite(value.doubleValue())) {
+                if (Double.compare(value.doubleValue(), Double.POSITIVE_INFINITY) == 0) {
+                    bound = INF;
+                } else {
+                    bound = NEG_INF;
+                }
+            } else if (Double.isNaN(value.doubleValue())) {
+                bound = NAN;
             }
-        } else if (value instanceof Float && Float.isInfinite(value.floatValue())) {
-            if (Float.compare(value.floatValue(), Float.POSITIVE_INFINITY) == 0) {
-                bound = INF;
-            } else {
-                bound = NEG_INF;
+        } else if (value instanceof Float) { 
+            if (Float.isInfinite(value.floatValue())) {
+                if (Float.compare(value.floatValue(), Float.POSITIVE_INFINITY) == 0) {
+                    bound = INF;
+                } else {
+                    bound = NEG_INF;
+                }
+            } else if (Float.isNaN(value.floatValue())) {
+                bound = NAN;
             }
         }
 
@@ -419,16 +452,31 @@ public class Range<T extends Number & Comparable> {
      */
     public boolean contains(T value) {
         if (value == null) {
-            throw new IllegalArgumentException("null values are not supported");
+            throw new UnsupportedOperationException("null values are not supported");
         }
         
         if (isPoint) {
             if (minType == FINITE) {
                 return minValue == value;
+
+            } else if (minType == NAN) {
+                if (value instanceof Double) {
+                    return Double.isNaN(value.doubleValue());
+                } else {
+                    return Float.isNaN(value.floatValue());
+                }
+
             } else {
                 return false;
             }
+
         } else {
+            // NaN values are always outside a proper interval
+            if ((value instanceof Double && Double.isNaN(value.doubleValue())) ||
+                (value instanceof Float && Float.isNaN(value.floatValue()))) {
+                return false;
+            }
+
             Range<T> r = Range.create(value);
             return intersects(r);
         }
