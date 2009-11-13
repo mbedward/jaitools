@@ -1,4 +1,5 @@
 #summary a JAI TileCache implementation to handle large volumes of image data
+#labels Featured
 
 =!DiskMemTileCache=
 
