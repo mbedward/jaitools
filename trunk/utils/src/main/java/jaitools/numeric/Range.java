@@ -21,11 +21,32 @@ package jaitools.numeric;
 
 
 /**
- * Defines a range of numeric values that is used with {@linkplain RangeLookupTable}
- * and the {@linkplain jaitools.media.jai.RangeLookup} operator.
+ * Yet another numeric interval class. It is used with the {@code RangeLookup} operator but
+ * is also available for general use and does not depend on JAI classes.
  * <p>
- * This class and the associated {@linkplain RangeComparator} do not depend on JAI and
- * so may also be used for general applications.
+ * {@code Range} is a generic class that can be used all {@code Number} types. A range
+ * is defined by its endpoints. If the min (lower bound) end-point is the same as the
+ * max (upper-bound) end-point then the range represents a point, also referred to as
+ * a degenerate interval.
+ * <p>
+ * An end-point can be positioned at a finite value, in which case it is said to be closed,
+ * or at positive or negative infinity, in which case it is said to be open. For finite
+ * end-points, a range can include or exclude the end-point. Included end-points correspond
+ * to square-brackets in interval notation, while excluded end-points correspond to round
+ * brackets.
+ * <p>
+ * The following rules apply to Float and Double NaN values...
+ * <ul> 
+ * <li> Float and Double NaN are considered equal
+ * <li> Point intervals can have value NaN
+ * <li> Proper intervals treat NaN at their lower end-point as negative infinity and at
+ *      their upper end-point as positive infinity
+ * <li> A test value of NaN can be equal to a point interval
+ * <li> A test value of NaN will always be treated as outside a proper interval
+ * </ul>
+ *
+ * @see RangeComparator
+ * @see jaitools.media.jai.rangelookup.RangeLookupDescriptor
  *
  * @author Michael Bedward
  * @since 1.0
