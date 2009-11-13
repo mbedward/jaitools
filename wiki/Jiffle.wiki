@@ -1,4 +1,4 @@
-#summary Jiffle: JAI Image Function Language
+#summary Jiffle: a language for image creation and raster algebra
 #labels Featured
 
 = Introduction =
