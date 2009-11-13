@@ -38,12 +38,18 @@ Comparisons between Range objects are handled by the !RangeComparator class. Hay
 ||GGGG||>>>>||is completely greater than||
 
 ==Handling NaN values==
+
 The following rules apply to Float and Double NaN values...
-* Float and Double NaN are considered equal
-* Point intervals can have value NaN
-* Proper intervals treat NaN at their lower end-point as negative infinity and at their upper end-point as positive infinity
-* A test value of NaN can be equal to a point interval
-* A test value of NaN will always be treated as outside a proper interval
+
+ * Float and Double NaN are considered equal
+
+ * Point intervals can have value NaN
+
+ * Proper intervals treat NaN at their lower end-point as negative infinity and at their upper end-point as positive infinity
+
+ * A test value of NaN can be equal to a point interval
+
+ * A test value of NaN will always be treated as outside a proper interval
 
 ==Examples of use==
 {{{
