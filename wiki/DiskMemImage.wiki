@@ -1,4 +1,5 @@
 #summary A writable tiled image class that uses disk as well as memory storage for its data
+#labels Featured
 
 =!DiskMemImage=
 
