@@ -75,93 +75,77 @@ public class RangeComparator<T extends Number & Comparable> {
      * the maximum of interval Y.
      */
     public enum Result {
-        /** Interval X is entirely less than interval Y. <br>
-         *  Notation: {@code <<<<}
+        /** (Hayes notation {@code <<<<}) Interval X is entirely less than interval Y
          */
         LLLL("<<<<", "is entirely less than"),
 
-        /** Interval X extends to minimum of interval Y. <br>
-         *  Notation: {@code <<<=}
+        /** (Hayes notation {@code <<<=}) Interval X extends to minimum of interval Y
          */
         LLLE("<<<=", "extends to min of"),
 
-        /** Interval X starts below and extends within interval Y. <br>
-         *  Notation: {@code <<<>}
+        /** (Hayes notation {@code <<<>}) Interval X starts below and extends within interval Y
          */
         LLLG("<<<>", "starts below and extends within"),
 
-        /** Interval X starts below and extends to maximum of interval Y. <br>
+        /** (Hayes notation {@code <<=>}) Interval X starts below and extends to maximum of interval Y
          *  Notation: {@code <<=>}
          */
         LLEG("<<=>", "starts below and extends to max of"),
 
-        /** Interval X starts with and extends beyond interval Y. <br>
-         *  Notation: {@code <=>>}
+        /** (Hayes notation {@code <=>>}) Interval X starts with and extends beyond interval Y. <br>
          */
         LEGG("<=>>", "starts with and extends beyond"),
 
-        /** Interval X starts below and has maximum at point location Y. <br>
-         *  Notation: {@code <<==}
+        /** (Hayes notation {@code <<==}) Interval X starts below and has maximum at point location Y. <br>
          */
         LLEE("<<==", "starts below and has max at point location of"),
 
-        /** Interval X extends from point location Y. <br>
-         *  Notation: {@code ==>>}
+        /** (Hayes notation {@code ==>>}) Interval X extends from point location Y. <br>
          */
         EEGG("==>>", "extends from point location of"),
 
-        /** Interval X is exactly equal to finite interval Y. <br>
-         *  Notation: {@code <==>}
+        /** (Hayes notation {@code <==>}) Interval X is exactly equal to finite interval Y. <br>
          */
         LEEG("<==>", "is exactly equal to finite interval"),
 
-        /** Point X is exactly equal to point Y. <br>
+        /** (Hayes notation {@code ====}) Point X is exactly equal to point Y. <br>
          *  Notation: {@code ====}
          */
         EEEE("====", "is exactly equal to point"),
 
-        /** Interval X strictly encloses interval Y. <br>
-         *  Notation: {@code <<>>}
+        /** (Hayes notation {@code <<>>}) Interval X strictly encloses interval Y
          */
         LLGG("<<>>", "strictly encloses"),
 
-        /** Interval X is enclosed by interval Y. <br>
-         *  Notation: {@code <><>}
+        /** (Hayes notation {@code <><>}) Interval X is enclosed by interval Y
          */
         LGLG("<><>", "is strictly enclosed by"),
 
-        /** Interval X starts within and extends beyond interval Y. <br>
-         *  Notation: {@code <>>>}
+        /** (Hayes notation {@code <>>>}) Interval X starts within and extends beyond interval Y
          */
         LGGG("<>>>", "starts within and extends beyond"),
 
-        /** Interval X starts within and extends to maximum of interval Y. <br>
-         *  Notation: {@code <>=>}
+        /** (Hayes notation {@code <>=>}) Interval X starts within and extends to maximum of interval Y
          */
         LGEG("<>=>", "starts within and extends to max of"),
 
-        /** Interval X starts with and extends beyond interval Y. <br>
-         *  Notation: {@code <=<>}
+        /** (Hayes notation {@code <=<>}) Interval X starts with and extends beyond interval Y
          */
         LELG("<=<>", "starts with and ends within"),
 
-        /** X is a point at maximum of interval Y. <br>
-         *  Notation: {@code =>=>}
+        /** (Hayes notation {@code =>=>}) X is a point at maximum of interval Y
          */
         EGEG("=>=>", "is a point at max of"),
 
-        /** X is a point at minimum of interval Y. <br>
-         *  Notation: {@code <=<=}
+        /** (Hayes notation {@code <=<=}) X is a point at minimum of interval Y
          */
         LELE("<=<=", "is a point at min of"),
 
-        /** Interval X extends from maximum of interval Y. <br>
-         *  Notation: {@code =>>>}
+        /** (Hayes notation {@code =>>>}) Interval X extends from maximum of interval Y
          */
         EGGG("=>>>", "extends from max of"),
 
-        /** Interval X is entirely greater than interval Y. <br>
-         *  Notation: {@code >>>>}
+        /** (Hayes notation {@code >>>>}) Interval X is entirely greater than interval Y
          */
         GGGG(">>>>", "is entirely greater than");
 

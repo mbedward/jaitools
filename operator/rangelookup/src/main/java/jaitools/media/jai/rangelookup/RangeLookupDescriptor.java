@@ -64,7 +64,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * RenderedImage luImg = JAI.create("rangelookup", pb);
  * </code></pre>
  *
- * @see Range
+ * @see jaitools.numeric.Range
  * @see RangeLookupTable
  * 
  * @author Michael Bedward
