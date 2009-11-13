@@ -116,7 +116,7 @@ public class DemoImageProvider {
         URL url = DemoImageProvider.class.getResource(name);
         File file = new File(url.toURI());
 
-        image = ImageUtils.createDoubleImage(width, height);
+        image = ImageUtils.createConstantImage(width, height, Double.valueOf(0d));
 
         Map<String, RenderedImage> imgParams = CollectionFactory.newMap();
         imgParams.put("result", image);

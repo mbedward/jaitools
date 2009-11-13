@@ -51,6 +51,12 @@
         </dependency>
         <dependency>
             <groupId>jaitools</groupId>
+            <artifactId>rangelookup</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>jaitools</groupId>
             <artifactId>zonalstats</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>

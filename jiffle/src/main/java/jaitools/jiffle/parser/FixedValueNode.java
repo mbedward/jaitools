@@ -32,13 +32,13 @@ import org.antlr.runtime.tree.CommonTree;
  * @source $URL$
  * @version $Id$
  */
-class FixedValueNode extends CommonTree {
+public class FixedValueNode extends CommonTree {
     private double value;
 
     /**
      * Constructor taking a double value
      */
-    FixedValueNode(int tokType, double value) { 
+    public FixedValueNode(int tokType, double value) {
         super(new CommonToken(tokType));
         this.value = value; 
     }
@@ -46,14 +46,14 @@ class FixedValueNode extends CommonTree {
     /**
      * Constructor taking a String representation of a double value
      */
-    FixedValueNode(int tokType, String text) {
+    public FixedValueNode(int tokType, String text) {
         this(tokType, Double.valueOf(text));
     }
 
     /**
      * Get the value stored by this node
      */
-    double getValue() { return value; }
+    public double getValue() { return value; }
     
     /**
      * Used by ANTLR during AST re-writing to create

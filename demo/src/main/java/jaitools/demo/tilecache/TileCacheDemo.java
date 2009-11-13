@@ -34,7 +34,7 @@ import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
 
 /**
- * Testing and demonstration of {@linkplain jaitools.tilecache.DiskMemTileCache}
+ * Demonstrates basic use of {@code DiskMemTileCache}.
  *
  * @author Michael Bedward
  * @since 1.0

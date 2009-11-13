@@ -113,8 +113,8 @@ public class ZonalStatsDemo {
          *   between 0 and 10
          * - a zone image where zones are equal-area horizontal bands
          */
-        dataImg = ImageUtils.createDoubleImage(500, 500);
-        TiledImage zoneDoubleImg = ImageUtils.createDoubleImage(500, 500);
+        dataImg = ImageUtils.createConstantImage(500, 500, Double.valueOf(0d));
+        TiledImage zoneDoubleImg = ImageUtils.createConstantImage(500, 500, Double.valueOf(0d));
 
         imgParams = new HashMap<String, RenderedImage>();
         imgParams.put("dataImg", dataImg);
