@@ -117,7 +117,7 @@ public class InterpreterDemo {
      */
     public void compileAndRun(File scriptFile) throws Exception {
         // create an image to write results to
-        TiledImage tImg = ImageUtils.createDoubleImage(imgWidth, imgHeight);
+        TiledImage tImg = ImageUtils.createConstantImage(imgWidth, imgHeight, Double.valueOf(0d));
 
         // link the variable name used in the script (result) to the image
         Map<String, RenderedImage> imgParams = CollectionFactory.newMap();

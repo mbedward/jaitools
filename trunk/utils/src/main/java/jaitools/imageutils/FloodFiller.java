@@ -69,7 +69,10 @@ public class FloodFiller {
     private boolean usingRadius;
     private ROI roi;
 
-    
+    /**
+     * Records a segment of contiguous pixels in a single row that will
+     * become part of a filled region.
+     */
     public static class ScanSegment implements Comparable<ScanSegment> {
 
         int startX;

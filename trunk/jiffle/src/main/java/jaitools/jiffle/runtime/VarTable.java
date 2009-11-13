@@ -54,19 +54,6 @@ public class VarTable {
         ops.put("%=", MOD_EQ);
     }
 
-    
-    public enum Type {
-        /**
-         * A named constant such as PI
-         */
-        NAMED_CONSTANT,
-        
-        /**
-         * A user-defined variable
-         */
-        USER;
-    }
-    
     private static Map<String, Double> constants;
     static {
         constants = CollectionFactory.newMap();
