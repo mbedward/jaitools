@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.googlecode.jai-tools</groupId>
+        <groupId>com.googlecode.jaitools</groupId>
         <artifactId>jaitools</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
@@ -14,49 +14,49 @@
     </build>
     <dependencies>
         <dependency>
-            <groupId>com.googlecode.jai-tools</groupId>
+            <groupId>com.googlecode.jaitools</groupId>
             <artifactId>utils</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jai-tools</groupId>
+            <groupId>com.googlecode.jaitools</groupId>
             <artifactId>kernel</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jai-tools</groupId>
+            <groupId>com.googlecode.jaitools</groupId>
             <artifactId>kernelstats</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jai-tools</groupId>
+            <groupId>com.googlecode.jaitools</groupId>
             <artifactId>maskedconvolve</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jai-tools</groupId>
+            <groupId>com.googlecode.jaitools</groupId>
             <artifactId>jiffle</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jai-tools</groupId>
+            <groupId>com.googlecode.jaitools</groupId>
             <artifactId>regionalize</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jai-tools</groupId>
+            <groupId>com.googlecode.jaitools</groupId>
             <artifactId>rangelookup</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jai-tools</groupId>
+            <groupId>com.googlecode.jaitools</groupId>
             <artifactId>zonalstats</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
