@@ -38,6 +38,7 @@ package jaitools.jiffle.parser;
 import java.util.List;
 import jaitools.CollectionFactory;
 import jaitools.jiffle.runtime.JiffleRunner;
+import jaitools.jiffle.runtime.LogicalOp;
 
 import static jaitools.numeric.DoubleComparison.*;
 }
@@ -98,21 +99,39 @@ expr returns [double value]
                 | ^(MOD e1=expr e2=expr) {$value = e1 \% e2;}
                 | ^(PLUS e1=expr e2=expr) {$value = e1 + e2;}
                 | ^(MINUS e1=expr e2=expr) {$value = e1 - e2;}
-                | ^(OR e1=expr e2=expr) {$value = (!dzero(e1) || !dzero(e2)) ? 1 : 0;}
-                | ^(AND e1=expr e2=expr) {$value = (!dzero(e1) && !dzero(e2)) ? 1 : 0;}
-                | ^(XOR e1=expr e2=expr) {$value = (!dzero(e1) ^ !dzero(e2)) ? 1 : 0;}
-                | ^(GT e1=expr e2=expr) {$value = (dcomp(e1, e2) > 0) ? 1 : 0;}
-                | ^(GE e1=expr e2=expr) {$value = (dcomp(e1, e2) >= 0) ? 1 : 0;}
-                | ^(LT e1=expr e2=expr) {$value = (dcomp(e1, e2) < 0) ? 1 : 0;}
-                | ^(LE e1=expr e2=expr) {$value = (dcomp(e1, e2) <= 0) ? 1 : 0;}
-                | ^(LOGICALEQ e1=expr e2=expr) {$value = (dcomp(e1, e2) == 0) ? 1 : 0;}
-                | ^(NE e1=expr e2=expr) {$value = (dcomp(e1, e2) != 0) ? 1 : 0;}
                 | ^(PREFIX PLUS e1=expr) {$value = +e1;}
                 | ^(PREFIX MINUS e1=expr) {$value = -e1;}
-                
-                /* @todo check that the expr is boolean */
-                | ^(PREFIX NOT e1=expr) {$value = dzero(e1) ? 1 : 0;}
-              
+
+                | ^(OR e1=expr e2=expr) 
+                  {$value = runner.invokeLogicalOp(LogicalOp.OR, e1, e2);}
+
+                | ^(AND e1=expr e2=expr)
+                  {$value = runner.invokeLogicalOp(LogicalOp.AND, e1, e2);}
+
+                | ^(XOR e1=expr e2=expr)
+                  {$value = runner.invokeLogicalOp(LogicalOp.XOR, e1, e2);}
+
+                | ^(GT e1=expr e2=expr)
+                  {$value = runner.invokeLogicalOp(LogicalOp.GT, e1, e2);}
+
+                | ^(GE e1=expr e2=expr)
+                  {$value = runner.invokeLogicalOp(LogicalOp.GE, e1, e2);}
+
+                | ^(LT e1=expr e2=expr)
+                  {$value = runner.invokeLogicalOp(LogicalOp.LT, e1, e2);}
+
+                | ^(LE e1=expr e2=expr)
+                  {$value = runner.invokeLogicalOp(LogicalOp.LE, e1, e2);}
+
+                | ^(LOGICALEQ e1=expr e2=expr)
+                  {$value = runner.invokeLogicalOp(LogicalOp.LOGICALEQ, e1, e2);}
+
+                | ^(NE e1=expr e2=expr)
+                  {$value = runner.invokeLogicalOp(LogicalOp.NE, e1, e2);}
+
+                | ^(PREFIX NOT e1=expr)
+                  {$value = runner.invokeLogicalOp(LogicalOp.PREFIX_NOT, e1, e2);}
+
                 | VAR 
                   {$value = runner.getVar($VAR.text);}
               
