@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>jaitools</groupId>
+        <groupId>com.googlecode.jai-tools</groupId>
         <artifactId>operator</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
@@ -12,9 +12,10 @@
     <packaging>jar</packaging>
     <name>MaskedConvolve operator</name>
     <description>
-        Adds selectivity to the JAI convolve operation. An ROI can
-        be used to control which source image pixels are convolved and/or
-        which neighbourhood pixels are included in the convolution.
+Adds selectivity to the JAI convolve operation. An ROI can
+be used to control which source image pixels are convolved and/or
+which neighbourhood pixels are included in the convolution.
     </description>
 
 </project>
+

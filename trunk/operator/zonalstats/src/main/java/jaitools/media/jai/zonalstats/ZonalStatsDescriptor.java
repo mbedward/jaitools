@@ -34,8 +34,8 @@ import javax.media.jai.ROI;
 import javax.media.jai.registry.RenderedRegistryMode;
 
 /**
- * Calculates a range of summary statistics for zones, defined in a zone image,
- * based on values in a data image. The operator can also be used without a zone
+ * Calculates a range of summary statistics, optionally for zones defined in a zone
+ * image, for values in a data image. The operator can be used without a zone
  * image, in which case it will treat all data image pixels as being in the same
  * zone (labelled zone 0).
  * <p>

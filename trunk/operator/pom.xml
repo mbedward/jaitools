@@ -3,12 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>jaitools</groupId>
+        <groupId>com.googlecode.jai-tools</groupId>
         <artifactId>jaitools</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>jaitools</groupId>
+    <groupId>com.googlecode.jai-tools</groupId>
     <artifactId>operator</artifactId>
     <packaging>pom</packaging>
 
