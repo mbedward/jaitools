@@ -281,7 +281,29 @@ public class JiffleRunner {
     public double invokeFunction(String name, List<Double> args) {
         return funcs.invoke(name, args);
     }
-    
+
+
+    /**
+     * Invoke an operator with a single argument
+     * @param op the identifying {@code LogicalOp} constant
+     * @param arg the argument
+     * @return the result of the operator as a double
+     */
+    public double invokeLogicalOp(LogicalOp op, Double arg) {
+        return funcs.invoke(op.toString(), arg);
+    }
+
+    /**
+     * Invoke an operator with two arguments
+     * @param op the identifying {@code LogicalOp} constant
+     * @param arg1 first argument
+     * @param arg2 second argument
+     * @return the result of the operator as a double
+     */
+    public double invokeLogicalOp(LogicalOp op, Double arg1, Double arg2) {
+        return funcs.invoke(op.toString(), arg1, arg2);
+    }
+
     /**
      * Check if a variable has been assigned
      * @param varName the variable name

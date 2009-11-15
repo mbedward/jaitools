@@ -293,6 +293,115 @@ public class FunctionTable {
                     }
                 });
 
+        lookup.put(LogicalOp.OR.getFunctionName(),
+                new Op2Arg() {
+                    public double call(double x1, double x2) {
+                        if (Double.isNaN(x1) || Double.isNaN(x2)) {
+                            return Double.NaN;
+                        }
+
+                        return (!dzero(x1) || !dzero(x2) ? 1d : 0d);
+                    }
+                });
+
+        lookup.put(LogicalOp.AND.getFunctionName(),
+                new Op2Arg() {
+                    public double call(double x1, double x2) {
+                        if (Double.isNaN(x1) || Double.isNaN(x2)) {
+                            return Double.NaN;
+                        }
+
+                        return (!dzero(x1) && !dzero(x2) ? 1d : 0d);
+                    }
+                });
+
+        lookup.put(LogicalOp.XOR.getFunctionName(),
+                new Op2Arg() {
+                    public double call(double x1, double x2) {
+                        if (Double.isNaN(x1) || Double.isNaN(x2)) {
+                            return Double.NaN;
+                        }
+
+                        return (!dzero(x1) ^ !dzero(x2) ? 1d : 0d);
+                    }
+                });
+
+        lookup.put(LogicalOp.GT.getFunctionName(),
+                new Op2Arg() {
+                    public double call(double x1, double x2) {
+                        if (Double.isNaN(x1) || Double.isNaN(x2)) {
+                            return Double.NaN;
+                        }
+
+                        return (dcomp(x1, x2) > 0 ? 1d : 0d);
+                    }
+                });
+
+        lookup.put(LogicalOp.GE.getFunctionName(),
+                new Op2Arg() {
+                    public double call(double x1, double x2) {
+                        if (Double.isNaN(x1) || Double.isNaN(x2)) {
+                            return Double.NaN;
+                        }
+
+                        return (dcomp(x1, x2) >= 0 ? 1d : 0d);
+                    }
+                });
+
+        lookup.put(LogicalOp.LT.getFunctionName(),
+                new Op2Arg() {
+                    public double call(double x1, double x2) {
+                        if (Double.isNaN(x1) || Double.isNaN(x2)) {
+                            return Double.NaN;
+                        }
+
+                        return (dcomp(x1, x2) < 0 ? 1d : 0d);
+                    }
+                });
+
+        lookup.put(LogicalOp.LE.getFunctionName(),
+                new Op2Arg() {
+                    public double call(double x1, double x2) {
+                        if (Double.isNaN(x1) || Double.isNaN(x2)) {
+                            return Double.NaN;
+                        }
+
+                        return (dcomp(x1, x2) <= 0 ? 1d : 0d);
+                    }
+                });
+
+        lookup.put(LogicalOp.LOGICALEQ.getFunctionName(),
+                new Op2Arg() {
+                    public double call(double x1, double x2) {
+                        if (Double.isNaN(x1) || Double.isNaN(x2)) {
+                            return Double.NaN;
+                        }
+
+                        return (dcomp(x1, x2) == 0 ? 1d : 0d);
+                    }
+                });
+
+        lookup.put(LogicalOp.NE.getFunctionName(),
+                new Op2Arg() {
+                    public double call(double x1, double x2) {
+                        if (Double.isNaN(x1) || Double.isNaN(x2)) {
+                            return Double.NaN;
+                        }
+
+                        return (dcomp(x1, x2) != 0 ? 1d : 0d);
+                    }
+                });
+
+        lookup.put(LogicalOp.PREFIX_NOT.getFunctionName(),
+                new Op1Arg() {
+                    public double call(double x) {
+                        if (Double.isNaN(x)) {
+                            return Double.NaN;
+                        }
+
+                        return (dzero(x) ? 1d : 0d);
+                    }
+                });
     }
 
     private static String[] volatileFuncs = {
@@ -372,7 +481,26 @@ public class FunctionTable {
                         "unsupported function: " + name + " with " + args.size() + " args");
         }
     }
+
     
+    public double invoke(String name, Double x) {
+        OpBase op = getMethod(name, 1);
+        if (op == null) {
+            throw new RuntimeException("unknown function: " + name + " with 1 arg");
+        }
+
+        return ((Op1Arg) op).call(x);
+    }
+
+    public double invoke(String name, Double x1, Double x2) {
+        OpBase op = getMethod(name, 2);
+        if (op == null) {
+            throw new RuntimeException("unknown function: " + name + " with 2 args");
+        }
+
+        return ((Op2Arg) op).call(x1, x2);
+    }
+
     /**
      * Get a function that matches the given name and number of
      * arguments. A search is made for a matching variable argument
