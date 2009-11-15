@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>jaitools</groupId>
+        <groupId>com.googlecode.jai-tools</groupId>
         <artifactId>operator</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
@@ -11,17 +11,17 @@
     <artifactId>regionalize</artifactId>
     <name>Regionalize operator</name>
 
-    <description>
-        Identifies (sufficiently) uniform regions in the source image, allocates
-        each a unique integer ID, and generates an output image with these IDs
-        as pixel values
+    <description>Identifies (sufficiently) uniform regions in the source image, allocates
+each a unique integer ID, and generates an output image with these IDs
+as pixel values
     </description>
 
     <dependencies>
         <dependency>
-            <groupId>jaitools</groupId>
+            <groupId>com.googlecode.jai-tools</groupId>
             <artifactId>utils</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>
+
