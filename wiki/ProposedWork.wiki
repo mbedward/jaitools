@@ -62,6 +62,10 @@ The latest version of ANTLR makes this process simpler by allowing grammar subse
 
 Add support for other images data types for both input and output. Add the ability to specify the type of the output image, perhaps via a !RenderingHint.
 
+=== Add non-image outputs ===
+
+At the moment the output of a Jiffle script is always an image but sometimes it would be useful to have other kinds of outputs. For example, a script to compare two images could output a summary statistic; or a search script could output the position of the first pixel that matches the search criteria.
+
 == !ZonalStats operator ==
 
 *Note: the following items have been implemented in version 1.0*
