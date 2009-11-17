@@ -47,15 +47,11 @@ import javax.imageio.stream.ImageOutputStream;
 import javax.media.jai.CachedTile;
 
 /**
- * Represents a tile cached on disk that may also be resident in memory.
- * <p>
- * This class does not hold a reference to the associated raster. When an
- * instance is created, the raster is written to disk and may, at the discretion
- * of the controlling DiskMemTileCache, also remain resident in
- * memory.
- *
+ * A managed tile class for {@code DiskMemTileCache}. Represents an image tile
+ * that can be cached on disk and/or in memory.
  *
  * @see DiskMemTileCache
+ *
  * @author Michael Bedward
  * @author Simone Giannecchini, GeoSolutions SAS
  * @since 1.0
@@ -279,12 +275,13 @@ public final class DiskCachedTile implements CachedTile {
         DataBuffer db = raster.getDataBuffer();
         numBanks = db.getNumBanks();
         dataLen = db.getSize();
-        db.getOffsets();
         memorySize = DataBuffer.getDataTypeSize(db.getDataType()) / 8L * dataLen * numBanks;
 
         if (writeToFile ) {
             writeData(raster);
         }
+
+        setTileTimeStamp(System.currentTimeMillis());
     }
 
     /**
@@ -622,7 +619,7 @@ public final class DiskCachedTile implements CachedTile {
                     {
                         short[] bankData;
                         for (int i = 0; i < numBanks; i++) {
-                            bankData = ((DataBufferShort) dataBuf).getData(i);
+                            bankData = ((DataBufferUShort) dataBuf).getData(i);
                             strm.writeShorts(bankData, 0, dataLen);
                         }
                     }
