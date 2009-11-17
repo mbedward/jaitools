@@ -357,8 +357,6 @@ public class DiskMemTileCache extends Observable implements TileCache {
                 tile.setAction(DiskCachedTile.TileAction.ACTION_ADDED);
             }
 
-            tile.setTileTimeStamp(System.currentTimeMillis());
-
             if (diagnosticsEnabled) {
                 setChanged();
                 notifyObservers(tile);
