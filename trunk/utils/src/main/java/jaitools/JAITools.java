@@ -48,7 +48,7 @@ public class JAITools {
      */
     public static void fixForOSX() {
         Properties sys = new Properties(System.getProperties());
-        if (sys.getProperty("os.name").compareToIgnoreCase("mac os x") == 0) {
+        if (sys.getProperty("os.name").equalsIgnoreCase("mac os x")) {
             sys.put("com.sun.media.jai.disableMediaLib", "true");
         }
         System.setProperties(sys);
