@@ -92,8 +92,9 @@ public class DiskMemImage
     private static DiskMemTileCache commonCache = null;
 
     /**
-     * Get the common tile cache. The common cache may not be in use
-     * by any existing images.
+     * Get the common tile cache. This method has the side effect of
+     * creating the common cache if it does not already exist (ie. it
+     * never returns {@code null}).
      *
      * @return the common tile cache
      *
