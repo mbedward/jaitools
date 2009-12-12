@@ -337,15 +337,15 @@ public class ZonalStatsTest {
         ZonalStats zonalStats1 = result.get(1);
         Map<Statistic, Double> stats1 = zonalStats1.getZoneStats(0);
         assertTrue(stats0.containsKey(Statistic.MIN));
-        assertTrue(stats0.get(Statistic.MIN).intValue() == -9999.0);
+        assertTrue(stats0.get(Statistic.MIN).doubleValue() == -9999.0);
         assertTrue(stats1.containsKey(Statistic.MIN));
-        assertTrue(stats1.get(Statistic.MIN).intValue() == -9999.0);
+        assertTrue(stats1.get(Statistic.MIN).doubleValue() == -9999.0);
         assertTrue(stats0.containsKey(Statistic.MAX));
-        assertTrue(stats0.get(Statistic.MAX).intValue() == 1.0);
+        assertTrue(stats0.get(Statistic.MAX).doubleValue() == 1.0);
         assertTrue(stats1.containsKey(Statistic.MAX));
-        assertTrue(stats1.get(Statistic.MAX).intValue() == 1.0);
+        assertTrue(stats1.get(Statistic.MAX).doubleValue() == 1.0);
         assertTrue(stats0.containsKey(Statistic.RANGE));
-        assertTrue(stats0.get(Statistic.RANGE).intValue() == 10000.0);
+        assertTrue(stats0.get(Statistic.RANGE).doubleValue() == 10000.0);
     }
 
     private static PlanarImage createConstantImage( Number[] bandValues ) {

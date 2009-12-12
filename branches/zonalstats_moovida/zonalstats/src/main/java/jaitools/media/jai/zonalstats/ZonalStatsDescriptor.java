@@ -21,12 +21,14 @@
 package jaitools.media.jai.zonalstats;
 
 import jaitools.numeric.Statistic;
+
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
+
 import javax.media.jai.JAI;
 import javax.media.jai.OperationDescriptorImpl;
 import javax.media.jai.ParameterBlockJAI;
@@ -37,7 +39,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * Calculates a range of summary statistics, optionally for zones defined in a zone
  * image, for values in a data image. The operator can be used without a zone
  * image, in which case it will treat all data image pixels as being in the same
- * zone (labelled zone 0).
+ * zone (labeled zone 0).
  * <p>
  * Optionally, an ROI can be provided to define which pixels in the data image
  * will contribute to the zonal statistics.
@@ -85,9 +87,10 @@ import javax.media.jai.registry.RenderedRegistryMode;
  *
  * pb.setParameter("stats", stats);
  * RenderedOp op = JAI.create("ZonalStats", pb);
- *
- * ZonalStats results = (ZonalStats) op.getProperty(
- *     ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+ * 
+ * Map<Integer, ZonalStats> resultMap = (Map<Integer, ZonalStats>) op
+ *               .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+ * ZonalStats result = resultMap.get(0);
  *
  * // print results to console
  * for (Integer zone : results.getZones()) {
@@ -120,11 +123,12 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * pb.setParameter("stats", stats);
  * RenderedOp op = JAI.create("ZonalStats", pb);
  *
- * ZonalStats results = (ZonalStats) op.getProperty(
- *     ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+ * Map<Integer, ZonalStats> resultMap = (Map<Integer, ZonalStats>) op
+ *               .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+ * ZonalStats result = resultMap.get(0);
  *
  * // print results: since we didn't use a zone image all
- * // results will be labelled as zone 0
+ * // results will be labeled as zone 0
  * Map<Statistic, Double> results = results.getZoneStats(0);
  * for (Entry<Statistic, Double> e : results.entrySet()) {
  *     System.out.println(String.format("%12s: %.4f", e.getKey(), e.getValue()));
@@ -154,15 +158,52 @@ import javax.media.jai.registry.RenderedRegistryMode;
  *
  * RenderedOp op = JAI.create("ZonalStats", pb);
  *
- * ZonalStats results = (ZonalStats) op.getProperty(
- *     ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+ * Map<Integer, ZonalStats> resultMap = (Map<Integer, ZonalStats>) op
+ *               .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+ * ZonalStats result = resultMap.get(0);
  *
  * // print results: since we didn't use a zone image all
- * // results will be labelled as zone 0
+ * // results will be labeled as zone 0
  * Map<Statistic, Double> results = results.getZoneStats(0);
  * for (Entry<Statistic, Double> e : results.entrySet()) {
  *     System.out.println(String.format("%12s: %.4f", e.getKey(), e.getValue()));
  * }
+ *
+ * </code></pre>
+ * Asking for statistics on multiple bands. 
+ * <p>
+ * By default the stats are calculated on a single default 0 index band. It 
+ * is possible also to request calculations on multiple bands, by passing the 
+ * band indexes as a parameter.
+ * <pre><code>
+ * RenderedImage myData = ...
+ * RenderedImage myZones = ...
+ *
+ * ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
+ * pb.setSource("dataImage", myData);
+ * pb.setSource("zoneImage", myZones);
+ *
+ * Statistic[] stats = {
+ *     Statistic.MIN,
+ *     Statistic.MAX,
+ *     Statistic.MEAN,
+ *     Statistic.APPROX_MEDIAN,
+ *     Statistic.SDEV
+ * };
+ *
+ * pb.setParameter("stats", stats);
+ * // asking for stats on band 0 and 3 of the image 
+ * pb.setParameter("bands", new Integer[]{0, 3});
+ * RenderedOp op = JAI.create("ZonalStats", pb);
+ * // get results back
+ * Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
+ *               .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+ * ZonalStats zonalStats0 = result.get(0);
+ * Map<Statistic, Double> stats0 = zonalStats0.getZoneStats(0);
+ * ZonalStats zonalStats3 = result.get(1);
+ * Map<Statistic, Double> stats3 = zonalStats3.getZoneStats(0);
+ * double minBand0 = stats0.get(Statistic.MIN).doubleValue();
+ * double minBand3 = stats3.get(Statistic.MIN).doubleValue();
  *
  * </code></pre>
  * <b>Parameters</b>
@@ -188,11 +229,14 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * @see jaitools.numeric.StreamingSampleStats
  *
  * @author Michael Bedward
+ * @author Andrea Antonello
  * @since 1.0
  * @source $URL$
  * @version $Id$
  */
 public class ZonalStatsDescriptor extends OperationDescriptorImpl {
+
+    private static final long serialVersionUID = -526208282980300507L;
 
     /** Property name used to retrieve the results */
     public static String ZONAL_STATS_PROPERTY = "ZonalStatsProperty";
@@ -202,7 +246,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
 
     private static final String[] srcImageNames = {"dataImage", "zoneImage"};
 
-    private static final Class[][] srcImageClasses = {{RenderedImage.class, RenderedImage.class}};
+    private static final Class<?>[][] srcImageClasses = {{RenderedImage.class, RenderedImage.class}};
 
     static final int STATS_ARG = 0;
     static final int BAND_ARG = 1;
@@ -211,7 +255,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
 
     private static final String[] paramNames = {"stats", "bands", "roi", "zoneTransform"};
 
-    private static final Class[] paramClasses = {Statistic[].class, Integer[].class,
+    private static final Class<?>[] paramClasses = {Statistic[].class, Integer[].class,
             javax.media.jai.ROI.class, AffineTransform.class,};
 
     private static final Object[] paramDefaults = {NO_PARAMETER_DEFAULT,
@@ -264,7 +308,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
      * @param dataImage the data image
      * @param zoneImage the zone image which must be of integral data type
      * @param stats an array specifying the statistics required
-     * @param band the band of the data image to process (default 0)
+     * @param bands the array of bands of the data image to process (default single band == 0)
      * @param roi optional roi (default is null) used to mask data values
      * @param zoneTransform (default is null) an AffineTransform used to convert
      * dataImage pixel coords to zoneImage pixel coords
@@ -299,7 +343,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
      * Checks parameters for the following:
      * <ul>
      * <li> Number of sources is 1 or 2
-     * <li> Data image band is valid
+     * <li> Data image bands are valid
      * <li> Zone image, if provided, is an integral data type
      * <li> Zone image, if provided, overlaps the data image, taking into
      *      account any {@code AffineTransform}

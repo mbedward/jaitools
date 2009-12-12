@@ -53,6 +53,7 @@ import javax.media.jai.iterator.RectIterFactory;
  * @see ZonalStatsDescriptor Description of the algorithm and example
  *
  * @author Michael Bedward
+ * @author Andrea Antonello
  * @since 1.0
  * @source $URL$
  * @version $Id$
@@ -72,27 +73,27 @@ public class ZonalStatsOpImage extends NullOpImage {
     private SortedSet<Integer> zones;
 
     /**
-     * Constructor
+     * Constructor.
      *
-     * @param dataImage a {@code RenderedImage} from which data values will be read
+     * @param dataImage a {@code RenderedImage} from which data values will be read.
      *
      * @param zoneImage an optional {@code RenderedImage} of integral data type that defines
-     *        the zones for which to calculate summary data
+     *        the zones for which to calculate summary data.
      * 
-     * @param config configurable attributes of the image (see {@link AreaOpImage})
+     * @param config configurable attributes of the image (see {@link AreaOpImage}).
      *
-     * @param layout an optional {@code ImageLayout} object
+     * @param layout an optional {@code ImageLayout} object.
      *
-     * @param stats an array of {@code Statistic} constants specifying the data required
+     * @param stats an array of {@code Statistic} constants specifying the data required.
      *
-     * @param bands the data image band to process
+     * @param bands the data image band to process.
      *
-     * @param roi an optional {@code ROI} for data image masking
+     * @param roi an optional {@code ROI} for data image masking.
      *
      * @see ZonalStatsDescriptor
      * @see Statistic
      */
-    public ZonalStatsOpImage( RenderedImage dataImage, RenderedImage zoneImage, Map config,
+    public ZonalStatsOpImage( RenderedImage dataImage, RenderedImage zoneImage, Map<?, ?> config,
             ImageLayout layout, Statistic[] stats, Integer[] bands, ROI roi,
             AffineTransform zoneTransform ) {
 
@@ -115,7 +116,7 @@ public class ZonalStatsOpImage extends NullOpImage {
         if (roi != null) {
             /*
              * Check that the ROI contains the data image bounds.
-             * If not, do as if there is no ROI.
+             * If not, do as if there is no ROI, i.e. get it all.
              */
             if (!roi.getBounds().intersects(dataImageBounds)) {
                 this.roi = null;
@@ -162,7 +163,7 @@ public class ZonalStatsOpImage extends NullOpImage {
     /**
      * Used to calculate statistics when a zone image was provided.
      *
-     * @return the results as a new instance of {@code ZonalStats}
+     * @return the results as a new map of {@code ZonalStats} for every band.
      */
     private Map<Integer, ZonalStats> compileZonalStatistics() {
         buildZoneList();
@@ -255,7 +256,7 @@ public class ZonalStatsOpImage extends NullOpImage {
     /**
      * Used to calculate statistics when no zone image was provided.
      *
-     * @return the results as a new instance of {@code ZonalStats}
+     * @return the results as a new map of {@code ZonalStats} for every band.
      */
     private Map<Integer, ZonalStats> compileUnzonedStatistics() {
         buildZoneList();
@@ -303,8 +304,8 @@ public class ZonalStatsOpImage extends NullOpImage {
     /**
      * Get the specified property.
      * <p>
-     * Use this method to retrieve the calculated statistics as a {@code ZonalStats}
-     * object by setting {@code name} to {@linkplain ZonalStatsDescriptor#ZONAL_STATS_PROPERTY}.
+     * Use this method to retrieve the calculated statistics as a map of {@code ZonalStats} per band
+     * by setting {@code name} to {@linkplain ZonalStatsDescriptor#ZONAL_STATS_PROPERTY}.
      *
      * @param name property name
      *
@@ -322,16 +323,16 @@ public class ZonalStatsOpImage extends NullOpImage {
     /**
      * Get the class of the given property. For
      * {@linkplain ZonalStatsDescriptor#ZONAL_STATS_PROPERTY} this will return
-     * {@code ZonalStats.class}.
+     * {@code Map.class}.
      *
      * @param name property name
      *
      * @return the property class
      */
     @Override
-    public Class getPropertyClass( String name ) {
+    public Class<?> getPropertyClass( String name ) {
         if (ZonalStatsDescriptor.ZONAL_STATS_PROPERTY.equalsIgnoreCase(name)) {
-            return ZonalStats.class;
+            return Map.class;
         } else {
             return super.getPropertyClass(name);
         }
