@@ -53,16 +53,19 @@ import static org.junit.Assert.*;
  * @version $Id$
  */
 public class ZonalStatsTest {
-    
+
     private static final int WIDTH = 256;
+    private static final int HEIGHT = 300;
     private static final int MIN_DATUM = -5;
-    private static final int MAX_DATUM =  5;
+    private static final int MAX_DATUM = 5;
     private static RenderedImage dataImage;
+    private static RenderedImage multibandImage;
     private static Random rand = new Random();
 
     @BeforeClass
     public static void setup() {
         dataImage = createRandomImage(MIN_DATUM, MAX_DATUM);
+        multibandImage = createMultibandImage();
     }
 
     @Test
@@ -148,11 +151,13 @@ public class ZonalStatsTest {
         } catch (Exception ex) {
             gotException = true;
         }
-        assertTrue("Failed to reject zone image that does not overlap when transformed", gotException);
+        assertTrue("Failed to reject zone image that does not overlap when transformed",
+                gotException);
 
         pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
-        pb.setSource("zoneImage", createConstantImage(new Integer[]{0}, new Point(WIDTH/2, WIDTH/2)));
+        pb.setSource("zoneImage", createConstantImage(new Integer[]{0}, new Point(WIDTH / 2,
+                WIDTH / 2)));
         gotException = false;
         try {
             JAI.create("ZonalStats", pb);
@@ -168,15 +173,15 @@ public class ZonalStatsTest {
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
-        pb.setParameter("stats", new Statistic[]{ Statistic.MIN });
+        pb.setParameter("stats", new Statistic[]{Statistic.MIN});
         RenderedOp op = JAI.create("ZonalStats", pb);
-        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
+                .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
         ZonalStats zonalStats = result.get(0);
         Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
         assertTrue(stats.containsKey(Statistic.MIN));
         assertTrue(stats.get(Statistic.MIN).intValue() == MIN_DATUM);
     }
-
 
     @Test
     public void testMax() {
@@ -184,9 +189,10 @@ public class ZonalStatsTest {
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
-        pb.setParameter("stats", new Statistic[]{ Statistic.MAX });
+        pb.setParameter("stats", new Statistic[]{Statistic.MAX});
         RenderedOp op = JAI.create("ZonalStats", pb);
-        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
+                .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
         ZonalStats zonalStats = result.get(0);
         Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
         assertTrue(stats.containsKey(Statistic.MAX));
@@ -203,22 +209,22 @@ public class ZonalStatsTest {
         do {
             do {
                 expMean += iter.getSample();
-            } while (!iter.nextPixelDone());
+            } while( !iter.nextPixelDone() );
             iter.startPixels();
-        } while (!iter.nextLineDone());
+        } while( !iter.nextLineDone() );
         expMean /= (WIDTH * WIDTH);
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{Statistic.MEAN});
         RenderedOp op = JAI.create("ZonalStats", pb);
-        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
+                .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
         ZonalStats zonalStats = result.get(0);
         Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
         assertTrue(stats.containsKey(Statistic.MEAN));
         assertTrue(DoubleComparison.dequal(expMean, stats.get(Statistic.MEAN)));
     }
-
 
     @Test
     public void testStdDev() {
@@ -233,7 +239,7 @@ public class ZonalStatsTest {
         do {
             do {
                 double val = iter.getSample();
-                n++ ;
+                n++;
                 if (n == 1) {
                     mOld = mNew = val;
                 } else {
@@ -241,17 +247,18 @@ public class ZonalStatsTest {
                     variance = variance + (val - mOld) * (val - mNew);
                     mOld = mNew;
                 }
-            } while (!iter.nextPixelDone());
+            } while( !iter.nextPixelDone() );
             iter.startPixels();
-        } while (!iter.nextLineDone());
+        } while( !iter.nextLineDone() );
 
-        expSD = Math.sqrt(variance / (n-1));
+        expSD = Math.sqrt(variance / (n - 1));
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{Statistic.SDEV});
         RenderedOp op = JAI.create("ZonalStats", pb);
-        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
+                .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
         ZonalStats zonalStats = result.get(0);
         Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
         assertTrue(stats.containsKey(Statistic.SDEV));
@@ -266,7 +273,8 @@ public class ZonalStatsTest {
         pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{Statistic.RANGE});
         RenderedOp op = JAI.create("ZonalStats", pb);
-        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
+                .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
         ZonalStats zonalStats = result.get(0);
         Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
 
@@ -284,7 +292,8 @@ public class ZonalStatsTest {
         pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{Statistic.MEDIAN});
         RenderedOp op = JAI.create("ZonalStats", pb);
-        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
+                .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
         ZonalStats zonalStats = result.get(0);
         Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
 
@@ -302,7 +311,8 @@ public class ZonalStatsTest {
         pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{Statistic.APPROX_MEDIAN});
         RenderedOp op = JAI.create("ZonalStats", pb);
-        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
+                .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
         ZonalStats zonalStats = result.get(0);
         Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
 
@@ -310,11 +320,39 @@ public class ZonalStatsTest {
         assertTrue(stats.get(Statistic.APPROX_MEDIAN).intValue() == expMedian);
     }
 
-    private static PlanarImage createConstantImage(Number[] bandValues) {
+    @Test
+    public void testMultiband() {
+        System.out.println("   test multiband");
+
+        ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
+        pb.setSource("dataImage", multibandImage);
+        pb.setParameter("stats", new Statistic[]{Statistic.MIN, Statistic.MAX, Statistic.MEAN,
+                Statistic.RANGE});
+        pb.setParameter("bands", new Integer[]{0, 1});
+        RenderedOp op = JAI.create("ZonalStats", pb);
+        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
+                .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+        ZonalStats zonalStats0 = result.get(0);
+        Map<Statistic, Double> stats0 = zonalStats0.getZoneStats(0);
+        ZonalStats zonalStats1 = result.get(1);
+        Map<Statistic, Double> stats1 = zonalStats1.getZoneStats(0);
+        assertTrue(stats0.containsKey(Statistic.MIN));
+        assertTrue(stats0.get(Statistic.MIN).intValue() == -9999.0);
+        assertTrue(stats1.containsKey(Statistic.MIN));
+        assertTrue(stats1.get(Statistic.MIN).intValue() == -9999.0);
+        assertTrue(stats0.containsKey(Statistic.MAX));
+        assertTrue(stats0.get(Statistic.MAX).intValue() == 1.0);
+        assertTrue(stats1.containsKey(Statistic.MAX));
+        assertTrue(stats1.get(Statistic.MAX).intValue() == 1.0);
+        assertTrue(stats0.containsKey(Statistic.RANGE));
+        assertTrue(stats0.get(Statistic.RANGE).intValue() == 10000.0);
+    }
+
+    private static PlanarImage createConstantImage( Number[] bandValues ) {
         return createConstantImage(bandValues, new Point(0, 0));
     }
 
-    private static PlanarImage createConstantImage(Number[] bandValues, Point origin) {
+    private static PlanarImage createConstantImage( Number[] bandValues, Point origin ) {
         RenderingHints hints = null;
         if (origin != null && !(origin.x == 0 && origin.y == 0)) {
             ImageLayout layout = new ImageLayout(origin.x, origin.y, WIDTH, WIDTH);
@@ -322,15 +360,15 @@ public class ZonalStatsTest {
         }
 
         ParameterBlockJAI pb = new ParameterBlockJAI("constant");
-        pb.setParameter("width", (float)WIDTH);
-        pb.setParameter("height", (float)WIDTH);
+        pb.setParameter("width", (float) WIDTH);
+        pb.setParameter("height", (float) WIDTH);
         pb.setParameter("bandValues", bandValues);
         return JAI.create("constant", pb, hints).getRendering();
     }
 
-    private static PlanarImage createRandomImage(int min, int max) {
-        SampleModel sm = new ComponentSampleModel(
-                DataBuffer.TYPE_INT, WIDTH, WIDTH, 1, WIDTH, new int[]{0});
+    private static PlanarImage createRandomImage( int min, int max ) {
+        SampleModel sm = new ComponentSampleModel(DataBuffer.TYPE_INT, WIDTH, WIDTH, 1, WIDTH,
+                new int[]{0});
 
         TiledImage img = new TiledImage(0, 0, WIDTH, WIDTH, 0, 0, sm, null);
 
@@ -338,10 +376,41 @@ public class ZonalStatsTest {
         int range = max - min + 1;
         do {
             do {
-                iter.setSample( rand.nextInt(range) + min );
-            } while (!iter.nextPixelDone());
+                iter.setSample(rand.nextInt(range) + min);
+            } while( !iter.nextPixelDone() );
             iter.startPixels();
-        } while (!iter.nextLineDone());
+        } while( !iter.nextLineDone() );
+
+        return img;
+    }
+
+    private static PlanarImage createMultibandImage() {
+        SampleModel sm = new ComponentSampleModel(DataBuffer.TYPE_DOUBLE, WIDTH, HEIGHT, 1, WIDTH,
+                new int[]{0, 0});
+
+        TiledImage img = new TiledImage(0, 0, WIDTH, WIDTH, 0, 0, sm, null);
+
+        WritableRectIter iter = RectIterFactory.createWritable(img, null);
+
+        final double[] values = new double[2];
+        int i = 0;
+        do {
+            int j = 0;
+            do {
+                for( int m = 0; m < 2; m++ ) {
+                    if (i < 2 && j < 2) {
+                        values[m] = Double.NaN;
+                    } else if (i > 10 && j > 7) {
+                        values[m] = -9999.0;
+                    } else
+                        values[m] = 1.0;
+                }
+                iter.setPixel(values);
+                j++;
+            } while( !iter.nextPixelDone() );
+            iter.startPixels();
+            i++;
+        } while( !iter.nextLineDone() );
 
         return img;
     }
