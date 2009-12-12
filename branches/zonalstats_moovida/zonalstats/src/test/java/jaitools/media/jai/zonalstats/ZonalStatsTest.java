@@ -170,8 +170,9 @@ public class ZonalStatsTest {
         pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{ Statistic.MIN });
         RenderedOp op = JAI.create("ZonalStats", pb);
-        ZonalStats result = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
-        Map<Statistic, Double> stats = result.getZoneStats(0);
+        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+        ZonalStats zonalStats = result.get(0);
+        Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
         assertTrue(stats.containsKey(Statistic.MIN));
         assertTrue(stats.get(Statistic.MIN).intValue() == MIN_DATUM);
     }
@@ -185,8 +186,9 @@ public class ZonalStatsTest {
         pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{ Statistic.MAX });
         RenderedOp op = JAI.create("ZonalStats", pb);
-        ZonalStats result = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
-        Map<Statistic, Double> stats = result.getZoneStats(0);
+        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+        ZonalStats zonalStats = result.get(0);
+        Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
         assertTrue(stats.containsKey(Statistic.MAX));
         assertTrue(stats.get(Statistic.MAX).intValue() == MAX_DATUM);
     }
@@ -210,8 +212,9 @@ public class ZonalStatsTest {
         pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{Statistic.MEAN});
         RenderedOp op = JAI.create("ZonalStats", pb);
-        ZonalStats result = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
-        Map<Statistic, Double> stats = result.getZoneStats(0);
+        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+        ZonalStats zonalStats = result.get(0);
+        Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
         assertTrue(stats.containsKey(Statistic.MEAN));
         assertTrue(DoubleComparison.dequal(expMean, stats.get(Statistic.MEAN)));
     }
@@ -248,8 +251,9 @@ public class ZonalStatsTest {
         pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{Statistic.SDEV});
         RenderedOp op = JAI.create("ZonalStats", pb);
-        ZonalStats result = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
-        Map<Statistic, Double> stats = result.getZoneStats(0);
+        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+        ZonalStats zonalStats = result.get(0);
+        Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
         assertTrue(stats.containsKey(Statistic.SDEV));
         assertTrue(DoubleComparison.dequal(expSD, stats.get(Statistic.SDEV)));
     }
@@ -262,8 +266,9 @@ public class ZonalStatsTest {
         pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{Statistic.RANGE});
         RenderedOp op = JAI.create("ZonalStats", pb);
-        ZonalStats result = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
-        Map<Statistic, Double> stats = result.getZoneStats(0);
+        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+        ZonalStats zonalStats = result.get(0);
+        Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
 
         assertTrue(stats.containsKey(Statistic.RANGE));
         assertTrue(stats.get(Statistic.RANGE).intValue() == MAX_DATUM - MIN_DATUM);
@@ -279,8 +284,9 @@ public class ZonalStatsTest {
         pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{Statistic.MEDIAN});
         RenderedOp op = JAI.create("ZonalStats", pb);
-        ZonalStats result = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
-        Map<Statistic, Double> stats = result.getZoneStats(0);
+        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+        ZonalStats zonalStats = result.get(0);
+        Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
 
         assertTrue(stats.containsKey(Statistic.MEDIAN));
         assertTrue(stats.get(Statistic.MEDIAN).intValue() == expMedian);
@@ -296,8 +302,9 @@ public class ZonalStatsTest {
         pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{Statistic.APPROX_MEDIAN});
         RenderedOp op = JAI.create("ZonalStats", pb);
-        ZonalStats result = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
-        Map<Statistic, Double> stats = result.getZoneStats(0);
+        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+        ZonalStats zonalStats = result.get(0);
+        Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
 
         assertTrue(stats.containsKey(Statistic.APPROX_MEDIAN));
         assertTrue(stats.get(Statistic.APPROX_MEDIAN).intValue() == expMedian);

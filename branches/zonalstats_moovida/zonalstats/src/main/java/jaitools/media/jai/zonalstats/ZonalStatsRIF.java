@@ -72,7 +72,7 @@ public class ZonalStatsRIF implements RenderedImageFactory {
         Statistic[] stats =
                 (Statistic[]) paramBlock.getObjectParameter(ZonalStatsDescriptor.STATS_ARG);
 
-        int band = paramBlock.getIntParameter(ZonalStatsDescriptor.BAND_ARG);
+        Integer[] bands = (Integer[]) paramBlock.getObjectParameter(ZonalStatsDescriptor.BAND_ARG);
 
         SampleModel sm = layout.getSampleModel(null);
         if (sm == null || sm.getNumBands() != stats.length) {
@@ -109,7 +109,7 @@ public class ZonalStatsRIF implements RenderedImageFactory {
                 renderHints,
                 layout,
                 stats,
-                band,
+                bands,
                 roi,
                 zoneTransform);
     }

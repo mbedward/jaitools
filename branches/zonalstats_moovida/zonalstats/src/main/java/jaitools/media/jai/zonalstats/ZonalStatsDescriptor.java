@@ -200,82 +200,62 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
     static final int DATA_IMAGE = 0;
     static final int ZONE_IMAGE = 1;
 
-    private static final String[] srcImageNames =
-        {"dataImage",
-         "zoneImage"
-        };
+    private static final String[] srcImageNames = {"dataImage", "zoneImage"};
 
-    private static final Class[][] srcImageClasses =
-    {
-        {RenderedImage.class, RenderedImage.class}
-    };
+    private static final Class[][] srcImageClasses = {{RenderedImage.class, RenderedImage.class}};
 
     static final int STATS_ARG = 0;
     static final int BAND_ARG = 1;
     static final int ROI_ARG = 2;
     static final int ZONE_TRANSFORM = 3;
 
-    private static final String[] paramNames =
-        {"stats",
-         "band",
-         "roi",
-         "zoneTransform"
-        };
+    private static final String[] paramNames = {"stats", "bands", "roi", "zoneTransform"};
 
-    private static final Class[] paramClasses =
-        {Statistic[].class,
-         Integer.class,
-         javax.media.jai.ROI.class,
-         AffineTransform.class,
-        };
+    private static final Class[] paramClasses = {Statistic[].class, Integer[].class,
+            javax.media.jai.ROI.class, AffineTransform.class,};
 
-    private static final Object[] paramDefaults =
-        {NO_PARAMETER_DEFAULT,
-         Integer.valueOf(0),
-         (ROI) null,
-         (AffineTransform) null,
-        };
+    private static final Object[] paramDefaults = {NO_PARAMETER_DEFAULT,
+            new Integer[]{Integer.valueOf(0)}, (ROI) null, (AffineTransform) null,};
 
     /** Constructor. */
     public ZonalStatsDescriptor() {
         super(new String[][]{
-                    {"GlobalName", "ZonalStats"},
-                    {"LocalName", "ZonalStats"},
-                    {"Vendor", "jaitools.media.jai"},
-                    {"Description", "Calculate neighbourhood statistics"},
-                    {"DocURL", "http://code.google.com/p/jai-tools/"},
-                    {"Version", "1.0.0"},
+                {"GlobalName", "ZonalStats"},
+                {"LocalName", "ZonalStats"},
+                {"Vendor", "jaitools.media.jai"},
+                {"Description", "Calculate neighbourhood statistics"},
+                {"DocURL", "http://code.google.com/p/jai-tools/"},
+                {"Version", "1.0.0"},
 
-                    {"arg0Desc", String.format(
-                             "%s - an array of Statistic constants specifying the " +
-                             "statistics required",
-                             paramNames[STATS_ARG])},
+                {
+                        "arg0Desc",
+                        String.format("%s - an array of Statistic constants specifying the "
+                                + "statistics required", paramNames[STATS_ARG])},
 
-                    {"arg1Desc", String.format(
-                             "%s (default %s) - the band of the data image to process",
-                             paramNames[BAND_ARG], paramDefaults[BAND_ARG])},
+                {
+                        "arg1Desc",
+                        String.format("%s (default %s) - the bands of the data image to process",
+                                paramNames[BAND_ARG], paramDefaults[BAND_ARG])},
 
-                    {"arg2Desc", String.format(
-                             "%s (default ) - an optional ROI for masking the data image",
-                             paramNames[ROI_ARG], paramDefaults[ROI_ARG])},
+                {
+                        "arg2Desc",
+                        String.format("%s (default ) - an optional ROI for masking the data image",
+                                paramNames[ROI_ARG], paramDefaults[ROI_ARG])},
 
-                    {"arg3Desc", String.format(
-                             "%s (default %s) - an optional AffineTransform to " +
-                             "from dataImage pixel coords to zoneImage pixel coords",
-                             paramNames[ZONE_TRANSFORM], paramDefaults[ZONE_TRANSFORM])}
-                },
+                {
+                        "arg3Desc",
+                        String.format("%s (default %s) - an optional AffineTransform to "
+                                + "from dataImage pixel coords to zoneImage pixel coords",
+                                paramNames[ZONE_TRANSFORM], paramDefaults[ZONE_TRANSFORM])}},
 
-                new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
+        new String[]{RenderedRegistryMode.MODE_NAME}, // supported modes
 
-                srcImageNames,
-                srcImageClasses,
+                srcImageNames, srcImageClasses,
 
-                paramNames,
-                paramClasses,
-                paramDefaults,
+                paramNames, paramClasses, paramDefaults,
 
-                null                                            // valid values (none defined)
-                );
+                null // valid values (none defined)
+        );
     }
 
     /**
@@ -291,24 +271,17 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
      * @param hints an optional RenderingHints object
      * @return a RenderedImage with a band for each requested statistic
      */
-    public static RenderedImage create(
-            RenderedImage dataImage,
-            RenderedImage zoneImage,
-            Statistic[] stats,
-            Integer band,
-            ROI roi,
-            AffineTransform zoneTransform,
-            RenderingHints hints) {
+    public static RenderedImage create( RenderedImage dataImage, RenderedImage zoneImage,
+            Statistic[] stats, Integer band, ROI roi, AffineTransform zoneTransform,
+            RenderingHints hints ) {
 
-        ParameterBlockJAI pb =
-                new ParameterBlockJAI("ZonalStats",
-                RenderedRegistryMode.MODE_NAME);
+        ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats", RenderedRegistryMode.MODE_NAME);
 
         pb.setSource("dataImage", dataImage);
         pb.setSource("zoneImage", zoneImage);
         pb.setSource("zoneTransform", zoneTransform);
         pb.setParameter("stats", stats);
-        pb.setParameter("band", band);
+        pb.setParameter("bands", band);
         pb.setParameter("roi", roi);
 
         return JAI.create("ZonalStats", pb, hints);
@@ -333,27 +306,34 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
      * </ul>
      */
     @Override
-    public boolean validateArguments(String modeName, ParameterBlock pb, StringBuffer msg) {
+    public boolean validateArguments( String modeName, ParameterBlock pb, StringBuffer msg ) {
         if (pb.getNumSources() == 0 || pb.getNumSources() > 2) {
             msg.append("ZonalStats operator takes 1 or 2 source images");
             return false;
         }
 
-        int band = pb.getIntParameter(BAND_ARG);
-        RenderedImage dataImg = pb.getRenderedSource(DATA_IMAGE);
-        if (band < 0 || band >= dataImg.getSampleModel().getNumBands()) {
-            msg.append("band arg out of bounds for source image: " + band);
+        Object bandsObject = pb.getObjectParameter(BAND_ARG);
+        Integer[] bands = null;
+        if (!(bandsObject instanceof Integer[])) {
+            msg.append("bands arg has to be of type Integer[]");
             return false;
+        } else {
+            bands = (Integer[]) bandsObject;
+        }
+        RenderedImage dataImg = pb.getRenderedSource(DATA_IMAGE);
+        for( Integer band : bands ) {
+            if (band < 0 || band >= dataImg.getSampleModel().getNumBands()) {
+                msg.append("band arg out of bounds for source image: " + band);
+                return false;
+            }
         }
 
         if (pb.getNumSources() == 2) {
             RenderedImage zoneImg = pb.getRenderedSource(ZONE_IMAGE);
             int dataType = zoneImg.getSampleModel().getDataType();
             boolean integralType = false;
-            if (dataType == DataBuffer.TYPE_BYTE ||
-                dataType == DataBuffer.TYPE_INT ||
-                dataType == DataBuffer.TYPE_SHORT ||
-                dataType == DataBuffer.TYPE_USHORT) {
+            if (dataType == DataBuffer.TYPE_BYTE || dataType == DataBuffer.TYPE_INT
+                    || dataType == DataBuffer.TYPE_SHORT || dataType == DataBuffer.TYPE_USHORT) {
                 integralType = true;
             }
 
@@ -362,13 +342,11 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
                 return false;
             }
 
-            Rectangle dataBounds = new Rectangle(
-                    dataImg.getMinX(), dataImg.getMinY(),
-                    dataImg.getWidth(), dataImg.getHeight());
+            Rectangle dataBounds = new Rectangle(dataImg.getMinX(), dataImg.getMinY(), dataImg
+                    .getWidth(), dataImg.getHeight());
 
-            Rectangle zoneBounds = new Rectangle(
-                    zoneImg.getMinX(), zoneImg.getMinY(),
-                    zoneImg.getWidth(), zoneImg.getHeight());
+            Rectangle zoneBounds = new Rectangle(zoneImg.getMinX(), zoneImg.getMinY(), zoneImg
+                    .getWidth(), zoneImg.getHeight());
 
             AffineTransform tr = (AffineTransform) pb.getObjectParameter(ZONE_TRANSFORM);
             if (tr != null && !tr.isIdentity()) {
@@ -386,4 +364,3 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
     }
 
 }
-
