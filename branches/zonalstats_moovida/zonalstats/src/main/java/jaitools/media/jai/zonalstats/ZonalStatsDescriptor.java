@@ -316,7 +316,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
      * @return a RenderedImage with a band for each requested statistic
      */
     public static RenderedImage create( RenderedImage dataImage, RenderedImage zoneImage,
-            Statistic[] stats, Integer band, ROI roi, AffineTransform zoneTransform,
+            Statistic[] stats, Integer[] bands, ROI roi, AffineTransform zoneTransform,
             RenderingHints hints ) {
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats", RenderedRegistryMode.MODE_NAME);
@@ -325,7 +325,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
         pb.setSource("zoneImage", zoneImage);
         pb.setSource("zoneTransform", zoneTransform);
         pb.setParameter("stats", stats);
-        pb.setParameter("bands", band);
+        pb.setParameter("bands", bands);
         pb.setParameter("roi", roi);
 
         return JAI.create("ZonalStats", pb, hints);
