@@ -112,13 +112,6 @@ public class ZonalStatsOpImage extends NullOpImage {
         this.srcBand = band;
 
         this.roi = roi;
-
-        if (roi != null) {
-            // check that the ROI contains the data image bounds
-            if (!roi.getBounds().contains(dataImageBounds)) {
-                throw new IllegalArgumentException("The bounds of the ROI must contain the data image");
-            }
-        }
     }
 
     /**
