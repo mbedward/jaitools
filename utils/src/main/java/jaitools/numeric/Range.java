@@ -36,7 +36,7 @@ package jaitools.numeric;
  * brackets.
  * <p>
  * The following rules apply to Float and Double NaN values...
- * <ul> 
+ * <ul>
  * <li> Float and Double NaN are considered equal
  * <li> Point intervals can have value NaN
  * <li> Proper intervals treat NaN at their lower end-point as negative infinity and at
@@ -72,7 +72,7 @@ public class Range<T extends Number & Comparable> {
     private static final int FINITE = 0;
 
     private static final int NAN = -9999;
-    
+
     private T minValue;
     private boolean minIncluded;
     private boolean minOpen;
@@ -89,7 +89,7 @@ public class Range<T extends Number & Comparable> {
      * the type parameter on both sides of the creation expression. So instead
      * of this...
      * <pre><code>
-     * 
+     *
      *    Range<Integer> r = new Range<Integer>(10, false, 20, true);
      * </code></pre>
      * you can do this...
@@ -319,7 +319,7 @@ public class Range<T extends Number & Comparable> {
             } else if (Double.isNaN(value.doubleValue())) {
                 bound = NAN;
             }
-        } else if (value instanceof Float) { 
+        } else if (value instanceof Float) {
             if (Float.isInfinite(value.floatValue())) {
                 if (Float.compare(value.floatValue(), Float.POSITIVE_INFINITY) == 0) {
                     bound = INF;
@@ -343,6 +343,21 @@ public class Range<T extends Number & Comparable> {
             this.maxIncluded = this.minIncluded = true;
             this.minOpen = this.maxOpen = true;
         }
+    }
+
+    /**
+     * Copy constructor.
+     */
+    public Range(Range<T> other) {
+        this.minValue = other.minValue;
+        this.minIncluded = other.minIncluded;
+        this.minOpen = other.minOpen;
+        this.minType = other.minType;
+        this.maxValue = other.maxValue;
+        this.maxIncluded = other.maxIncluded;
+        this.maxOpen = other.maxOpen;
+        this.maxType = other.maxType;
+        this.isPoint = other.isPoint;
     }
 
     /**
@@ -475,7 +490,7 @@ public class Range<T extends Number & Comparable> {
         if (value == null) {
             throw new UnsupportedOperationException("null values are not supported");
         }
-        
+
         if (isPoint) {
             if (minType == FINITE) {
                 return minValue == value;
@@ -514,6 +529,28 @@ public class Range<T extends Number & Comparable> {
     public boolean intersects(Range<T> other) {
         RangeComparator.Result comp = this.compareTo(other);
         return RangeComparator.isIntersection(comp);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("Range");
+
+        if (isMinClosed()) {
+            sb.append(isMinIncluded() ? '[' : '(');
+            sb.append(getMin());
+            sb.append(", ");
+        } else {
+            sb.append("[-Inf, ");
+        }
+
+        if (isMaxClosed()) {
+            sb.append(getMax());
+            sb.append(isMaxIncluded() ? ']' : ')');
+        } else {
+            sb.append("Inf]");
+        }
+
+        return sb.toString();
     }
 
     /**
