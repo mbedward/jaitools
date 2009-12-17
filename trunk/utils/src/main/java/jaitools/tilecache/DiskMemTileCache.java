@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Observable;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
@@ -186,24 +187,30 @@ public class DiskMemTileCache extends Observable implements TileCache {
 
     private boolean writeNewTilesToDisk;
 
-    // map of all tiles whether currently in memory or cached on disk
-    private Map<Object, DiskCachedTile> tiles;
+    /**
+     * Map of all cached tiles.
+     */
+    protected Map<Object, DiskCachedTile> tiles;
     
-    // set of those tiles currently resident in memory
-    private Map<Object, Raster> residentTiles;
+    /**
+     * Memory-resident tiles.
+     */
+    protected Map<Object, Raster> residentTiles;
 
-    // A tile comparator used to determine priority of tiles in limited
-    // memory storage
+    /**
+     * A tile comparator used to determine the priority of tiles for
+     * storage in memory.
+     */
     private Comparator<CachedTile> comparator;
 
     /* List of tile references that is sorted into tile priority order when
      * required for memory swapping.
-     *
-     * Note: we use this in preference to a SortedSet or similar because of
-     * the complications of using the remove(obj) method with a collection
-     * that is using a comparator rather than equals().
+     * <p>
+     * Implementation note: we use this in preference to a SortedSet or similar
+     * because of the complications of using the remove(obj) method with a sorted
+     * collection, where the comparator is used rather than the equals method.
      */
-    private List<DiskCachedTile> sortedResidentTiles;
+    protected List<DiskCachedTile> sortedResidentTiles;
 
     // whether to send cache diagnostics to observers
     private boolean diagnosticsEnabled;
@@ -525,6 +532,31 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
+     * Check if any tiles have a null owner (e.g. owning image has been
+     * garbage collected) and, if so, remove them from the cache.
+     */
+    public synchronized void removeNullTiles() {
+        Set<Object> nullTileKeys = CollectionFactory.newSet();
+        for (Object key : tiles.keySet()) {
+            DiskCachedTile tile = tiles.get(key);
+            if (tile.getOwner() == null) {
+                nullTileKeys.add(key);
+            }
+        }
+
+        for (Object key : nullTileKeys) {
+            DiskCachedTile tile = tiles.get(key);
+            tile.deleteDiskCopy();
+            if (residentTiles.containsKey(key)) {
+                residentTiles.remove(key);
+                sortedResidentTiles.remove(tile);
+                curMemory -= tile.getTileSize();
+            }
+            tiles.remove(key);
+        }
+    }
+
+    /**
      * This method is not presently declared as synchronized because it simply calls
      * the {@code add} method repeatedly.
      *
@@ -634,7 +666,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
          * space
          */
         Collections.sort(sortedResidentTiles, comparator);
-        while (memCapacity - curMemory < memRequired) {
+        while (memCapacity - curMemory < memRequired && !sortedResidentTiles.isEmpty()) {
             Object key = sortedResidentTiles.get(sortedResidentTiles.size()-1).getTileId();
 
             try {
