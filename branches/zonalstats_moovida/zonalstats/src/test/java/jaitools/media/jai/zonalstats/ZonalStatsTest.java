@@ -27,6 +27,7 @@ import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.ComponentSampleModel;
 import java.awt.image.DataBuffer;
+import java.awt.image.PixelInterleavedSampleModel;
 import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
 import java.util.Map;
@@ -48,6 +49,7 @@ import static org.junit.Assert.*;
  * Unit tests for the ZonalStats operator
  *
  * @author Michael Bedward
+ * @author Andrea Antonello
  * @since 1.0
  * @source $URL$
  * @version $Id$
@@ -328,24 +330,35 @@ public class ZonalStatsTest {
         pb.setSource("dataImage", multibandImage);
         pb.setParameter("stats", new Statistic[]{Statistic.MIN, Statistic.MAX, Statistic.MEAN,
                 Statistic.RANGE});
-        pb.setParameter("bands", new Integer[]{0, 1});
+
+        // make the test a bit more testing by skipping a band
+        pb.setParameter("bands", new Integer[]{0, 2});
+
         RenderedOp op = JAI.create("ZonalStats", pb);
+
         Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
                 .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+
         ZonalStats zonalStats0 = result.get(0);
         Map<Statistic, Double> stats0 = zonalStats0.getZoneStats(0);
-        ZonalStats zonalStats1 = result.get(1);
-        Map<Statistic, Double> stats1 = zonalStats1.getZoneStats(0);
+
+        ZonalStats zonalStats2 = result.get(2);
+        Map<Statistic, Double> stats2 = zonalStats2.getZoneStats(0);
+
         assertTrue(stats0.containsKey(Statistic.MIN));
         assertTrue(stats0.get(Statistic.MIN).doubleValue() == -9999.0);
-        assertTrue(stats1.containsKey(Statistic.MIN));
-        assertTrue(stats1.get(Statistic.MIN).doubleValue() == -9999.0);
+        assertTrue(stats2.containsKey(Statistic.MIN));
+        assertTrue(stats2.get(Statistic.MIN).doubleValue() == -9999.0);
         assertTrue(stats0.containsKey(Statistic.MAX));
+        System.out.println("max band 0: " + stats0.get(Statistic.MAX).doubleValue());
         assertTrue(stats0.get(Statistic.MAX).doubleValue() == 1.0);
-        assertTrue(stats1.containsKey(Statistic.MAX));
-        assertTrue(stats1.get(Statistic.MAX).doubleValue() == 1.0);
+        assertTrue(stats2.containsKey(Statistic.MAX));
+        System.out.println("max band 2: " + stats2.get(Statistic.MAX).doubleValue());
+        assertTrue(stats2.get(Statistic.MAX).doubleValue() == 3.0);
         assertTrue(stats0.containsKey(Statistic.RANGE));
         assertTrue(stats0.get(Statistic.RANGE).doubleValue() == 10000.0);
+        assertTrue(stats2.containsKey(Statistic.RANGE));
+        assertTrue(stats2.get(Statistic.RANGE).doubleValue() == 10002.0);
     }
 
     private static PlanarImage createConstantImage( Number[] bandValues ) {
@@ -385,25 +398,31 @@ public class ZonalStatsTest {
     }
 
     private static PlanarImage createMultibandImage() {
-        SampleModel sm = new ComponentSampleModel(DataBuffer.TYPE_DOUBLE, WIDTH, HEIGHT, 1, WIDTH,
-                new int[]{0, 0});
+        final int numBands = 3;
+        final int[] bandOffsets = {0, 1, 2};
+
+        SampleModel sm = new PixelInterleavedSampleModel(
+                DataBuffer.TYPE_DOUBLE,
+                WIDTH, WIDTH,
+                numBands, numBands*WIDTH,
+                bandOffsets);
 
         TiledImage img = new TiledImage(0, 0, WIDTH, WIDTH, 0, 0, sm, null);
 
         WritableRectIter iter = RectIterFactory.createWritable(img, null);
 
-        final double[] values = new double[2];
+        final double[] values = new double[numBands];
         int i = 0;
         do {
             int j = 0;
             do {
-                for( int m = 0; m < 2; m++ ) {
+                for( int m = 0; m < numBands; m++ ) {
                     if (i < 2 && j < 2) {
                         values[m] = Double.NaN;
                     } else if (i > 10 && j > 7) {
                         values[m] = -9999.0;
                     } else
-                        values[m] = 1.0;
+                        values[m] = m + 1.0;  // make band values different
                 }
                 iter.setPixel(values);
                 j++;

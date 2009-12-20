@@ -27,10 +27,8 @@ import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.image.RenderedImage;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedSet;
-import java.util.TreeMap;
 
 import javax.media.jai.AreaOpImage;
 import javax.media.jai.ImageLayout;
@@ -169,7 +167,7 @@ public class ZonalStatsOpImage extends NullOpImage {
         buildZoneList();
 
         
-        Map<Integer, Map<Integer, StreamingSampleStats>> results = new TreeMap<Integer, Map<Integer,StreamingSampleStats>>();
+        Map<Integer, Map<Integer, StreamingSampleStats>> results = CollectionFactory.newTreeMap();
         for( Integer srcBand : srcBands ) {
             Map<Integer, StreamingSampleStats> resultsPerBand = CollectionFactory.newTreeMap();
             results.put(srcBand, resultsPerBand);
@@ -180,7 +178,7 @@ public class ZonalStatsOpImage extends NullOpImage {
             }
         }
 
-        final double[] sampleValues = new double[srcBands.length];
+        final double[] sampleValues = new double[dataImage.getSampleModel().getNumBands()];
         RectIter dataIter = RectIterFactory.create(dataImage, null);
         if (zoneTransform == null) { // Idenity transform assumed
             RectIter zoneIter = RectIterFactory.create(zoneImage, dataImageBounds);
@@ -191,12 +189,11 @@ public class ZonalStatsOpImage extends NullOpImage {
                 do {
                     if (roi == null || roi.contains(x, y)) {
                         dataIter.getPixel(sampleValues);
-                        for( int i = 0; i < sampleValues.length; i++ ) {
-                            int bandNumber = srcBands[i];
-                            Map<Integer, StreamingSampleStats> resultPerBand = results.get(bandNumber);
+                        for( Integer band : srcBands ) {
+                            Map<Integer, StreamingSampleStats> resultPerBand = results.get(band);
                         
                             int zone = zoneIter.getSample();
-                            resultPerBand.get(zone).addSample(sampleValues[i]);
+                            resultPerBand.get(zone).addSample(sampleValues[band]);
                         }
                     }
                     zoneIter.nextPixelDone(); // safe call
@@ -221,12 +218,11 @@ public class ZonalStatsOpImage extends NullOpImage {
                         dataIter.getPixel(sampleValues);
                         zoneTransform.transform(dataPos, zonePos);
                         
-                        for( int i = 0; i < sampleValues.length; i++ ) {
-                            int bandNumber = srcBands[i];
-                            Map<Integer, StreamingSampleStats> resultPerBand = results.get(bandNumber);
+                        for( Integer band : srcBands ) {
+                            Map<Integer, StreamingSampleStats> resultPerBand = results.get(band);
                         
                             int zone = zoneIter.getSample((int) zonePos.x, (int) zonePos.y, 0);
-                            resultPerBand.get(zone).addSample(sampleValues[i]);
+                            resultPerBand.get(zone).addSample(sampleValues[band]);
                         }
                         
                         
@@ -240,10 +236,12 @@ public class ZonalStatsOpImage extends NullOpImage {
             } while( !dataIter.nextLineDone() );
         }
 
-        Map<Integer, ZonalStats> zonalStatsPerBand = new HashMap<Integer, ZonalStats>();
-        for( int i = 0; i < srcBands.length; i++ ) {
+        Map<Integer, ZonalStats> zonalStatsPerBand = CollectionFactory.newTreeMap();
+        for( Integer band : srcBands ) {
             ZonalStats zonalStats = new ZonalStats(stats, zones);
-            Map<Integer, StreamingSampleStats> resultsPerBand = results.get(i);
+            zonalStatsPerBand.put(band, zonalStats);
+
+            Map<Integer, StreamingSampleStats> resultsPerBand = results.get(band);
             
             for( Integer zone : zones ) {
                 zonalStats.setZoneResults(zone, resultsPerBand.get(zone));
@@ -262,14 +260,14 @@ public class ZonalStatsOpImage extends NullOpImage {
         buildZoneList();
         Integer zoneID = zones.first();
 
-        Map<Integer, StreamingSampleStats> sampleStatsPerBand = new HashMap<Integer, StreamingSampleStats>();
-        for( int i = 0; i < srcBands.length; i++ ) {
+        Map<Integer, StreamingSampleStats> sampleStatsPerBand = CollectionFactory.newTreeMap();
+        for( Integer band : srcBands ) {
             StreamingSampleStats sampleStats = new StreamingSampleStats();
             sampleStats.setStatistics(stats);
-            sampleStatsPerBand.put(srcBands[i], sampleStats);
+            sampleStatsPerBand.put(band, sampleStats);
         }
 
-        final double[] sampleValues = new double[srcBands.length];
+        final double[] sampleValues = new double[dataImage.getSampleModel().getNumBands()];
         RectIter dataIter = RectIterFactory.create(dataImage, null);
         int y = dataImage.getMinY();
         do {
@@ -277,10 +275,8 @@ public class ZonalStatsOpImage extends NullOpImage {
             do {
                 if (roi == null || roi.contains(x, y)) {
                     dataIter.getPixel(sampleValues);
-                    for( int i = 0; i < sampleValues.length; i++ ) {
-                        int bandNumber = srcBands[i];
-                        StreamingSampleStats sampleStats = sampleStatsPerBand.get(bandNumber);
-                        sampleStats.addSample(sampleValues[i]);
+                    for( Integer band : srcBands ) {
+                        sampleStatsPerBand.get(band).addSample(sampleValues[band]);
                     }
                 }
                 x++;
@@ -291,12 +287,12 @@ public class ZonalStatsOpImage extends NullOpImage {
 
         } while( !dataIter.nextLineDone() );
 
-        Map<Integer, ZonalStats> zonalStatsPerBand = new HashMap<Integer, ZonalStats>();
-        for( Integer srcBand : srcBands ) {
-            StreamingSampleStats sampleStats = sampleStatsPerBand.get(srcBand);
+        Map<Integer, ZonalStats> zonalStatsPerBand = CollectionFactory.newTreeMap();
+        for( Integer band : srcBands ) {
+            StreamingSampleStats sampleStats = sampleStatsPerBand.get(band);
             ZonalStats zonalStats = new ZonalStats(stats, zones);
             zonalStats.setZoneResults(zoneID, sampleStats);
-            zonalStatsPerBand.put(srcBand, zonalStats);
+            zonalStatsPerBand.put(band, zonalStats);
         }
         return zonalStatsPerBand;
     }

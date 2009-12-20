@@ -198,9 +198,11 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * // get results back
  * Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
  *               .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+ * // results for band 0
  * ZonalStats zonalStats0 = result.get(0);
  * Map<Statistic, Double> stats0 = zonalStats0.getZoneStats(0);
- * ZonalStats zonalStats3 = result.get(1);
+ * // results for band 3
+ * ZonalStats zonalStats3 = result.get(3);
  * Map<Statistic, Double> stats3 = zonalStats3.getZoneStats(0);
  * double minBand0 = stats0.get(Statistic.MIN).doubleValue();
  * double minBand3 = stats3.get(Statistic.MIN).doubleValue();
