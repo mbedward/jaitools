@@ -51,7 +51,7 @@ public class ZonalStats {
         data = CollectionFactory.newTreeMap();
 
         for (Integer zone : zones) {
-            for (Statistic stat : stats) {
+            for( int i = 0; i < stats.length; i++ ) {
                 Map<Statistic, Double> zoneStats = CollectionFactory.newTreeMap();
                 data.put(zone, zoneStats);
             }
