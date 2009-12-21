@@ -217,7 +217,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * <td>stats</td><td>Statistic[]</td><td>NO DEFAULT</td>
  * </tr>
  * <tr align="right">
- * <td>band</td><td>Integer</td><td>0</td>
+ * <td>bands</td><td>Integer[]</td><td>{0}</td>
  * </tr>
  * <tr align="right">
  * <td>roi</td><td>ROI</td><td>null</td>
