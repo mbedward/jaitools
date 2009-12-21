@@ -29,6 +29,7 @@ import java.awt.geom.Point2D;
 import java.awt.image.RenderedImage;
 import java.util.Map;
 import java.util.SortedSet;
+
 import javax.media.jai.AreaOpImage;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.NullOpImage;
@@ -50,13 +51,14 @@ import javax.media.jai.iterator.RectIterFactory;
  * @see ZonalStatsDescriptor Description of the algorithm and example
  *
  * @author Michael Bedward
+ * @author Andrea Antonello
  * @since 1.0
  * @source $URL$
  * @version $Id$
  */
 public class ZonalStatsOpImage extends NullOpImage {
 
-    private int srcBand;
+    private Integer[] srcBands;
 
     private ROI roi;
 
@@ -69,31 +71,31 @@ public class ZonalStatsOpImage extends NullOpImage {
     private SortedSet<Integer> zones;
 
     /**
-     * Constructor
+     * Constructor.
      *
-     * @param dataImage a {@code RenderedImage} from which data values will be read
+     * @param dataImage a {@code RenderedImage} from which data values will be read.
      *
      * @param zoneImage an optional {@code RenderedImage} of integral data type that defines
-     *        the zones for which to calculate summary data
+     *        the zones for which to calculate summary data.
      * 
-     * @param config configurable attributes of the image (see {@link AreaOpImage})
+     * @param config configurable attributes of the image (see {@link AreaOpImage}).
      *
-     * @param layout an optional {@code ImageLayout} object
+     * @param layout an optional {@code ImageLayout} object.
      *
-     * @param stats an array of {@code Statistic} constants specifying the data required
+     * @param stats an array of {@code Statistic} constants specifying the data required.
      *
-     * @param band the data image band to process
+     * @param bands the data image band to process.
      *
-     * @param roi an optional {@code ROI} for data image masking
+     * @param roi an optional {@code ROI} for data image masking.
      *
      * @see ZonalStatsDescriptor
      * @see Statistic
      */
-    public ZonalStatsOpImage(RenderedImage dataImage, RenderedImage zoneImage,
-            Map config,
+    public ZonalStatsOpImage(RenderedImage dataImage, RenderedImage zoneImage, 
+            Map<?, ?> config,
             ImageLayout layout,
-            Statistic[] stats,
-            int band,
+            Statistic[] stats, 
+            Integer[] bands,
             ROI roi,
             AffineTransform zoneTransform) {
 
@@ -102,16 +104,27 @@ public class ZonalStatsOpImage extends NullOpImage {
         this.dataImage = dataImage;
 
         dataImageBounds = new Rectangle(
-                dataImage.getMinX(), dataImage.getMinY(),
-                dataImage.getWidth(), dataImage.getHeight());
+        		dataImage.getMinX(), dataImage.getMinY(),
+        		dataImage.getWidth(), dataImage.getHeight());
 
         this.zoneImage = zoneImage;
         this.zoneTransform = zoneTransform;
 
         this.stats = stats;
-        this.srcBand = band;
+        
+        this.srcBands = bands;
 
         this.roi = roi;
+
+        if (roi != null) {
+            /*
+             * Check that the ROI contains the data image bounds.
+             * If not, do as if there is no ROI, i.e. get it all.
+             */
+            if (!roi.getBounds().intersects(dataImageBounds)) {
+                this.roi = null;
+            }
+        }
     }
 
     /**
@@ -142,7 +155,7 @@ public class ZonalStatsOpImage extends NullOpImage {
      *
      * @return the results as a new instance of {@code ZonalStats}
      */
-    private ZonalStats compileStatistics() {
+    private Map<Integer, ZonalStats> compileStatistics() {
         if (zoneImage != null) {
             return compileZonalStatistics();
         } else {
@@ -153,21 +166,26 @@ public class ZonalStatsOpImage extends NullOpImage {
     /**
      * Used to calculate statistics when a zone image was provided.
      *
-     * @return the results as a new instance of {@code ZonalStats}
+     * @return the results as a new map of {@code ZonalStats} for every band.
      */
-    private ZonalStats compileZonalStatistics() {
+    private Map<Integer, ZonalStats> compileZonalStatistics() {
         buildZoneList();
 
-        Map<Integer, StreamingSampleStats> results = CollectionFactory.newTreeMap();
-
-        for (Integer zone : zones) {
-            StreamingSampleStats sampleStats = new StreamingSampleStats();
-            sampleStats.setStatistics(stats);
-            results.put(zone, sampleStats);
+        
+        Map<Integer, Map<Integer, StreamingSampleStats>> results = CollectionFactory.newTreeMap();
+        for( Integer srcBand : srcBands ) {
+            Map<Integer, StreamingSampleStats> resultsPerBand = CollectionFactory.newTreeMap();
+            results.put(srcBand, resultsPerBand);
+            for( Integer zone : zones ) {
+                StreamingSampleStats sampleStats = new StreamingSampleStats();
+                sampleStats.setStatistics(stats);
+                resultsPerBand.put(zone, sampleStats);
+            }
         }
 
+        final double[] sampleValues = new double[dataImage.getSampleModel().getNumBands()];
         RectIter dataIter = RectIterFactory.create(dataImage, null);
-        if (zoneTransform == null) {  // Idenity transform assumed
+        if (zoneTransform == null) { // Idenity transform assumed
             RectIter zoneIter = RectIterFactory.create(zoneImage, dataImageBounds);
 
             int y = dataImage.getMinY();
@@ -175,19 +193,23 @@ public class ZonalStatsOpImage extends NullOpImage {
                 int x = dataImage.getMinX();
                 do {
                     if (roi == null || roi.contains(x, y)) {
-                        double value = dataIter.getSampleDouble(srcBand);
-                        int zone = zoneIter.getSample();
-                        results.get(zone).addSample(value);
+                        dataIter.getPixel(sampleValues);
+                        for( Integer band : srcBands ) {
+                            Map<Integer, StreamingSampleStats> resultPerBand = results.get(band);
+                        
+                            int zone = zoneIter.getSample();
+                            resultPerBand.get(zone).addSample(sampleValues[band]);
+                        }
                     }
                     zoneIter.nextPixelDone(); // safe call
                     x++;
-                } while (!dataIter.nextPixelDone());
+                } while( !dataIter.nextPixelDone() );
 
                 dataIter.startPixels();
                 zoneIter.startPixels();
                 zoneIter.nextLineDone(); // safe call
 
-            } while (!dataIter.nextLineDone());
+            } while( !dataIter.nextLineDone() );
 
         } else {
             RandomIter zoneIter = RandomIterFactory.create(zoneImage, dataImageBounds);
@@ -198,77 +220,100 @@ public class ZonalStatsOpImage extends NullOpImage {
                 dataPos.x = dataImage.getMinX();
                 do {
                     if (roi == null | roi.contains(dataPos)) {
-                        double value = dataIter.getSampleDouble(srcBand);
+                        dataIter.getPixel(sampleValues);
                         zoneTransform.transform(dataPos, zonePos);
-                        int zone = zoneIter.getSample((int)zonePos.x, (int)zonePos.y, 0);
-                        results.get(zone).addSample(value);
+                        
+                        for( Integer band : srcBands ) {
+                            Map<Integer, StreamingSampleStats> resultPerBand = results.get(band);
+                        
+                            int zone = zoneIter.getSample((int) zonePos.x, (int) zonePos.y, 0);
+                            resultPerBand.get(zone).addSample(sampleValues[band]);
+                        }
+                        
+                        
                     }
-                    dataPos.x++ ;
-                } while (!dataIter.nextPixelDone());
+                    dataPos.x++;
+                } while( !dataIter.nextPixelDone() );
 
                 dataIter.startPixels();
-                dataPos.y++ ;
+                dataPos.y++;
 
-            } while (!dataIter.nextLineDone());
+            } while( !dataIter.nextLineDone() );
         }
 
-        ZonalStats zonalStats = new ZonalStats(stats, zones);
+        Map<Integer, ZonalStats> zonalStatsPerBand = CollectionFactory.newTreeMap();
+        for( Integer band : srcBands ) {
+            ZonalStats zonalStats = new ZonalStats(stats, zones);
+            zonalStatsPerBand.put(band, zonalStats);
 
-        for (Integer zone : zones) {
-            zonalStats.setZoneResults(zone, results.get(zone));
+            Map<Integer, StreamingSampleStats> resultsPerBand = results.get(band);
+            
+            for( Integer zone : zones ) {
+                zonalStats.setZoneResults(zone, resultsPerBand.get(zone));
+            }
         }
 
-        return zonalStats;
+        return zonalStatsPerBand;
     }
-
 
     /**
      * Used to calculate statistics when no zone image was provided.
      *
-     * @return the results as a new instance of {@code ZonalStats}
+     * @return the results as a new map of {@code ZonalStats} for every band.
      */
-    private ZonalStats compileUnzonedStatistics() {
+    private Map<Integer, ZonalStats> compileUnzonedStatistics() {
         buildZoneList();
         Integer zoneID = zones.first();
 
-        StreamingSampleStats sampleStats = new StreamingSampleStats();
-        sampleStats.setStatistics(stats);
+        Map<Integer, StreamingSampleStats> sampleStatsPerBand = CollectionFactory.newTreeMap();
+        for( Integer band : srcBands ) {
+            StreamingSampleStats sampleStats = new StreamingSampleStats();
+            sampleStats.setStatistics(stats);
+            sampleStatsPerBand.put(band, sampleStats);
+        }
 
+        final double[] sampleValues = new double[dataImage.getSampleModel().getNumBands()];
         RectIter dataIter = RectIterFactory.create(dataImage, null);
         int y = dataImage.getMinY();
         do {
             int x = dataImage.getMinX();
             do {
                 if (roi == null || roi.contains(x, y)) {
-                    double value = dataIter.getSampleDouble(srcBand);
-                    sampleStats.addSample(value);
+                    dataIter.getPixel(sampleValues);
+                    for( Integer band : srcBands ) {
+                        sampleStatsPerBand.get(band).addSample(sampleValues[band]);
+                    }
                 }
                 x++;
-            } while (!dataIter.nextPixelDone());
+            } while( !dataIter.nextPixelDone() );
 
             dataIter.startPixels();
-            y++ ;
+            y++;
 
-        } while (!dataIter.nextLineDone());
+        } while( !dataIter.nextLineDone() );
 
-
-        ZonalStats zonalStats = new ZonalStats(stats, zones);
-        zonalStats.setZoneResults(zoneID, sampleStats);
-        return zonalStats;
+        Map<Integer, ZonalStats> zonalStatsPerBand = CollectionFactory.newTreeMap();
+        for( Integer band : srcBands ) {
+            StreamingSampleStats sampleStats = sampleStatsPerBand.get(band);
+            ZonalStats zonalStats = new ZonalStats(stats, zones);
+            zonalStats.setZoneResults(zoneID, sampleStats);
+            zonalStatsPerBand.put(band, zonalStats);
+        }
+        return zonalStatsPerBand;
     }
 
     /**
      * Get the specified property.
      * <p>
-     * Use this method to retrieve the calculated statistics as a {@code ZonalStats}
-     * object by setting {@code name} to {@linkplain ZonalStatsDescriptor#ZONAL_STATS_PROPERTY}.
+     * Use this method to retrieve the calculated statistics as a map of {@code ZonalStats} per band
+     * by setting {@code name} to {@linkplain ZonalStatsDescriptor#ZONAL_STATS_PROPERTY}.
      *
      * @param name property name
      *
      * @return the requested property
      */
     @Override
-    public Object getProperty(String name) {
+    public Object getProperty( String name ) {
         if (ZonalStatsDescriptor.ZONAL_STATS_PROPERTY.equalsIgnoreCase(name)) {
             return compileStatistics();
         } else {
@@ -276,20 +321,19 @@ public class ZonalStatsOpImage extends NullOpImage {
         }
     }
 
-
     /**
      * Get the class of the given property. For
      * {@linkplain ZonalStatsDescriptor#ZONAL_STATS_PROPERTY} this will return
-     * {@code ZonalStats.class}.
+     * {@code Map.class}.
      *
      * @param name property name
      *
      * @return the property class
      */
     @Override
-    public Class getPropertyClass(String name) {
+    public Class<?> getPropertyClass( String name ) {
         if (ZonalStatsDescriptor.ZONAL_STATS_PROPERTY.equalsIgnoreCase(name)) {
-            return ZonalStats.class;
+            return Map.class;
         } else {
             return super.getPropertyClass(name);
         }
@@ -307,7 +351,7 @@ public class ZonalStatsOpImage extends NullOpImage {
         String[] superNames = super.getPropertyNames();
         if (superNames != null) {
             names = new String[superNames.length + 1];
-            for (String name : super.getPropertyNames()) {
+            for( String name : super.getPropertyNames() ) {
                 names[k++] = name;
             }
         } else {
@@ -319,4 +363,3 @@ public class ZonalStatsOpImage extends NullOpImage {
     }
 
 }
-
