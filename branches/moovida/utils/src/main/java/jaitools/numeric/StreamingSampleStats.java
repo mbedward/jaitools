@@ -138,6 +138,11 @@ public class StreamingSampleStats {
             case VARIANCE:
                 createVarianceProcessor(stat);
                 break;
+
+            case SUM:
+            case ACTIVECELLS:
+                createSumProcessor(stat);
+                break;
         }
     }
 
@@ -260,6 +265,30 @@ public class StreamingSampleStats {
     }
 
     /**
+     * Initialize a processor for the requested extremum statistic:
+     * one of Statistic.MIN, Statistic.MAX or Statistic.RANGE
+     */
+    private void createSumProcessor(Statistic stat) {
+        Processor proc = null;
+        Integer count = 0;
+        
+        for (Statistic related : EnumSet.of(Statistic.SUM, Statistic.ACTIVECELLS)) {
+            proc = procByStat.get(related);
+            if (proc != null) {
+                count = procTable.get(proc);
+                break;
+            }
+        }
+        
+        if (proc == null) {
+            proc = new SumProcessor();
+        }
+        
+        procByStat.put(stat, proc);
+        procTable.put(proc, count+1);
+    }
+
+    /**
      * Initialize a processor for the exact or approximate median
      */
     private void createMedianProcessor(Statistic stat) {
@@ -369,6 +398,40 @@ public class StreamingSampleStats {
                 default:
                     throw new IllegalArgumentException(
                             "Invalid argument for this processor type: " + stat);
+            }
+        }
+    }
+    
+    /**
+     * Processor for sum statistics, with support for active cells
+     */
+    private static class SumProcessor extends Processor {
+        
+        Double sum = 0.0;
+        Double activeCells = 0.0;
+        
+        @Override
+        void update(Double sample) {
+            activeCells++;
+            sum = sum + sample;
+        }
+        
+        @Override
+        Double get(Statistic stat) {
+            if (getCount() == 0) {
+                return Double.NaN;
+            }
+            
+            switch (stat) {
+            case SUM:
+                return sum;
+                
+            case ACTIVECELLS:
+                return activeCells;
+                
+            default:
+                throw new IllegalArgumentException(
+                        "Invalid argument for this processor type: " + stat);
             }
         }
     }

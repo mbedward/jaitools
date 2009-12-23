@@ -135,4 +135,36 @@ public class StreamingSampleStatsTest {
         double error = Math.abs(exact - streamStats.getStatisticValue(Statistic.APPROX_MEDIAN));
         assertTrue(error / values.size() <= 0.05);
     }
+    
+    @Test
+    public void testSum() {
+        System.out.println("   test sum");
+        StreamingSampleStats stats = new StreamingSampleStats();
+        stats.setStatistic(Statistic.SUM);
+
+        for (int val = -1000; val <= 1000; val++) {
+            stats.addSample((double)val);
+        }
+
+        double result = stats.getStatisticValue(Statistic.SUM);
+        assertTrue(DoubleComparison.dzero(result));
+    }
+    
+    @Test
+    public void testActiveCells() {
+        System.out.println("   test activecells");
+        StreamingSampleStats stats = new StreamingSampleStats();
+        stats.setStatistic(Statistic.ACTIVECELLS);
+        
+        for (int val = -1000; val <= 1000; val++) {
+            if(val % 2 == 0){
+                stats.addSample((double)val);
+            } else {
+                stats.addSample(Double.NaN);
+            }
+        }
+        
+        double result = stats.getStatisticValue(Statistic.ACTIVECELLS);
+        assertTrue(DoubleComparison.dcomp(result, 1001.0) == 0);
+    }
 }

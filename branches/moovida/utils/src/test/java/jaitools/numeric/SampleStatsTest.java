@@ -88,5 +88,21 @@ public class SampleStatsTest {
         double result = SampleStats.variance(values, true);
         assertTrue(DoubleComparison.dcomp(expResult, result) == 0);
     }
+    
+    @Test
+    public void testSum() {
+        System.out.println("   sum");
+        double expResult = 55.0d;
+        double result = SampleStats.sum(values, true);
+        assertTrue(DoubleComparison.dcomp(expResult, result) == 0);
+    }
+
+    @Test
+    public void testActiveCells() {
+        System.out.println("   activecells");
+        double expResult = 10.0d;
+        double result = SampleStats.activecells(values, true);
+        assertTrue(DoubleComparison.dcomp(expResult, result) == 0);
+    }
 
 }

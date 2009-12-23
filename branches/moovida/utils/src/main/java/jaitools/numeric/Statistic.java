@@ -57,8 +57,14 @@ public enum Statistic {
     /** Sample standard deviation */
     SDEV("sdev", "sample standard deviation", false),
 
+    /** Sum of valid values */
+    SUM("sum", "sum of valid values", true),
+    
     /** Sample variance */
-    VARIANCE("variance", "sample variance", false);
+    VARIANCE("variance", "sample variance", false),
+
+    /** Active cells */
+    ACTIVECELLS("activecells", "active cells", true);
 
     private static Map<String, Statistic> lookup;
     static {
