@@ -66,6 +66,10 @@ Add support for other images data types for both input and output. Add the abili
 
 At the moment the output of a Jiffle script is always an image but sometimes it would be useful to have other kinds of outputs. For example, a script to compare two images could output a summary statistic; or a search script could output the position of the first pixel that matches the search criteria.
 
+=== Deferred execution ===
+
+Allow Jiffle to be called as part of tile computation so that the script is only run when and as required.
+
 == !ZonalStats operator ==
 
 *Note: the following items have been implemented in version 1.0*
