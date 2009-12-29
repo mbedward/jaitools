@@ -77,3 +77,5 @@ Allow Jiffle to be called as part of tile computation so that the script is only
 Make the zone image optional - if not provided the source image is treated as being in a single zone. This will allow the operator to also be used to calculate statistics selectively for areas defined in an ROI.
 
 Relax the requirement that the zone image should cover the whole source image. If the zone image is provided treat any source image pixels that are beyond the bounds of the zone image as ignored.
+
+Add support for multiple bands.
