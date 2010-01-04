@@ -1,0 +1,50 @@
+#summary Get jai-tools jars via Maven.
+
+= Introduction =
+
+If you are using [http://maven.apache.org/ Maven] as your build tool you can get the jai-tools jars downloaded automagically. Presently, only the snapshot jars are available (built from the latest code on _trunk_ in the subversion repository).
+
+Add the jai-tools snapshot repository to your projects pom.xml file:
+{{{
+    <repositories>
+        <repository> 
+            <id>jaitools-snapshots</id> 
+            <name>jaitools snapshots</name> 
+            <url>http://oss.sonatype.org/content/repositories/snapshots/</url> 
+            <snapshots> 
+                <enabled>true</enabled> 
+            </snapshots> 
+        </repository>
+    </repositories>
+}}}
+
+Add the jai-tools modules that you want to use in your project as dependencies:
+{{{
+    <dependencies>
+        <!-- Example: adding utils module for DiskMemImage etc -->
+        <dependency>
+            <groupId>com.googlecode.jaitools</groupId>
+            <artifactId>utils</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
+}}}
+
+= Available modules =
+
+== General modules ==
+
+|| *Module* || *Description* ||
+|| demo || Demo programs ||
+|| jiffle || The jiffle image scripting language ||
+|| kernel || Factory and utility classes to work with KernelJAI objects ||
+|| utils || Support classes including !DiskMemTileCache and !DiskMemImage ||
+
+== Image operator modules ==
+
+|| *Module* || *Description* ||
+|| kernelstats || Calculates neighbourhood statistics ||
+|| maskedconvolve || Extends the standard !JAI convolve operator with source and destination masking ||
+|| rangelookup || An image lookup operator that can handle both integral and floating point data types and work with value ranges ||
+|| regionalize || Identifies regions of (sufficiently) uniform value in a source image ||
+|| zonalstats || Calculates statistics for values in a source image, optionally grouped by zones in a control image ||
