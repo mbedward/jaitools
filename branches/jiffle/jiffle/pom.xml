@@ -8,9 +8,8 @@
     </parent>
     <artifactId>jiffle</artifactId>
     <packaging>jar</packaging>
-    <name>Jiffle: JAI Image Function Language</name>
-    <description>Jiffle is a language and interpreter intended to make it easier to create
-        images from mathematical functions.
+    <name>Jiffle: a scripting language for raster images</name>
+    <description>Jiffle is a language and interpreter to create and analyse images
     </description>
 
     <build>
@@ -45,3 +44,4 @@
         <netbeans.hint.useExternalMaven>true</netbeans.hint.useExternalMaven>
     </properties>
 </project>
+
