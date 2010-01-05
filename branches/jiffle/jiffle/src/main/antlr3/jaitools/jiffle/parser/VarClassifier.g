@@ -47,7 +47,7 @@ import java.util.Set;
 
 import jaitools.CollectionFactory;
 import jaitools.jiffle.ErrorCode;
-import jaitools.jiffle.runtime.JiffleRunner;
+import jaitools.jiffle.runtime.FunctionTable;
 import jaitools.jiffle.runtime.VarTable;
 }
 
@@ -56,11 +56,11 @@ private boolean printDebug = false;
 public void setPrint(boolean b) { printDebug = b; }
 
 private boolean isInfoFunc(String funcName) {
-    return JiffleRunner.isInfoFunction(funcName);
+    return FunctionTable.isInfoFunction(funcName);
 }
 
 private boolean isPositionalFunc(String funcName) {
-    return JiffleRunner.isPositionalFunction(funcName);
+    return FunctionTable.isPositionalFunction(funcName);
 }
 
 /*

@@ -256,8 +256,6 @@ sub_expr returns [boolean hasValue, Double value]
                 | IMAGE_VAR
                 | ^(NBR_REF IMAGE_VAR expr expr)
                 | NON_LOCAL_VAR
-                | IMAGE_POS_LOOKUP
-                | IMAGE_INFO_LOOKUP
                 
                 | LOCAL_VAR
                   {
@@ -300,8 +298,6 @@ assignable_var  : POS_VAR
                 ;
                 
 non_assignable_var : IMAGE_VAR
-                | IMAGE_POS_LOOKUP
-                | IMAGE_INFO_LOOKUP
                 ;
 
 assign_op	: EQ

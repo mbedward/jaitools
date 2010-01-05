@@ -156,8 +156,6 @@ assignable_var returns [String varName, Double value]
                 ;
                 
 non_assignable_var : image_input
-                | IMAGE_POS_LOOKUP
-                | IMAGE_INFO_LOOKUP
                 ;
 
 image_input     : IMAGE_VAR

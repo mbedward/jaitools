@@ -22,8 +22,6 @@
   * Grammar for step 1 in tree morphing: 
   * <ul>
   * <li> Converts ASSIGN with image var on rhs to IMAGE_WRITE
-  * <li> Converts FUNC_CALL of image pos function to IMAGE_POS_LOOKUP 
-  *      and image info function to IMAGE_INFO_LOOKUP
   * <li> Converts ID tokens for variables into POS_VAR, IMAGE_VAR, LOCAL_VAR
   *      or NON_LOCAL_VAR
   * </ul>
@@ -46,17 +44,14 @@ tokens {
     NON_LOCAL_VAR;
     CONSTANT;
 
-    IMAGE_POS_LOOKUP;
-    IMAGE_INFO_LOOKUP;
-
     IMAGE_WRITE;
 }
 
 @header {
 package jaitools.jiffle.parser;
 
-import jaitools.jiffle.runtime.JiffleRunner;
 import jaitools.jiffle.Metadata;
+import jaitools.jiffle.runtime.FunctionTable;
 import jaitools.jiffle.runtime.VarTable;
 }
 
@@ -71,11 +66,11 @@ public void setMetadata(Metadata metadata) {
 }
 
 private boolean isInfoFunc(String funcName) {
-    return JiffleRunner.isInfoFunction(funcName);
+    return FunctionTable.isInfoFunction(funcName);
 }
 
 private boolean isPosFunc(String funcName) {
-    return JiffleRunner.isPositionalFunction(funcName);
+    return FunctionTable.isPositionalFunction(funcName);
 }
 
 private boolean isPosVar(String varName) {
@@ -95,7 +90,7 @@ private boolean isJiffleConstant(String varName) {
 }
 
 private String getProxyVar(String funcName) {
-    return JiffleRunner.getImageFunctionProxyVar(funcName);
+    return ImageInfoFunctionProvider.getImageFunctionProxyVar(funcName);
 }
 
 }
@@ -119,14 +114,10 @@ expr            : ^(ASSIGN assign_op var expr)
                   -> {isImageVar($var.text)}? ^(IMAGE_WRITE var expr)
                   -> ^(ASSIGN assign_op var expr)
                   
-                | ^(FUNC_CALL id=ID expr_list)
-                  -> {isPosFunc($id.text)}? IMAGE_POS_LOOKUP[getProxyVar($id.text)]
-                  -> {isInfoFunc($id.text)}? IMAGE_INFO_LOOKUP[getProxyVar($id.text)]
-                  -> ^(FUNC_CALL ID expr_list)
-                  
                 | ^(NBR_REF ID expr expr) 
                   -> ^(NBR_REF IMAGE_VAR[$ID.text] expr expr)
                   
+                | ^(FUNC_CALL id=ID expr_list)
                 | ^(QUESTION expr expr expr)
                 | ^(PREFIX unary_op expr)
                 | ^(expr_op expr expr)

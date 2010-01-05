@@ -39,7 +39,6 @@ import java.util.Map;
 import jaitools.CollectionFactory;
 import jaitools.jiffle.ErrorCode;
 import jaitools.jiffle.runtime.FunctionTable;
-import jaitools.jiffle.runtime.JiffleRunner;
 }
 
 @members {
@@ -49,18 +48,7 @@ public void setPrint(boolean b) { printDebug = b; }
 private FunctionTable funcTable = new FunctionTable();
 
 private boolean isDefinedFunction(String funcName, int numArgs) {
-    boolean found = false;
-    
-    if (numArgs == 0) {
-        found = (JiffleRunner.isInfoFunction(funcName) ||
-                 JiffleRunner.isPositionalFunction(funcName));
-    }
-    
-    if (!found) {
-        found = funcTable.isDefined(funcName, numArgs);
-    }
-    
-    return found;
+    return funcTable.isDefined(funcName, numArgs);
 }
 
 /* Table of function name : error code */
