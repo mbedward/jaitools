@@ -39,7 +39,12 @@ public enum ErrorCode {
     /**
      * Error: No output image specified
      */
-    IMAGE_NO_OUT(ErrorLevel.ERROR, "No output image (?)"),
+    IMAGE_NO_OUT(ErrorLevel.ERROR, "No output image defined"),
+
+    /**
+     * Error: More than one output image defined.
+     */
+    IMAGE_MULTIPLE_OUT(ErrorLevel.ERROR, "More than one output image defined"),
     
     /**
      * Error: neighbourhood reference used with a variable that is not

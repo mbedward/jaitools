@@ -80,34 +80,11 @@ import org.antlr.runtime.RecognitionException;
  * @version $Id$
  */
 public class JiffleRunner {
-    
-    private static class ImageFnProxy {
-        enum Type {POS, INFO};
-        
-        String varName;
-        Type type;
-        
-        ImageFnProxy(Type type, String varName) {
-            this.type = type;  this.varName = varName;
-        }
-    }
-    
-    private static Map<String, ImageFnProxy> proxyTable;
-    static {
-        proxyTable = CollectionFactory.newMap();
-        proxyTable.put("width", new ImageFnProxy(ImageFnProxy.Type.INFO, "_width"));
-        proxyTable.put("height", new ImageFnProxy(ImageFnProxy.Type.INFO, "_height"));
-        proxyTable.put("size", new ImageFnProxy(ImageFnProxy.Type.INFO, "_size"));
-        proxyTable.put("x", new ImageFnProxy(ImageFnProxy.Type.POS, "_x"));
-        proxyTable.put("y", new ImageFnProxy(ImageFnProxy.Type.POS, "_y"));
-        proxyTable.put("row", new ImageFnProxy(ImageFnProxy.Type.POS, "_row"));
-        proxyTable.put("col", new ImageFnProxy(ImageFnProxy.Type.POS, "_col"));
-    }
-    
+
     private Jiffle jiffle;
     private Metadata metadata;
-    private VarTable vars;
-    private FunctionTable funcs;
+    private VarTable varTable;
+    private FunctionTable functionTable;
 
     private static class ImageHandler {
         int x;
@@ -146,54 +123,6 @@ public class JiffleRunner {
      */
     int numPixelsProcessed;
     
-    
-    /**
-     * Query whether a function name refers to a positional
-     * function, ie. one which returns the current pixel location
-     * such as x().
-     * 
-     * @param name function name
-     * @return true if a positional function; false otherwise
-     */
-    public static boolean isPositionalFunction(String name) {
-        ImageFnProxy proxy = proxyTable.get(name);
-        if (proxy != null  &&  proxy.type == ImageFnProxy.Type.POS) {
-            return true;
-        }
-        
-        return false;
-    }
-    
-    /**
-     * Query if a function name refers to an image info function,
-     * e.g. width() which returns image width in pixels
-     * 
-     * @param name function name
-     * @return true if an image info function; false otherwise
-     */
-    public static boolean isInfoFunction(String name) {
-        ImageFnProxy proxy = proxyTable.get(name);
-        if (proxy != null  &&  proxy.type == ImageFnProxy.Type.INFO) {
-            return true;
-        }
-        
-        return false;
-    }
-    
-    /**
-     * A function used by the compiler and not intended for client code.
-     * Jiffle creates pfoxy variables for image position and info functions
-     * so that values can be looked up in a symbol table at runtime 
-     * rather than needing a function invocation.
-     * 
-     * @param funcName function name
-     * @return a proxy variable name
-     */
-    
-    public static String getImageFunctionProxyVar(String funcName) {
-        return proxyTable.get(funcName).varName;
-    }
-    
     /**
      * Constructor. Takes a compiled Jiffle and prepares the runtime
      * system.
@@ -209,8 +138,8 @@ public class JiffleRunner {
         this.jiffle = jiffle;
         this.metadata = jiffle.getMetadata();
         
-        vars = new VarTable();
-        funcs = new FunctionTable();
+        varTable = new VarTable();
+        functionTable = new FunctionTable();
 
         setSpecialVars();
         setHandlers();
@@ -220,7 +149,7 @@ public class JiffleRunner {
         
         progressListeners = CollectionFactory.newSet();
     }
-    
+
     /**
      * Get the value of an image at the current location
      * @param imgName the image variable name
@@ -269,7 +198,7 @@ public class JiffleRunner {
      * @throws a RuntimeException if the variable has not been assigned
      */
     public double getVar(String varName) {
-        return vars.get(varName);
+        return varTable.get(varName);
     }
 
     /**
@@ -279,7 +208,7 @@ public class JiffleRunner {
      * @return the result of the function call as a double
      */
     public double invokeFunction(String name, List<Double> args) {
-        return funcs.invoke(name, args);
+        return functionTable.invoke(name, args);
     }
 
 
@@ -290,7 +219,7 @@ public class JiffleRunner {
      * @return the result of the operator as a double
      */
     public double invokeLogicalOp(LogicalOp op, Double arg) {
-        return funcs.invoke(op.toString(), arg);
+        return functionTable.invoke(op.toString(), arg);
     }
 
     /**
@@ -301,7 +230,7 @@ public class JiffleRunner {
      * @return the result of the operator as a double
      */
     public double invokeLogicalOp(LogicalOp op, Double arg1, Double arg2) {
-        return funcs.invoke(op.toString(), arg1, arg2);
+        return functionTable.invoke(op.toString(), arg1, arg2);
     }
 
     /**
@@ -309,7 +238,7 @@ public class JiffleRunner {
      * @param varName the variable name
      */
     public boolean isVarDefined(String varName) {
-        return vars.contains(varName);
+        return varTable.contains(varName);
     }
 
     /**
@@ -318,7 +247,7 @@ public class JiffleRunner {
      * @param value the value to assign
      */
     public void setVar(String varName, double value) {
-        vars.set(varName, value);
+        varTable.set(varName, value);
     }
     
     /**
@@ -328,7 +257,7 @@ public class JiffleRunner {
      * @param value the value to assign
      */
     public void setVar(String varName, String op, double value) {
-        vars.assign(varName, op, value);
+        varTable.assign(varName, op, value);
     }
 
     /**
@@ -402,7 +331,7 @@ public class JiffleRunner {
             h.x = h.xmin = image.getMinX();
             h.y = h.ymin = image.getMinY();
             h.band = 0;
-            h.isOutput = metadata.getOutputImageVars().contains(e.getKey());
+            h.isOutput = metadata.getOutputImageVar().equals(e.getKey());
 
             if (image instanceof PlanarImage) {
                 PlanarImage pImage = (PlanarImage)image;
@@ -439,9 +368,7 @@ public class JiffleRunner {
         // image var as a reference - change this later when
         // allowing images with different bounds
         
-        List<String> outVars = CollectionFactory.newList();
-        outVars.addAll(metadata.getOutputImageVars());
-        refImg = metadata.getImageParams().get(outVars.get(0));
+        refImg = metadata.getImageParams().get(metadata.getOutputImageVar());
         
         Rectangle bounds = null;
         if (refImg instanceof PlanarImage) {
@@ -455,12 +382,8 @@ public class JiffleRunner {
         }
 
         refImgSize = bounds.width * bounds.height;
-        
-        vars.set(proxyTable.get("x").varName, bounds.x);
-        vars.set(proxyTable.get("y").varName, bounds.y);
-        vars.set(proxyTable.get("width").varName, bounds.width);
-        vars.set(proxyTable.get("height").varName, bounds.height);
-        vars.set(proxyTable.get("size").varName, refImgSize);
+
+        functionTable.setRuntimeBounds(bounds);
     }
 
     /**
@@ -484,10 +407,10 @@ public class JiffleRunner {
 
                 // @todo remove this hack
                 if (firstImg) {
-                    vars.set("_x", h.x - h.xmin);
-                    vars.set("_y", h.y - h.ymin);
-                    vars.set("_col", h.x - h.xmin + 1);
-                    vars.set("_row", h.y - h.ymin + 1);
+                    varTable.set("_x", h.x - h.xmin);
+                    varTable.set("_y", h.y - h.ymin);
+                    varTable.set("_col", h.x - h.xmin + 1);
+                    varTable.set("_row", h.y - h.ymin + 1);
                     firstImg = false;
 
                     numPixelsProcessed++ ;

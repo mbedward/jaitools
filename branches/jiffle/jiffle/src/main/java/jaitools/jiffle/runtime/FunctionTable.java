@@ -21,9 +21,13 @@ package jaitools.jiffle.runtime;
 
 import jaitools.CollectionFactory;
 import jaitools.numeric.SampleStats;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import static jaitools.numeric.DoubleComparison.*;
 
@@ -38,63 +42,62 @@ import static jaitools.numeric.DoubleComparison.*;
  */
 public class FunctionTable {
 
-    private static Random rr = new Random();
-    private static Map<String, OpBase> lookup = null;
-    
+    private static final Random rr = new Random();
+    private static final Map<String, OpBase> staticFunctions;
 
     static {
-        lookup = CollectionFactory.newTreeMap();
+        staticFunctions = CollectionFactory.newTreeMap();
 
-        lookup.put("abs_1",
+        staticFunctions.put("abs_1",
                 new Op1Arg() {
                     public double call(double x) {
                         return Math.abs(x);
                     }
                 });
 
-        lookup.put("acos_1",
+        staticFunctions.put("acos_1",
                 new Op1Arg() {
                     public double call(double x) {
                         return Math.acos(x);
                     }
                 });
 
-        lookup.put("asin_1",
+        staticFunctions.put("asin_1",
                 new Op1Arg() {
                     public double call(double x) {
                         return Math.asin(x);
                     }
                 });
 
-        lookup.put("atan_1",
+        staticFunctions.put("atan_1",
                 new Op1Arg() {
                     public double call(double x) {
                         return Math.atan(x);
                     }
                 });
 
-        lookup.put("cos_1",
+        staticFunctions.put("cos_1",
                 new Op1Arg() {
                     public double call(double x) {
                         return Math.cos(x);
                     }
                 });
 
-        lookup.put("degToRad_1",
+        staticFunctions.put("degToRad_1",
                 new Op1Arg() {
                     public double call(double x) {
                         return Math.PI * x / 180d;
                     }
                 });
 
-        lookup.put("floor_1",
+        staticFunctions.put("floor_1",
                 new Op1Arg() {
                     public double call(double x) {
                         return Math.floor(x);
                     }
                 });
 
-        lookup.put("if_1",
+        staticFunctions.put("if_1",
                 new Op1Arg() {
                     public double call(double x) {
                         if (!Double.isNaN(x)) {
@@ -105,7 +108,7 @@ public class FunctionTable {
                     }
                 });
 
-        lookup.put("if_2",
+        staticFunctions.put("if_2",
                 new Op2Arg() {
                     public double call(double x, double a) {
                         if (!Double.isNaN(x)) {
@@ -116,7 +119,7 @@ public class FunctionTable {
                     }
                 });
 
-        lookup.put("if_3",
+        staticFunctions.put("if_3",
                 new Op3Arg() {
                     public double call(double x, double a, double b) {
                         if (!Double.isNaN(x)) {
@@ -127,7 +130,7 @@ public class FunctionTable {
                     }
                 });
 
-        lookup.put("if_4",
+        staticFunctions.put("if_4",
                 new Op4Arg() {
                     public double call(double x, double a, double b, double c) {
                         if (!Double.isNaN(x)) {
@@ -138,119 +141,119 @@ public class FunctionTable {
                     }
                 });
 
-        lookup.put("isinf_1",
+        staticFunctions.put("isinf_1",
                 new Op1Arg() {
                     public double call(double x) {
                         return Double.isInfinite(x) ? 1d : 0d;
                     }
                 });
 
-        lookup.put("isnan_1",
+        staticFunctions.put("isnan_1",
                 new Op1Arg() {
                     public double call(double x) {
                         return Double.isNaN(x) ? 1d : 0d;
                     }
                 });
 
-        lookup.put("isnull_1",
+        staticFunctions.put("isnull_1",
                 new Op1Arg() {
                     public double call(double x) {
                         return Double.isNaN(x) ? 1d : 0d;
                     }
                 });
 
-        lookup.put("log_1",
+        staticFunctions.put("log_1",
                 new Op1Arg() {
                     public double call(double x) {
                         return Math.log(x);
                     }
                 });
                 
-        lookup.put("log_2",
+        staticFunctions.put("log_2",
                 new Op2Arg() {
                     public double call(double x, double y) {
                         return Math.log(x) / Math.log(y);
                     }
                 });
                 
-        lookup.put("max_v",
+        staticFunctions.put("max_v",
                 new OpVarArgs() {
                     public double call(Double ...values) {
                         return SampleStats.max(values, true);
                     }
                 });
 
-        lookup.put("mean_v",
+        staticFunctions.put("mean_v",
                 new OpVarArgs() {
                     public double call(Double ...values) {
                         return SampleStats.mean(values, true);
                     }
         });
         
-        lookup.put("median_v",
+        staticFunctions.put("median_v",
                 new OpVarArgs() {
                     public double call(Double ...values) {
                         return SampleStats.median(values, true);
                     }
                 });
                 
-        lookup.put("min_v",
+        staticFunctions.put("min_v",
                 new OpVarArgs() {
                     public double call(Double ...values) {
                         return SampleStats.min(values, true);
                     }
                 });
                 
-        lookup.put("mode_v",
+        staticFunctions.put("mode_v",
                 new OpVarArgs() {
                     public double call(Double ...values) {
                         return SampleStats.mode(values, true);
                     }
                 });
                 
-        lookup.put("null_0",
+        staticFunctions.put("null_0",
                 new OpNoArg() {
                     public double call() {
                         return Double.NaN;
                     }
                 });
                 
-        lookup.put("radToDeg_1",
+        staticFunctions.put("radToDeg_1",
                 new Op1Arg() {
                     public double call(double x) {
                         return x / Math.PI * 180d;
                     }
                 });
 
-        lookup.put("rand_1",
+        staticFunctions.put("rand_1",
                 new Op1Arg() {
                     public double call(double x) {
                         return rr.nextDouble() * x;
                     }
                 });
 
-        lookup.put("randInt_1",
+        staticFunctions.put("randInt_1",
                 new Op1Arg() {
                     public double call(double x) {
                         return rr.nextInt((int) x);
                     }
                 });
 
-        lookup.put("range_v",
+        staticFunctions.put("range_v",
                 new OpVarArgs() {
                     public double call(Double ...values) {
                         return SampleStats.range(values, true);
                     }
                 });
                 
-        lookup.put("round_1",
+        staticFunctions.put("round_1",
                 new Op1Arg() {
                     public double call(double x) {
                         return Math.round(x);
                     }
                 });
                 
-        lookup.put("round_2",
+        staticFunctions.put("round_2",
                 new Op2Arg() {
                     public double call(double x, double fac) {
                         int ifac = (int)(fac + 0.5);
@@ -258,42 +261,42 @@ public class FunctionTable {
                     }
                 });
 
-        lookup.put("sdev_v",
+        staticFunctions.put("sdev_v",
                 new OpVarArgs() {
                     public double call(Double ...values) {
                         return SampleStats.sdev(values, true);
                     }
                 });
 
-        lookup.put("sin_1",
+        staticFunctions.put("sin_1",
                 new Op1Arg() {
                     public double call(double x) {
                         return Math.sin(x);
                     }
                 });
 
-        lookup.put("sqrt_1",
+        staticFunctions.put("sqrt_1",
                 new Op1Arg() {
                     public double call(double x) {
                         return Math.sqrt(x);
                     }
                 });
 
-        lookup.put("tan_1",
+        staticFunctions.put("tan_1",
                 new Op1Arg() {
                     public double call(double x) {
                         return Math.tan(x);
                     }
                 });
 
-        lookup.put("variance_v",
+        staticFunctions.put("variance_v",
                 new OpVarArgs() {
                     public double call(Double ...values) {
                         return SampleStats.variance(values, true);
                     }
                 });
 
-        lookup.put(LogicalOp.OR.getFunctionName(),
+        staticFunctions.put(LogicalOp.OR.getFunctionName(),
                 new Op2Arg() {
                     public double call(double x1, double x2) {
                         if (Double.isNaN(x1) || Double.isNaN(x2)) {
@@ -304,7 +307,7 @@ public class FunctionTable {
                     }
                 });
 
-        lookup.put(LogicalOp.AND.getFunctionName(),
+        staticFunctions.put(LogicalOp.AND.getFunctionName(),
                 new Op2Arg() {
                     public double call(double x1, double x2) {
                         if (Double.isNaN(x1) || Double.isNaN(x2)) {
@@ -315,7 +318,7 @@ public class FunctionTable {
                     }
                 });
 
-        lookup.put(LogicalOp.XOR.getFunctionName(),
+        staticFunctions.put(LogicalOp.XOR.getFunctionName(),
                 new Op2Arg() {
                     public double call(double x1, double x2) {
                         if (Double.isNaN(x1) || Double.isNaN(x2)) {
@@ -326,7 +329,7 @@ public class FunctionTable {
                     }
                 });
 
-        lookup.put(LogicalOp.GT.getFunctionName(),
+        staticFunctions.put(LogicalOp.GT.getFunctionName(),
                 new Op2Arg() {
                     public double call(double x1, double x2) {
                         if (Double.isNaN(x1) || Double.isNaN(x2)) {
@@ -337,7 +340,7 @@ public class FunctionTable {
                     }
                 });
 
-        lookup.put(LogicalOp.GE.getFunctionName(),
+        staticFunctions.put(LogicalOp.GE.getFunctionName(),
                 new Op2Arg() {
                     public double call(double x1, double x2) {
                         if (Double.isNaN(x1) || Double.isNaN(x2)) {
@@ -348,7 +351,7 @@ public class FunctionTable {
                     }
                 });
 
-        lookup.put(LogicalOp.LT.getFunctionName(),
+        staticFunctions.put(LogicalOp.LT.getFunctionName(),
                 new Op2Arg() {
                     public double call(double x1, double x2) {
                         if (Double.isNaN(x1) || Double.isNaN(x2)) {
@@ -359,7 +362,7 @@ public class FunctionTable {
                     }
                 });
 
-        lookup.put(LogicalOp.LE.getFunctionName(),
+        staticFunctions.put(LogicalOp.LE.getFunctionName(),
                 new Op2Arg() {
                     public double call(double x1, double x2) {
                         if (Double.isNaN(x1) || Double.isNaN(x2)) {
@@ -370,7 +373,7 @@ public class FunctionTable {
                     }
                 });
 
-        lookup.put(LogicalOp.LOGICALEQ.getFunctionName(),
+        staticFunctions.put(LogicalOp.LOGICALEQ.getFunctionName(),
                 new Op2Arg() {
                     public double call(double x1, double x2) {
                         if (Double.isNaN(x1) || Double.isNaN(x2)) {
@@ -381,7 +384,7 @@ public class FunctionTable {
                     }
                 });
 
-        lookup.put(LogicalOp.NE.getFunctionName(),
+        staticFunctions.put(LogicalOp.NE.getFunctionName(),
                 new Op2Arg() {
                     public double call(double x1, double x2) {
                         if (Double.isNaN(x1) || Double.isNaN(x2)) {
@@ -392,7 +395,7 @@ public class FunctionTable {
                     }
                 });
 
-        lookup.put(LogicalOp.PREFIX_NOT.getFunctionName(),
+        staticFunctions.put(LogicalOp.PREFIX_NOT.getFunctionName(),
                 new Op1Arg() {
                     public double call(double x) {
                         if (Double.isNaN(x)) {
@@ -402,11 +405,75 @@ public class FunctionTable {
                         return (dzero(x) ? 1d : 0d);
                     }
                 });
+
     }
 
-    private static String[] volatileFuncs = {
-        "rand", "randInt"
-    };
+    private Map<String, OpBase> instanceFunctions;
+
+    protected void createInstanceFunctions() {
+        instanceFunctions = CollectionFactory.newTreeMap();
+
+        instanceFunctions.put("width_0",
+                new OpNoArg() {
+                    public double call() {
+                        return runtimeBounds.getWidth();
+                    }
+                });
+
+        instanceFunctions.put("height_0",
+                new OpNoArg() {
+                    public double call() {
+                        return runtimeBounds.getHeight();
+                    }
+                });
+
+        instanceFunctions.put("size_0",
+                new OpNoArg() {
+                    public double call() {
+                        return runtimeNumPixels;
+                    }
+                });
+
+        instanceFunctions.put("x_0",
+                new OpNoArg() {
+                    public double call() {
+                        return runtimePosition.x;
+                    }
+                });
+
+        instanceFunctions.put("y_0",
+                new OpNoArg() {
+                    public double call() {
+                        return runtimePosition.y;
+                    }
+                });
+    }
+
+
+    private static final Set<String> imageInfoFuncs = new HashSet<String>();
+    static {
+        for (String name : new String[]{"width", "height", "size"}) {
+            imageInfoFuncs.add(name);
+        }
+    }
+
+    private static final Set<String> imagePositionFuncs = new HashSet<String>();
+    static {
+        for (String name : new String[]{"x", "y", "row", "col"}) {
+            imagePositionFuncs.add(name);
+        }
+    }
+
+    private static final Set<String> volatileFuncs = new HashSet<String>();
+    static {
+        volatileFuncs.add("rand");
+        volatileFuncs.add("randInt");
+        volatileFuncs.addAll(imagePositionFuncs);
+    }
+
+    private Rectangle runtimeBounds;
+    private double runtimeNumPixels;
+    private Point runtimePosition;
 
     /**
      * Constructor
@@ -436,11 +503,30 @@ public class FunctionTable {
      * @return true if the function is volatile; false otherwise
      */
     public static boolean isVolatile(String name) {
-        for (String vf : volatileFuncs) {
-            if (vf.equals(name)) return true;
-        }
+        return volatileFuncs.contains(name);
+    }
 
-        return false;
+    /**
+     * Query whether a function name refers to a positional
+     * function, ie. one which returns the current pixel location
+     * such as x().
+     *
+     * @param name function name
+     * @return true if a positional function; false otherwise
+     */
+    public static boolean isPositionalFunction(String name) {
+        return imagePositionFuncs.contains(name);
+    }
+
+    /**
+     * Query if a function name refers to an image info function,
+     * e.g. width() which returns image width in pixels
+     *
+     * @param name function name
+     * @return true if an image info function; false otherwise
+     */
+    public static boolean isInfoFunction(String name) {
+        return imageInfoFuncs.contains(name);
     }
 
     /**
@@ -515,13 +601,18 @@ public class FunctionTable {
         OpBase op;
         
         // first check for a match with var args functions
-        op = lookup.get(name + "_v");
+        op = staticFunctions.get(name + "_v");
         
         if (op == null) {
             // check for a match with fixed arg functions
-            return lookup.get(name + "_" + numArgs);
+            return staticFunctions.get(name + "_" + numArgs);
         }
         
         return op;
+    }
+
+    void setRuntimeBounds(Rectangle bounds) {
+        runtimeBounds = new Rectangle(bounds);
+        runtimeNumPixels = runtimeBounds.getWidth() * runtimeBounds.getHeight();
     }
 }

@@ -89,10 +89,6 @@ private boolean isJiffleConstant(String varName) {
     return VarTable.isConstant(varName);
 }
 
-private String getProxyVar(String funcName) {
-    return ImageInfoFunctionProvider.getImageFunctionProxyVar(funcName);
-}
-
 }
 
 start

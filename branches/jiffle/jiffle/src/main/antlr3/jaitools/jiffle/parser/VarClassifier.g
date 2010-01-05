@@ -109,7 +109,7 @@ public boolean hasUnassignedVar() {
 }
 
 /**
- * Image var validation - there should be at least one output image
+ * Image var validation - there should be only one output image
  * and no image should be used for both input and output
  */
 private Set<String> imageVars;
@@ -120,10 +120,13 @@ public void setImageVars(Collection<String> varNames) {
 }
 
 private Set<String> inImageVars = CollectionFactory.newSet();
-private Set<String> outImageVars = CollectionFactory.newSet();
+private String outImageVar = null;
 
-public Set<String> getOutputImageVars() {
-    return outImageVars;
+// error flag
+private boolean multipleOutImageVars = false;
+
+public String getOutputImageVar() {
+    return outImageVar;
 }
 
 private Set<String> nbrRefVars = CollectionFactory.newSet();
@@ -155,21 +158,23 @@ public boolean hasWarning() {
 }
 
 /*
- * This method is run after the tree has been processed to 
- * check that the image var params and the AST are in sync
+ * This method is run after the tree has been processed
  */
 private void postValidation() {
+    if (multipleOutImageVars) {
+        errorTable.put("n/a", ErrorCode.IMAGE_MULTIPLE_OUT);
+
+    } else if (outImageVar == null) {
+        errorTable.put("n/a", ErrorCode.IMAGE_NO_OUT);
+    }
+
     for (String varName : unassignedVars) {
         errorTable.put(varName, ErrorCode.VAR_UNDEFINED);
     }
 
-    if (outImageVars.isEmpty()) {
-        errorTable.put("n/a", ErrorCode.IMAGE_NO_OUT);
-    }
-
     // check all image vars are accounted for
     for (String varName : imageVars) {
-        if (!inImageVars.contains(varName) && !outImageVars.contains(varName)) {
+        if (!inImageVars.contains(varName) && !(outImageVar.equals(varName))) {
             errorTable.put(varName, ErrorCode.IMAGE_UNUSED);
         }
     }
@@ -179,7 +184,7 @@ private void postValidation() {
     for (String varName : nbrRefVars) {
         boolean ok = (
             inImageVars.contains(varName) ||
-            (imageVars.contains(varName) && !outImageVars.contains(varName))
+            (imageVars.contains(varName) && !outImageVar.equals(varName))
         );
             
         if (!ok) {
@@ -221,12 +226,17 @@ expr returns [boolean isLocal, boolean isPositional]
                 : ^(ASSIGN assign_op ID e1=expr)
                   {
                       if (imageVars.contains($ID.text)) {
-                          outImageVars.add($ID.text);
-                      
-                          if (printDebug) {
-                              System.out.println("Output image var: " + $ID.text);
+                          if (outImageVar == null) {
+                              outImageVar = $ID.text;
+
+                              if (printDebug) {
+                                  System.out.println("Output image var: " + $ID.text);
+                              }
+
+                          } else if (!outImageVar.equals($ID.text)) {
+                              multipleOutImageVars = true;
                           }
-                          
+                      
                       } else {
                           userVars.add($ID.text);
                       
@@ -271,7 +281,7 @@ expr returns [boolean isLocal, boolean isPositional]
                 | ID
                   {
                       if (imageVars.contains($ID.text)) {
-                          if (outImageVars.contains($ID.text)) {
+                          if (outImageVar.equals($ID.text)) {
                               // error - using image for input and output
                               errorTable.put($ID.text, ErrorCode.IMAGE_IO);
                           
