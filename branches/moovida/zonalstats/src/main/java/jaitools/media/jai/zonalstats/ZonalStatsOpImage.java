@@ -92,6 +92,12 @@ public class ZonalStatsOpImage extends NullOpImage {
      *
      * @param roi an optional {@code ROI} for data image masking.
      *
+     * @param zoneTransform
+     * 
+     * @param rangesList a {@link List} of {@link Range}s, that will be filtered out
+     *              of the process. This means that values inside the supplied ranges 
+     *              will not be considered as valid and discarded.
+     * 
      * @see ZonalStatsDescriptor
      * @see Statistic
      */
