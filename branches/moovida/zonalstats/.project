@@ -2,9 +2,7 @@
   <name>zonalstats</name>
   <comment>Calculates summary statistics, optionally within zones defined by
 a zone image, for values in a data image</comment>
-  <projects>
-    <project>utils</project>
-  </projects>
+  <projects/>
   <buildSpec>
     <buildCommand>
       <name>org.eclipse.jdt.core.javabuilder</name>

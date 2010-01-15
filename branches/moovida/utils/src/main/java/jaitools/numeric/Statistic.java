@@ -61,10 +61,7 @@ public enum Statistic {
     SUM("sum", "sum of valid values", true),
     
     /** Sample variance */
-    VARIANCE("variance", "sample variance", false),
-
-    /** Active cells */
-    ACTIVECELLS("activecells", "active cells", true);
+    VARIANCE("variance", "sample variance", false);
 
     private static Map<String, Statistic> lookup;
     static {

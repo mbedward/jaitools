@@ -140,7 +140,6 @@ public class StreamingSampleStats {
                 break;
 
             case SUM:
-            case ACTIVECELLS:
                 createSumProcessor(stat);
                 break;
         }
@@ -272,7 +271,7 @@ public class StreamingSampleStats {
         Processor proc = null;
         Integer count = 0;
         
-        for (Statistic related : EnumSet.of(Statistic.SUM, Statistic.ACTIVECELLS)) {
+        for (Statistic related : EnumSet.of(Statistic.SUM)) {
             proc = procByStat.get(related);
             if (proc != null) {
                 count = procTable.get(proc);
@@ -408,11 +407,9 @@ public class StreamingSampleStats {
     private static class SumProcessor extends Processor {
         
         Double sum = 0.0;
-        Double activeCells = 0.0;
         
         @Override
         void update(Double sample) {
-            activeCells++;
             sum = sum + sample;
         }
         
@@ -425,9 +422,6 @@ public class StreamingSampleStats {
             switch (stat) {
             case SUM:
                 return sum;
-                
-            case ACTIVECELLS:
-                return activeCells;
                 
             default:
                 throw new IllegalArgumentException(
