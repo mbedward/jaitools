@@ -330,21 +330,4 @@ public class SampleStats {
         
         return sum;
     }
-
-    /**
-     * Calculate the active values passed (not NaN).
-     */
-    public static double activecells(Double[] values, boolean ignoreNaN) {
-        if (!ignoreNaN) {
-            return values.length;
-        }
-        double count = 0;
-        for (int i = 0; i < values.length; i++) {
-            if (!Double.isNaN(values[i])) {
-                count++;  
-            }
-        }
-        
-        return count;
-    }
 }
