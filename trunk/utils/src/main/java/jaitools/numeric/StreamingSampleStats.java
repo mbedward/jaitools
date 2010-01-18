@@ -509,6 +509,10 @@ public class StreamingSampleStats {
             if (getCount() == 0) {
                 return Double.NaN;
             }
+            
+            if (getCount() == 1) {
+                return buf0.data[0];
+            }
 
             if (needsCalculation) {
                 List<WeightedSample> samples = CollectionFactory.newList();
