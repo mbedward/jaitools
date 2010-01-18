@@ -35,8 +35,7 @@ import static org.junit.Assert.*;
  */
 public class StreamingSampleStatsTest {
 
-    public StreamingSampleStatsTest() {
-    }
+    private final Double singleValue = 42.0;
 
     @Test
     public void testMean() {
@@ -50,6 +49,16 @@ public class StreamingSampleStatsTest {
 
         double result = stats.getStatisticValue(Statistic.MEAN);
         assertTrue(DoubleComparison.dzero(result));
+    }
+
+    @Test
+    public void testMeanSingleValue() {
+        System.out.println("   test mean single value");
+        StreamingSampleStats stats = new StreamingSampleStats();
+        stats.setStatistic(Statistic.MEAN);
+        stats.addSample(singleValue);
+
+        assertEquals(singleValue, stats.getStatisticValue(Statistic.MEAN));
     }
 
     @Test
@@ -79,6 +88,16 @@ public class StreamingSampleStatsTest {
         double expResult = 333833.5d;  // calculated with R
         double result = stats.getStatisticValue(Statistic.VARIANCE);
         assertTrue(DoubleComparison.dcomp(result, expResult) == 0);
+    }
+
+    @Test
+    public void testVarianceSingleValue() {
+        System.out.println("   test variance single value");
+        StreamingSampleStats stats = new StreamingSampleStats();
+        stats.setStatistic(Statistic.VARIANCE);
+        stats.addSample(singleValue);
+
+        assertTrue(Double.isNaN(stats.getStatisticValue(Statistic.VARIANCE)));
     }
 
     @Test
@@ -112,6 +131,21 @@ public class StreamingSampleStatsTest {
     }
 
     @Test
+    public void testMinMaxRangeSingleValue() {
+        System.out.println("   test min, max and range single value");
+        StreamingSampleStats streamStats = new StreamingSampleStats();
+        Statistic[] stats = {
+            Statistic.MIN, Statistic.MAX, Statistic.RANGE
+        };
+        streamStats.setStatistics(stats);
+        streamStats.addSample(singleValue);
+
+        assertEquals(singleValue, streamStats.getStatisticValue(Statistic.MIN));
+        assertEquals(singleValue, streamStats.getStatisticValue(Statistic.MAX));
+        assertEquals(Double.valueOf(0), streamStats.getStatisticValue(Statistic.RANGE));
+    }
+
+    @Test
     public void testMedian() {
         System.out.println("   test exact and approximate median");
         StreamingSampleStats streamStats = new StreamingSampleStats();
@@ -134,5 +168,25 @@ public class StreamingSampleStatsTest {
 
         double error = Math.abs(exact - streamStats.getStatisticValue(Statistic.APPROX_MEDIAN));
         assertTrue(error / values.size() <= 0.05);
+    }
+
+    @Test
+    public void testExactMedianSingleValue() {
+        System.out.println("   test exact median single value");
+        StreamingSampleStats streamStats = new StreamingSampleStats();
+        streamStats.setStatistic(Statistic.MEDIAN);
+
+        streamStats.addSample(singleValue);
+        assertEquals(singleValue, streamStats.getStatisticValue(Statistic.MEDIAN));
+    }
+
+    @Test
+    public void testApproxMedianSingleValue() {
+        System.out.println("   test approx median single value");
+        StreamingSampleStats streamStats = new StreamingSampleStats();
+        streamStats.setStatistic(Statistic.APPROX_MEDIAN);
+
+        streamStats.addSample(singleValue);
+        assertEquals(singleValue, streamStats.getStatisticValue(Statistic.APPROX_MEDIAN));
     }
 }

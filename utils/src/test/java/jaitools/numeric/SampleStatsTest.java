@@ -41,12 +41,20 @@ public class SampleStatsTest {
         }
     }
 
+    static final Double[] singleValue = { 42.0 };
+
     @Test
     public void testMax() {
         System.out.println("   max");
         double expResult = 10.0d;
         double result = SampleStats.max(values, true);
         assertTrue(DoubleComparison.dzero(expResult - result));
+    }
+    
+    @Test
+    public void testMaxSingleValue() {
+        System.out.println("   max with single value");
+        assertEquals(singleValue[0], Double.valueOf(SampleStats.max(singleValue, true)));
     }
 
     @Test
@@ -58,6 +66,12 @@ public class SampleStatsTest {
     }
 
     @Test
+    public void testMinSingleValue() {
+        System.out.println("   min with single value");
+        assertEquals(singleValue[0], Double.valueOf(SampleStats.min(singleValue, true)));
+    }
+
+    @Test
     public void testMedian() {
         System.out.println("   median");
         double expResult = 5.5d;
@@ -65,6 +79,12 @@ public class SampleStatsTest {
         assertTrue(DoubleComparison.dzero(expResult - result));
     }
     
+    @Test
+    public void testMedianSingleValue() {
+        System.out.println("   median with single value");
+        assertEquals(singleValue[0], Double.valueOf(SampleStats.median(singleValue, true)));
+    }
+
     @Test
     public void testRange() {
         System.out.println("   range");
@@ -74,6 +94,12 @@ public class SampleStatsTest {
     }
     
     @Test
+    public void testRangeSingleValue() {
+        System.out.println("   range with single value");
+        assertEquals(Double.valueOf(0), Double.valueOf(SampleStats.range(singleValue, true)));
+    }
+
+    @Test
     public void testMean() {
         System.out.println("   mean");
         double expResult = 5.5d;
@@ -82,11 +108,23 @@ public class SampleStatsTest {
     }
 
     @Test
+    public void testMeanSingleValue() {
+        System.out.println("   mean with single value");
+        assertEquals(singleValue[0], Double.valueOf(SampleStats.mean(singleValue, true)));
+    }
+
+    @Test
     public void testVariance() {
         System.out.println("   variance");
         double expResult = 9.0d + 1.0d / 6;
         double result = SampleStats.variance(values, true);
         assertTrue(DoubleComparison.dcomp(expResult, result) == 0);
+    }
+
+    @Test
+    public void testVarianceSingleValue() {
+        System.out.println("   variance with single value");
+        assertTrue(Double.isNaN(SampleStats.variance(singleValue, true)));
     }
 
 }
