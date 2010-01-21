@@ -171,12 +171,16 @@ public class TestKernelStats {
             case VARIANCE:
                 expValue = 0;
                 break;
+
+            case SUM:
+                expValue = 9;
+                break;
         }
 
         RectIter iter = RectIterFactory.create(img, null);
         do {
             do {
-                assertTrue(dcomp(iter.getSampleDouble(), expValue) == 0);
+                assertTrue(dcomp(expValue, iter.getSampleDouble()) == 0);
             } while (!iter.nextPixelDone());
             iter.startPixels();
         } while (!iter.nextLineDone());
