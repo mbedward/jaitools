@@ -24,6 +24,7 @@ import jaitools.CollectionFactory;
 import jaitools.jiffle.Jiffle;
 import jaitools.jiffle.Metadata;
 import jaitools.jiffle.parser.ImageCalculator;
+import java.awt.Point;
 import static jaitools.numeric.DoubleComparison.*;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
@@ -117,6 +118,8 @@ public class JiffleRunner {
      */
     RenderedImage refImg;
     int refImgSize;
+    Rectangle refImgBounds;
+    Point refImgPosition;
     
     /*
      * TODO: better way of tracking progress
@@ -331,7 +334,7 @@ public class JiffleRunner {
             h.x = h.xmin = image.getMinX();
             h.y = h.ymin = image.getMinY();
             h.band = 0;
-            h.isOutput = metadata.getOutputImageVar().equals(e.getKey());
+            h.isOutput = metadata.getOutputImageVars().contains(e.getKey());
 
             if (image instanceof PlanarImage) {
                 PlanarImage pImage = (PlanarImage)image;
@@ -368,7 +371,7 @@ public class JiffleRunner {
         // image var as a reference - change this later when
         // allowing images with different bounds
         
-        refImg = metadata.getImageParams().get(metadata.getOutputImageVar());
+        refImg = metadata.getImageParams().get(metadata.getOutputImageVars().iterator().next());
         
         Rectangle bounds = null;
         if (refImg instanceof PlanarImage) {
@@ -382,7 +385,6 @@ public class JiffleRunner {
         }
 
         refImgSize = bounds.width * bounds.height;
-
         functionTable.setRuntimeBounds(bounds);
     }
 
@@ -406,11 +408,8 @@ public class JiffleRunner {
                 }
 
                 // @todo remove this hack
-                if (firstImg) {
-                    varTable.set("_x", h.x - h.xmin);
-                    varTable.set("_y", h.y - h.ymin);
-                    varTable.set("_col", h.x - h.xmin + 1);
-                    varTable.set("_row", h.y - h.ymin + 1);
+                if (!finished && firstImg) {
+                    functionTable.setRuntimePosition(h.x, h.y);
                     firstImg = false;
 
                     numPixelsProcessed++ ;
@@ -419,7 +418,7 @@ public class JiffleRunner {
             }
         }
     }
-    
+
     private void publishProgress() {
         float prop = (float)numPixelsProcessed / refImgSize;
         if (prop - propComplete >= PROGRESS_INCREMENT) {

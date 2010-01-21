@@ -447,6 +447,20 @@ public class FunctionTable {
                         return runtimePosition.y;
                     }
                 });
+
+        instanceFunctions.put("row_0",
+                new OpNoArg() {
+                    public double call() {
+                        return runtimePosition.y - runtimeBounds.y + 1;
+                    }
+                });
+
+        instanceFunctions.put("col_0",
+                new OpNoArg() {
+                    public double call() {
+                        return runtimePosition.x - runtimeBounds.x + 1;
+                    }
+                });
     }
 
 
@@ -479,6 +493,18 @@ public class FunctionTable {
      * Constructor
      */
     public FunctionTable() {
+        createInstanceFunctions();
+    }
+
+    public void setRuntimeBounds(Rectangle bounds) {
+        runtimeBounds = new Rectangle(bounds);
+        runtimeNumPixels = runtimeBounds.getWidth() * runtimeBounds.getHeight();
+        runtimePosition = new Point(runtimeBounds.x, runtimeBounds.y);
+    }
+
+    public void setRuntimePosition(int x, int y) {
+        runtimePosition.x = x;
+        runtimePosition.y = y;
     }
 
     /**
@@ -490,7 +516,7 @@ public class FunctionTable {
      * @param numArgs number of arguments
      * @return true if the function is defined; false otherwise
      */
-    public static boolean isDefined(String name, int numArgs) {
+    public boolean isDefined(String name, int numArgs) {
         OpBase op = getMethod(name, numArgs);
         return op != null;
     }
@@ -502,7 +528,7 @@ public class FunctionTable {
      * @param name the function name
      * @return true if the function is volatile; false otherwise
      */
-    public static boolean isVolatile(String name) {
+    public boolean isVolatile(String name) {
         return volatileFuncs.contains(name);
     }
 
@@ -514,7 +540,7 @@ public class FunctionTable {
      * @param name function name
      * @return true if a positional function; false otherwise
      */
-    public static boolean isPositionalFunction(String name) {
+    public boolean isPositionalFunction(String name) {
         return imagePositionFuncs.contains(name);
     }
 
@@ -525,7 +551,7 @@ public class FunctionTable {
      * @param name function name
      * @return true if an image info function; false otherwise
      */
-    public static boolean isInfoFunction(String name) {
+    public boolean isInfoFunction(String name) {
         return imageInfoFuncs.contains(name);
     }
 
@@ -538,13 +564,12 @@ public class FunctionTable {
      * @return the result of the named function
      */
     public double invoke(String name, List<Double> args) {
-        OpBase op = getMethod(name, args.size());
+        int numArgs = (args == null ? 0 : args.size());
+        OpBase op = getMethod(name, numArgs);
         if (op == null) {
             throw new RuntimeException("unknown function: " + name + 
                     "with " + args.size() + " args");
         }
-        
-        int numArgs = (args == null ? 0 : args.size());
 
         switch (numArgs) {
             case 0:
@@ -597,7 +622,7 @@ public class FunctionTable {
      * @param numArgs the number of arguments
      * @return an OpBase reference if a match is found, or null otherwise
      */
-    private static OpBase getMethod(String name, int numArgs) {
+    private OpBase getMethod(String name, int numArgs) {
         OpBase op;
         
         // first check for a match with var args functions
@@ -605,14 +630,15 @@ public class FunctionTable {
         
         if (op == null) {
             // check for a match with fixed arg functions
-            return staticFunctions.get(name + "_" + numArgs);
+            op = staticFunctions.get(name + "_" + numArgs);
+        }
+
+        if (op == null) {
+            // check for a match with instance functions
+            op = instanceFunctions.get(name + "_" + numArgs);
         }
         
         return op;
     }
 
-    void setRuntimeBounds(Rectangle bounds) {
-        runtimeBounds = new Rectangle(bounds);
-        runtimeNumPixels = runtimeBounds.getWidth() * runtimeBounds.getHeight();
-    }
 }

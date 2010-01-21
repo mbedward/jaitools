@@ -17,19 +17,19 @@ public interface IJiffleRunner {
      * 
      * @return true if the run completed successfully; false otherwise.
      */
-    public boolean run();
+    public boolean run() throws JiffleInterpreterException;
 
     /**
      * Run the jiffle script for the given destination image tile.
      *
      * @return true if the run completed successfully; false otherwise.
      */
-    public boolean run(int tileX, int tileY);
+    public boolean run(int tileX, int tileY) throws JiffleInterpreterException;
 
     /**
      * Run the jiffle script to compute the given area of the destination image.
      *
      * @return true if the run completed successfully; false otherwise.
      */
-    public boolean run(Rectangle bounds);
+    public boolean run(Rectangle bounds) throws JiffleInterpreterException;
 }
