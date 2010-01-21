@@ -692,6 +692,9 @@ public class KernelStatsOpImage extends AreaOpImage {
                 case VARIANCE:
                     return SampleStats.variance(values, ignoreNaN);
 
+                case SUM:
+                    return SampleStats.sum(values, ignoreNaN);
+
                 default:
                 throw new IllegalArgumentException("Unrecognized KernelStatstic arg");
             }
