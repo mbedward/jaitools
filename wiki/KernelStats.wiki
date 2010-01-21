@@ -12,18 +12,13 @@ This operator calculates summary statistics for pixel neighbourhoods in a single
 The following statistics can be calculated:
 
  * Mean
-
  * Median
-
  * Minimum
-
  * Maximum
-
  * Range (max - min)
-
  * Sample standard deviation
-
  * Sample variance
+ * Sum
 
 Multiple statistics can be requested in a single invocation of the operator. Each statistic is returned as a band in the destination image.
 
