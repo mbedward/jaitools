@@ -312,4 +312,22 @@ public class SampleStats {
         return (Double.isNaN(var) ? Double.NaN : Math.sqrt(var));
     }
 
+    /**
+     * Calculate the sum of the values passed.
+     */
+    public static double sum(Double[] values, boolean ignoreNaN) {
+        double sum = 0.0d;
+
+        for (int i = 0; i < values.length; i++) {
+            if (Double.isNaN(values[i])) {
+                if (!ignoreNaN) {
+                    return Double.NaN;
+                }
+            } else {
+              sum = sum + values[i];  
+            }
+        }
+        
+        return sum;
+    }
 }

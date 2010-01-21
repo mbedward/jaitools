@@ -22,6 +22,8 @@ package jaitools.media.jai.zonalstats;
 
 import com.sun.media.jai.opimage.RIFUtil;
 import com.sun.media.jai.util.ImageUtil;
+
+import jaitools.numeric.Range;
 import jaitools.numeric.Statistic;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
@@ -31,6 +33,8 @@ import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
 import java.awt.image.renderable.ParameterBlock;
 import java.awt.image.renderable.RenderedImageFactory;
+import java.util.List;
+
 import javax.media.jai.ImageLayout;
 import javax.media.jai.ROI;
 import javax.media.jai.RasterFactory;
@@ -75,6 +79,8 @@ public class ZonalStatsRIF implements RenderedImageFactory {
 
         Integer[] bands = (Integer[]) paramBlock.getObjectParameter(ZonalStatsDescriptor.BAND_ARG);
 
+        List<Range<Double>> rangesList = (List<Range<Double>>) paramBlock.getObjectParameter(ZonalStatsDescriptor.RANGE_ARG);
+
         SampleModel sm = layout.getSampleModel(null);
         if (sm == null || sm.getNumBands() != stats.length) {
 
@@ -112,7 +118,8 @@ public class ZonalStatsRIF implements RenderedImageFactory {
                 stats,
                 bands,
                 roi,
-                zoneTransform);
+                zoneTransform,
+                rangesList);
     }
 }
 

@@ -171,6 +171,20 @@ public class StreamingSampleStatsTest {
     }
 
     @Test
+    public void testSum() {
+        System.out.println("   test sum");
+        StreamingSampleStats stats = new StreamingSampleStats();
+        stats.setStatistic(Statistic.SUM);
+
+        for (int val = -1000; val <= 1000; val++) {
+            stats.addSample((double)val);
+        }
+
+        double result = stats.getStatisticValue(Statistic.SUM);
+        assertTrue(DoubleComparison.dzero(result));
+    }
+    
+    @Test
     public void testExactMedianSingleValue() {
         System.out.println("   test exact median single value");
         StreamingSampleStats streamStats = new StreamingSampleStats();
