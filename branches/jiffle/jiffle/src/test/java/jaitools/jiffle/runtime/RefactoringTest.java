@@ -15,12 +15,14 @@ import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
 import java.util.Map;
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
  * @author Michael Bedward
  */
+@Ignore
 public class RefactoringTest {
 
     private static final int OUT_WIDTH = 1000;

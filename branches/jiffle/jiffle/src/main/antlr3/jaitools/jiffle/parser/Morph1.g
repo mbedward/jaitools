@@ -65,12 +65,14 @@ public void setMetadata(Metadata metadata) {
     this.metadata = metadata;
 }
 
+private FunctionTable funcTable = new FunctionTable();
+
 private boolean isInfoFunc(String funcName) {
-    return FunctionTable.isInfoFunction(funcName);
+    return funcTable.isInfoFunction(funcName);
 }
 
 private boolean isPosFunc(String funcName) {
-    return FunctionTable.isPositionalFunction(funcName);
+    return funcTable.isPositionalFunction(funcName);
 }
 
 private boolean isPosVar(String varName) {

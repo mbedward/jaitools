@@ -38,11 +38,11 @@ public class NeighbourhoodTest {
 
     @Test
     public void testNeighbourhood() throws Exception {
-        int width = 10, height = 10;
+        final int width = 10, height = 10;
         
         TiledImage testImg = createTestImage(width, height);
         
-        TiledImage tImg = ImageUtils.createDoubleImage(width, height);
+        TiledImage tImg = ImageUtils.createConstantImage(width, height, 0D);
         Map<String, RenderedImage> imgParams = CollectionFactory.newMap();
         imgParams.put("testImg", testImg);
         imgParams.put("result", tImg);
@@ -68,7 +68,7 @@ public class NeighbourhoodTest {
                 double val = tImg.getSampleDouble(x, y, 0);
                 double left = (x == 0 ? Double.NaN : y);
                 double right = (x == width-1 ? Double.NaN : y);
-                //System.out.println("" + val + " " + above + " " + below + " " + left + " " + right);
+                System.out.println("" + val + " " + above + " " + below + " " + left + " " + right);
                 assertTrue(DoubleComparison.dcomp(val, above + below + left + right) == 0);
             }
         }
@@ -78,7 +78,7 @@ public class NeighbourhoodTest {
      * Create a test image where pixel value == row index (from 0)
      */
     private TiledImage createTestImage(int width, int height) throws Exception {
-        TiledImage tImg = ImageUtils.createDoubleImage(width, height);
+        TiledImage tImg = ImageUtils.createConstantImage(width, height, 0D);
         Map<String, RenderedImage> imgParams = CollectionFactory.newMap();
         imgParams.put("result", tImg);
         

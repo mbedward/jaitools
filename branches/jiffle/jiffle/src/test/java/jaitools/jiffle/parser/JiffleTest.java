@@ -109,12 +109,6 @@ public class JiffleTest {
         assertTrue(deq(result, 2));
     }
 
-    /**
-     * Evaluates a numeric expression
-     * @param input intput jiffle statement(s)
-     * @return the result as a double value
-     * @throws org.antlr.runtime.RecognitionException
-     */
     private double eval(String input) throws RecognitionException {
         ANTLRStringStream strm = new ANTLRStringStream(input);
         JiffleLexer lexer = new JiffleLexer(strm);

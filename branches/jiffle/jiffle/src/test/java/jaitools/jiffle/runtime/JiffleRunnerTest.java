@@ -30,6 +30,7 @@ import javax.media.jai.PlanarImage;
 import javax.media.jai.TiledImage;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
+import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static jaitools.numeric.DoubleComparison.*;
@@ -39,8 +40,14 @@ import static jaitools.numeric.DoubleComparison.*;
  * @author Michael Bedward
  */
 public class JiffleRunnerTest {
+    private FunctionTable functionTable;
 
     public JiffleRunnerTest() {
+    }
+
+    @Before
+    public void setup() {
+        functionTable = new FunctionTable();
     }
 
     @Test
@@ -48,10 +55,10 @@ public class JiffleRunnerTest {
         System.out.println("   isPositionalFunction");
         String[] names = {"x", "y", "row", "col"};
         for (String name : names) {
-            assertTrue(JiffleRunner.isPositionalFunction(name));
+            assertTrue(functionTable.isPositionalFunction(name));
         }
         
-        assertFalse(JiffleRunner.isPositionalFunction("foo"));
+        assertFalse(functionTable.isPositionalFunction("foo"));
     }
 
     @Test
@@ -59,10 +66,10 @@ public class JiffleRunnerTest {
         System.out.println("   isInfoFunction");
         String[] names = {"width", "height"};
         for (String name : names) {
-            assertTrue(JiffleRunner.isInfoFunction(name));
+            assertTrue(functionTable.isInfoFunction(name));
         }
         
-        assertFalse(JiffleRunner.isInfoFunction("foo"));
+        assertFalse(functionTable.isInfoFunction("foo"));
     }
 
     /**
@@ -76,9 +83,10 @@ public class JiffleRunnerTest {
         System.out.println("   run");
         
         double inValue = 10d;
+        final int width = 10;
         
-        PlanarImage inImg = ImageUtils.createDoubleImage(10, 10, new double[]{inValue});
-        PlanarImage outImg = ImageUtils.createDoubleImage(10, 10, 1);
+        PlanarImage inImg = ImageUtils.createConstantImage(width, width, Double.valueOf(inValue));
+        PlanarImage outImg = ImageUtils.createConstantImage(width, width, 1.0D);
         
         Map<String, RenderedImage> imgParams = CollectionFactory.newMap();
         imgParams.put("out", outImg);
@@ -124,10 +132,10 @@ public class JiffleRunnerTest {
     public void testNullImageValueSubtraction() throws Exception {
         System.out.println("   subtraction with null and non-null image values");
 
-        int width = 100;
+        final int width = 10;
 
-        TiledImage inImg1 = ImageUtils.createDoubleImage(width, width);
-        TiledImage inImg2 = ImageUtils.createDoubleImage(width, width);
+        TiledImage inImg1 = ImageUtils.createConstantImage(width, width, 0D);
+        TiledImage inImg2 = ImageUtils.createConstantImage(width, width, 0D);
 
         /*
          * Randomly allocate the four possible combinations of
@@ -161,7 +169,7 @@ public class JiffleRunnerTest {
         }
         
         // out image initially filled with zeroes
-        TiledImage outImg = ImageUtils.createDoubleImage(width, width);
+        TiledImage outImg = ImageUtils.createConstantImage(width, width, 0D);
         
         Map<String, RenderedImage> imgParams = CollectionFactory.newMap();
         imgParams.put("in1", inImg1);
@@ -242,10 +250,10 @@ public class JiffleRunnerTest {
     public void testNullSubtractionWithinIf() throws Exception {
         System.out.println("   subtraction with null and non-null values within if statements");
 
-        int width = 100;
+        final int width = 10;
 
-        TiledImage inImg1 = ImageUtils.createDoubleImage(width, width);
-        TiledImage inImg2 = ImageUtils.createDoubleImage(width, width);
+        TiledImage inImg1 = ImageUtils.createConstantImage(width, width, 0D);
+        TiledImage inImg2 = ImageUtils.createConstantImage(width, width, 0D);
 
         /*
          * Randomly allocate the four possible combinations of
@@ -279,7 +287,7 @@ public class JiffleRunnerTest {
         }
 
         // out image initially filled with zeroes
-        TiledImage outImg = ImageUtils.createDoubleImage(width, width);
+        TiledImage outImg = ImageUtils.createConstantImage(width, width, 0D);
 
         Map<String, RenderedImage> imgParams = CollectionFactory.newMap();
         imgParams.put("in1", inImg1);
