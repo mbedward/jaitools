@@ -20,6 +20,7 @@
 
 package jaitools.media.jai.zonalstats;
 
+import jaitools.numeric.Range;
 import jaitools.numeric.Statistic;
 
 import java.awt.Rectangle;
@@ -28,6 +29,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
+import java.util.List;
 
 import javax.media.jai.JAI;
 import javax.media.jai.OperationDescriptorImpl;
@@ -254,14 +256,15 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
     static final int BAND_ARG = 1;
     static final int ROI_ARG = 2;
     static final int ZONE_TRANSFORM = 3;
+    static final int RANGE_ARG = 4;
 
-    private static final String[] paramNames = {"stats", "bands", "roi", "zoneTransform"};
+    private static final String[] paramNames = {"stats", "bands", "roi", "zoneTransform", "ranges"};
 
     private static final Class<?>[] paramClasses = {Statistic[].class, Integer[].class,
-            javax.media.jai.ROI.class, AffineTransform.class,};
+            javax.media.jai.ROI.class, AffineTransform.class, List.class};
 
     private static final Object[] paramDefaults = {NO_PARAMETER_DEFAULT,
-            new Integer[]{Integer.valueOf(0)}, (ROI) null, (AffineTransform) null,};
+            new Integer[]{Integer.valueOf(0)}, (ROI) null, (AffineTransform) null, (List) null};
 
     /** Constructor. */
     public ZonalStatsDescriptor() {
@@ -292,7 +295,14 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
                         "arg3Desc",
                         String.format("%s (default %s) - an optional AffineTransform to "
                                 + "from dataImage pixel coords to zoneImage pixel coords",
-                                paramNames[ZONE_TRANSFORM], paramDefaults[ZONE_TRANSFORM])}},
+                                paramNames[ZONE_TRANSFORM], paramDefaults[ZONE_TRANSFORM])},
+
+                {
+                        "arg4Desc",
+                        String.format("%s (default %s) - an optional List of Ranges to ",
+                                paramNames[RANGE_ARG], paramDefaults[RANGE_ARG])}
+
+        },
 
         new String[]{RenderedRegistryMode.MODE_NAME}, // supported modes
 
@@ -314,12 +324,13 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
      * @param roi optional roi (default is null) used to mask data values
      * @param zoneTransform (default is null) an AffineTransform used to convert
      * dataImage pixel coords to zoneImage pixel coords
+     * @param ranges  a list of ranges to exclude from the analysis
      * @param hints an optional RenderingHints object
      * @return a RenderedImage with a band for each requested statistic
      */
     public static RenderedImage create( RenderedImage dataImage, RenderedImage zoneImage,
             Statistic[] stats, Integer[] bands, ROI roi, AffineTransform zoneTransform,
-            RenderingHints hints ) {
+            List<Range<Double>> ranges, RenderingHints hints ) {
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats", RenderedRegistryMode.MODE_NAME);
 
@@ -329,6 +340,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
         pb.setParameter("stats", stats);
         pb.setParameter("bands", bands);
         pb.setParameter("roi", roi);
+        pb.setParameter("ranges", ranges);
 
         return JAI.create("ZonalStats", pb, hints);
     }
@@ -358,6 +370,24 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
             return false;
         }
 
+        Object rangeObject = pb.getObjectParameter(RANGE_ARG);
+        if (rangeObject instanceof List) {
+            if(((List)rangeObject).size() < 1){
+                msg.append("range arg has to contain range objects");
+                return false;
+            }
+            Object range = ((List)rangeObject).get(0);
+            if (!(range instanceof Range)) {
+                msg.append("range arg has to be a List of Range objects");
+                return false;
+            }
+        } else {
+            if(rangeObject != null){
+                msg.append("range arg has to be of type List");
+                return false;
+            }
+        }
+        
         Object bandsObject = pb.getObjectParameter(BAND_ARG);
         Integer[] bands = null;
         if (!(bandsObject instanceof Integer[])) {

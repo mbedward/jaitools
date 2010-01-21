@@ -21,6 +21,7 @@
 package jaitools.media.jai.zonalstats;
 
 import jaitools.numeric.DoubleComparison;
+import jaitools.numeric.Range;
 import jaitools.numeric.Statistic;
 import java.awt.Point;
 import java.awt.RenderingHints;
@@ -30,6 +31,8 @@ import java.awt.image.DataBuffer;
 import java.awt.image.PixelInterleavedSampleModel;
 import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import javax.media.jai.ImageLayout;
@@ -61,6 +64,8 @@ public class ZonalStatsTest {
     private static final int MIN_DATUM = -5;
     private static final int MAX_DATUM = 5;
     private static RenderedImage dataImage;
+    private static RenderedImage constant1Image;
+    private static RenderedImage twoValueImage;
     private static RenderedImage multibandImage;
     private static Random rand = new Random();
 
@@ -68,6 +73,8 @@ public class ZonalStatsTest {
     public static void setup() {
         dataImage = createRandomImage(MIN_DATUM, MAX_DATUM);
         multibandImage = createMultibandImage();
+        constant1Image = createConstantImage(new Double[]{1.0});
+        twoValueImage = createTwoValuesImage();
     }
 
     @Test
@@ -360,6 +367,22 @@ public class ZonalStatsTest {
         assertTrue(stats2.containsKey(Statistic.RANGE));
         assertTrue(stats2.get(Statistic.RANGE).doubleValue() == 10002.0);
     }
+    
+    @Test
+    public void testSum() {
+        System.out.println("   test sum");
+
+        ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
+        pb.setSource("dataImage", constant1Image);
+        pb.setParameter("stats", new Statistic[]{Statistic.SUM});
+        RenderedOp op = JAI.create("ZonalStats", pb);
+        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
+                .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+        ZonalStats zonalStats = result.get(0);
+        Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
+        assertTrue(stats.containsKey(Statistic.SUM));
+        assertTrue(stats.get(Statistic.SUM).intValue() == (1*WIDTH*WIDTH));
+    }
 
     private static PlanarImage createConstantImage( Number[] bandValues ) {
         return createConstantImage(bandValues, new Point(0, 0));
@@ -377,6 +400,29 @@ public class ZonalStatsTest {
         pb.setParameter("height", (float) WIDTH);
         pb.setParameter("bandValues", bandValues);
         return JAI.create("constant", pb, hints).getRendering();
+    }
+
+    private static PlanarImage createTwoValuesImage() {
+        SampleModel sm = new ComponentSampleModel(DataBuffer.TYPE_INT, WIDTH, WIDTH, 1, WIDTH,
+                new int[]{0});
+
+        TiledImage img = new TiledImage(0, 0, WIDTH, WIDTH, 0, 0, sm, null);
+
+        WritableRectIter iter = RectIterFactory.createWritable(img, null);
+        int index = 0;
+        do {
+            do {
+                if (index < (WIDTH*WIDTH/2)) {
+                    iter.setSample(1);
+                }else{
+                    iter.setSample(10);
+                }
+                index++;
+            } while( !iter.nextPixelDone() );
+            iter.startPixels();
+        } while( !iter.nextLineDone() );
+
+        return img;
     }
 
     private static PlanarImage createRandomImage( int min, int max ) {
