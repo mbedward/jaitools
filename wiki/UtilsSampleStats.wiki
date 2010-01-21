@@ -18,6 +18,7 @@ The following methods are provided:
  * mode - most frequently occuring sample value
  * range - maximum - minimum
  * sdev - sample standard deviation
+ * sum - sum of sample values
  * variance - sample variance
 
 Each method has two parameters: a Double array containing the sample values; and a boolean flag specifying whether NaN values should be ignored or not. If !NaNs are not ignored, all methods will return NaN if any of the sample values are NaN.
