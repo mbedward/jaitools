@@ -2,7 +2,7 @@
 
 = Introduction =
 
-If you are using [http://maven.apache.org/ Maven] as your build tool you can get the jai-tools jars downloaded automagically. Presently, only the snapshot jars are available (built from the latest code on _trunk_ in the subversion repository).
+If you are using [http://maven.apache.org/ Maven] as your build tool you can get the jai-tools jars downloaded automagically. Presently, only the snapshot jars are available (built from the latest code on _trunk_ in the subversion repository). The jai-tools repository contains the jai-tools binaries, sources and javadoc jars.
 
 Add the jai-tools snapshot repository to your projects pom.xml file:
 {{{
