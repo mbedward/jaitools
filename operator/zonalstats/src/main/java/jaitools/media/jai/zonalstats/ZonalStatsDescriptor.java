@@ -59,6 +59,10 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * positions to zone image positions. For example, multiple data image pixels
  * could be mapped to a single zone image pixel.
  * <p>
+ * The range of data image values that contribute to the analysis can be constrained
+ * by supplying a List of {@linkplain Range} objects, each of which defines a range 
+ * of data values to <b>exclude</b>.
+ * <p>
  * Use of this operator is similar to the standard JAI statistics operators such as
  * {@linkplain javax.media.jai.operator.HistogramDescriptor} where the source image is
  * simply passed through to the destination image and the results of the operation are
@@ -104,6 +108,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * }
  *
  * </code></pre>
+ *
  * Using the operator to calculate statistics for an area within the data image...
  * <pre><code>
  * RenderedImage myData = ...
@@ -114,15 +119,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * pb.setSource("dataImage", myData);
  * pb.setParameter("roi", roi);
  *
- * Statistic[] stats = {
- *     Statistic.MIN,
- *     Statistic.MAX,
- *     Statistic.MEAN,
- *     Statistic.APPROX_MEDIAN,
- *     Statistic.SDEV
- * };
- *
- * pb.setParameter("stats", stats);
+ * pb.setParameter("stats", someStats);
  * RenderedOp op = JAI.create("ZonalStats", pb);
  *
  * Map<Integer, ZonalStats> resultMap = (Map<Integer, ZonalStats>) op
@@ -137,79 +134,60 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * }
  *
  * </code></pre>
+ *
  * Using an {@code AffineTransform} to map data image position to zone image position...
  * <pre><code>
- * RenderedImage myData = ...
- * RenderedImage myZones = ...
- *
  * ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
- * pb.setSource("dataImage", myData);
- * pb.setSource("zoneImage", myZones);
+ * pb.setSource("dataImage", myDataImage);
+ * pb.setSource("zoneImage", myZoneImage);
+ * pb.setParameter("stats", someStats);
  *
- * Statistic[] stats = {
- *     Statistic.MIN,
- *     Statistic.MAX,
- *     Statistic.MEAN,
- *     Statistic.APPROX_MEDIAN,
- *     Statistic.SDEV
- * };
- *
- * pb.setParameter("stats", stats);
- *
- * AffineTransform
- *
- * RenderedOp op = JAI.create("ZonalStats", pb);
- *
- * Map<Integer, ZonalStats> resultMap = (Map<Integer, ZonalStats>) op
- *               .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
- * ZonalStats result = resultMap.get(0);
- *
- * // print results: since we didn't use a zone image all
- * // results will be labeled as zone 0
- * Map<Statistic, Double> results = results.getZoneStats(0);
- * for (Entry<Statistic, Double> e : results.entrySet()) {
- *     System.out.println(String.format("%12s: %.4f", e.getKey(), e.getValue()));
- * }
- *
+ * AffineTransform tr = new AffineTransform( ... );
+ * pb.setParameter("zoneTransform", tr);
  * </code></pre>
+ *
  * Asking for statistics on multiple bands. 
  * <p>
  * By default the stats are calculated on a single default 0 index band. It 
  * is possible also to request calculations on multiple bands, by passing the 
  * band indexes as a parameter.
  * <pre><code>
- * RenderedImage myData = ...
- * RenderedImage myZones = ...
- *
  * ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
- * pb.setSource("dataImage", myData);
- * pb.setSource("zoneImage", myZones);
+ * pb.setSource("dataImage", myDataImage);
+ * pb.setSource("zoneImage", myZoneImage);
+ * pb.setParameter("stats", someStats);
  *
- * Statistic[] stats = {
- *     Statistic.MIN,
- *     Statistic.MAX,
- *     Statistic.MEAN,
- *     Statistic.APPROX_MEDIAN,
- *     Statistic.SDEV
- * };
- *
- * pb.setParameter("stats", stats);
- * // asking for stats on band 0 and 3 of the image 
- * pb.setParameter("bands", new Integer[]{0, 3});
+ * // ask for stats on band 0 and 2 of the image
+ * pb.setParameter("bands", new Integer[]{0, 2});
  * RenderedOp op = JAI.create("ZonalStats", pb);
+ *
  * // get results back
- * Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
- *               .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+ * Map<Integer, ZonalStats> result = 
+ *         (Map<Integer, ZonalStats>) op.getProperty(
+ *             ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+ *
  * // results for band 0
  * ZonalStats zonalStats0 = result.get(0);
  * Map<Statistic, Double> stats0 = zonalStats0.getZoneStats(0);
- * // results for band 3
- * ZonalStats zonalStats3 = result.get(3);
- * Map<Statistic, Double> stats3 = zonalStats3.getZoneStats(0);
+ * 
+ * // results for band 2
+ * ZonalStats zonalStats2 = result.get(2);
+ * Map<Statistic, Double> stats3 = zonalStats2.getZoneStats(0);
  * double minBand0 = stats0.get(Statistic.MIN).doubleValue();
- * double minBand3 = stats3.get(Statistic.MIN).doubleValue();
- *
+ * double minBand2 = stats2.get(Statistic.MIN).doubleValue();
  * </code></pre>
+ *
+ * Excluding data values from the analysis with the "exclude" parameter:
+ * <pre><code>
+ * ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
+ * ...
+ *
+ * // exclude values between -5 and 5 inclusive
+ * List&lt;Range&lt;Double>> excludeList = CollectionFactory.newList();
+ * excludeList.add(Range.create(-5, true, 5, true));
+ * pb.setParameter("exclude", excludeList);
+ * </code></pre>
+ *
  * <b>Parameters</b>
  * <table border="1">
  * <tr align="right">
@@ -226,6 +204,9 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * </tr>
  * <tr align="right">
  * <td>zoneTransform</td><td>AffineTransform</td><td>null (identity transform)</td>
+ * </tr>
+ * <tr align="right">
+ * <td>exclude</td><td>List&lt;Range></td><td>null (include all data values)</td>
  * </tr>
  * </table>
  *
@@ -255,10 +236,10 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
     static final int STATS_ARG = 0;
     static final int BAND_ARG = 1;
     static final int ROI_ARG = 2;
-    static final int ZONE_TRANSFORM = 3;
-    static final int RANGE_ARG = 4;
+    static final int ZONE_TRANSFORM_ARG = 3;
+    static final int EXCLUDE_RANGE_ARG = 4;
 
-    private static final String[] paramNames = {"stats", "bands", "roi", "zoneTransform", "ranges"};
+    private static final String[] paramNames = {"stats", "bands", "roi", "zoneTransform", "exclude"};
 
     private static final Class<?>[] paramClasses = {Statistic[].class, Integer[].class,
             javax.media.jai.ROI.class, AffineTransform.class, List.class};
@@ -294,13 +275,14 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
                 {
                         "arg3Desc",
                         String.format("%s (default %s) - an optional AffineTransform to "
-                                + "from dataImage pixel coords to zoneImage pixel coords",
-                                paramNames[ZONE_TRANSFORM], paramDefaults[ZONE_TRANSFORM])},
+                                + "map dataImage pixel coords to zoneImage pixel coords",
+                                paramNames[ZONE_TRANSFORM_ARG], paramDefaults[ZONE_TRANSFORM_ARG])},
 
                 {
                         "arg4Desc",
-                        String.format("%s (default %s) - an optional List of Ranges to ",
-                                paramNames[RANGE_ARG], paramDefaults[RANGE_ARG])}
+                        String.format("%s (default %s) - an optional List of Ranges "
+                                + "that define dataImage values to exclude from calculations",
+                                paramNames[EXCLUDE_RANGE_ARG], paramDefaults[EXCLUDE_RANGE_ARG])}
 
         },
 
@@ -317,30 +299,40 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
     /**
      * Convenience method which constructs a {@link ParameterBlockJAI} and
      * invokes {@code JAI.create("ZonalStats", params) }
+     *
      * @param dataImage the data image
+     *
      * @param zoneImage the zone image which must be of integral data type
+     *
      * @param stats an array specifying the statistics required
+     *
      * @param bands the array of bands of the data image to process (default single band == 0)
-     * @param roi optional roi (default is null) used to mask data values
-     * @param zoneTransform (default is null) an AffineTransform used to convert
-     * dataImage pixel coords to zoneImage pixel coords
-     * @param ranges  a list of ranges to exclude from the analysis
+     *
+     * @param roi optional roi (default is {@code null}) used to mask data values
+     *
+     * @param zoneTransform (default is {@code null}) an AffineTransform used to convert
+     *        dataImage pixel coords to zoneImage pixel coords
+     *
+     * @param exclude a List of Ranges defining dataImage values to exclude from the analysis
+     *        (may be empty or {@code null})
+     *
      * @param hints an optional RenderingHints object
+     *
      * @return a RenderedImage with a band for each requested statistic
      */
     public static RenderedImage create( RenderedImage dataImage, RenderedImage zoneImage,
             Statistic[] stats, Integer[] bands, ROI roi, AffineTransform zoneTransform,
-            List<Range<Double>> ranges, RenderingHints hints ) {
+            List<Range<Double>> exclude, RenderingHints hints ) {
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats", RenderedRegistryMode.MODE_NAME);
 
-        pb.setSource("dataImage", dataImage);
-        pb.setSource("zoneImage", zoneImage);
-        pb.setSource("zoneTransform", zoneTransform);
-        pb.setParameter("stats", stats);
-        pb.setParameter("bands", bands);
-        pb.setParameter("roi", roi);
-        pb.setParameter("ranges", ranges);
+        pb.setSource(srcImageNames[DATA_IMAGE], dataImage);
+        pb.setSource(srcImageNames[ZONE_IMAGE], zoneImage);
+        pb.setParameter(paramNames[STATS_ARG], stats);
+        pb.setParameter(paramNames[BAND_ARG], bands);
+        pb.setParameter(paramNames[ROI_ARG], roi);
+        pb.setParameter(paramNames[ZONE_TRANSFORM_ARG], zoneTransform);
+        pb.setParameter(paramNames[EXCLUDE_RANGE_ARG], exclude);
 
         return JAI.create("ZonalStats", pb, hints);
     }
@@ -370,20 +362,21 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
             return false;
         }
 
-        Object rangeObject = pb.getObjectParameter(RANGE_ARG);
-        if (rangeObject instanceof List) {
-            if(((List)rangeObject).size() < 1){
-                msg.append("range arg has to contain range objects");
-                return false;
+        Object rangeObject = pb.getObjectParameter(EXCLUDE_RANGE_ARG);
+        if (rangeObject != null) {
+            boolean ok = true;
+            if (rangeObject instanceof List) {
+                Object range = ((List) rangeObject).get(0);
+                if (!(range instanceof Range)) {
+                    ok = false;
+                }
+            } else {
+                if (rangeObject != null) {
+                    ok = false;
+                }
             }
-            Object range = ((List)rangeObject).get(0);
-            if (!(range instanceof Range)) {
-                msg.append("range arg has to be a List of Range objects");
-                return false;
-            }
-        } else {
-            if(rangeObject != null){
-                msg.append("range arg has to be of type List");
+            if (!ok) {
+                msg.append(paramNames[EXCLUDE_RANGE_ARG] + " arg has to be of type List<Range<Double>>");
                 return false;
             }
         }
@@ -391,15 +384,32 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
         Object bandsObject = pb.getObjectParameter(BAND_ARG);
         Integer[] bands = null;
         if (!(bandsObject instanceof Integer[])) {
-            msg.append("bands arg has to be of type Integer[]");
+            msg.append(paramNames[BAND_ARG] + " arg has to be of type Integer[]");
             return false;
         } else {
             bands = (Integer[]) bandsObject;
         }
+
         RenderedImage dataImg = pb.getRenderedSource(DATA_IMAGE);
         for( Integer band : bands ) {
             if (band < 0 || band >= dataImg.getSampleModel().getNumBands()) {
-                msg.append("band arg out of bounds for source image: " + band);
+                msg.append("band index out of bounds for source image: " + band);
+                return false;
+            }
+        }
+
+        Rectangle dataBounds = new Rectangle(
+                dataImg.getMinX(), dataImg.getMinY(),
+                dataImg.getWidth(), dataImg.getHeight());
+
+        Object roiObject = pb.getObjectParameter(ROI_ARG);
+        if (roiObject != null) {
+            if (!(roiObject instanceof ROI)) {
+                msg.append("The supplied ROI is not a supported class");
+                return false;
+            }
+            if (!((ROI)roiObject).intersects(dataBounds)) {
+                msg.append("The supplied ROI does not intersect the source image");
                 return false;
             }
         }
@@ -418,13 +428,20 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
                 return false;
             }
 
-            Rectangle dataBounds = new Rectangle(dataImg.getMinX(), dataImg.getMinY(), dataImg
-                    .getWidth(), dataImg.getHeight());
+            AffineTransform tr = null;
+            Object trObject = pb.getObjectParameter(ZONE_TRANSFORM_ARG);
+            if (trObject != null) {
+                if (!(trObject instanceof AffineTransform)) {
+                    msg.append("The supplied transform should be an instance of AffineTransform");
+                    return false;
+                }
+            }
+
+            tr = (AffineTransform) trObject;
 
             Rectangle zoneBounds = new Rectangle(zoneImg.getMinX(), zoneImg.getMinY(), zoneImg
                     .getWidth(), zoneImg.getHeight());
 
-            AffineTransform tr = (AffineTransform) pb.getObjectParameter(ZONE_TRANSFORM);
             if (tr != null && !tr.isIdentity()) {
                 zoneBounds = tr.createTransformedShape(zoneBounds).getBounds();
             }

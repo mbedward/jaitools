@@ -79,7 +79,7 @@ public class ZonalStatsRIF implements RenderedImageFactory {
 
         Integer[] bands = (Integer[]) paramBlock.getObjectParameter(ZonalStatsDescriptor.BAND_ARG);
 
-        List<Range<Double>> rangesList = (List<Range<Double>>) paramBlock.getObjectParameter(ZonalStatsDescriptor.RANGE_ARG);
+        List<Range<Double>> excludeRanges = (List<Range<Double>>) paramBlock.getObjectParameter(ZonalStatsDescriptor.EXCLUDE_RANGE_ARG);
 
         SampleModel sm = layout.getSampleModel(null);
         if (sm == null || sm.getNumBands() != stats.length) {
@@ -109,7 +109,7 @@ public class ZonalStatsRIF implements RenderedImageFactory {
         ROI roi = (ROI) paramBlock.getObjectParameter(ZonalStatsDescriptor.ROI_ARG);
 
         AffineTransform zoneTransform =
-                (AffineTransform) paramBlock.getObjectParameter(ZonalStatsDescriptor.ZONE_TRANSFORM);
+                (AffineTransform) paramBlock.getObjectParameter(ZonalStatsDescriptor.ZONE_TRANSFORM_ARG);
 
         return new ZonalStatsOpImage(
                 dataImage, zoneImage,
@@ -119,7 +119,7 @@ public class ZonalStatsRIF implements RenderedImageFactory {
                 bands,
                 roi,
                 zoneTransform,
-                rangesList);
+                excludeRanges);
     }
 }
 
