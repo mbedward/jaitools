@@ -20,11 +20,9 @@
 
 package jaitools.media.jai.zonalstats;
 
-import com.sun.media.jai.opimage.RIFUtil;
-import com.sun.media.jai.util.ImageUtil;
-
 import jaitools.numeric.Range;
 import jaitools.numeric.Statistic;
+
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.ColorModel;
@@ -38,6 +36,9 @@ import java.util.List;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.ROI;
 import javax.media.jai.RasterFactory;
+
+import com.sun.media.jai.opimage.RIFUtil;
+import com.sun.media.jai.util.ImageUtil;
 
 /**
  * The image factory for the {@link ZonalStatsOpImage} operation.

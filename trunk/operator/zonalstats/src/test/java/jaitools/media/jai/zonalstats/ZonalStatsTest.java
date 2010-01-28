@@ -24,6 +24,7 @@ import jaitools.CollectionFactory;
 import jaitools.numeric.DoubleComparison;
 import jaitools.numeric.Range;
 import jaitools.numeric.Statistic;
+
 import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
@@ -35,6 +36,9 @@ import java.awt.image.SampleModel;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import javax.media.jai.ImageLayout;
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
@@ -52,12 +56,15 @@ import static org.junit.Assert.*;
  *
  * @author Michael Bedward
  * @author Andrea Antonello
+ * @author Simone Giannecchini, GeoSolutions SAS
  * @since 1.0
  * @source $URL$
  * @version $Id$
  */
 public class ZonalStatsTest {
 
+    private static final Logger LOGGER = Logger.getLogger("ZonalStatsTest");
+    
     private static final int WIDTH = 256;
     private static final int HEIGHT = 300;
     private static final int MIN_DATUM = -5;
@@ -73,13 +80,14 @@ public class ZonalStatsTest {
 
     @Test
     public void testValidateNumSources() {
-        System.out.println("   validate number of sources");
+    	if(LOGGER.isLoggable(Level.INFO))
+    		LOGGER.info("   validate number of sources");
 
         boolean gotException = false;
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         try {
             JAI.create("ZonalStats", pb);
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             gotException = true;
         }
         assertTrue("Failed validation of no sources", gotException);
@@ -89,7 +97,7 @@ public class ZonalStatsTest {
         pb.setSource("dataImage", dataImage);
         try {
             JAI.create("ZonalStats", pb);
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             gotException = true;
         }
         assertFalse("Failed validation of 1 source", gotException);
@@ -108,14 +116,15 @@ public class ZonalStatsTest {
 
     @Test
     public void testZoneImageType() {
-        System.out.println("   validate zone image type");
+    	if(LOGGER.isLoggable(Level.INFO))
+    		LOGGER.info("   validate zone image type");
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
         pb.setSource("zoneImage", createConstantImage(new Float[]{0f}));
         boolean gotException = false;
         try {
             JAI.create("ZonalStats", pb);
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             gotException = true;
         }
         assertTrue("Failed to reject non-integral zone image", gotException);
@@ -124,7 +133,7 @@ public class ZonalStatsTest {
         gotException = false;
         try {
             JAI.create("ZonalStats", pb);
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             gotException = true;
         }
         assertFalse("Failed to accept integral zone image", gotException);
@@ -132,14 +141,15 @@ public class ZonalStatsTest {
 
     @Test
     public void testZoneImageOverlap() {
-        System.out.println("   validate data - zone image overlap");
+    	if(LOGGER.isLoggable(Level.INFO))
+    		LOGGER.info("   validate data - zone image overlap");
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
         pb.setSource("zoneImage", createConstantImage(new Integer[]{0}, new Point(WIDTH, WIDTH)));
         boolean gotException = false;
-        try {
+        try { 
             JAI.create("ZonalStats", pb);
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             gotException = true;
         }
         assertTrue("Failed to reject non-overlapping zone image", gotException);
@@ -151,7 +161,7 @@ public class ZonalStatsTest {
         gotException = false;
         try {
             JAI.create("ZonalStats", pb);
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             gotException = true;
         }
         assertTrue("Failed to reject zone image that does not overlap when transformed",
@@ -159,12 +169,11 @@ public class ZonalStatsTest {
 
         pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
-        pb.setSource("zoneImage", createConstantImage(new Integer[]{0}, new Point(WIDTH / 2,
-                WIDTH / 2)));
+        pb.setSource("zoneImage", createConstantImage(new Integer[]{0}, new Point(WIDTH / 2,WIDTH / 2)));
         gotException = false;
         try {
             JAI.create("ZonalStats", pb);
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             gotException = true;
         }
         assertFalse("Failed to accept partially overlapping zone image", gotException);
@@ -172,14 +181,14 @@ public class ZonalStatsTest {
 
     @Test
     public void testMin() {
-        System.out.println("   test min");
+        if(LOGGER.isLoggable(Level.INFO))
+    		LOGGER.info("   test min");
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{Statistic.MIN});
         RenderedOp op = JAI.create("ZonalStats", pb);
-        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
-                .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
         ZonalStats zonalStats = result.get(0);
         Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
         assertTrue(stats.containsKey(Statistic.MIN));
@@ -188,7 +197,8 @@ public class ZonalStatsTest {
 
     @Test
     public void testMax() {
-        System.out.println("   test max");
+        if(LOGGER.isLoggable(Level.INFO))
+    		LOGGER.info("   test max");
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
@@ -204,7 +214,8 @@ public class ZonalStatsTest {
 
     @Test
     public void testMean() {
-        System.out.println("   test mean");
+        if(LOGGER.isLoggable(Level.INFO))
+    		LOGGER.info("   test mean");
 
         double expMean = 0d;
 
@@ -231,7 +242,8 @@ public class ZonalStatsTest {
 
     @Test
     public void testStdDev() {
-        System.out.println("   test standard deviation");
+        if(LOGGER.isLoggable(Level.INFO))
+    		LOGGER.info("   test standard deviation");
 
         double expSD;
         double mOld = 0d, mNew;
@@ -270,7 +282,8 @@ public class ZonalStatsTest {
 
     @Test
     public void testRange() {
-        System.out.println("   test range");
+        if(LOGGER.isLoggable(Level.INFO))
+    		LOGGER.info("   test range");
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
@@ -287,7 +300,8 @@ public class ZonalStatsTest {
 
     @Test
     public void testExactMedian() {
-        System.out.println("   test exact median");
+        if(LOGGER.isLoggable(Level.INFO))
+    		LOGGER.info("   test exact median");
 
         final int expMedian = 0;
 
@@ -306,7 +320,8 @@ public class ZonalStatsTest {
 
     @Test
     public void testApproxMedian() {
-        System.out.println("   test approximate median");
+        if(LOGGER.isLoggable(Level.INFO))
+    		LOGGER.info("   test approximate median");
 
         final int expMedian = 0;
 
@@ -325,7 +340,8 @@ public class ZonalStatsTest {
 
     @Test
     public void testMultiband() {
-        System.out.println("   test multiband");
+        if(LOGGER.isLoggable(Level.INFO))
+    		LOGGER.info("   test multiband");
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", multibandImage);
@@ -362,7 +378,8 @@ public class ZonalStatsTest {
     
     @Test
     public void testSum() {
-        System.out.println("   test sum");
+        if(LOGGER.isLoggable(Level.INFO))
+    		LOGGER.info("   test sum");
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", constant1Image);
@@ -378,7 +395,8 @@ public class ZonalStatsTest {
 
     @Test
     public void testExclusionRanges() {
-        System.out.println("   test excluding ranges of values");
+        if(LOGGER.isLoggable(Level.INFO))
+    		LOGGER.info("   test excluding ranges of values");
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
@@ -421,11 +439,18 @@ public class ZonalStatsTest {
         pb.setParameter("width", (float) WIDTH);
         pb.setParameter("height", (float) WIDTH);
         pb.setParameter("bandValues", bandValues);
+        
+        if(hints!=null&&hints.containsKey(JAI.KEY_IMAGE_LAYOUT)){
+        	
+            final ImageLayout layout =(ImageLayout) hints.get(JAI.KEY_IMAGE_LAYOUT);
+            layout.setTileGridXOffset(0).setTileGridYOffset(0).setTileHeight(128).setTileWidth(128);
+        }
+
         return JAI.create("constant", pb, hints).getRendering();
     }
 
     private static PlanarImage createTwoValuesImage() {
-        SampleModel sm = new ComponentSampleModel(DataBuffer.TYPE_INT, WIDTH, WIDTH, 1, WIDTH,
+        SampleModel sm = new ComponentSampleModel(DataBuffer.TYPE_INT, 128, 128, 1, 128,
                 new int[]{0});
 
         TiledImage img = new TiledImage(0, 0, WIDTH, WIDTH, 0, 0, sm, null);
@@ -448,7 +473,7 @@ public class ZonalStatsTest {
     }
 
     private static PlanarImage createRandomImage( int min, int max ) {
-        SampleModel sm = new ComponentSampleModel(DataBuffer.TYPE_INT, WIDTH, WIDTH, 1, WIDTH,
+        SampleModel sm = new ComponentSampleModel(DataBuffer.TYPE_INT, 128, 128, 1, 128,
                 new int[]{0});
 
         TiledImage img = new TiledImage(0, 0, WIDTH, WIDTH, 0, 0, sm, null);
@@ -471,8 +496,8 @@ public class ZonalStatsTest {
 
         SampleModel sm = new PixelInterleavedSampleModel(
                 DataBuffer.TYPE_DOUBLE,
-                WIDTH, WIDTH,
-                numBands, numBands*WIDTH,
+                128, 128,
+                numBands, numBands*128,
                 bandOffsets);
 
         TiledImage img = new TiledImage(0, 0, WIDTH, WIDTH, 0, 0, sm, null);
