@@ -25,6 +25,7 @@ import jaitools.numeric.Statistic;
 
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
@@ -355,13 +356,14 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
      *      account any {@code AffineTransform}
      * </ul>
      */
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public boolean validateArguments( String modeName, ParameterBlock pb, StringBuffer msg ) {
         if (pb.getNumSources() == 0 || pb.getNumSources() > 2) {
             msg.append("ZonalStats operator takes 1 or 2 source images");
             return false;
         }
-
+        // CHECKING EXCLUSION RANGES
         Object rangeObject = pb.getObjectParameter(EXCLUDE_RANGE_ARG);
         if (rangeObject != null) {
             boolean ok = true;
@@ -380,7 +382,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
                 return false;
             }
         }
-        
+        // CHECKING BANDS
         Object bandsObject = pb.getObjectParameter(BAND_ARG);
         Integer[] bands = null;
         if (!(bandsObject instanceof Integer[])) {
@@ -390,6 +392,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
             bands = (Integer[]) bandsObject;
         }
 
+        // CHECKING DATA IMAGE
         RenderedImage dataImg = pb.getRenderedSource(DATA_IMAGE);
         for( Integer band : bands ) {
             if (band < 0 || band >= dataImg.getSampleModel().getNumBands()) {
@@ -402,6 +405,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
                 dataImg.getMinX(), dataImg.getMinY(),
                 dataImg.getWidth(), dataImg.getHeight());
 
+        // CHECKING ROI
         Object roiObject = pb.getObjectParameter(ROI_ARG);
         if (roiObject != null) {
             if (!(roiObject instanceof ROI)) {
@@ -414,7 +418,10 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
             }
         }
 
+        // CHECKING ZONE IMAGE BOUNDS
         if (pb.getNumSources() == 2) {
+        	
+        	// get the zone image and check that it covers at least partially the data image
             RenderedImage zoneImg = pb.getRenderedSource(ZONE_IMAGE);
             int dataType = zoneImg.getSampleModel().getDataType();
             boolean integralType = false;
@@ -436,21 +443,27 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
                     return false;
                 }
             }
-
             tr = (AffineTransform) trObject;
 
-            Rectangle zoneBounds = new Rectangle(zoneImg.getMinX(), zoneImg.getMinY(), zoneImg
-                    .getWidth(), zoneImg.getHeight());
-
+            final Rectangle zoneBounds = new Rectangle(zoneImg.getMinX(), zoneImg.getMinY(), zoneImg.getWidth(), zoneImg.getHeight());
             if (tr != null && !tr.isIdentity()) {
-                zoneBounds = tr.createTransformedShape(zoneBounds).getBounds();
+            	// given that we are using an affine transform for this it might happen that we
+            	// are getting here is an elaborate shape that is badly approximated by its bbox
+                final Shape zoneBoundsTransformed = tr.createTransformedShape(zoneBounds);
+                if (!zoneBoundsTransformed.intersects(dataBounds)) {
+                    msg.append("Zone image bounds are outside the data image bounds");
+                    return false;
+                }  
             }
-            Rectangle xRect = new Rectangle();
-            Rectangle.intersect(dataBounds, zoneBounds, xRect);
-            if (xRect.isEmpty()) {
-                msg.append("Zone image bounds are outside the data image bounds");
-                return false;
+            else
+            {
+            	// ok, in this case we can go with the simple bounds
+                if (!dataBounds.intersects(zoneBounds)) {
+                    msg.append("Zone image bounds are outside the data image bounds");
+                    return false;
+                }            	
             }
+
         }
 
         return true;
