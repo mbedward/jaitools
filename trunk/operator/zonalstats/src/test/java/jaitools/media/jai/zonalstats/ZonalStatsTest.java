@@ -20,6 +20,7 @@
 
 package jaitools.media.jai.zonalstats;
 
+import jaitools.CollectionFactory;
 import jaitools.numeric.DoubleComparison;
 import jaitools.numeric.Range;
 import jaitools.numeric.Statistic;
@@ -31,7 +32,6 @@ import java.awt.image.DataBuffer;
 import java.awt.image.PixelInterleavedSampleModel;
 import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -44,7 +44,6 @@ import javax.media.jai.TiledImage;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 import javax.media.jai.iterator.WritableRectIter;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -63,19 +62,14 @@ public class ZonalStatsTest {
     private static final int HEIGHT = 300;
     private static final int MIN_DATUM = -5;
     private static final int MAX_DATUM = 5;
-    private static RenderedImage dataImage;
-    private static RenderedImage constant1Image;
-    private static RenderedImage twoValueImage;
-    private static RenderedImage multibandImage;
+
     private static Random rand = new Random();
 
-    @BeforeClass
-    public static void setup() {
-        dataImage = createRandomImage(MIN_DATUM, MAX_DATUM);
-        multibandImage = createMultibandImage();
-        constant1Image = createConstantImage(new Double[]{1.0});
-        twoValueImage = createTwoValuesImage();
-    }
+    private static RenderedImage dataImage = createRandomImage(MIN_DATUM, MAX_DATUM);
+    private static RenderedImage constant1Image = createConstantImage(new Double[]{1.0});
+    private static RenderedImage twoValueImage = createTwoValuesImage();
+    private static RenderedImage multibandImage = createMultibandImage();
+
 
     @Test
     public void testValidateNumSources() {
@@ -357,10 +351,8 @@ public class ZonalStatsTest {
         assertTrue(stats2.containsKey(Statistic.MIN));
         assertTrue(stats2.get(Statistic.MIN).doubleValue() == -9999.0);
         assertTrue(stats0.containsKey(Statistic.MAX));
-        System.out.println("max band 0: " + stats0.get(Statistic.MAX).doubleValue());
         assertTrue(stats0.get(Statistic.MAX).doubleValue() == 1.0);
         assertTrue(stats2.containsKey(Statistic.MAX));
-        System.out.println("max band 2: " + stats2.get(Statistic.MAX).doubleValue());
         assertTrue(stats2.get(Statistic.MAX).doubleValue() == 3.0);
         assertTrue(stats0.containsKey(Statistic.RANGE));
         assertTrue(stats0.get(Statistic.RANGE).doubleValue() == 10000.0);
@@ -382,6 +374,36 @@ public class ZonalStatsTest {
         Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
         assertTrue(stats.containsKey(Statistic.SUM));
         assertTrue(stats.get(Statistic.SUM).intValue() == (1*WIDTH*WIDTH));
+    }
+
+    @Test
+    public void testExclusionRanges() {
+        System.out.println("   test excluding ranges of values");
+
+        ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
+        pb.setSource("dataImage", dataImage);
+        pb.setParameter("stats", new Statistic[]{Statistic.MIN, Statistic.MAX});
+
+        List<Range<Double>> exclusions = CollectionFactory.newList();
+
+        // exclude lower end of values
+        double min = MIN_DATUM + 1;
+        exclusions.add(Range.create(null, true, min, false));
+
+        // exclude upper end of values
+        double max = MAX_DATUM - 1;
+        exclusions.add(Range.create(max, false, null, true));
+
+        pb.setParameter("exclude", exclusions);
+
+        RenderedOp op = JAI.create("ZonalStats", pb);
+        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
+                .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+        ZonalStats zonalStats = result.get(0);
+        Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
+
+        assertTrue(stats.get(Statistic.MIN) >= min);
+        assertTrue(stats.get(Statistic.MAX) <= max);
     }
 
     private static PlanarImage createConstantImage( Number[] bandValues ) {

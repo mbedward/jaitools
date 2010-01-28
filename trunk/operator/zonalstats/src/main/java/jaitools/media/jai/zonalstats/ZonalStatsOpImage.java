@@ -60,19 +60,20 @@ import javax.media.jai.iterator.RectIterFactory;
  */
 public class ZonalStatsOpImage extends NullOpImage {
 
-    private Integer[] srcBands;
+    private final Integer[] srcBands;
 
-    private ROI roi;
+    private final ROI roi;
 
-    private Statistic[] stats;
+    private final Statistic[] stats;
 
-    private RenderedImage dataImage;
-    private Rectangle dataImageBounds;
-    private RenderedImage zoneImage;
-    private AffineTransform zoneTransform;
+    private final RenderedImage dataImage;
+    private final Rectangle dataImageBounds;
+    private final RenderedImage zoneImage;
+    private final AffineTransform zoneTransform;
+    private final List<Range<Double>> excludedRanges;
+
     private SortedSet<Integer> zones;
 
-    private final List<Range<Double>> rangesList;
 
     /**
      * Constructor.
@@ -94,9 +95,9 @@ public class ZonalStatsOpImage extends NullOpImage {
      *
      * @param zoneTransform
      * 
-     * @param rangesList a {@link List} of {@link Range}s, that will be filtered out
-     *              of the process. This means that values inside the supplied ranges 
-     *              will not be considered as valid and discarded.
+     * @param excludeRanges a {@link List} of {@link Range}s, that will be filtered out
+     *        of the process. This means that values inside the supplied ranges 
+     *        will not be considered as valid and discarded.
      * 
      * @see ZonalStatsDescriptor
      * @see Statistic
@@ -108,34 +109,27 @@ public class ZonalStatsOpImage extends NullOpImage {
             Integer[] bands,
             ROI roi,
             AffineTransform zoneTransform,
-            List<Range<Double>> rangesList) {
+            List<Range<Double>> excludeRanges) {
 
         super(dataImage, layout, config, OpImage.OP_COMPUTE_BOUND);
 
         this.dataImage = dataImage;
-        this.rangesList = rangesList;
+        this.zoneImage = zoneImage;
 
         dataImageBounds = new Rectangle(
         		dataImage.getMinX(), dataImage.getMinY(),
         		dataImage.getWidth(), dataImage.getHeight());
 
-        this.zoneImage = zoneImage;
+        this.stats = stats;
+        this.srcBands = bands;
+        this.roi = roi;
         this.zoneTransform = zoneTransform;
 
-        this.stats = stats;
-        
-        this.srcBands = bands;
-
-        this.roi = roi;
-
-        if (roi != null) {
-            /*
-             * Check that the ROI contains the data image bounds.
-             * If not, do as if there is no ROI, i.e. get it all.
-             */
-            if (!roi.getBounds().intersects(dataImageBounds)) {
-                this.roi = null;
-            }
+        if (excludeRanges != null && !excludeRanges.isEmpty()) {
+            this.excludedRanges = CollectionFactory.newList();
+            this.excludedRanges.addAll(excludeRanges);
+        } else {
+            this.excludedRanges = null;
         }
     }
 
@@ -212,12 +206,17 @@ public class ZonalStatsOpImage extends NullOpImage {
                             int zone = zoneIter.getSample();
                             
                             boolean doAdd = true;
-                            if(rangesList != null)
-                                for( Range<Double> range : rangesList ) {
-                                    doAdd = !range.contains(sampleValues[band]);
+                            if (excludedRanges != null) {
+                                for (Range<Double> range : excludedRanges) {
+                                    if (range.contains(sampleValues[band])) {
+                                        doAdd = false;
+                                        break;
+                                    }
                                 }
-                            if (doAdd)
+                            }
+                            if (doAdd) {
                                 resultPerBand.get(zone).addSample(sampleValues[band]);
+                            }
                         }
                     }
                     zoneIter.nextPixelDone(); // safe call
@@ -242,21 +241,24 @@ public class ZonalStatsOpImage extends NullOpImage {
                         dataIter.getPixel(sampleValues);
                         zoneTransform.transform(dataPos, zonePos);
                         
-                        for( Integer band : srcBands ) {
+                        for (Integer band : srcBands) {
                             Map<Integer, StreamingSampleStats> resultPerBand = results.get(band);
-                        
+
                             int zone = zoneIter.getSample((int) zonePos.x, (int) zonePos.y, 0);
-                            
+
                             boolean doAdd = true;
-                            if(rangesList != null)
-                                for( Range<Double> range : rangesList ) {
-                                    doAdd = !range.contains(sampleValues[band]);
+                            if (excludedRanges != null) {
+                                for (Range<Double> range : excludedRanges) {
+                                    if (range.contains(sampleValues[band])) {
+                                        doAdd = false;
+                                        break;
+                                    }
                                 }
-                            if (doAdd)
+                            }
+                            if (doAdd) {
                                 resultPerBand.get(zone).addSample(sampleValues[band]);
+                            }
                         }
-                        
-                        
                     }
                     dataPos.x++;
                 } while( !dataIter.nextPixelDone() );
@@ -306,18 +308,23 @@ public class ZonalStatsOpImage extends NullOpImage {
             do {
                 if (roi == null || roi.contains(x, y)) {
                     dataIter.getPixel(sampleValues);
-                    for( Integer band : srcBands ) {
+                    for (Integer band : srcBands) {
                         boolean doAdd = true;
-                        if(rangesList != null)
-                            for( Range<Double> range : rangesList ) {
-                                doAdd = !range.contains(sampleValues[band]);
+                        if (excludedRanges != null) {
+                            for (Range<Double> range : excludedRanges) {
+                                if (range.contains(sampleValues[band])) {
+                                    doAdd = false;
+                                    break;
+                                }
                             }
-                        if (doAdd)
+                        }
+                        if (doAdd) {
                             sampleStatsPerBand.get(band).addSample(sampleValues[band]);
+                        }
                     }
                 }
                 x++;
-            } while( !dataIter.nextPixelDone() );
+            } while (!dataIter.nextPixelDone() );
 
             dataIter.startPixels();
             y++;
