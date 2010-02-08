@@ -210,20 +210,17 @@ public class StreamingSampleStats {
                     "requesting sample size for a statistic that is not set: " + stat);
         }
 
-        return proc.getCount();
+        return proc.getNumOffered();
     }
 
     /**
      * Add a sample value and update all currently set statistics.
-     * Null and Double.NaN values are ignored.
      *
      * @param sample the new sample value
      */
     public void addSample(Double sample) {
-        if (sample != null && !sample.isNaN()) {
-            for (Processor proc : procTable.keySet()) {
-                proc.add(sample);
-            }
+        for (Processor proc : procTable.keySet()) {
+            proc.offer(sample);
         }
     }
 
@@ -291,7 +288,7 @@ public class StreamingSampleStats {
      * Initialize a processor for the exact or approximate median
      */
     private void createMedianProcessor(Statistic stat) {
-        Processor proc = null;
+        AbstractProcessor proc = null;
         switch (stat) {
             case MEDIAN:
                 proc = new ExactMedianProcessor();
@@ -300,7 +297,7 @@ public class StreamingSampleStats {
                 break;
 
             case APPROX_MEDIAN:
-                proc = new RemedianProcessor();
+                proc = new ApproxMedianProcessor();
                 procTable.put(proc, 1);
                 procByStat.put(Statistic.APPROX_MEDIAN, proc);
                 break;
@@ -329,336 +326,6 @@ public class StreamingSampleStats {
 
         procByStat.put(stat, proc);
         procTable.put(proc, count+1);
-    }
-
-
-    /**
-     * Base class for statistics processors. Sub-classes override the
-     * update and get methods.
-     */
-    private static abstract class Processor {
-
-        private long count = 0;
-
-        long getCount() {
-            return count;
-        }
-
-        final void add(Double sample) {
-            count++;
-            update(sample);
-        }
-
-        abstract void update(Double sample);
-
-        abstract Double get(Statistic stat);
-    }
-
-
-    /**
-     * Processor for extrema statistics
-     */
-    private static class ExtremaProcessor extends Processor {
-
-        Double min;
-        Double max;
-
-        @Override
-        void update(Double sample) {
-            if (getCount() == 1) {
-                min = max = sample;
-            } else {
-                if (sample > max) {
-                    max = sample;
-                }
-
-                if (sample < min) {
-                    min = sample;
-                }
-            }
-        }
-
-        @Override
-        Double get(Statistic stat) {
-            if (getCount() == 0) {
-                return Double.NaN;
-            }
-
-            switch (stat) {
-                case MAX:
-                    return max;
-
-                case MIN:
-                    return min;
-
-                case RANGE:
-                    return max - min;
-
-                default:
-                    throw new IllegalArgumentException(
-                            "Invalid argument for this processor type: " + stat);
-            }
-        }
-    }
-    
-    /**
-     * Processor for sum statistics, with support for active cells
-     */
-    private static class SumProcessor extends Processor {
-        
-        Double sum = 0.0;
-        
-        @Override
-        void update(Double sample) {
-            sum = sum + sample;
-        }
-        
-        @Override
-        Double get(Statistic stat) {
-            if (getCount() == 0) {
-                return Double.NaN;
-            }
-            
-            switch (stat) {
-            case SUM:
-                return sum;
-                
-            default:
-                throw new IllegalArgumentException(
-                        "Invalid argument for this processor type: " + stat);
-            }
-        }
-    }
-
-
-    /**
-     * Processor for the exact median
-     */
-    private static class ExactMedianProcessor extends Processor {
-
-        private List<Double> values = CollectionFactory.newList();
-        private boolean calculationRequired = true;
-        private double median;
-
-        @Override
-        void update(Double sample) {
-            if (getCount() >= Integer.MAX_VALUE) {
-                throw new IllegalStateException("Too many samples for exact median");
-            }
-
-            values.add(sample);
-            calculationRequired = true;
-        }
-
-        @Override
-        Double get(Statistic stat) {
-            if (getCount() == 0) {
-                return Double.NaN;
-            }
-
-            if (calculationRequired) {
-                Collections.sort(values);
-                int n0 = (int) getCount() / 2;
-                if (getCount() % 2 == 1) {
-                    median = values.get(n0);
-                } else {
-                    median = (values.get(n0) + values.get(n0-1)) / 2;
-                }
-                calculationRequired = false;
-            }
-
-            return median;
-        }
-
-    }
-
-    /*
-     * Processor for the remedian: a large dataset estiator
-     * of the sample median
-     */
-    private static class RemedianProcessor extends Processor {
-
-        // this must be an odd value
-        private final int BASE = 21;
-        private final int MEDIAN_POS = BASE / 2;
-
-        private boolean needsCalculation = true;
-        private double remedian;
-
-        private class Buffer {
-            double[] data = new double[BASE];
-            int pos = 0;
-
-            void add(double value) {
-                data[pos++] = value;
-            }
-
-            boolean isFull() { return pos >= BASE; }
-        }
-
-        private List<Buffer> buffers;
-        private Buffer buf0;
-
-        private class WeightedSample implements Comparable<WeightedSample> {
-            double value;
-            long weight;
-
-            public int compareTo(WeightedSample other) {
-                return Double.compare(value, other.value);
-            }
-        }
-
-
-        RemedianProcessor() {
-            buffers = CollectionFactory.newList();
-            buf0 = new Buffer();
-            buffers.add(buf0);
-        }
-
-
-        @Override
-        void update(Double sample) {
-            if (buf0.isFull()) {
-                cascade(0);
-            }
-            buf0.add(sample);
-
-            needsCalculation = true;
-        }
-
-        /*
-         * Calculate the median of the values in the full buffer at
-         * the given level and store the result in the next
-         * available position of the buffer at level+1, creating this
-         * next buffer if necessary. If the next buffer is also full
-         * it is cascaded with a recursive call.
-         */
-        private void cascade(int level) {
-            Buffer buf = buffers.get(level);
-            Arrays.sort(buf.data);
-            double median = buf.data[MEDIAN_POS];
-
-            Buffer nextBuf;
-            if (level+1 < buffers.size()) {
-                nextBuf = buffers.get(level+1);
-            } else {
-                nextBuf = new Buffer();
-                buffers.add(nextBuf);
-            }
-
-            if (nextBuf.isFull()) {
-                cascade(level+1);
-            }
-
-            buf.pos = 0;
-            nextBuf.add(median);
-        }
-
-        /**
-         * Calculate the remedian as the weighted median of the buffer values
-         * where the weight for each value in buffer i is BASE^i, i = 0..numBuffers-1
-         *
-         * @param stat ignored
-         * @return the value of the remedian
-         */
-        @Override
-        Double get(Statistic stat) {
-            if (getCount() == 0) {
-                return Double.NaN;
-            }
-            
-            if (getCount() == 1) {
-                return buf0.data[0];
-            }
-
-            if (needsCalculation) {
-                List<WeightedSample> samples = CollectionFactory.newList();
-                long weight = 1;
-                for (Buffer buf : buffers) {
-                    for (int i = 0; i < buf.pos; i++) {
-                        WeightedSample datum = new WeightedSample();
-                        datum.value = buf.data[i];
-                        datum.weight = weight;
-                        samples.add(datum);
-                    }
-
-                    weight = weight * BASE;
-                }
-
-                Collections.sort(samples);
-
-                long nHalf = getCount() / 2;
-                long n = 0;
-                Iterator<WeightedSample> iter = samples.iterator();
-                WeightedSample datum = null;
-                
-                while (n < nHalf) {
-                    datum = iter.next();
-                    n += datum.weight;
-                }
-
-                remedian = datum.value;
-                needsCalculation = false;
-            }
-
-            return remedian;
-        }
-    }
-
-
-    /**
-     * A Processor to calculate running mean and variance. The algorithm used is that
-     * that of Welford (1962) which was presented in Knuth's <i>The Art of Computer
-     * Programming (3rd ed)</i> vol. 2, p. 232. Also described online at:
-     * http://www.johndcook.com/standard_deviation.html
-     */
-    private static class MeanVarianceProcessor extends Processor {
-
-        Double mOld, mNew;
-        Double s;
-
-        @Override
-        void update(Double sample) {
-            if (getCount() == 1) {
-                mOld = mNew = sample;
-                s = 0.0d;
-            } else {
-                mNew = mOld + (sample - mOld) / getCount();
-                s = s + (sample - mOld) * (sample - mNew);
-                mOld = mNew;
-            }
-        }
-
-        @Override
-        Double get(Statistic stat) {
-            long n = getCount();
-
-            switch (stat) {
-                case MEAN:
-                    if (n > 0) {
-                        return mNew;
-                    }
-                    break;
-
-                case SDEV:
-                    if (n > 1) {
-                        return Math.sqrt(s / (n - 1));
-                    }
-                    break;
-
-                case VARIANCE:
-                    if (n > 1) {
-                        return s / (n - 1);
-                    }
-                    break;
-
-                default:
-                    throw new IllegalArgumentException(
-                            "Invalid argument for this processor type: " + stat);
-            }
-
-            return Double.NaN;
-        }
     }
 }
 
