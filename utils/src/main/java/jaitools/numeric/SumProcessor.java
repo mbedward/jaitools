@@ -35,7 +35,7 @@ import java.util.Set;
  * @source $URL$
  * @version $Id$
  */
-class SumProcessor extends AbstractProcessor {
+public class SumProcessor extends AbstractProcessor {
 
     private static final Set<Statistic> SUPPORTED = Collections.singleton(Statistic.SUM);
 

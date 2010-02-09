@@ -44,7 +44,7 @@ import java.util.Set;
  * @source $URL$
  * @version $Id$
  */
-class MeanVarianceProcessor extends AbstractProcessor {
+public class MeanVarianceProcessor extends AbstractProcessor {
 
     private static final Set<Statistic> SUPPORTED = new HashSet<Statistic>();
     static {
