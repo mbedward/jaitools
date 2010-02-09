@@ -54,7 +54,7 @@ import java.util.Set;
  * @source $URL$
  * @version $Id$
  */
-class ApproxMedianProcessor extends AbstractProcessor {
+public class ApproxMedianProcessor extends AbstractProcessor {
 
     private static final Set<Statistic> SUPPORTED = Collections.singleton(Statistic.APPROX_MEDIAN);
 
@@ -96,7 +96,7 @@ class ApproxMedianProcessor extends AbstractProcessor {
     /**
      * Default constructor.
      */
-    ApproxMedianProcessor() {
+    public ApproxMedianProcessor() {
         buffers = CollectionFactory.newList();
         buf0 = new Buffer();
         buffers.add(buf0);

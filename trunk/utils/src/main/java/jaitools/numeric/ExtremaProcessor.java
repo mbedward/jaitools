@@ -36,7 +36,7 @@ import java.util.Set;
  * @source $URL$
  * @version $Id$
  */
-class ExtremaProcessor extends AbstractProcessor {
+public class ExtremaProcessor extends AbstractProcessor {
 
     private static final Set<Statistic> SUPPORTED = new HashSet<Statistic>();
     static {
