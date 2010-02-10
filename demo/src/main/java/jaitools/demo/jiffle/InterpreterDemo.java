@@ -120,7 +120,7 @@ public class InterpreterDemo {
         TiledImage tImg = ImageUtils.createConstantImage(imgWidth, imgHeight, Double.valueOf(0d));
 
         // link the variable name used in the script (result) to the image
-        Map<String, RenderedImage> imgParams = CollectionFactory.newMap();
+        Map<String, RenderedImage> imgParams = CollectionFactory.map();
         imgParams.put("result", tImg);
 
         try {

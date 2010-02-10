@@ -83,12 +83,12 @@ public class LexerParserTest {
         
         JiffleLexer lexer = lex(input);
         
-        Set<Integer> okHiddenTypes = CollectionFactory.newSet();
+        Set<Integer> okHiddenTypes = CollectionFactory.set();
         okHiddenTypes.add(JiffleLexer.BLOCK_COMMENT);
         okHiddenTypes.add(JiffleLexer.WS);
         okHiddenTypes.add(JiffleLexer.NEWLINE);
         
-        Set<Integer> okVisibleTypes = CollectionFactory.newSet();
+        Set<Integer> okVisibleTypes = CollectionFactory.set();
         okVisibleTypes.add(JiffleLexer.ID);
         okVisibleTypes.add(JiffleLexer.INT_LITERAL);
         okVisibleTypes.add(JiffleLexer.EQ);

@@ -44,7 +44,7 @@ public class VarTable {
 
     private static Map<String, Integer> ops;
     static {
-        ops = CollectionFactory.newTreeMap();
+        ops = CollectionFactory.sortedMap();
 
         ops.put("=", ASSIGN);
         ops.put("+=", PLUS_EQ);
@@ -56,7 +56,7 @@ public class VarTable {
 
     private static Map<String, Double> constants;
     static {
-        constants = CollectionFactory.newMap();
+        constants = CollectionFactory.map();
         constants.put("PI", Math.PI);
         constants.put("E", Math.E);
         constants.put("NaN", Double.NaN);

@@ -386,7 +386,7 @@ public class KernelFactory {
          */
         PathIterator iter = shape.getPathIterator(transform, 0.05);
         float[] buf = new float[6];
-        List<Coordinate> coords = CollectionFactory.newList();
+        List<Coordinate> coords = CollectionFactory.list();
         while (!iter.isDone()) {
             iter.currentSegment(buf);
             coords.add(new Coordinate(buf[0], buf[1]));

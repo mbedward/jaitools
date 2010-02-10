@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2010 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -95,19 +95,33 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * pb.setParameter("stats", stats);
  * RenderedOp op = JAI.create("ZonalStats", pb);
  * 
- * Map<Integer, ZonalStats> resultMap = (Map<Integer, ZonalStats>) op
- *               .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
- * ZonalStats result = resultMap.get(0);
+ * ZonalStats stats = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
  *
  * // print results to console
- * for (Integer zone : results.getZones()) {
- *     System.out.println("Zone " + zone);
- *     Map<Statistic, Double> zoneResults = results.getZoneStats(zone);
- *     for (Entry<Statistic, Double> e : zoneResults.entrySet()) {
- *         System.out.println(String.format("%12s: %.4f", e.getKey(), e.getValue()));
- *     }
+ * for (Result r : stats.results()) {
+ *     System.out.println(r);
+ * }
+ * </code></pre>
+ *
+ * The {@code ZonalStats} object returned by the {@code getProperty} method above allows
+ * you to examine results by image band, zone and statistic as shown here...
+ * <pre><code>
+ * ZonalStats stats = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+ *
+ * // print all results for band 0
+ * for (Result r : stats.band(0).results()) {
+ *     System.out.println(r);
  * }
  *
+ * // print all result for band 2, zone 5
+ * for (Result r : stats.band(2).zone(5).results()) {
+ *     System.out.println(r);
+ * }
+ *
+ * // print MEAN values for all zones in band 0
+ * for (Result r : stats.band(0).statistics(Statistic.MEAN).results()) {
+ *     System.out.println(r);
+ * }
  * </code></pre>
  *
  * Using the operator to calculate statistics for an area within the data image...
@@ -123,15 +137,11 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * pb.setParameter("stats", someStats);
  * RenderedOp op = JAI.create("ZonalStats", pb);
  *
- * Map<Integer, ZonalStats> resultMap = (Map<Integer, ZonalStats>) op
- *               .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
- * ZonalStats result = resultMap.get(0);
+ * ZonalStats stats = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
  *
- * // print results: since we didn't use a zone image all
- * // results will be labeled as zone 0
- * Map<Statistic, Double> results = results.getZoneStats(0);
- * for (Entry<Statistic, Double> e : results.entrySet()) {
- *     System.out.println(String.format("%12s: %.4f", e.getKey(), e.getValue()));
+ * // print results to console
+ * for (Result r : stats.results()) {
+ *     System.out.println(r);
  * }
  *
  * </code></pre>
@@ -162,20 +172,12 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * pb.setParameter("bands", new Integer[]{0, 2});
  * RenderedOp op = JAI.create("ZonalStats", pb);
  *
- * // get results back
- * Map<Integer, ZonalStats> result = 
- *         (Map<Integer, ZonalStats>) op.getProperty(
- *             ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+ * // get the results
+ * ZonalStats> stats = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
  *
- * // results for band 0
- * ZonalStats zonalStats0 = result.get(0);
- * Map<Statistic, Double> stats0 = zonalStats0.getZoneStats(0);
- * 
- * // results for band 2
- * ZonalStats zonalStats2 = result.get(2);
- * Map<Statistic, Double> stats3 = zonalStats2.getZoneStats(0);
- * double minBand0 = stats0.get(Statistic.MIN).doubleValue();
- * double minBand2 = stats2.get(Statistic.MIN).doubleValue();
+ * // results by band
+ * List<Result> resultsBand0 = stats.band(0).results;
+ * List<Result> resultsBand2 = stats.band(2).results;
  * </code></pre>
  *
  * Excluding data values from the analysis with the "exclude" parameter:
@@ -187,6 +189,15 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * List&lt;Range&lt;Double>> excludeList = CollectionFactory.newList();
  * excludeList.add(Range.create(-5, true, 5, true));
  * pb.setParameter("exclude", excludeList);
+ *
+ * // after we run the operator and get the results we can examine
+ * // how many sample values were included in the calculation
+ * List<Result> results = zonalStats.results();
+ * for (Result r : results) {
+ *     int numUsed = r.getNumAccepted();
+ *     int numExcluded = r.getNumOffered() - numUsed;
+ *     ...
+ * }
  * </code></pre>
  *
  * <b>Parameters</b>
@@ -211,8 +222,10 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * </tr>
  * </table>
  *
+ * @see Result
  * @see jaitools.numeric.Statistic
  * @see jaitools.numeric.StreamingSampleStats
+ * @see ZonalStats
  *
  * @author Michael Bedward
  * @author Andrea Antonello

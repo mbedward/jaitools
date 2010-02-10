@@ -154,7 +154,7 @@ public class RegionalizeOpImage extends PointOpImage {
         setTileCache( regionImage.getTileCache() );
 
         filler = new FloodFiller(source, band, regionImage, 0, tolerance, diagonal);
-        regions = CollectionFactory.newTreeMap();
+        regions = CollectionFactory.sortedMap();
 
         this.executor = Executors.newSingleThreadExecutor();
 
@@ -175,7 +175,7 @@ public class RegionalizeOpImage extends PointOpImage {
     @Override
     public Object getProperty(String name) {
         if (RegionalizeDescriptor.REGION_DATA_PROPERTY.equalsIgnoreCase(name)) {
-            List<Region> regionData = CollectionFactory.newList();
+            List<Region> regionData = CollectionFactory.list();
             regionData.addAll(regions.values());
             return regionData;
 

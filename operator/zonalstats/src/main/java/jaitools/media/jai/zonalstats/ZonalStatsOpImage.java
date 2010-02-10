@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2010 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -46,9 +46,6 @@ import javax.media.jai.iterator.RectIterFactory;
  * Calculates image summary statistics for a data image within zones defined by
  * a integral valued zone image. If a zone image is not provided all data image
  * pixels are treated as being in the same zone (zone 0).
- * <p>
- * An {@code ROI} can be provided to specify a subset of the data image that will
- * be included in the calculations.
  *
  * @see ZonalStatsDescriptor Description of the algorithm and example
  *
@@ -95,7 +92,7 @@ public class ZonalStatsOpImage extends NullOpImage {
      *
      * @param zoneTransform
      * 
-     * @param excludeRanges a {@link List} of {@link Range}s, that will be filtered out
+     * @param excludedRanges a {@link List} of {@link Range}s, that will be filtered out
      *        of the process. This means that values inside the supplied ranges 
      *        will not be considered as valid and discarded.
      * 
@@ -109,7 +106,7 @@ public class ZonalStatsOpImage extends NullOpImage {
             Integer[] bands,
             ROI roi,
             AffineTransform zoneTransform,
-            List<Range<Double>> excludeRanges) {
+            List<Range<Double>> excludedRanges) {
 
         super(dataImage, layout, config, OpImage.OP_COMPUTE_BOUND);
 
@@ -125,11 +122,13 @@ public class ZonalStatsOpImage extends NullOpImage {
         this.roi = roi;
         this.zoneTransform = zoneTransform;
 
-        if (excludeRanges != null && !excludeRanges.isEmpty()) {
-            this.excludedRanges = CollectionFactory.newList();
-            this.excludedRanges.addAll(excludeRanges);
-        } else {
-            this.excludedRanges = null;
+        this.excludedRanges = CollectionFactory.list();
+        if (excludedRanges != null && !excludedRanges.isEmpty()) {
+            // copy the ranges defensively
+            for (Range<Double> r : excludedRanges) {
+                this.excludedRanges.add(new Range<Double>(r));
+            }
+
         }
     }
 
@@ -141,7 +140,7 @@ public class ZonalStatsOpImage extends NullOpImage {
      * belonging to zone 0.
      */
     private void buildZoneList() {
-        zones = CollectionFactory.newTreeSet();
+        zones = CollectionFactory.sortedSet();
         if (zoneImage != null) {
             RectIter iter = RectIterFactory.create(zoneImage, null);
             do {
@@ -161,7 +160,7 @@ public class ZonalStatsOpImage extends NullOpImage {
      *
      * @return the results as a new instance of {@code ZonalStats}
      */
-    private synchronized Map<Integer, ZonalStats> compileStatistics() {
+    private synchronized ZonalStats compileStatistics() {
         if (zoneImage != null) {
             return compileZonalStatistics();
         } else {
@@ -172,18 +171,20 @@ public class ZonalStatsOpImage extends NullOpImage {
     /**
      * Used to calculate statistics when a zone image was provided.
      *
-     * @return the results as a new map of {@code ZonalStats} for every band.
+     * @return the results as a {@code ZonalStats} instance
      */
-    private Map<Integer, ZonalStats> compileZonalStatistics() {
+    private ZonalStats compileZonalStatistics() {
         buildZoneList();
-
         
-        Map<Integer, Map<Integer, StreamingSampleStats>> results = CollectionFactory.newTreeMap();
+        Map<Integer, Map<Integer, StreamingSampleStats>> results = CollectionFactory.sortedMap();
         for( Integer srcBand : srcBands ) {
-            Map<Integer, StreamingSampleStats> resultsPerBand = CollectionFactory.newTreeMap();
+            Map<Integer, StreamingSampleStats> resultsPerBand = CollectionFactory.sortedMap();
             results.put(srcBand, resultsPerBand);
             for( Integer zone : zones ) {
                 StreamingSampleStats sampleStats = new StreamingSampleStats();
+                for (Range<Double> r : excludedRanges) {
+                    sampleStats.addExcludedRange(r);
+                }
                 sampleStats.setStatistics(stats);
                 resultsPerBand.put(zone, sampleStats);
             }
@@ -204,19 +205,7 @@ public class ZonalStatsOpImage extends NullOpImage {
                             Map<Integer, StreamingSampleStats> resultPerBand = results.get(band);
                         
                             int zone = zoneIter.getSample();
-                            
-                            boolean doAdd = true;
-                            if (excludedRanges != null) {
-                                for (Range<Double> range : excludedRanges) {
-                                    if (range.contains(sampleValues[band])) {
-                                        doAdd = false;
-                                        break;
-                                    }
-                                }
-                            }
-                            if (doAdd) {
-                                resultPerBand.get(zone).addSample(sampleValues[band]);
-                            }
+                            resultPerBand.get(zone).offer(sampleValues[band]);
                         }
                     }
                     zoneIter.nextPixelDone(); // safe call
@@ -245,19 +234,7 @@ public class ZonalStatsOpImage extends NullOpImage {
                             Map<Integer, StreamingSampleStats> resultPerBand = results.get(band);
 
                             int zone = zoneIter.getSample((int) zonePos.x, (int) zonePos.y, 0);
-
-                            boolean doAdd = true;
-                            if (excludedRanges != null) {
-                                for (Range<Double> range : excludedRanges) {
-                                    if (range.contains(sampleValues[band])) {
-                                        doAdd = false;
-                                        break;
-                                    }
-                                }
-                            }
-                            if (doAdd) {
-                                resultPerBand.get(zone).addSample(sampleValues[band]);
-                            }
+                            resultPerBand.get(zone).offer(sampleValues[band]);
                         }
                     }
                     dataPos.x++;
@@ -269,27 +246,22 @@ public class ZonalStatsOpImage extends NullOpImage {
             } while( !dataIter.nextLineDone() );
         }
 
-        Map<Integer, ZonalStats> zonalStatsPerBand = CollectionFactory.newTreeMap();
+        ZonalStats zs = new ZonalStats();
         for( Integer band : srcBands ) {
-            ZonalStats zonalStats = new ZonalStats(stats, zones);
-            zonalStatsPerBand.put(band, zonalStats);
-
-            Map<Integer, StreamingSampleStats> resultsPerBand = results.get(band);
-            
             for( Integer zone : zones ) {
-                zonalStats.setZoneResults(zone, resultsPerBand.get(zone));
+                zs.setResults(band, zone, results.get(band).get(zone));
             }
         }
 
-        return zonalStatsPerBand;
+        return zs;
     }
 
     /**
      * Used to calculate statistics when no zone image was provided.
      *
-     * @return the results as a new map of {@code ZonalStats} for every band.
+     * @return the results as a {@code ZonalStats} instance
      */
-    private Map<Integer, ZonalStats> compileUnzonedStatistics() {
+    private ZonalStats compileUnzonedStatistics() {
         buildZoneList();
         Integer zoneID = zones.first();
         
@@ -297,6 +269,9 @@ public class ZonalStatsOpImage extends NullOpImage {
         final StreamingSampleStats sampleStatsPerBand[] = new StreamingSampleStats[srcBands.length];
         for (int index = 0; index < srcBands.length; index++) {
             final StreamingSampleStats sampleStats = new StreamingSampleStats();
+            for (Range<Double> r : excludedRanges) {
+                sampleStats.addExcludedRange(r);
+            }
             sampleStats.setStatistics(stats);
             sampleStatsPerBand[index] = sampleStats;
         }
@@ -310,19 +285,8 @@ public class ZonalStatsOpImage extends NullOpImage {
                 if (roi == null || roi.contains(x, y)) {
                     dataIter.getPixel(sampleValues);
                     for (int index = 0; index < srcBands.length; index++) {
-                        boolean doAdd = true;
                         final double value = sampleValues[srcBands[index]];
-                        if (excludedRanges != null) {
-                            for (Range<Double> range : excludedRanges) {
-                                if (range.contains(value)) {
-                                    doAdd = false;
-                                    break;
-                                }
-                            }
-                        }
-                        if (doAdd) {
-                            sampleStatsPerBand[index].addSample(value);
-                        }
+                        sampleStatsPerBand[index].offer(value);
                     }
                 }
                 x++;
@@ -334,14 +298,12 @@ public class ZonalStatsOpImage extends NullOpImage {
         } while( !dataIter.nextLineDone() );
 
         // get the results
-        final Map<Integer, ZonalStats> zonalStatsPerBand = CollectionFactory.newTreeMap();
+        ZonalStats zs = new ZonalStats();
         for (int index = 0; index < srcBands.length; index++) {
-            final StreamingSampleStats sampleStats = sampleStatsPerBand[index];
-            ZonalStats zonalStats = new ZonalStats(stats, zones);
-            zonalStats.setZoneResults(zoneID, sampleStats);
-            zonalStatsPerBand.put(srcBands[index], zonalStats);
+            StreamingSampleStats sampleStats = sampleStatsPerBand[index];
+            zs.setResults(srcBands[index], zoneID, sampleStats);
         }
-        return zonalStatsPerBand;
+        return zs;
     }
 
     /**

@@ -20,6 +20,7 @@
 
 package jaitools.numeric;
 
+import jaitools.CollectionFactory;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,10 +37,18 @@ import java.util.Map;
  */
 public abstract class AbstractProcessor implements Processor {
 
-    protected long numOffered = 0;
-    protected long numAccepted = 0;
+    protected long numOffered;
+    protected long numAccepted;
 
-    private List<Range<Double>> excludedRanges = new ArrayList<Range<Double>>();
+    private List<Range<Double>> excludedRanges;
+
+    /**
+     * Default constructor.
+     */
+    public AbstractProcessor() {
+        excludedRanges = CollectionFactory.list();
+        numOffered = numAccepted = 0;
+    }
 
     /**
      * {@inheritDoc}
@@ -49,7 +58,8 @@ public abstract class AbstractProcessor implements Processor {
      */
     public void addExcludedRange(Range<Double> exclude) {
         if (exclude != null) {
-            excludedRanges.add(exclude);
+            // copy the input Range defensively
+            excludedRanges.add(new Range<Double>(exclude));
         }
     }
 

@@ -47,7 +47,7 @@ public class ExactMedianProcessor extends AbstractProcessor {
 
     private static final Set<Statistic> SUPPORTED = Collections.singleton(Statistic.MEDIAN);
 
-    private List<Double> values = CollectionFactory.newList();
+    private List<Double> values = CollectionFactory.list();
     private boolean calculationRequired = true;
     private double median;
 

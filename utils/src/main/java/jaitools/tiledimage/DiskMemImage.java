@@ -334,7 +334,7 @@ public class DiskMemImage
         tileMemorySize = DataBuffer.getDataTypeSize(db.getDataType()) / 8L *
                 db.getSize() * db.getNumBanks();
 
-        tileObservers = CollectionFactory.newSet();
+        tileObservers = CollectionFactory.set();
 
         // just to remind us that we are deferring creation of
         // the tile cache

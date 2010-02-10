@@ -34,7 +34,6 @@ import java.awt.image.PixelInterleavedSampleModel;
 import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -65,8 +64,9 @@ public class ZonalStatsTest {
 
     private static final Logger LOGGER = Logger.getLogger("ZonalStatsTest");
     
-    private static final int WIDTH = 256;
-    private static final int HEIGHT = 300;
+    private static final int WIDTH = 128;
+    private static final int HEIGHT = 64;
+    private static final int TILE_WIDTH = 64;
     private static final int MIN_DATUM = -5;
     private static final int MAX_DATUM = 5;
 
@@ -188,11 +188,7 @@ public class ZonalStatsTest {
         pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{Statistic.MIN});
         RenderedOp op = JAI.create("ZonalStats", pb);
-        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
-        ZonalStats zonalStats = result.get(0);
-        Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
-        assertTrue(stats.containsKey(Statistic.MIN));
-        assertTrue(stats.get(Statistic.MIN).intValue() == MIN_DATUM);
+        assertSingleResult(op, Statistic.MIN, Double.valueOf(MIN_DATUM));
     }
 
     @Test
@@ -204,14 +200,9 @@ public class ZonalStatsTest {
         pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{Statistic.MAX});
         RenderedOp op = JAI.create("ZonalStats", pb);
-        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
-                .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
-        ZonalStats zonalStats = result.get(0);
-        Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
-        assertTrue(stats.containsKey(Statistic.MAX));
-        assertTrue(stats.get(Statistic.MAX).intValue() == MAX_DATUM);
+        assertSingleResult(op, Statistic.MAX, Double.valueOf(MAX_DATUM));
     }
-
+    
     @Test
     public void testMean() {
         if(LOGGER.isLoggable(Level.INFO))
@@ -232,12 +223,7 @@ public class ZonalStatsTest {
         pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{Statistic.MEAN});
         RenderedOp op = JAI.create("ZonalStats", pb);
-        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
-                .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
-        ZonalStats zonalStats = result.get(0);
-        Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
-        assertTrue(stats.containsKey(Statistic.MEAN));
-        assertTrue(DoubleComparison.dequal(expMean, stats.get(Statistic.MEAN)));
+        assertSingleResult(op, Statistic.MEAN, expMean);
     }
 
     @Test
@@ -272,12 +258,7 @@ public class ZonalStatsTest {
         pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{Statistic.SDEV});
         RenderedOp op = JAI.create("ZonalStats", pb);
-        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
-                .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
-        ZonalStats zonalStats = result.get(0);
-        Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
-        assertTrue(stats.containsKey(Statistic.SDEV));
-        assertTrue(DoubleComparison.dequal(expSD, stats.get(Statistic.SDEV)));
+        assertSingleResult(op, Statistic.SDEV, expSD);
     }
 
     @Test
@@ -289,93 +270,10 @@ public class ZonalStatsTest {
         pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{Statistic.RANGE});
         RenderedOp op = JAI.create("ZonalStats", pb);
-        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
-                .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
-        ZonalStats zonalStats = result.get(0);
-        Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
-
-        assertTrue(stats.containsKey(Statistic.RANGE));
-        assertTrue(stats.get(Statistic.RANGE).intValue() == MAX_DATUM - MIN_DATUM);
+        double exp = MAX_DATUM - MIN_DATUM;
+        assertSingleResult(op, Statistic.RANGE, exp);
     }
 
-    @Test
-    public void testExactMedian() {
-        if(LOGGER.isLoggable(Level.INFO))
-    		LOGGER.info("   test exact median");
-
-        final int expMedian = 0;
-
-        ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
-        pb.setSource("dataImage", dataImage);
-        pb.setParameter("stats", new Statistic[]{Statistic.MEDIAN});
-        RenderedOp op = JAI.create("ZonalStats", pb);
-        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
-                .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
-        ZonalStats zonalStats = result.get(0);
-        Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
-
-        assertTrue(stats.containsKey(Statistic.MEDIAN));
-        assertTrue(stats.get(Statistic.MEDIAN).intValue() == expMedian);
-    }
-
-    @Test
-    public void testApproxMedian() {
-        if(LOGGER.isLoggable(Level.INFO))
-    		LOGGER.info("   test approximate median");
-
-        final int expMedian = 0;
-
-        ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
-        pb.setSource("dataImage", dataImage);
-        pb.setParameter("stats", new Statistic[]{Statistic.APPROX_MEDIAN});
-        RenderedOp op = JAI.create("ZonalStats", pb);
-        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
-                .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
-        ZonalStats zonalStats = result.get(0);
-        Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
-
-        assertTrue(stats.containsKey(Statistic.APPROX_MEDIAN));
-        assertTrue(stats.get(Statistic.APPROX_MEDIAN).intValue() == expMedian);
-    }
-
-    @Test
-    public void testMultiband() {
-        if(LOGGER.isLoggable(Level.INFO))
-    		LOGGER.info("   test multiband");
-
-        ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
-        pb.setSource("dataImage", multibandImage);
-        pb.setParameter("stats", new Statistic[]{Statistic.MIN, Statistic.MAX, Statistic.MEAN,
-                Statistic.RANGE});
-
-        // make the test a bit more testing by skipping a band
-        pb.setParameter("bands", new Integer[]{0, 2});
-
-        RenderedOp op = JAI.create("ZonalStats", pb);
-
-        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
-                .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
-
-        ZonalStats zonalStats0 = result.get(0);
-        Map<Statistic, Double> stats0 = zonalStats0.getZoneStats(0);
-
-        ZonalStats zonalStats2 = result.get(2);
-        Map<Statistic, Double> stats2 = zonalStats2.getZoneStats(0);
-
-        assertTrue(stats0.containsKey(Statistic.MIN));
-        assertTrue(stats0.get(Statistic.MIN).doubleValue() == -9999.0);
-        assertTrue(stats2.containsKey(Statistic.MIN));
-        assertTrue(stats2.get(Statistic.MIN).doubleValue() == -9999.0);
-        assertTrue(stats0.containsKey(Statistic.MAX));
-        assertTrue(stats0.get(Statistic.MAX).doubleValue() == 1.0);
-        assertTrue(stats2.containsKey(Statistic.MAX));
-        assertTrue(stats2.get(Statistic.MAX).doubleValue() == 3.0);
-        assertTrue(stats0.containsKey(Statistic.RANGE));
-        assertTrue(stats0.get(Statistic.RANGE).doubleValue() == 10000.0);
-        assertTrue(stats2.containsKey(Statistic.RANGE));
-        assertTrue(stats2.get(Statistic.RANGE).doubleValue() == 10002.0);
-    }
-    
     @Test
     public void testSum() {
         if(LOGGER.isLoggable(Level.INFO))
@@ -385,12 +283,81 @@ public class ZonalStatsTest {
         pb.setSource("dataImage", constant1Image);
         pb.setParameter("stats", new Statistic[]{Statistic.SUM});
         RenderedOp op = JAI.create("ZonalStats", pb);
-        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
-                .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
-        ZonalStats zonalStats = result.get(0);
-        Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
-        assertTrue(stats.containsKey(Statistic.SUM));
-        assertTrue(stats.get(Statistic.SUM).intValue() == (1*WIDTH*WIDTH));
+        assertSingleResult(op, Statistic.SUM, Double.valueOf(WIDTH * WIDTH));
+    }
+
+    @Test
+    public void testExactMedian() {
+        if(LOGGER.isLoggable(Level.INFO))
+    		LOGGER.info("   test exact median");
+
+        final double expMedian = 0.0;
+
+        ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
+        pb.setSource("dataImage", dataImage);
+        pb.setParameter("stats", new Statistic[]{Statistic.MEDIAN});
+        RenderedOp op = JAI.create("ZonalStats", pb);
+        assertSingleResult(op, Statistic.MEDIAN, expMedian);
+    }
+
+    @Test
+    public void testApproxMedian() {
+        if(LOGGER.isLoggable(Level.INFO))
+    		LOGGER.info("   test approximate median");
+
+        final double expMedian = 0.0;
+
+        ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
+        pb.setSource("dataImage", dataImage);
+        pb.setParameter("stats", new Statistic[]{Statistic.APPROX_MEDIAN});
+        RenderedOp op = JAI.create("ZonalStats", pb);
+        assertSingleResult(op, Statistic.APPROX_MEDIAN, expMedian);
+    }
+
+    @Test
+    public void testMultiband() {
+        if(LOGGER.isLoggable(Level.INFO))
+    		LOGGER.info("   test multiband");
+
+        ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
+        pb.setSource("dataImage", multibandImage);
+        pb.setParameter("stats", new Statistic[]{Statistic.MIN, Statistic.MAX, Statistic.RANGE});
+
+        // make the test a bit more testing by skipping a band
+        pb.setParameter("bands", new Integer[]{0, 2});
+
+        RenderedOp op = JAI.create("ZonalStats", pb);
+        ZonalStats stats = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+
+        final int MIN = 0, MAX = 1, RANGE = 2;
+        final int[] flag = new int[3];
+
+        for (Result r : stats.results()) {
+            switch (r.getStatistic()) {
+                case MIN:
+                    assertTrue(DoubleComparison.dequal(-9999.0, r.getValue()));
+                    flag[MIN]++ ;
+                    break;
+
+                case MAX:
+                    assertTrue(DoubleComparison.dequal(r.getImageBand() + 1, r.getValue()));
+                    flag[MAX]++;
+                    break;
+
+                case RANGE:
+                    assertTrue(DoubleComparison.dequal(r.getImageBand() + 10000.0, r.getValue()));
+                    flag[RANGE]++;
+                    break;
+
+                default:
+                    fail("unexpected statistic: " + r.getStatistic());
+            }
+        }
+
+        for (int i = 0; i < flag.length; i++) {
+            assertEquals(2, flag[i]);
+        }
+
     }
 
     @Test
@@ -402,7 +369,7 @@ public class ZonalStatsTest {
         pb.setSource("dataImage", dataImage);
         pb.setParameter("stats", new Statistic[]{Statistic.MIN, Statistic.MAX});
 
-        List<Range<Double>> exclusions = CollectionFactory.newList();
+        List<Range<Double>> exclusions = CollectionFactory.list();
 
         // exclude lower end of values
         double min = MIN_DATUM + 1;
@@ -415,13 +382,18 @@ public class ZonalStatsTest {
         pb.setParameter("exclude", exclusions);
 
         RenderedOp op = JAI.create("ZonalStats", pb);
-        Map<Integer, ZonalStats> result = (Map<Integer, ZonalStats>) op
-                .getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
-        ZonalStats zonalStats = result.get(0);
-        Map<Statistic, Double> stats = zonalStats.getZoneStats(0);
+        ZonalStats stats = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
 
-        assertTrue(stats.get(Statistic.MIN) >= min);
-        assertTrue(stats.get(Statistic.MAX) <= max);
+        assertTrue(stats.statistic(Statistic.MIN).results().get(0).getValue() >= min);
+        assertTrue(stats.statistic(Statistic.MAX).results().get(0).getValue() <= max);
+    }
+
+
+    private void assertSingleResult(RenderedOp op, Statistic stat, Double value) {
+        ZonalStats stats = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+        Result r = stats.band(0).zone(0).statistic(stat).results().get(0);
+        assertEquals(stat, r.getStatistic());
+        assertTrue(DoubleComparison.dequal(value, r.getValue()));
     }
 
     private static PlanarImage createConstantImage( Number[] bandValues ) {
@@ -490,29 +462,36 @@ public class ZonalStatsTest {
         return img;
     }
 
+    /**
+     * Create a 3 band image. Each band has an outer border of Double.NaN; an
+     * inner border of -9999; and then interior values of band index + 1.
+     */
     private static PlanarImage createMultibandImage() {
         final int numBands = 3;
         final int[] bandOffsets = {0, 1, 2};
 
         SampleModel sm = new PixelInterleavedSampleModel(
                 DataBuffer.TYPE_DOUBLE,
-                128, 128,
-                numBands, numBands*128,
+                TILE_WIDTH, TILE_WIDTH,
+                numBands, numBands*TILE_WIDTH,
                 bandOffsets);
 
-        TiledImage img = new TiledImage(0, 0, WIDTH, WIDTH, 0, 0, sm, null);
+        TiledImage img = new TiledImage(0, 0, WIDTH, HEIGHT, 0, 0, sm, null);
 
         WritableRectIter iter = RectIterFactory.createWritable(img, null);
 
         final double[] values = new double[numBands];
         int i = 0;
         do {
+            int iToEdge = Math.min(i, WIDTH - i - 1);
             int j = 0;
             do {
+                int jToEdge = Math.min(j, WIDTH - j - 1);
+
                 for( int m = 0; m < numBands; m++ ) {
-                    if (i < 2 && j < 2) {
+                    if (iToEdge < 5 || jToEdge < 5) {
                         values[m] = Double.NaN;
-                    } else if (i > 10 && j > 7) {
+                    } else if (iToEdge < 10 || jToEdge < 10) {
                         values[m] = -9999.0;
                     } else
                         values[m] = m + 1.0;  // make band values different

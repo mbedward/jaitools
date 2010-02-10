@@ -22,6 +22,7 @@ package jaitools.demo.zonalstats;
 import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
 import jaitools.jiffle.runtime.JiffleRunner;
+import jaitools.media.jai.zonalstats.Result;
 import jaitools.media.jai.zonalstats.ZonalStats;
 import jaitools.media.jai.zonalstats.ZonalStatsDescriptor;
 import jaitools.numeric.Statistic;
@@ -29,7 +30,6 @@ import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
@@ -81,24 +81,32 @@ public class ZonalStatsDemo {
         pb.setSource("dataImage", dataImg);
         pb.setSource("zoneImage", zoneImg);
 
-        Statistic[] stats = {
+        Statistic[] statistics = {
             Statistic.MIN,
             Statistic.MAX,
             Statistic.MEDIAN,
             Statistic.APPROX_MEDIAN,
             Statistic.SDEV
         };
-        pb.setParameter("stats", stats);
+
+        pb.setParameter("stats", statistics);
 
         RenderedOp zsImg = JAI.create("zonalstats", pb);
 
-        ZonalStats results = (ZonalStats) zsImg.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
-        for (Integer zone : results.getZones()) {
-            System.out.println("Zone " + zone);
-            Map<Statistic, Double> zoneResults = results.getZoneStats(zone);
-            for (Entry<Statistic, Double> e : zoneResults.entrySet()) {
-                System.out.println(String.format("%12s: %.4f", e.getKey(), e.getValue()));
+        ZonalStats zs = (ZonalStats) zsImg.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+        System.out.println("                               exact    approx");
+        System.out.println(" band zone      min      max   median   median     sdev");
+        System.out.println("-----------------------------------------------------------");
+
+        final int band = 0;
+        for (int z : zs.getZones()) {
+            System.out.printf(" %4d %4d", band, z);
+
+            ZonalStats zoneSubset = zs.band(0).zone(z);
+            for (Statistic s : statistics) {
+                System.out.printf(" %8.4f", zoneSubset.statistic(s).results().get(0).getValue());
             }
+            System.out.println();
         }
     }
 

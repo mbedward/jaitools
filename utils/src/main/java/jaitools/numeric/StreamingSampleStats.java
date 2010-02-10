@@ -20,8 +20,10 @@
 package jaitools.numeric;
 
 import jaitools.CollectionFactory;
-import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * A class to calculate summary statistics for a sample of Double-valued
@@ -62,7 +64,7 @@ import java.util.Map;
  * // some process that generates a long stream of data
  * while (somethingBigIsRunning) {
  *     double value = ...
- *     strmStats.addSample(value);
+ *     strmStats.offer(value);
  * }
  *
  * // report the results
@@ -78,76 +80,51 @@ import java.util.Map;
  * @version $Id$
  */
 public class StreamingSampleStats {
+    private static final Logger LOGGER = Logger.getLogger("jaitools.numeric");
 
-    private Map<Statistic, Processor> procByStat;
-    private Map<Processor, Integer> procTable;
+    private ProcessorFactory factory = new ProcessorFactory();
+    private List<Processor> processors;
+    private List<Range<Double>> excludedRanges;
 
     /**
      * Constructor
      */
     public StreamingSampleStats() {
-        procByStat = CollectionFactory.newMap();
-        procTable = CollectionFactory.newMap();
+        processors = CollectionFactory.list();
+        excludedRanges = CollectionFactory.list();
     }
 
     /**
      * Set a statistic to be calculated as sample values are added.
-     * If the same statistic was previously set calling this method
-     * has the effect of clearing any previous result. In addition,
-     * because of the relationship between statistics in the calculations,
-     * calling this method for one statistic in the following groups will
-     * cause the other statistics in that group to be reset:
-     * <ul>
-     * <li>MIN, MAX, RANGE
-     * <li>MEAN, SDEV, VARIANCE
-     * </ul>
+     * If the same statistic was previously set then calling this method
+     * has no effect.
      *
      * @param stat the requested statistic
      * @see Statistic
      */
     public void setStatistic(Statistic stat) {
-        Processor proc = procByStat.get(stat);
-        if (proc != null) {
-            // treat a duplicate request as resetting this
-            // statistic
-            procByStat.remove(stat);
-            Integer count = procTable.get(proc);
-            if (count == 1) {
-                procTable.remove(proc);
+        Processor p = findProcessor(stat);
+        if (p == null) {
+            p = factory.getForStatistic(stat);
+
+            if (p == null) {
+                LOGGER.severe("Unsupported Statistic: " + stat);
+            } else {
+                processors.add(p);
+                
+                // apply cached excluded ranges to the new processor
+                for (Range<Double> excluded : excludedRanges) {
+                    p.addExcludedRange(excluded);
+                }
             }
-        }
-
-        switch (stat) {
-            case MAX:
-            case MIN:
-            case RANGE:
-                createExtremaProcessor(stat);
-                break;
-
-            case MEDIAN:
-            case APPROX_MEDIAN:
-                createMedianProcessor(stat);
-                break;
-
-            case MEAN:
-            case SDEV:
-            case VARIANCE:
-                createVarianceProcessor(stat);
-                break;
-
-            case SUM:
-                createSumProcessor(stat);
-                break;
         }
     }
 
     /**
-     * Convenience method: sets the selected statistics to be calculated
-     * as subsequent sample values are added.
+     * Convenience method: sets the specified statistics.
      *
-     * @param stats the requested statistics
-     * @see #setStatistic(jaitools.numeric.Statistic)
-     * @see Statistic
+     * @param stats the statistics
+     * @see #setStatistic(Statistic)
      */
     public void setStatistics(Statistic[] stats) {
         for (Statistic stat : stats) {
@@ -156,14 +133,46 @@ public class StreamingSampleStats {
     }
 
     /**
-     * Get the array of statistics currently set.
-     * @return a new array of Statistic enum constants.
+     * Query whether the specified statistic is currently set. Note that
+     * statistics can be set indirectly because of logical groupings. For
+     * example, if {@code Statistic.MEAN} is set then {@code SDEV} and
+     * {@code VARIANCE} will also be set as these three are calculated
+     * together.  The same is true for {@code MIN}, {@code MAX} and {@code RANGE}.
+     *
+     * @param stat the statistic
+     *
+     * @return true if the statistic has been set; false otherwise.
      */
-    public Statistic[] getStatistics() {
-        Statistic[] stats = new Statistic[procByStat.size()];
-        int k = 0;
-        for (Statistic stat : procByStat.keySet()) {
-            stats[k++] = stat;
+    public boolean isSet(Statistic stat) {
+        return findProcessor(stat) != null;
+    }
+
+    /**
+     * Add a range of values to exclude from the calculation of <b>all</b>
+     * statistics. If further statistics are set after calling this method
+     * the excluded range will be applied to them as well.
+     *
+     * @param exclude the {@code Range} to exclude
+     */
+    public void addExcludedRange(Range<Double> exclude) {
+        excludedRanges.add(new Range<Double>(exclude));
+
+        for (Processor p : processors) {
+            p.addExcludedRange(exclude);
+        }
+    }
+
+    /**
+     * Get the statistics that are currently set.
+     *
+     * @return the statistics
+     */
+    public Set<Statistic> getStatistics() {
+        Set<Statistic> stats = CollectionFactory.orderedSet();
+        for (Processor p : processors) {
+            for (Statistic s : p.getSupported()) {
+                stats.add(s);
+            }
         }
 
         return stats;
@@ -180,43 +189,75 @@ public class StreamingSampleStats {
      * @throws IllegalStateException if stat was not previously set
      */
     public Double getStatisticValue(Statistic stat) {
-        Processor proc = procByStat.get(stat);
-        if (proc == null) {
+        Processor p = findProcessor(stat);
+        if (p == null) {
             throw new IllegalStateException(
                     "requesting a result for a statistic that hasn't been set: " + stat);
         }
 
-        return proc.get(stat);
+        return p.get(stat);
     }
 
     /**
-     * Get the current sample size for the specified statistic.
-     * Note that the sample size has to be retrieved with reference to a
-     * statistic because there is no requirement for the statistics
-     * having been set at the same time.
+     * Get the number of sample values that have been accepted for the
+     * specified {@code Statistic}.
+     * <p>
+     * Note that different statistics might have been set at different
+     * times in the sampling process.
      *
-     * @param stat the statistic that the sample size pertains to
-     * @return number of samples added since the statistic was set
+     * @param stat the statistic
+     * 
+     * @return number of samples that have been accepted
+     *
      * @throws IllegalArgumentException if the statistic hasn't been set
      */
-    public long size(Statistic stat) {
-        Processor proc = procByStat.get(stat);
-        if (proc == null) {
+    public long getNumAccepted(Statistic stat) {
+        Processor p = findProcessor(stat);
+        if (p == null) {
             throw new IllegalArgumentException(
                     "requesting sample size for a statistic that is not set: " + stat);
         }
 
-        return proc.getNumOffered();
+        return p.getNumAccepted();
     }
 
     /**
-     * Add a sample value and update all currently set statistics.
+     * Get the number of sample values that have been <b>offered</b> for the
+     * specified {@code Statistic}. This might be higher than the value
+     * returned by {@linkplain #getNumAccepted} due to {@code nulls},
+     * {@code Double.NaNs} and excluded values in the data stream.
+     * <p>
+     * Note that different statistics might have been set at different
+     * times in the sampling process.
      *
-     * @param sample the new sample value
+     * @param stat the statistic
+     *
+     * @return number of samples that have been accepted
+     *
+     * @throws IllegalArgumentException if the statistic hasn't been set
      */
-    public void addSample(Double sample) {
-        for (Processor proc : procTable.keySet()) {
-            proc.offer(sample);
+    public long getNumOffered(Statistic stat) {
+        Processor p = findProcessor(stat);
+        if (p == null) {
+            throw new IllegalArgumentException(
+                    "requesting sample size for a statistic that is not set: " + stat);
+        }
+
+        return p.getNumOffered();
+    }
+
+    /**
+     * Offer a sample value. Offered values are filtered through excluded ranges.
+     * {@code Double.NaNs} and {@code nulls} are excluded by default.
+     *
+     * @param sample the sample value
+     *
+     * @see #getNumOffered
+     * @see #getNumAccepted
+     */
+    public void offer(Double sample) {
+        for (Processor p : processors) {
+            p.offer(sample);
         }
     }
 
@@ -227,101 +268,41 @@ public class StreamingSampleStats {
      * @param samples the new sample values
      */
     public void addSamples(Double[] samples) {
-        for (int i = 0; i < samples.length; i++) {
-            addSample(samples[i]);
+        for (Processor p : processors) {
+            for (int i = 0; i < samples.length; i++) {
+                offer(samples[i]);
+            }
         }
     }
 
     /**
-     * Initialize a processor for the requested extremum statistic:
-     * one of Statistic.MIN, Statistic.MAX or Statistic.RANGE
+     * Search the list of {@code Processors} for one that supports
+     * the given {@code Statistic}.
+     *
+     * @param stat the statistic
+     *
+     * @return the supporting {@code Processor} or null if one has not
+     *         been set for the statistic
      */
-    private void createExtremaProcessor(Statistic stat) {
-        Processor proc = null;
-        Integer count = 0;
-
-        for (Statistic related : EnumSet.of(Statistic.MAX, Statistic.MIN, Statistic.RANGE)) {
-            proc = procByStat.get(related);
-            if (proc != null) {
-                count = procTable.get(proc);
-                break;
+    private Processor findProcessor(Statistic stat) {
+        for (Processor p : processors) {
+            if (p.getSupported().contains(stat)) {
+                return p;
             }
         }
 
-        if (proc == null) {
-            proc = new ExtremaProcessor();
-        }
-
-        procByStat.put(stat, proc);
-        procTable.put(proc, count+1);
+        return null;
     }
 
-    /**
-     * Initialize a processor for the requested extremum statistic:
-     * one of Statistic.MIN, Statistic.MAX or Statistic.RANGE
-     */
-    private void createSumProcessor(Statistic stat) {
-        Processor proc = null;
-        Integer count = 0;
-        
-        for (Statistic related : EnumSet.of(Statistic.SUM)) {
-            proc = procByStat.get(related);
-            if (proc != null) {
-                count = procTable.get(proc);
-                break;
-            }
+    public Map<Statistic, Double> getStatisticValues() {
+        Map<Statistic, Double> results = CollectionFactory.orderedMap();
+
+        for (Statistic s : getStatistics()) {
+            results.put(s, getStatisticValue(s));
         }
         
-        if (proc == null) {
-            proc = new SumProcessor();
-        }
-        
-        procByStat.put(stat, proc);
-        procTable.put(proc, count+1);
+        return results;
     }
 
-    /**
-     * Initialize a processor for the exact or approximate median
-     */
-    private void createMedianProcessor(Statistic stat) {
-        AbstractProcessor proc = null;
-        switch (stat) {
-            case MEDIAN:
-                proc = new ExactMedianProcessor();
-                procTable.put(proc, 1);
-                procByStat.put(Statistic.MEDIAN, proc);
-                break;
-
-            case APPROX_MEDIAN:
-                proc = new ApproxMedianProcessor();
-                procTable.put(proc, 1);
-                procByStat.put(Statistic.APPROX_MEDIAN, proc);
-                break;
-        }
-    }
-
-    /**
-     * Initialize a processor for one of Statistic.MEAN, Statistic.VARIANCE
-     * or Statistic.SDEV
-     */
-    private void createVarianceProcessor(Statistic stat) {
-        Processor proc = null;
-        Integer count = 0;
-
-        for (Statistic related : EnumSet.of(Statistic.MEAN, Statistic.SDEV, Statistic.VARIANCE)) {
-            proc = procByStat.get(related);
-            if (proc != null) {
-                count = procTable.get(proc);
-                break;
-            }
-        }
-
-        if (proc == null) {
-            proc = new MeanVarianceProcessor();
-        }
-
-        procByStat.put(stat, proc);
-        procTable.put(proc, count+1);
-    }
 }
 

@@ -149,7 +149,7 @@ public class RangeComparator<T extends Number & Comparable> {
          */
         GGGG(">>>>", "is entirely greater than");
 
-        private static Map<String, Result> lookup = CollectionFactory.newMap();
+        private static Map<String, Result> lookup = CollectionFactory.map();
         static {
             for (Result t : EnumSet.allOf(Result.class)) {
                 lookup.put(t.name(), t);
@@ -245,7 +245,7 @@ public class RangeComparator<T extends Number & Comparable> {
                 throw new IllegalArgumentException("pos must be in the range [0, NOTATION_LENGTH)");
             }
 
-            List<Result> types = CollectionFactory.newList();
+            List<Result> types = CollectionFactory.list();
 
             for (Result t : typesToSearch) {
                 if (t.flags[pos*3 + op + 1]) {

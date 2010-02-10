@@ -52,7 +52,7 @@ public class SampleStats {
             return values[0];
         }
         
-        SortedSet<Double> set = CollectionFactory.newTreeSet();
+        SortedSet<Double> set = CollectionFactory.sortedSet();
         set.addAll(Arrays.asList(values));
         if (ignoreNaN) set.remove(Double.NaN);
         return set.last();
@@ -100,7 +100,7 @@ public class SampleStats {
             return values[0];
         }
         
-        SortedSet<Double> set = CollectionFactory.newTreeSet();
+        SortedSet<Double> set = CollectionFactory.sortedSet();
         set.addAll(Arrays.asList(values));
         if (ignoreNaN) set.remove(Double.NaN);
         return set.first();
@@ -122,7 +122,7 @@ public class SampleStats {
             return Double.NaN;
         }
         
-        List<Double> nonNaNValues = CollectionFactory.newList();
+        List<Double> nonNaNValues = CollectionFactory.list();
         nonNaNValues.addAll(Arrays.asList(values));
         if (ignoreNaN) {
             while (nonNaNValues.remove(Double.NaN)) /* deliberately empty */ ;
@@ -183,7 +183,7 @@ public class SampleStats {
             return Double.NaN;
         }
         
-        List<Double> list = CollectionFactory.newList();
+        List<Double> list = CollectionFactory.list();
         list.addAll(Arrays.asList(values));
         if (ignoreNaN) {
             while (list.remove(Double.NaN)) /* deliberately empty */ ;
@@ -197,8 +197,8 @@ public class SampleStats {
         
         Collections.sort(list);
         
-        List<Double> uniqueValues = CollectionFactory.newList();
-        List<Integer> freq = CollectionFactory.newList();
+        List<Double> uniqueValues = CollectionFactory.list();
+        List<Integer> freq = CollectionFactory.list();
         
         Double curVal = list.get(0);
         int curFreq = 1;
@@ -219,7 +219,7 @@ public class SampleStats {
         freq.add(curFreq);
         if (curFreq > maxFreq) maxFreq = curFreq;
         
-        List<Integer> maxFreqIndices = CollectionFactory.newList();
+        List<Integer> maxFreqIndices = CollectionFactory.list();
         int k = 0;
         for (Integer f : freq) {
             if (f == maxFreq) {
@@ -252,7 +252,7 @@ public class SampleStats {
             return 0d;
         }
         
-        SortedSet<Double> set = CollectionFactory.newTreeSet();
+        SortedSet<Double> set = CollectionFactory.sortedSet();
         set.addAll(Arrays.asList(values));
         if (ignoreNaN) set.remove(Double.NaN);
         return set.last() - set.first();

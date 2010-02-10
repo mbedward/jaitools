@@ -26,8 +26,8 @@ import java.awt.image.RenderedImage;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 import java.util.SortedSet;
-import java.util.TreeMap;
 import javax.media.jai.JAI;
 import javax.media.jai.LookupTableJAI;
 import javax.media.jai.ParameterBlockJAI;
@@ -314,7 +314,7 @@ public class ImageUtils {
         if (minKey < 0 || maxKey > 255) {
             lookupImg = createConstantImage(dataImg.getWidth(), dataImg.getHeight(), Integer.valueOf(0));
 
-            TreeMap<Integer, Integer> keyTable = CollectionFactory.newTreeMap();
+            SortedMap<Integer, Integer> keyTable = CollectionFactory.sortedMap();
             int k = 0;
             for (Integer key : colourTable.keySet()) {
                 keyTable.put(key, k++);
@@ -369,7 +369,7 @@ public class ImageUtils {
      * @return a List of new single-band images
      */
     public static List<RenderedImage> getBandsAsImages(RenderedImage img) {
-        List<RenderedImage> images = CollectionFactory.newList();
+        List<RenderedImage> images = CollectionFactory.list();
 
         if (img != null) {
             int numBands = img.getSampleModel().getNumBands();
@@ -395,11 +395,11 @@ public class ImageUtils {
      * @return a List of new single-band images
      */
     public static List<RenderedImage> getBandsAsImages(RenderedImage img, Collection<Integer> bandIndices) {
-        List<RenderedImage> images = CollectionFactory.newList();
+        List<RenderedImage> images = CollectionFactory.list();
 
         if (img != null) {
             int numBands = img.getSampleModel().getNumBands();
-            SortedSet<Integer> sortedIndices = CollectionFactory.newTreeSet();
+            SortedSet<Integer> sortedIndices = CollectionFactory.sortedSet();
             sortedIndices.addAll(bandIndices);
 
             if (sortedIndices.first() < 0 || sortedIndices.last() >= numBands) {

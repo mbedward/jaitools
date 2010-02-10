@@ -64,7 +64,7 @@ private boolean isDefinedFunction(String funcName, int numArgs) {
 }
 
 /* Table of function name : error code */
-private Map<String, ErrorCode> errorTable = CollectionFactory.newMap();
+private Map<String, ErrorCode> errorTable = CollectionFactory.orderedMap();
 
 public Map<String, ErrorCode> getErrors() {
     return errorTable;

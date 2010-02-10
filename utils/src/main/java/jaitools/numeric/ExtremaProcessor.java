@@ -45,8 +45,8 @@ public class ExtremaProcessor extends AbstractProcessor {
         SUPPORTED.add(Statistic.RANGE);
     };
 
-    private Double min;
-    private Double max;
+    private double min;
+    private double max;
 
     /**
      * {@inheritDoc}
@@ -61,8 +61,9 @@ public class ExtremaProcessor extends AbstractProcessor {
     @Override
     protected boolean update(Double sample) {
         if (!isExcluded(sample)) {
-            if (getNumOffered() == 1) {
+            if (getNumAccepted() == 0) {
                 min = max = sample;
+
             } else {
                 if (sample > max) {
                     max = sample;

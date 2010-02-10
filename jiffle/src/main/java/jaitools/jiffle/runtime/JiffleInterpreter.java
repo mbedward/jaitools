@@ -93,8 +93,8 @@ public class JiffleInterpreter {
      * Constructor
      */
     public JiffleInterpreter() {
-        jobs = CollectionFactory.newMap();
-        listeners = CollectionFactory.newList();
+        jobs = CollectionFactory.orderedMap();
+        listeners = CollectionFactory.list();
     }
 
     /**

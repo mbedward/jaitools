@@ -94,7 +94,7 @@ public class JiffleRunner {
     
     private static Map<String, ImageFnProxy> proxyTable;
     static {
-        proxyTable = CollectionFactory.newMap();
+        proxyTable = CollectionFactory.map();
         proxyTable.put("width", new ImageFnProxy(ImageFnProxy.Type.INFO, "_width"));
         proxyTable.put("height", new ImageFnProxy(ImageFnProxy.Type.INFO, "_height"));
         proxyTable.put("size", new ImageFnProxy(ImageFnProxy.Type.INFO, "_size"));
@@ -218,7 +218,7 @@ public class JiffleRunner {
         numPixelsProcessed = 0;
         propComplete = 0.0f;
         
-        progressListeners = CollectionFactory.newSet();
+        progressListeners = CollectionFactory.set();
     }
     
     /**
@@ -392,7 +392,7 @@ public class JiffleRunner {
      * values
      */
     private void setHandlers() {
-        handlerTable = CollectionFactory.newMap();
+        handlerTable = CollectionFactory.map();
 
         for (Entry<String, RenderedImage> e : metadata.getImageParams().entrySet()) {
             ImageHandler h = new ImageHandler();
@@ -439,7 +439,7 @@ public class JiffleRunner {
         // image var as a reference - change this later when
         // allowing images with different bounds
         
-        List<String> outVars = CollectionFactory.newList();
+        List<String> outVars = CollectionFactory.list();
         outVars.addAll(metadata.getOutputImageVars());
         refImg = metadata.getImageParams().get(outVars.get(0));
         
