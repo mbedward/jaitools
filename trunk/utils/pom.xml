@@ -13,4 +13,12 @@
 
     <description>Support and utility classes used by other JAI-tools components and
       available for general use.</description>
+
+    <build>
+    </build>
+
+    <dependencies>
+    </dependencies>
 </project>
+
+

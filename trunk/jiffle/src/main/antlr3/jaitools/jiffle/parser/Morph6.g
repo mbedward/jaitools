@@ -281,7 +281,7 @@ sub_expr returns [boolean hasValue, Double value]
                 
 expr_list returns [ List<Double> values ]
 @init { 
-    $values = CollectionFactory.newList(); 
+    $values = CollectionFactory.list();
 }
                 : ^(EXPR_LIST ( sub_expr 
                                 {

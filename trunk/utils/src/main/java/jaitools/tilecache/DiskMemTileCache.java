@@ -255,7 +255,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
 
         diagnosticsEnabled = false;
         tiles = new HashMap<Object, DiskCachedTile>();
-        residentTiles = CollectionFactory.newMap();
+        residentTiles = CollectionFactory.map();
         curMemory = 0L;
         memThreshold = DEFAULT_MEMORY_THRESHOLD;
 
@@ -536,7 +536,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * garbage collected) and, if so, remove them from the cache.
      */
     public synchronized void removeNullTiles() {
-        Set<Object> nullTileKeys = CollectionFactory.newSet();
+        Set<Object> nullTileKeys = CollectionFactory.set();
         for (Object key : tiles.keySet()) {
             DiskCachedTile tile = tiles.get(key);
             if (tile.getOwner() == null) {

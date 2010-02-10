@@ -43,7 +43,7 @@ public class FunctionTable {
     
 
     static {
-        lookup = CollectionFactory.newTreeMap();
+        lookup = CollectionFactory.sortedMap();
 
         lookup.put("abs_1",
                 new Op1Arg() {

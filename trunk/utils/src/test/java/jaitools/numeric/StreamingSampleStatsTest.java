@@ -44,7 +44,7 @@ public class StreamingSampleStatsTest {
         stats.setStatistic(Statistic.MEAN);
 
         for (int val = -1000; val <= 1000; val++) {
-            stats.addSample((double)val);
+            stats.offer((double)val);
         }
 
         double result = stats.getStatisticValue(Statistic.MEAN);
@@ -56,7 +56,7 @@ public class StreamingSampleStatsTest {
         System.out.println("   test mean single value");
         StreamingSampleStats stats = new StreamingSampleStats();
         stats.setStatistic(Statistic.MEAN);
-        stats.addSample(singleValue);
+        stats.offer(singleValue);
 
         assertEquals(singleValue, stats.getStatisticValue(Statistic.MEAN));
     }
@@ -68,7 +68,7 @@ public class StreamingSampleStatsTest {
         stats.setStatistic(Statistic.VARIANCE);
 
         for (int val = -1000; val <= 1000; val++) {
-            stats.addSample(42.0d);
+            stats.offer(42.0d);
         }
 
         double result = stats.getStatisticValue(Statistic.VARIANCE);
@@ -82,7 +82,7 @@ public class StreamingSampleStatsTest {
         stats.setStatistic(Statistic.VARIANCE);
 
         for (int val = -1000; val <= 1000; val++) {
-            stats.addSample((double)val);
+            stats.offer((double)val);
         }
 
         double expResult = 333833.5d;  // calculated with R
@@ -95,7 +95,7 @@ public class StreamingSampleStatsTest {
         System.out.println("   test variance single value");
         StreamingSampleStats stats = new StreamingSampleStats();
         stats.setStatistic(Statistic.VARIANCE);
-        stats.addSample(singleValue);
+        stats.offer(singleValue);
 
         assertTrue(Double.isNaN(stats.getStatisticValue(Statistic.VARIANCE)));
     }
@@ -117,7 +117,7 @@ public class StreamingSampleStatsTest {
             double val = limit * (rr.nextDouble() - 2.0d);
             if (val < min) min = val;
             if (val > max) max = val;
-            streamStats.addSample(val);
+            streamStats.offer(val);
         }
 
         double result = streamStats.getStatisticValue(Statistic.MIN);
@@ -138,7 +138,7 @@ public class StreamingSampleStatsTest {
             Statistic.MIN, Statistic.MAX, Statistic.RANGE
         };
         streamStats.setStatistics(stats);
-        streamStats.addSample(singleValue);
+        streamStats.offer(singleValue);
 
         assertEquals(singleValue, streamStats.getStatisticValue(Statistic.MIN));
         assertEquals(singleValue, streamStats.getStatisticValue(Statistic.MAX));
@@ -152,7 +152,7 @@ public class StreamingSampleStatsTest {
         streamStats.setStatistic(Statistic.MEDIAN);
         streamStats.setStatistic(Statistic.APPROX_MEDIAN);
 
-        List<Double> values = CollectionFactory.newList();
+        List<Double> values = CollectionFactory.list();
 
         for (int val = -1000, k = 0; val <= 1000; val++, k++) {
             values.add((double)val);
@@ -160,7 +160,7 @@ public class StreamingSampleStatsTest {
 
         Collections.shuffle(values);
         for (Double val : values) {
-            streamStats.addSample(val);
+            streamStats.offer(val);
         }
 
         double exact = streamStats.getStatisticValue(Statistic.MEDIAN);
@@ -177,7 +177,7 @@ public class StreamingSampleStatsTest {
         stats.setStatistic(Statistic.SUM);
 
         for (int val = -1000; val <= 1000; val++) {
-            stats.addSample((double)val);
+            stats.offer((double)val);
         }
 
         double result = stats.getStatisticValue(Statistic.SUM);
@@ -190,7 +190,7 @@ public class StreamingSampleStatsTest {
         StreamingSampleStats streamStats = new StreamingSampleStats();
         streamStats.setStatistic(Statistic.MEDIAN);
 
-        streamStats.addSample(singleValue);
+        streamStats.offer(singleValue);
         assertEquals(singleValue, streamStats.getStatisticValue(Statistic.MEDIAN));
     }
 
@@ -200,7 +200,7 @@ public class StreamingSampleStatsTest {
         StreamingSampleStats streamStats = new StreamingSampleStats();
         streamStats.setStatistic(Statistic.APPROX_MEDIAN);
 
-        streamStats.addSample(singleValue);
+        streamStats.offer(singleValue);
         assertEquals(singleValue, streamStats.getStatisticValue(Statistic.APPROX_MEDIAN));
     }
 }

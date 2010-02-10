@@ -67,7 +67,7 @@ private boolean isPositionalFunc(String funcName) {
  * Positional variables - those that depend directly or indirectly
  * on image position when the jiffle is being run
  */
-private Set<String> positionalVars = CollectionFactory.newSet();
+private Set<String> positionalVars = CollectionFactory.set();
 
 public Set<String> getPositionalVars() {
     return positionalVars;
@@ -78,8 +78,8 @@ public Set<String> getPositionalVars() {
  * Purely local variables - those that depend only on
  * local numeric values and/or named constants
  */
-private Set<String> localVars = CollectionFactory.newSet();
-private Set<String> nonLocalVars = CollectionFactory.newSet();
+private Set<String> localVars = CollectionFactory.set();
+private Set<String> nonLocalVars = CollectionFactory.set();
 
 public Set<String> getLocalVars() {
     return localVars;
@@ -92,13 +92,13 @@ public Set<String> getLocalVars() {
  * Use of an unsassigned variable is not necessarily an error
  * as it might (should) be an input image variable.
  */
-private Set<String> userVars = CollectionFactory.newSet();
+private Set<String> userVars = CollectionFactory.set();
 
 public Set<String> getUserVars() {
     return userVars;
 }
 
-private Set<String> unassignedVars = CollectionFactory.newSet();
+private Set<String> unassignedVars = CollectionFactory.set();
 
 public Set<String> getUnassignedVars() {
     return unassignedVars;
@@ -115,22 +115,22 @@ public boolean hasUnassignedVar() {
 private Set<String> imageVars;
 
 public void setImageVars(Collection<String> varNames) {
-    imageVars = CollectionFactory.newSet();
+    imageVars = CollectionFactory.set();
     imageVars.addAll(varNames);
 }
 
-private Set<String> inImageVars = CollectionFactory.newSet();
-private Set<String> outImageVars = CollectionFactory.newSet();
+private Set<String> inImageVars = CollectionFactory.set();
+private Set<String> outImageVars = CollectionFactory.set();
 
 public Set<String> getOutputImageVars() {
     return outImageVars;
 }
 
-private Set<String> nbrRefVars = CollectionFactory.newSet();
+private Set<String> nbrRefVars = CollectionFactory.set();
 
 
 /* Table of var name : error code */
-private Map<String, ErrorCode> errorTable = CollectionFactory.newMap();
+private Map<String, ErrorCode> errorTable = CollectionFactory.orderedMap();
 
 public Map<String, ErrorCode> getErrors() {
     return errorTable;

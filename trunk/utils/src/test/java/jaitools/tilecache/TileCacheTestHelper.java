@@ -36,8 +36,8 @@ class TileCacheTestHelper implements Observer {
      * Constructor
      */
     TileCacheTestHelper() {
-        tiles = CollectionFactory.newList();
-        residentTiles = CollectionFactory.newList();
+        tiles = CollectionFactory.list();
+        residentTiles = CollectionFactory.list();
 
         ImageLayout layout = new ImageLayout();
         layout.setTileWidth(TILE_WIDTH);

@@ -150,7 +150,7 @@ expr returns [double value]
                 
                 
 expr_list returns [ List<Double> values ] :
-                 { $values = CollectionFactory.newList(); }
+                 { $values = CollectionFactory.list(); }
                   ^(EXPR_LIST ( e=expr {$values.add($e.value);} )*)
                 ;                
                 

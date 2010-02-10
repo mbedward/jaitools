@@ -213,7 +213,7 @@ public class Jiffle {
     private void init(String script, Map<String, RenderedImage> params)
             throws JiffleCompilationException {
 
-        this.imageParams = CollectionFactory.newMap();
+        this.imageParams = CollectionFactory.map();
         this.imageParams.putAll(params);
 
         // add extra new line just in case last statement hits EOF
@@ -248,7 +248,7 @@ public class Jiffle {
      * @param params variable names and their corresponding images
      */
     public void setImageParams(Map<String, RenderedImage> params) {
-        imageParams = CollectionFactory.newMap();
+        imageParams = CollectionFactory.map();
         imageParams.putAll(params);
     }
 

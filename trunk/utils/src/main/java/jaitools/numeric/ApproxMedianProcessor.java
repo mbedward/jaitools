@@ -97,7 +97,7 @@ public class ApproxMedianProcessor extends AbstractProcessor {
      * Default constructor.
      */
     public ApproxMedianProcessor() {
-        buffers = CollectionFactory.newList();
+        buffers = CollectionFactory.list();
         buf0 = new Buffer();
         buffers.add(buf0);
     }
@@ -142,7 +142,7 @@ public class ApproxMedianProcessor extends AbstractProcessor {
                  * Calculate the remedian as the weighted median of the buffer values
                  * where the weight for each value in buffer i is BASE^i, i = 0..numBuffers-1
                  */
-                List<WeightedSample> samples = CollectionFactory.newList();
+                List<WeightedSample> samples = CollectionFactory.list();
                 long weight = 1;
                 for (Buffer buf : buffers) {
                     for (int i = 0; i < buf.pos; i++) {

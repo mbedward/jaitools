@@ -54,9 +54,9 @@ public class MeanVarianceProcessor extends AbstractProcessor {
     };
 
 
-    private Double mOld;
-    private Double mNew;
-    private Double s;
+    private double mOld;
+    private double mNew;
+    private double s;
 
     /**
      * {@inheritDoc}

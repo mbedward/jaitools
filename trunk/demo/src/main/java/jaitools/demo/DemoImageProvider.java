@@ -66,7 +66,7 @@ public class DemoImageProvider {
         ProgressMeter progMeter = new ProgressMeter();
     }
 
-    private Map<Integer, Job> jobs = CollectionFactory.newMap();
+    private Map<Integer, Job> jobs = CollectionFactory.orderedMap();
 
     /**
      * Private constructor
@@ -118,7 +118,7 @@ public class DemoImageProvider {
 
         image = ImageUtils.createConstantImage(width, height, Double.valueOf(0d));
 
-        Map<String, RenderedImage> imgParams = CollectionFactory.newMap();
+        Map<String, RenderedImage> imgParams = CollectionFactory.map();
         imgParams.put("result", image);
 
         try {

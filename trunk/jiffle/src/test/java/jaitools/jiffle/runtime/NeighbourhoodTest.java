@@ -43,7 +43,7 @@ public class NeighbourhoodTest {
         TiledImage testImg = createTestImage(width, height);
         
         TiledImage tImg = ImageUtils.createDoubleImage(width, height);
-        Map<String, RenderedImage> imgParams = CollectionFactory.newMap();
+        Map<String, RenderedImage> imgParams = CollectionFactory.map();
         imgParams.put("testImg", testImg);
         imgParams.put("result", tImg);
         
@@ -79,7 +79,7 @@ public class NeighbourhoodTest {
      */
     private TiledImage createTestImage(int width, int height) throws Exception {
         TiledImage tImg = ImageUtils.createDoubleImage(width, height);
-        Map<String, RenderedImage> imgParams = CollectionFactory.newMap();
+        Map<String, RenderedImage> imgParams = CollectionFactory.map();
         imgParams.put("result", tImg);
         
         Jiffle jiffle = new Jiffle("result = y()", imgParams);

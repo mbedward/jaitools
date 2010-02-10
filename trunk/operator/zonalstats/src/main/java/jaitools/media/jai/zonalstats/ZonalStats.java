@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2010 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -23,15 +23,56 @@ package jaitools.media.jai.zonalstats;
 import jaitools.CollectionFactory;
 import jaitools.numeric.StreamingSampleStats;
 import jaitools.numeric.Statistic;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.SortedSet;
 
 /**
- * A data class used to hold the results of the ZonalStats operator.
+ * Holds the results of the ZonalStats operator.
  * An instance of this class is stored as a property of the destination
- * image. See {@linkplain ZonalStatsDescriptor} for an example code
- * snippet.
+ * image.
+ * <p>
+ * Chaining methods are provided to select a subset of the results...
+ * <pre><code>
+ * ZonalStats allStats = ...
+ *
+ * // Get results for a given band
+ * int bandIndex = ...
+ * List<Result> bandResults = allStats.band(bandIndex).results();
+ *
+ *
+ * // Get Statistic.MEAN values for the specified band and zone
+ * List<Result> subsetResults = allStats.band(b).zone(z).statistic(Statistic.MEAN).results();
+ *
+ *
+ * // Impress your friends with pretty printing !
+ * Statistic[] statistics = {
+ *           Statistic.MIN,
+ *           Statistic.MAX,
+ *           Statistic.MEDIAN,
+ *           Statistic.APPROX_MEDIAN,
+ *           Statistic.SDEV
+ *       };
+ *
+ * System.out.println("                               exact    approx");
+ * System.out.println(" band zone      min      max   median   median     sdev");
+ * System.out.println("-----------------------------------------------------------");
+ *
+ * for (int b : allStats.getImageBands()) {
+ *     for (int z : zs.getZones()) {
+ *         System.out.printf(" %4d %4d", b, z);
+ *         ZonalStats subset = zs.band(b).zone(z);
+ *         for (Statistic s : statistics) {
+ *             System.out.printf(" %8.4f", zoneSubset.statistic(s).results().get(0).getValue());
+ *         }
+ *         System.out.println();
+ *     }
+ * }
+ *
+ * </code></pre>
+ * 
+ * @see Result
+ * @see ZonalStatsDescriptor
  *
  * @author Michael Bedward
  * @since 1.0
@@ -40,61 +81,117 @@ import java.util.SortedSet;
  */
 public class ZonalStats {
 
-    Map<Integer, Map<Statistic, Double>> data;
+    private List<Result> results;
 
     /**
      * Constructor. Package-private; called by ZonalStatsOpImage.
-     * @param stats the array of data
-     * @param zones a SortedSet of integer zone IDs
      */
-    ZonalStats(Statistic[] stats, SortedSet<Integer> zones) {
-        data = CollectionFactory.newTreeMap();
+    ZonalStats() {
+        results = CollectionFactory.list();
+    }
 
-        for (Integer zone : zones) {
-            for( int i = 0; i < stats.length; i++ ) {
-                Map<Statistic, Double> zoneStats = CollectionFactory.newTreeMap();
-                data.put(zone, zoneStats);
+    /**
+     * Copy constructor. Used by the chaining methods such as {@linkplain #band(int)}.
+     *
+     * @param src source object
+     * @param band selected image band or {@code null} for all bands
+     * @param zone selected zone or {@code null} for all zones
+     * @param stat selected statistic or {@code null} for all statistics
+     */
+    private ZonalStats(ZonalStats src, Integer band, Integer zone, Statistic stat) {
+        results = CollectionFactory.list();
+        for (Result r : src.results) {
+            if ((band == null || r.getImageBand() == band) &&
+                (zone == null || r.getZone() == zone) &&
+                (stat == null || r.getStatistic() == stat)) {
+                results.add(r);
             }
         }
     }
 
     /**
-     * Store the results for the given zone. Package-private method.
+     * Store the results for the given zone. Package-private method used by
+     * {@code ZonalStatsOpImage}.
      */
-    void setZoneResults(int zone, StreamingSampleStats streamStats) {
-        Map<Statistic, Double> zoneStats = data.get(zone);
-        for (Statistic stat : streamStats.getStatistics()) {
-            zoneStats.put(stat, streamStats.getStatisticValue(stat));
+    void setResults(int band, int zone, StreamingSampleStats stats) {
+        for (Statistic s : stats.getStatistics()) {
+            Result r = new Result(band, zone, s,
+                    stats.getStatisticValue(s),
+                    stats.getNumOffered(s),
+                    stats.getNumAccepted(s));
+
+            results.add(r);
         }
     }
 
     /**
-     * Get a List of the integer zone IDs that were read from the
-     * zone image
-     * @return a new List<Integer> containing the IDs
+     * Get the integer IDs read from the zone image. If a zone image
+     * was not used all results are treated as being in zone 0.
+     * <p>
+     * Note that statistics will not necessarily have been calculated for
+     * all zones.
+     *
+     * @return the sorted zone IDs
      */
-    public List<Integer> getZones() {
-        List<Integer> ids = CollectionFactory.newList();
-        ids.addAll(data.keySet());
+    public SortedSet<Integer> getZones() {
+        SortedSet<Integer> ids = CollectionFactory.sortedSet();
+
+        for (Result r : results) {
+            ids.add(r.getZone());
+        }
+        
         return ids;
     }
 
     /**
-     * Get the statistics calculated for the specified zone
-     * @param zone the integer ID of the zone. If zone does not
-     * match any of the IDs stored, this method will return null.
+     * Get the subset of results for the given band.
      *
-     * @return a Map<Statistic, Double> of Statistics and their values,
-     * or null if no results are held for the zone
+     * See the example of chaining this method in the class docs.
+     *
+     * @param b band index
+     *
+     * @return a new {@code ZonalStats} object containing results for the band
+     *         (data are shared with the source object rather than copied)
      */
-    public Map<Statistic, Double> getZoneStats(int zone) {
-        Map<Statistic, Double> zoneStats = data.get(zone);
-        if (zoneStats == null) {
-            return null;
-        }
+    public ZonalStats band(int b) {
+        return new ZonalStats(this, b, null, null);
+    }
 
-        Map<Statistic, Double> copy = CollectionFactory.newTreeMap();
-        copy.putAll(data.get(zone));
-        return copy;
+    /**
+     * Get the subset of results for the given zone.
+     *
+     * See the example of chaining this method in the class docs.
+     *
+     * @param z zone ID
+     *
+     * @return a new {@code ZonalStats} object containing results for the zone
+     *         (data are shared with the source object rather than copied)
+     */
+    public ZonalStats zone(int z) {
+        return new ZonalStats(this, null, z, null);
+    }
+
+    /**
+     * Get the subset of results for the given {@code Statistic}.
+     *
+     * See the example of chaining this method in the class docs.
+     *
+     * @param s the statistic
+     *
+     * @return a new {@code ZonalStats} object containing results for the statistic
+     *         (data are shared with the source object rather than copied)
+     */
+    public ZonalStats statistic(Statistic s) {
+        return new ZonalStats(this, null, null, s);
+    }
+
+    /**
+     * Returns the list of {@code Result} objects.
+     *
+     * @return the results
+     * @see Result
+     */
+    public List<Result> results() {
+        return Collections.unmodifiableList(results);
     }
 }

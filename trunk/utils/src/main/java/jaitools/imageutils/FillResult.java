@@ -58,7 +58,7 @@ public class FillResult {
         this.id = id;
         this.value = value;
         this.segments = segments;
-        this.index = CollectionFactory.newMap();
+        this.index = CollectionFactory.map();
 
         if (segments.isEmpty()) {
             numPixels = 0;
@@ -172,7 +172,7 @@ public class FillResult {
     private void addToIndex(FloodFiller.ScanSegment segment, int segmentListPos) {
         List<Integer> indices = index.get(segment.y);
         if (indices == null) {
-            indices = CollectionFactory.newList();
+            indices = CollectionFactory.list();
             index.put(segment.y, indices);
         }
         indices.add(segmentListPos);
