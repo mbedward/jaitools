@@ -6,6 +6,7 @@
 package jaitools.jiffle.runtime;
 
 import jaitools.CollectionFactory;
+import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
 import jaitools.tiledimage.DiskMemImage;
 import java.awt.Rectangle;
@@ -15,6 +16,7 @@ import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
 import java.util.Map;
+import javax.media.jai.TiledImage;
 import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -22,13 +24,23 @@ import static org.junit.Assert.*;
 /**
  * @author Michael Bedward
  */
-@Ignore
 public class RefactoringTest {
 
     private static final int OUT_WIDTH = 1000;
     private static final int OUT_HEIGHT = 500;
     private static final int TILE_WIDTH = 128;
 
+    @Test
+    public void spikeTest() throws Exception {
+        Map<String, RenderedImage> params = CollectionFactory.newMap();
+        RenderedImage img = ImageUtils.createConstantImage(10, 10, new Double[]{0d});
+        params.put("out", img);
+        
+        String script = "x = 42; out = x;" ;
+        Jiffle jiffle = new Jiffle(script, params);
+    }
+
+    @Ignore
     @Test
     public void newRunnerDesign() throws Exception {
         Map<String, RenderedImage> params = CollectionFactory.newMap();

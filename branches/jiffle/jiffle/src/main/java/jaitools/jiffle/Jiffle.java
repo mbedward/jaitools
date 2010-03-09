@@ -20,11 +20,11 @@
 package jaitools.jiffle;
 
 import jaitools.CollectionFactory;
+import jaitools.jiffle.parser.Compile_CategorizeVars;
 import jaitools.jiffle.parser.FunctionValidator;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
 import jaitools.jiffle.parser.MakeRuntime;
-import jaitools.jiffle.parser.Morph1;
 import jaitools.jiffle.parser.Morph4;
 import jaitools.jiffle.parser.Morph5;
 import jaitools.jiffle.parser.Morph6;
@@ -300,7 +300,7 @@ public class Jiffle {
             if (!classifyVars()) {
                 throw new JiffleCompilationException(getErrorString());
             }
-            
+
             runtimeAST = optimizeTree();
         }
     }
@@ -404,6 +404,7 @@ public class Jiffle {
         return true;
     }
 
+
     /**
      * Attempt to optimize the AST by identifying variables and expressions
      * that depend only on in-built and user-defined constants and
@@ -417,12 +418,18 @@ public class Jiffle {
         try {
             CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
             nodes.setTokenStream(tokens);
-            
+
+            /*
             Morph1 m1 = new Morph1(nodes);
             m1.setMetadata(metadata);
             Morph1.start_return m1Ret = m1.start();
             tree = (CommonTree) m1Ret.getTree();
-
+            */
+        Compile_CategorizeVars foo = new Compile_CategorizeVars(nodes);
+        foo.setMetadata(metadata);
+        tree = (CommonTree) foo.downup(primaryAST, true);
+        System.out.println(tree.toStringTree());
+            
             nodes = new CommonTreeNodeStream(tree);
             Morph4 m4 = new Morph4(nodes);
             Morph4.start_return m4Ret = m4.start();
