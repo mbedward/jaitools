@@ -4,7 +4,7 @@
 
     <groupId>com.googlecode.jaitools</groupId>
     <artifactId>jaitools</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.0-SNAPSHOT</version>
 
     <packaging>pom</packaging>
     <name>JAI-tools</name>
@@ -30,8 +30,8 @@
     </mailingLists>
 
     <scm>
-        <connection>scm:svn:http://jai-tools.googlecode.com/svn/</connection>
-        <developerConnection>scm:svn:https://jai-tools.googlecode.com/svn/</developerConnection>
+        <connection>scm:svn:http://jai-tools.googlecode.com/svn/trunk/</connection>
+        <developerConnection>scm:svn:https://jai-tools.googlecode.com/svn/trunk/</developerConnection>
         <url>http://code.google.com/p/jai-tools/source/browse/</url>
     </scm>
 
@@ -144,7 +144,7 @@
             <dependency>
                 <groupId>com.vividsolutions</groupId>
                 <artifactId>jts</artifactId>
-                <version>1.10</version>
+                <version>1.11</version>
             </dependency>
             <dependency>
                 <groupId>junit</groupId>
