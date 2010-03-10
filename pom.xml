@@ -30,8 +30,8 @@
     </mailingLists>
 
     <scm>
-        <connection>scm:svn:http://jai-tools.googlecode.com/svn/trunk/</connection>
-        <developerConnection>scm:svn:https://jai-tools.googlecode.com/svn/trunk/</developerConnection>
+        <connection>scm:svn:http://jai-tools.googlecode.com/svn/</connection>
+        <developerConnection>scm:svn:https://jai-tools.googlecode.com/svn/</developerConnection>
         <url>http://code.google.com/p/jai-tools/source/browse/</url>
     </scm>
 
