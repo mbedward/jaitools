@@ -17,39 +17,6 @@
     <description>Image perators for the Java Advanced Imaging library
     </description>
 
-    <build>
-        <resources>
-            <resource>
-                <targetPath>META-INF</targetPath>
-                <directory>src/main/java/META-INF</directory>
-                <includes>
-                    <include>*</include>
-                </includes>
-            </resource>
-            <resource>
-                <targetPath>META-INF/services</targetPath>
-                <directory>src/main/java/META-INF/services</directory>
-                <includes>
-                    <include>*</include>
-                </includes>
-            </resource>
-            <resource>
-                <targetPath>images</targetPath>
-                <directory>src/main/resources/images</directory>
-                <includes>
-                    <include>*</include>
-                </includes>
-            </resource>
-            <resource>
-                <targetPath>scripts</targetPath>
-                <directory>src/main/resources/scripts</directory>
-                <includes>
-                    <include>**/*.jfl</include>
-                </includes>
-            </resource>
-        </resources>
-    </build>
-	
     <modules>
         <module>kernelstats</module>
         <module>maskedconvolve</module>
