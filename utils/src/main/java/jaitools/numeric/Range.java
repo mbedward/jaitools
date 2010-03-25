@@ -532,6 +532,48 @@ public class Range<T extends Number & Comparable> {
     }
 
     /**
+     * Test for equality.
+     *
+     * @param obj the other {@code Range} object
+     *
+     * @return true if this instance has the same end point values and type
+     *         (included / excluded) as the other instance
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Range<T> other = (Range<T>) obj;
+        if (this.minValue != other.minValue && (this.minValue == null || !this.minValue.equals(other.minValue))) {
+            return false;
+        }
+        if (this.minIncluded != other.minIncluded) {
+            return false;
+        }
+        if (this.maxValue != other.maxValue && (this.maxValue == null || !this.maxValue.equals(other.maxValue))) {
+            return false;
+        }
+        if (this.maxIncluded != other.maxIncluded) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 11 * hash + (this.minValue != null ? this.minValue.hashCode() : 0);
+        hash = 11 * hash + (this.minIncluded ? 1 : 0);
+        hash = 11 * hash + (this.maxValue != null ? this.maxValue.hashCode() : 0);
+        hash = 11 * hash + (this.maxIncluded ? 1 : 0);
+        return hash;
+    }
+
+    /**
      * Returns a string representation of this {@code Range}.
      * <p>
      * Examples of output:
