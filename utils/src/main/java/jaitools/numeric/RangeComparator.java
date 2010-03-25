@@ -190,8 +190,8 @@ public class RangeComparator<T extends Number & Comparable> {
          * worded so that it makes grammatical sense when placed between two
          * Range object names. For example...
          * <pre><code>
-         * Range<Integer> r1 = ...
-         * Range<Integer> r2 = ...
+         * Range&lt;Integer> r1 = ...
+         * Range&lt;Integer> r2 = ...
          * RangeComparator.Result comp = r1.compareTo(r2);
          * System.out.println(String.format("Range r1 %s Range r2", comp.getDesc()));
          * </code></pre>
@@ -221,7 +221,7 @@ public class RangeComparator<T extends Number & Comparable> {
          * <pre><code>
          * // first call uses two-arg method to select from all Types that have
          * // the given flag at pos 0 (Types with names L***)
-         * List<Result> types = match(RangeComparator.LT, 0);
+         * List&lt;Result> types = match(RangeComparator.LT, 0);
          *
          * // now winnow down to those Types that match LL*G
          * types = match(RangeComparator.LT, 1, types);
