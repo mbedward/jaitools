@@ -90,12 +90,12 @@ public class Range<T extends Number & Comparable> {
      * of this...
      * <pre><code>
      *
-     *    Range<Integer> r = new Range<Integer>(10, false, 20, true);
+     *    Range&lt;Integer> r = new Range&lt;Integer>(10, false, 20, true);
      * </code></pre>
      * you can do this...
      * <pre><code>
      *
-     *    Range<Integer> r = Range.create(10, false, 20, true);
+     *    Range&lt;Integer> r = Range.create(10, false, 20, true);
      * </code></pre>
      * which is infinitesimally better.
      *
@@ -281,11 +281,11 @@ public class Range<T extends Number & Comparable> {
      * point range at infinity can be created as in this example...
      * <pre><code>
      *
-     *    Range<Integer> rInf = new Range<Integer>(null, Range.INF);
-     *    Range<Integer> rNegInf = new Range<Integer>(null, Range.NEG_INF);
+     *    Range&lt;Integer> rInf = new Range&lt;Integer>(null, Range.INF);
+     *    Range&lt;Integer> rNegInf = new Range&lt;Integer>(null, Range.NEG_INF);
      *
      *    // or with the static create method...
-     *    Range<Integer> rInf2 = Range.create(null, Range.INF);
+     *    Range&lt;Integer> rInf2 = Range.create(null, Range.INF);
      * </code></pre>
      * <p>
      * For a point interval at positive or negative infinity the following apply:
@@ -531,6 +531,17 @@ public class Range<T extends Number & Comparable> {
         return RangeComparator.isIntersection(comp);
     }
 
+    /**
+     * Returns a string representation of this {@code Range}.
+     * <p>
+     * Examples of output:
+     * <blockquote>
+     * Range[10, 20] <br>
+     * Range[-Inf, 42)
+     * </blockquote>
+     *
+     * @return this range as a String
+     */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("Range");
