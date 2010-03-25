@@ -190,8 +190,8 @@ public class RangeComparator<T extends Number & Comparable> {
          * worded so that it makes grammatical sense when placed between two
          * Range object names. For example...
          * <pre><code>
-         * Range<Integer> r1 = ...
-         * Range<Integer> r2 = ...
+         * Range&lt;Integer> r1 = ...
+         * Range&lt;Integer> r2 = ...
          * RangeComparator.Result comp = r1.compareTo(r2);
          * System.out.println(String.format("Range r1 %s Range r2", comp.getDesc()));
          * </code></pre>
@@ -221,7 +221,7 @@ public class RangeComparator<T extends Number & Comparable> {
          * <pre><code>
          * // first call uses two-arg method to select from all Types that have
          * // the given flag at pos 0 (Types with names L***)
-         * List<Result> types = match(RangeComparator.LT, 0);
+         * List&lt;Result> types = match(RangeComparator.LT, 0);
          *
          * // now winnow down to those Types that match LL*G
          * types = match(RangeComparator.LT, 1, types);
@@ -270,7 +270,7 @@ public class RangeComparator<T extends Number & Comparable> {
          * The result of each comparison is expressed from the point of view of
          * range 1. This produces the four comparisons that equate to the
          * nomenclature presented in Hayes (2003).
-         * 
+         *
          * @return the Result that matches the given array of comparison flags or
          * null if there is no match
          */
@@ -316,7 +316,7 @@ public class RangeComparator<T extends Number & Comparable> {
      *
      * @param r1 the first Range
      * @param r2 the second Range
-     * 
+     *
      * @return a {@linkplain RangeComparator.Result} constant
      */
     public Result compare(Range<T> r1, Range<T> r2) {
@@ -332,7 +332,7 @@ public class RangeComparator<T extends Number & Comparable> {
 
         int[] compFlags = new int[4];
 
-        /* 
+        /*
          * Comparison 1: r1 min compared to r2 max
          */
         compFlags[0] = UNDEFINED;
@@ -534,7 +534,7 @@ public class RangeComparator<T extends Number & Comparable> {
                         compFlags[0] = compFlags[2] = flag;
                     }
                 }
-                
+
                 if (r2.isMinNegInf()) {
                     compFlags[1] = compFlags[3] = GT;
                 } else {
