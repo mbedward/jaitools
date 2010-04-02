@@ -130,10 +130,10 @@ public class ApproxMedianProcessor extends AbstractProcessor {
      */
     public Double get(Statistic stat) {
         if (SUPPORTED.contains(stat)) {
-            if (getNumOffered() == 0) {
+            if (getNumAccepted() == 0) {
                 return Double.NaN;
             }
-            if (getNumOffered() == 1) {
+            if (getNumAccepted() == 1) {
                 return buf0.data[0];
             }
 

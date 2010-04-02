@@ -71,11 +71,11 @@ public class MeanVarianceProcessor extends AbstractProcessor {
     @Override
     protected boolean update(Double sample) {
         if (!isExcluded(sample)) {
-            if (getNumOffered() == 1) {
+            if (getNumAccepted() == 1) {
                 mOld = mNew = sample;
                 s = 0.0;
             } else {
-                mNew = mOld + (sample - mOld) / getNumOffered();
+                mNew = mOld + (sample - mOld) / getNumAccepted();
                 s = s + (sample - mOld) * (sample - mNew);
                 mOld = mNew;
             }
