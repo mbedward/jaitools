@@ -154,7 +154,7 @@ public class ApproxMedianProcessor extends AbstractProcessor {
                     weight = weight * BASE;
                 }
                 Collections.sort(samples);
-                long nHalf = getNumOffered() / 2;
+                long nHalf = getNumAccepted() / 2;
                 long n = 0;
                 Iterator<WeightedSample> iter = samples.iterator();
                 WeightedSample datum = null;
