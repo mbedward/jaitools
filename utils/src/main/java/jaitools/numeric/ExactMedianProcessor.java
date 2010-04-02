@@ -107,9 +107,8 @@ public class ExactMedianProcessor extends AbstractProcessor {
 
             if (calculationRequired) {
                 Collections.sort(values);
-
-                int n0 = (int) getNumOffered() / 2;
-                if (getNumOffered() % 2 == 1) {
+                int n0 = (int) getNumAccepted() / 2;
+                if (getNumAccepted() % 2 == 1) {
                     median = values.get(n0);
                 } else {
                     median = (values.get(n0) + values.get(n0 - 1)) / 2;
