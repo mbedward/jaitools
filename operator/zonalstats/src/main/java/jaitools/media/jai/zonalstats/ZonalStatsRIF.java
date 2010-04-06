@@ -45,6 +45,7 @@ import com.sun.media.jai.util.ImageUtil;
  *
  * @author Michael Bedward
  * @author Andrea Antonello
+ * @author Daniele Romagnoli, GeoSolutions S.A.S.
  * @since 1.0
  * @source $URL$
  * @version $Id$
@@ -59,7 +60,8 @@ public class ZonalStatsRIF implements RenderedImageFactory {
      * Create a new instance of ZonalStatsOpImage in the rendered layer.
      *
      * @param paramBlock specifies the source image, the optional zone image,
-     * and the following parameters: "stats", "band", "roi", "zoneTransform"
+     * and the following parameters: "stats", "band", "roi", "zoneTransform", "ranges", 
+     * "rangesType", "rangeLocalStats"
      *
      * @param renderHints optional RenderingHints object
      */

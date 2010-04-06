@@ -53,6 +53,7 @@ import javax.media.jai.iterator.RectIterFactory;
  *
  * @author Michael Bedward
  * @author Andrea Antonello
+ * @author Daniele Romagnoli, GeoSolutions S.A.S.
  * @since 1.0
  * @source $URL$
  * @version $Id$
@@ -69,8 +70,15 @@ public class ZonalStatsOpImage extends NullOpImage {
     private final Rectangle dataImageBounds;
     private final RenderedImage zoneImage;
     private final AffineTransform zoneTransform;
+    
+    /** Optional ranges to exclude/include values from/in statistics computations */
     private final List<Range<Double>> ranges;
+    
+    /** Compute separated statistics on ranges if true */
     private final boolean rangeLocalStats;
+    
+    /** Define whether provided ranges of values need to be included or excluded 
+     * from statistics computations */
     private Range.Type rangesType;
 
     private SortedSet<Integer> zones;
@@ -96,7 +104,7 @@ public class ZonalStatsOpImage extends NullOpImage {
      *
      * @param zoneTransform
      * 
-     * @param ranges a {@link List} of {@link Range}s, that will be filtered out
+     * @param excludedRanges a {@link List} of {@link Range}s, that will be filtered out
      *        of the process. This means that values inside the supplied ranges 
      *        will not be considered as valid and discarded.
      * 
@@ -110,8 +118,8 @@ public class ZonalStatsOpImage extends NullOpImage {
             Integer[] bands,
             ROI roi,
             AffineTransform zoneTransform,
-            List<Range<Double>> ranges) {
-    	this (dataImage, zoneImage, config, layout, stats, bands, roi, zoneTransform, ranges, Range.Type.EXCLUDE, false);
+            List<Range<Double>> excludedRanges) {
+    	this (dataImage, zoneImage, config, layout, stats, bands, roi, zoneTransform, excludedRanges, Range.Type.EXCLUDE, false);
     }
     
     /**
@@ -136,7 +144,14 @@ public class ZonalStatsOpImage extends NullOpImage {
      * 
      * @param ranges a {@link List} of {@link Range}s, that will be filtered out/in
      *        of the process. This means that values inside the supplied ranges 
-     *        will not/will be considered as valid and discarded.
+     *        will be considered as invalid/valid and discarded/accepted.
+     *        
+     * @param rangesType specify if the provided ranges argument should be considered 
+     * 		  as Included or Excluded. See {@link Range.Type}.
+     * 
+     * @param rangeLocalStats if {@code true}, the statistics should be computed for ranges, 
+     * 		  separately. 
+     *        
      * 
      * @see ZonalStatsDescriptor
      * @see Statistic
@@ -343,7 +358,7 @@ public class ZonalStatsOpImage extends NullOpImage {
             dataIter.startPixels();
             y++;
 
-        } while( !dataIter.nextLineDone() );
+        } while (!dataIter.nextLineDone() );
 
         // get the results
         final ZonalStats zs = new ZonalStats();
@@ -369,14 +384,14 @@ public class ZonalStatsOpImage extends NullOpImage {
     }
     
     /**
-     * Used to calculate statistics when no zone image was provided.
+     * Used to calculate statistics when range local statistics are required.
      *
      * @return the results as a {@code ZonalStats} instance
      */
     private ZonalStats compileRangeStatistics() {
         buildZoneList();
-        Integer zoneID = zones.first();
-        ZonalStats zs = new ZonalStats();
+        final Integer zoneID = zones.first();
+        final ZonalStats zs = new ZonalStats();
         List<Range> localRanges = null;
         switch (rangesType){
         	case EXCLUDE:

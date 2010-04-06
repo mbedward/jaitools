@@ -77,6 +77,7 @@ import java.util.SortedSet;
  * @see ZonalStatsDescriptor
  *
  * @author Michael Bedward
+ * @author Daniele Romagnoli, GeoSolutions S.A.S.
  * @since 1.0
  * @source $URL$
  * @version $Id$
@@ -212,9 +213,7 @@ public class ZonalStats {
     /**
      * Get the subset of results for the given {@code Ranges}.
      *
-     * See the example of chaining this method in the class docs.
-     *
-     * @param ranges the Ranges
+     * @param ranges the Ranges 
      *
      * @return a new {@code ZonalStats} object containing results for the ranges
      *         (data are shared with the source object rather than copied)

@@ -231,6 +231,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  *
  * @author Michael Bedward
  * @author Andrea Antonello
+ * @author Daniele Romagnoli, GeoSolutions S.A.S.
  * @since 1.0
  * @source $URL$
  * @version $Id$
