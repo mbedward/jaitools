@@ -35,6 +35,7 @@ import static org.junit.Assert.*;
  */
 public class StreamingSampleStatsTest {
 
+    private static final double TOL = 1.0E-6;
     private final Double singleValue = 42.0;
 
     @Test
@@ -48,7 +49,22 @@ public class StreamingSampleStatsTest {
         }
 
         double result = stats.getStatisticValue(Statistic.MEAN);
-        assertTrue(DoubleComparison.dzero(result));
+        assertEquals(0.0, result, TOL);
+    }
+
+    @Test
+    public void testMeanWithExcludedRange() {
+        System.out.println("   test mean with excluded range");
+        StreamingSampleStats stats = new StreamingSampleStats();
+        stats.setStatistic(Statistic.MEAN);
+        stats.addExcludedRange(Range.create(null, true, 0.0, false));
+
+        for (int val = -1000; val <= 1000; val++) {
+            stats.offer((double)val);
+        }
+
+        double result = stats.getStatisticValue(Statistic.MEAN);
+        assertEquals(500.0, result, TOL);
     }
 
     @Test
@@ -72,7 +88,7 @@ public class StreamingSampleStatsTest {
         }
 
         double result = stats.getStatisticValue(Statistic.VARIANCE);
-        assertTrue(DoubleComparison.dzero(result));
+        assertEquals(0.0, result, TOL);
     }
 
     @Test
@@ -87,7 +103,7 @@ public class StreamingSampleStatsTest {
 
         double expResult = 333833.5d;  // calculated with R
         double result = stats.getStatisticValue(Statistic.VARIANCE);
-        assertTrue(DoubleComparison.dcomp(result, expResult) == 0);
+        assertEquals(expResult, result, TOL);
     }
 
     @Test
@@ -121,13 +137,13 @@ public class StreamingSampleStatsTest {
         }
 
         double result = streamStats.getStatisticValue(Statistic.MIN);
-        assertTrue(DoubleComparison.dcomp(result, min) == 0);
+        assertEquals(min, result, TOL);
 
         result = streamStats.getStatisticValue(Statistic.MAX);
-        assertTrue(DoubleComparison.dcomp(result, max) == 0);
+        assertEquals(max, result, TOL);
 
         result = streamStats.getStatisticValue(Statistic.RANGE);
-        assertTrue(DoubleComparison.dcomp(result, max - min) == 0);
+        assertEquals(max - min, result, TOL);
     }
 
     @Test
@@ -164,10 +180,37 @@ public class StreamingSampleStatsTest {
         }
 
         double exact = streamStats.getStatisticValue(Statistic.MEDIAN);
-        assertTrue(DoubleComparison.dzero(exact));
+        assertEquals(0.0, exact, TOL);
 
         double error = Math.abs(exact - streamStats.getStatisticValue(Statistic.APPROX_MEDIAN));
         assertTrue(error / values.size() <= 0.05);
+    }
+
+    @Test
+    public void testMedianWithRange() {
+        System.out.println("   test medians with excluded range");
+        StreamingSampleStats streamStats = new StreamingSampleStats();
+        streamStats.setStatistic(Statistic.MEDIAN);
+        streamStats.setStatistic(Statistic.APPROX_MEDIAN);
+        streamStats.addExcludedRange(Range.create(null, true, 0.0, false));
+
+        List<Double> values = CollectionFactory.list();
+
+        for (int val = -1000, k = 0; val <= 1000; val++, k++) {
+            values.add((double)val);
+        }
+
+        Collections.shuffle(values);
+        for (Double val : values) {
+            streamStats.offer(val);
+        }
+
+        double exact = streamStats.getStatisticValue(Statistic.MEDIAN);
+        System.out.println("exact: " + exact);
+        assertEquals(500.0, exact, TOL);
+
+        double error = Math.abs(exact - streamStats.getStatisticValue(Statistic.APPROX_MEDIAN));
+        assertTrue(error / streamStats.getNumAccepted(Statistic.APPROX_MEDIAN) <= 0.05);
     }
 
     @Test
@@ -181,7 +224,7 @@ public class StreamingSampleStatsTest {
         }
 
         double result = stats.getStatisticValue(Statistic.SUM);
-        assertTrue(DoubleComparison.dzero(result));
+        assertEquals(0.0, result, TOL);
     }
     
     @Test

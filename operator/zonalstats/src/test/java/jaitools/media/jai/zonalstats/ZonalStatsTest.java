@@ -379,7 +379,8 @@ public class ZonalStatsTest {
         double max = MAX_DATUM - 1;
         exclusions.add(Range.create(max, false, null, true));
 
-        pb.setParameter("exclude", exclusions);
+        pb.setParameter("ranges", exclusions);
+        pb.setParameter("rangesType", Range.Type.EXCLUDED);
 
         RenderedOp op = JAI.create("ZonalStats", pb);
         ZonalStats stats = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);

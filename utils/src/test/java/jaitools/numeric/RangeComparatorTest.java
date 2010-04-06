@@ -20,7 +20,6 @@
 
 package jaitools.numeric;
 
-import jaitools.numeric.Range;
 import jaitools.numeric.RangeComparator.Result;
 import org.junit.Test;
 import static org.junit.Assert.*;

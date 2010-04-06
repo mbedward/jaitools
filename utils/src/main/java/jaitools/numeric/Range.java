@@ -55,11 +55,26 @@ package jaitools.numeric;
  */
 public class Range<T extends Number & Comparable> {
 
-	public static enum Type{
-		INCLUDED, EXCLUDED, UNDEFINED
-	}
+    /**
+     * This enum is used by jai-tools statistics classes to specify
+     * whether a {@code Range} parameter defines included or excluded
+     * values. It is defined within the {@code Range} class for
+     * convenience.
+     * <p>
+     * It provides the constants INCLUDE, EXCLUDE and UNDEFINED.
+     */
+    public static enum Type {
+        /** The range defines values to include in an operation */
+        INCLUDE,
 
-	/**
+        /** The range defines values to exclude in an operation */
+        EXCLUDE,
+
+        /** The application of the range is undefined */
+        UNDEFINED
+    }
+
+    /**
      * Integer flag value for negative infinity. Can be used as an
      * argument to the {@linkplain #Range} constructor for point
      * (degenerate) intervals.
@@ -73,7 +88,11 @@ public class Range<T extends Number & Comparable> {
      */
     public static final int INF = 1;
 
-    private static final int FINITE = 0;
+    /**
+     * Integer flag to indicate a finite argument. For internal use
+     * and by RangeUtils.
+     */
+    static final int FINITE = 0;
 
     private static final int NAN = -9999;
 

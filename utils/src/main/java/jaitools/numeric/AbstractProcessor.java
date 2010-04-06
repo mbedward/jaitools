@@ -71,6 +71,9 @@ public abstract class AbstractProcessor implements Processor {
      */
     public void addExcludedRange(Range<Double> exclude) {
         if (exclude != null) {
+        	if (this.rangesType == Range.Type.UNDEFINED){
+				this.rangesType = Range.Type.EXCLUDE;
+			}
             // copy the input Range defensively
             ranges.add(new Range<Double>(exclude));
         }
@@ -100,9 +103,9 @@ public abstract class AbstractProcessor implements Processor {
 
         for (Range<Double> r : ranges) {
         	switch (rangesType){
-        		case EXCLUDED:
+        		case EXCLUDE:
         			return r.contains(sample);
-        		case INCLUDED:
+        		case INCLUDE:
         			return !r.contains(sample);
         	}
         }
@@ -168,7 +171,7 @@ public abstract class AbstractProcessor implements Processor {
 	public void addRange(Range<Double> range) {
 		if (range != null) {
 			if (this.rangesType == Range.Type.UNDEFINED){
-				this.rangesType = Range.Type.EXCLUDED;
+				this.rangesType = Range.Type.EXCLUDE;
 			}
 			// copy the input Range defensively
             ranges.add(new Range<Double>(range));
@@ -228,16 +231,21 @@ public abstract class AbstractProcessor implements Processor {
             return false;
         }
 
+        if (ranges == null || ranges.isEmpty())
+        	return true;
+        
+        boolean isAccepted = rangesType == Type.INCLUDE? false : true;
     	for (Range<Double> r : ranges) {
         	switch (rangesType){
-        		case EXCLUDED:
-        			return !r.contains(sample);
-        		case INCLUDED:
-        			return r.contains(sample);
+        		case EXCLUDE:
+        			isAccepted &= !r.contains(sample);
+        			break;
+        		case INCLUDE:
+        			isAccepted |= r.contains(sample);
+        			break;
         	}
         }
-
-        return true;
+        return isAccepted;
 	}
 
 }

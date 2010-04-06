@@ -93,7 +93,7 @@ public class StreamingSampleStats {
      * Constructor
      */
     public StreamingSampleStats() {
-        this(Range.Type.EXCLUDED);
+        this(Range.Type.EXCLUDE);
     }
     
     public StreamingSampleStats(Range.Type rangesType) {
@@ -182,7 +182,7 @@ public class StreamingSampleStats {
         ranges.add(new Range<Double>(range));
 
         for (Processor p : processors) {
-            p.addRange(range, Range.Type.EXCLUDED);
+            p.addRange(range, Range.Type.EXCLUDE);
         }
     }
     
