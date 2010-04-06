@@ -20,6 +20,7 @@
 
 package jaitools.numeric;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -107,5 +108,102 @@ public class RangeUtilsTest {
         assertFalse(low.isMaxIncluded());
         assertEquals(input.getMax().intValue(), high.getMin().intValue());
         assertTrue(high.isMinIncluded());
+    }
+
+    @Test
+    public void createComplementOfOpenInterval() {
+        System.out.println("   createComplementOfOpenInterval");
+
+        // min open
+        Range<Integer> input = Range.create(null, true, 10, true);
+        List<Range<Integer>> compList = RangeUtils.createComplement(input);
+        assertEquals(1, compList.size());
+
+        Range<Integer> result = compList.get(0);
+        assertEquals(input.getMax().intValue(), result.getMin().intValue());
+        assertFalse(result.isMinIncluded());
+        assertTrue(result.isMaxOpen());
+        
+        // max open
+        input = Range.create(10, true, null, true);
+        compList = RangeUtils.createComplement(input);
+        assertEquals(1, compList.size());
+
+        result = compList.get(0);
+        assertEquals(input.getMin().intValue(), result.getMax().intValue());
+        assertFalse(result.isMaxIncluded());
+        assertTrue(result.isMinOpen());
+    }
+
+    @Test
+    public void testSortRanges() {
+        System.out.println("   testSortRanges");
+
+        List<Range<Integer>> sortedInputs = new ArrayList<Range<Integer>>();
+        sortedInputs.add( Range.create(null, true, 5, true) );
+        sortedInputs.add( Range.create(-10, true, 5, true) );
+        sortedInputs.add( Range.create(0) );
+        sortedInputs.add( Range.create(5, true, 10, true) );
+        sortedInputs.add( Range.create(5, true, null, true) );
+
+        List<Range<Integer>> disorderedInputs = new ArrayList<Range<Integer>>();
+        for (int i : new int[]{4, 2, 3, 1, 0}) {
+            disorderedInputs.add(sortedInputs.get(i));
+        }
+
+        List<Range<Integer>> result = RangeUtils.sort(disorderedInputs);
+        int k = 0;
+        for (Range r : result) {
+            assertTrue(r.equals(sortedInputs.get(k++)));
+        }
+    }
+
+    @Test
+    public void testSimplify() {
+        System.out.println("   testSimplify");
+
+        List<Range<Integer>> inputs = new ArrayList<Range<Integer>>();
+        inputs.add( Range.create(null, true, 5, false));
+        inputs.add( Range.create(0));
+        inputs.add( Range.create(0, true, 5, false));
+        inputs.add( Range.create(5, true, 10, true));
+        inputs.add( Range.create(20, true, 30, true));
+
+        List<Range<Integer>> result = RangeUtils.simplify(inputs);
+        assertEquals(2, result.size());
+        assertEquals(new Range<Integer>(null, true, 10, true), result.get(0));
+        assertEquals(new Range<Integer>(20, true, 30, true), result.get(1));
+    }
+
+    @Test
+    public void testIntersection() {
+        System.out.println("   testIntersection");
+        
+        Range<Integer> r1 = Range.create(null, true, 5, false);
+        Range<Integer> r2 = Range.create(-5, false, null, true);
+        Range<Integer> result = RangeUtils.intersection(r2, r1);
+
+        Range<Integer> expected = Range.create(-5, false, 5, false);
+        assertEquals(expected, result);
+
+        Range<Integer> r3 = Range.create(5, true, null, true);
+        result = RangeUtils.intersection(r3, r1);
+        assertNull(result);
+    }
+
+    @Test
+    public void testSubtract() {
+        System.out.println("   testSubtract");
+
+        Range<Integer> r1 = Range.create(null, true, null, true);
+        Range<Integer> r2 = Range.create(-5, false, 5, true);
+
+        List<Range<Integer>> result = RangeUtils.subtact(r1, r2);
+        assertEquals(0, result.size());
+
+        result = RangeUtils.subtact(r2, r1);
+        assertEquals(2, result.size());
+        assertEquals(new Range<Integer>(null, true, -5, true), result.get(0));
+        assertEquals(new Range<Integer>(5, false, null, true), result.get(1));
     }
 }

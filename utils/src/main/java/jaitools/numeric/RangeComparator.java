@@ -54,6 +54,30 @@ public class RangeComparator<T extends Number & Comparable> {
     private static final int UNDEFINED = LT - 1;
 
     /**
+     * Index of {@linkplain Result} element for the comparison of the min value
+     * of the first Range with the max value of the second range.
+     */
+    public static final int MIN_MAX = 0;
+
+    /**
+     * Index of {@linkplain Result} element for the comparison of the min value
+     * of the first Range with the min value of the second range.
+     */
+    public static final int MIN_MIN = 1;
+
+    /**
+     * Index of {@linkplain Result} element for the comparison of the max value
+     * of the first Range with the max value of the second range.
+     */
+    public static final int MAX_MAX = 2;
+
+    /**
+     * Index of {@linkplain Result} element for the comparison of the max value
+     * of the first Range with the min value of the second range.
+     */
+    public static final int MAX_MIN = 3;
+
+    /**
      * This enum defines names, notation and descriptions for the 18 different
      * possible interval comparisons as described by:
      * <blockquote>
@@ -129,7 +153,7 @@ public class RangeComparator<T extends Number & Comparable> {
          */
         LGEG("<>=>", "starts within and extends to max of"),
 
-        /** (Hayes notation {@code <=<>}) Interval X starts with and extends beyond interval Y
+        /** (Hayes notation {@code <=<>}) Interval X starts with and ends within interval Y
          */
         LELG("<=<>", "starts with and ends within"),
 
@@ -158,7 +182,7 @@ public class RangeComparator<T extends Number & Comparable> {
 
         private String notation;
         private String desc;
-        private boolean[] flags;
+        private int[] flags;
 
         /**
          * Private constructor
@@ -169,11 +193,10 @@ public class RangeComparator<T extends Number & Comparable> {
             this.notation = notation;
             this.desc = desc;
 
-            flags = new boolean[notation.length() * 3];
-            for (int i = 0, j = 1; i < notation.length(); i++, j += 3) {
-                flags[j + LT] = notation.charAt(i) == '<';
-                flags[j + EQ] = notation.charAt(i) == '=';
-                flags[j + GT] = notation.charAt(i) == '>';
+            flags = new int[notation.length()];
+            final String symbols = "<=>";
+            for (int i = 0; i < notation.length(); i++) {
+                flags[i] = symbols.indexOf(notation.charAt(i)) - 1;
             }
         }
 
@@ -199,6 +222,23 @@ public class RangeComparator<T extends Number & Comparable> {
          */
         public String getDesc() {
             return desc;
+        }
+
+        /**
+         * Get the result element at the given index. The index can be
+         * specified as an int from 0 to 3 or one of the constants:
+         * {@linkplain RangeComparator#MAX_MAX},
+         * {@linkplain RangeComparator#MAX_MIN},
+         * {@linkplain RangeComparator#MIN_MAX},
+         * {@linkplain RangeComparator#MIN_MIN}.
+         *
+         * @param pos index of the element to retrieve
+         *
+         * @return one of {@linkplain RangeComparator#LT}, {@linkplain RangeComparator#GT},
+         *         or {@linkplain RangeComparator#EQ}
+         */
+        public int getAt(int pos) {
+            return flags[pos];
         }
 
         /**
@@ -248,7 +288,7 @@ public class RangeComparator<T extends Number & Comparable> {
             List<Result> types = CollectionFactory.list();
 
             for (Result t : typesToSearch) {
-                if (t.flags[pos*3 + op + 1]) {
+                if (t.flags[pos] == op) {
                     types.add(t);
                 }
             }

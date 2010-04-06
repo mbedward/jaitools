@@ -46,6 +46,14 @@ public class RangeTest {
     }
 
     @Test
+    public void testCreateInfiniteInterval() {
+        System.out.println("   testCreateInfiniteInterval");
+        Range<Integer> r1 = Range.create(null, true, null, true);
+        assertTrue(r1.isMinNegInf());
+        assertTrue(r1.isMaxInf());
+    }
+
+    @Test
     public void testEquals() {
         System.out.println("   testEquals");
         
