@@ -20,7 +20,6 @@
 package jaitools.numeric;
 
 import jaitools.CollectionFactory;
-import jaitools.numeric.Range.Type;
 
 import java.util.List;
 import java.util.Map;
