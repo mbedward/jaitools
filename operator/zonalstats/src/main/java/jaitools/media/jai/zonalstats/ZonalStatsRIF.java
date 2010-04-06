@@ -87,7 +87,7 @@ public class ZonalStatsRIF implements RenderedImageFactory {
         List<Range<Double>> ranges = rng != null ? (List<Range<Double>>) rng : null;
         
         Object rngType = paramBlock.getObjectParameter(ZonalStatsDescriptor.RANGES_TYPE_ARG);
-        Range.Type rangesType = rngType != null ? (Range.Type) rngType : rng != null ? Range.Type.EXCLUDED : Range.Type.UNDEFINED; 
+        Range.Type rangesType = rngType != null ? (Range.Type) rngType : rng != null ? Range.Type.EXCLUDE : Range.Type.UNDEFINED; 
 
         SampleModel sm = layout.getSampleModel(null);
         if (sm == null || sm.getNumBands() != stats.length) {

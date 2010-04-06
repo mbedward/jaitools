@@ -172,26 +172,26 @@ public class StreamingSampleStats {
     }
     
     /**
-     * Add a range of values to exclude from the calculation of <b>all</b>
+     * Add a range of values to include/exclude from the calculation of <b>all</b>
      * statistics. If further statistics are set after calling this method
-     * the excluded range will be applied to them as well.
+     * the range will be applied to them as well.
      *
-     * @param exclude the {@code Range} to exclude
+     * @param range the {@code Range} to include/exclude
      */
     public void addRange(Range<Double> range) {
         ranges.add(new Range<Double>(range));
 
         for (Processor p : processors) {
-            p.addRange(range, Range.Type.EXCLUDE);
+            p.addRange(range);
         }
     }
     
     /**
-     * Add a range of values to exclude from the calculation of <b>all</b>
+     * Add a range of values to exclude/include from the calculation of <b>all</b>
      * statistics. If further statistics are set after calling this method
-     * the excluded range will be applied to them as well.
+     * the range will be applied to them as well.
      *
-     * @param exclude the {@code Range} to exclude
+     * @param range the {@code Range} to include/exclude
      */
     public void addRange(Range<Double> range, Range.Type rangesType) {
         for (Processor p : processors) {

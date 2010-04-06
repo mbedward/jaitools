@@ -111,7 +111,7 @@ public class ZonalStatsOpImage extends NullOpImage {
             ROI roi,
             AffineTransform zoneTransform,
             List<Range<Double>> ranges) {
-    	this (dataImage, zoneImage, config, layout, stats, bands, roi, zoneTransform, ranges, Range.Type.EXCLUDED, false);
+    	this (dataImage, zoneImage, config, layout, stats, bands, roi, zoneTransform, ranges, Range.Type.EXCLUDE, false);
     }
     
     /**
@@ -229,7 +229,7 @@ public class ZonalStatsOpImage extends NullOpImage {
             Map<Integer, StreamingSampleStats> resultsPerBand = CollectionFactory.sortedMap();
             results.put(srcBand, resultsPerBand);
             for( Integer zone : zones ) {
-                StreamingSampleStats sampleStats = new StreamingSampleStats(Range.Type.EXCLUDED);
+                StreamingSampleStats sampleStats = new StreamingSampleStats(Range.Type.EXCLUDE);
                 for (Range<Double> r : ranges) {
                     sampleStats.addRange(r);
                 }
@@ -352,11 +352,11 @@ public class ZonalStatsOpImage extends NullOpImage {
             List<Range> inclRanges = null;
             if (ranges != null && !ranges.isEmpty()){
             	switch(rangesType){
-            		case INCLUDED:
+            		case INCLUDE:
             			inclRanges = CollectionFactory.list();
             			inclRanges.addAll(ranges);
             			break;
-            		case EXCLUDED:
+            		case EXCLUDE:
             			inclRanges = CollectionFactory.list();
             			List<Range<Double>> incRanges = RangeUtils.createComplement(ranges);
             			inclRanges.addAll(incRanges);
@@ -379,12 +379,12 @@ public class ZonalStatsOpImage extends NullOpImage {
         ZonalStats zs = new ZonalStats();
         List<Range> localRanges = null;
         switch (rangesType){
-        	case EXCLUDED:
+        	case EXCLUDE:
         		List<Range<Double>> inRanges = RangeUtils.createComplement(ranges);
         		localRanges = CollectionFactory.list();
         		localRanges.addAll(inRanges);
         		break;
-        	case INCLUDED:
+        	case INCLUDE:
         		localRanges = CollectionFactory.list();
         		localRanges.addAll(ranges);
         		break;

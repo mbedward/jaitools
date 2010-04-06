@@ -352,7 +352,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
             Statistic[] stats, Integer[] bands, ROI roi, AffineTransform zoneTransform,
             List<Range<Double>> ranges, RenderingHints hints ) {
 
-        return create(dataImage, zoneImage, stats, bands, roi, zoneTransform, ranges, Range.Type.EXCLUDED, false, hints);
+        return create(dataImage, zoneImage, stats, bands, roi, zoneTransform, ranges, Range.Type.EXCLUDE, false, hints);
     }
     
     public static RenderedImage create( RenderedImage dataImage, RenderedImage zoneImage,
