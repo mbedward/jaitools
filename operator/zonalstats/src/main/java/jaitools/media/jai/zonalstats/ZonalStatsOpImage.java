@@ -358,7 +358,7 @@ public class ZonalStatsOpImage extends NullOpImage {
             			break;
             		case EXCLUDE:
             			inclRanges = CollectionFactory.list();
-            			List<Range<Double>> incRanges = RangeUtils.createComplement(ranges);
+            			List<Range<Double>> incRanges = RangeUtils.createComplement(RangeUtils.sort(ranges));
             			inclRanges.addAll(incRanges);
             			break;
             	}
@@ -380,7 +380,7 @@ public class ZonalStatsOpImage extends NullOpImage {
         List<Range> localRanges = null;
         switch (rangesType){
         	case EXCLUDE:
-        		List<Range<Double>> inRanges = RangeUtils.createComplement(ranges);
+        		List<Range<Double>> inRanges = RangeUtils.createComplement(RangeUtils.sort(ranges));
         		localRanges = CollectionFactory.list();
         		localRanges.addAll(inRanges);
         		break;

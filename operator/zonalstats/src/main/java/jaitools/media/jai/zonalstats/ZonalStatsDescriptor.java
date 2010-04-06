@@ -21,6 +21,8 @@
 package jaitools.media.jai.zonalstats;
 
 import jaitools.numeric.Range;
+import jaitools.numeric.RangeComparator;
+import jaitools.numeric.RangeUtils;
 import jaitools.numeric.Statistic;
 
 import java.awt.Rectangle;
@@ -406,18 +408,40 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
             if (rangeObject instanceof List) {
                 Object range = ((List) rangeObject).get(0);
                 if (!(range instanceof Range)) {
+                	msg.append(paramNames[RANGES_ARG] + " arg has to be of type List<Range<Double>>");
                     ok = false;
+                } else {
+                	List ranges = (List)rangeObject;
+                	List sortedRanges = RangeUtils.sort(ranges);
+                	final int elements = sortedRanges.size();
+                	if (elements > 1){
+                		RangeComparator rc = new RangeComparator();
+                		List<Range> rr = (List<Range>) sortedRanges; 
+                		for (int i = 0; i<elements - 1; i++){
+                			Range r1 = rr.get(i);
+                			Range r2 = rr.get(i+1);
+                			RangeComparator.Result result = rc.compare(r1, r2);
+                    	    	if (RangeComparator.isIntersection(result)) {
+                    	    		ok = false;
+                    	    		msg.append(paramNames[RANGES_ARG] + " arg can't contain intersecting ranges");
+                    	    		break;
+                    	    	}
+                			
+                		}
+                	}
                 }
+                
             } else {
                 if (rangeObject != null) {
                     ok = false;
+                    msg.append(paramNames[RANGES_ARG] + " arg has to be of type List<Range<Double>>");
                 }
             }
             if (!ok) {
-                msg.append(paramNames[RANGES_ARG] + " arg has to be of type List<Range<Double>>");
                 return false;
             }
         }
+        
         Object rangesType = pb.getObjectParameter(RANGES_TYPE_ARG);
         if (rangesType != null){
         	if (rangesType instanceof Range.Type){
