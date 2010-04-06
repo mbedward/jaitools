@@ -50,16 +50,54 @@ public interface Processor {
      * value in this range is offered it will be ignored.
      *
      * @param exclude a range of values to exclude
+     * @deprecated use {@link #addRange(Range, jaitools.numeric.Range.Type))}
      */
     public void addExcludedRange(Range<Double> exclude);
+    
+    /**
+     * Set a {@code Range} of values to exclude from/include in calculations
+     *
+     * @param range a range of values to be checked
+     * @param rangeType the type of range. Note that you can only add range of the same type
+     */
+    public void addRange(Range<Double> range, final Range.Type rangeType);
+    
+    /**
+     * Set the {@code Range.Type} of the ranges to be added to the processor.
+     * It is worth to point out that this method can be called only a time.
+     * @param rangeType the type of range. 
+     */
+    public void setRangesType(Range.Type rangesType);
+    
+    /**
+     * 
+     * @return the rangesType of this processor
+     */
+    public Range.Type getRangesType ();
 
+    /**
+     * Set a {@code Range} of values to exclude from calculations, ie. if a sample
+     * value in this range is offered it will be ignored.
+     *
+     * @param a range of values to be checked
+     */
+    public void addRange(Range<Double> range);
+    
     /**
      * Retrieve the {@code Ranges} of sample values excluded from calculations.
      *
      * @return the excluded {@code Ranges} or an empty list if no exclusions
      *         are defined
+     * @deprecated use {@link #getRanges()}
      */
     public List<Range<Double>> getExcludedRanges();
+    
+    /**
+     * Retrieve the {@code Ranges} of sample values excluded from/included in calculations.
+     *
+     * @return the {@code Ranges} or an empty list if no ranges are defined
+     */
+    public List<Range<Double>> getRanges();
 
     /**
      * Test whether a sample value will be excluded from calculations by
@@ -69,8 +107,20 @@ public interface Processor {
      * 
      * @return true if the sample lies within an excluded {@code Range} set 
      *         for this processor; false otherwise
+     * @deprecated use {@link #isAccepted}                  
      */
     public boolean isExcluded(Double sample);
+    
+    /**
+     * Test whether a sample value will be accepted for calculations by
+     * the processor.
+     * 
+     * @param sample the sample value
+     * 
+     * @return true if the sample is accepted in compliance with the ranges settings.
+     * 			false otherwise
+     */
+    public boolean isAccepted(Double sample);
 
     /**
      * Offer a sample value to the processor.
@@ -93,6 +143,13 @@ public interface Processor {
      * @return number of samples used for calculations
      */
     public long getNumAccepted();
+    
+    /**
+     * Get the number of NaN samples 
+     *
+     * @return number of NaN samples
+     */
+    public long getNumNaN();
 
     /**
      * Get the value of the statistic calculated by this processor.

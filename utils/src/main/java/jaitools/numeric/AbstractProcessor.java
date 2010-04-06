@@ -21,7 +21,8 @@
 package jaitools.numeric;
 
 import jaitools.CollectionFactory;
-import java.util.ArrayList;
+import jaitools.numeric.Range.Type;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -39,14 +40,26 @@ public abstract class AbstractProcessor implements Processor {
 
     protected long numOffered;
     protected long numAccepted;
+    protected long numNaN;
 
-    private List<Range<Double>> excludedRanges;
+    private List<Range<Double>> ranges;
+    private Range.Type rangesType;
 
     /**
      * Default constructor.
      */
     public AbstractProcessor() {
-        excludedRanges = CollectionFactory.list();
+        ranges = CollectionFactory.list();
+        rangesType = Range.Type.UNDEFINED;
+        numOffered = numAccepted = 0;
+    }
+    
+    /**
+     * Default constructor.
+     */
+    public AbstractProcessor(final Range.Type rangesType) {
+        ranges = CollectionFactory.list();
+        this.rangesType = rangesType;
         numOffered = numAccepted = 0;
     }
 
@@ -59,30 +72,39 @@ public abstract class AbstractProcessor implements Processor {
     public void addExcludedRange(Range<Double> exclude) {
         if (exclude != null) {
             // copy the input Range defensively
-            excludedRanges.add(new Range<Double>(exclude));
+            ranges.add(new Range<Double>(exclude));
         }
     }
 
     /**
      * {@inheritDoc}
+     * @deprecated use {@link #getRanges()}
      */
     public List<Range<Double>> getExcludedRanges() {
-        return Collections.unmodifiableList(excludedRanges);
+        return Collections.unmodifiableList(ranges);
     }
 
     /**
      * {@inheritDoc}.
      * Null and Double.NaN values are excluded by default.
+     * @deprecated use {@link #isAccepted(Double)} with opposite logic.
      */
     public boolean isExcluded(Double sample) {
-        if (sample == null || sample.isNaN()) {
+        if (sample == null){
+            return true;
+        }
+        if (sample.isNaN()) {
+            numNaN++;
             return true;
         }
 
-        for (Range<Double> r : excludedRanges) {
-            if (r.contains(sample)) {
-                return true;
-            }
+        for (Range<Double> r : ranges) {
+        	switch (rangesType){
+        		case EXCLUDED:
+        			return r.contains(sample);
+        		case INCLUDED:
+        			return !r.contains(sample);
+        	}
         }
 
         return false;
@@ -100,6 +122,13 @@ public abstract class AbstractProcessor implements Processor {
      */
     public final long getNumAccepted() {
         return numAccepted;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    public long getNumNaN() {
+        return numNaN;
     }
 
     /**
@@ -132,5 +161,83 @@ public abstract class AbstractProcessor implements Processor {
      *         false otherwise
      */
     protected abstract boolean update(Double sample);
+
+    /**
+     * {@inheritDoc}
+     */
+	public void addRange(Range<Double> range) {
+		if (range != null) {
+			if (this.rangesType == Range.Type.UNDEFINED){
+				this.rangesType = Range.Type.EXCLUDED;
+			}
+			// copy the input Range defensively
+            ranges.add(new Range<Double>(range));
+        }
+	}
+	
+	/**
+     * {@inheritDoc}
+     */
+	public void addRange(Range<Double> range, Range.Type rangesType) {
+		if (range != null) {
+			if (this.rangesType == Range.Type.UNDEFINED){
+				this.rangesType = rangesType;
+			} else {
+				if (this.rangesType != rangesType){
+					throw new IllegalArgumentException("The provided rangesType is not compatible with the processors rangesType");
+				}
+			}
+			// copy the input Range defensively
+            ranges.add(new Range<Double>(range));
+        }
+	}
+
+	 /**
+     * {@inheritDoc}
+     */
+	public List<Range<Double>> getRanges() {
+		return Collections.unmodifiableList(ranges);
+	}
+
+	 /**
+     * {@inheritDoc}
+     */
+	public void setRangesType(final Range.Type rangesType) {
+		if (this.rangesType != Range.Type.UNDEFINED){
+			throw new UnsupportedOperationException("Cannot change RangesType once already defined");
+		}
+		this.rangesType = rangesType; 
+	}
+	
+	 /**
+     * {@inheritDoc}
+     */
+	public final Range.Type getRangesType(){
+		return rangesType;
+	}
+
+	 /**
+     * {@inheritDoc}
+     */
+	public boolean isAccepted(Double sample) {
+		if (sample == null){
+            return false;
+        }
+        if (sample.isNaN()) {
+            numNaN++;
+            return false;
+        }
+
+    	for (Range<Double> r : ranges) {
+        	switch (rangesType){
+        		case EXCLUDED:
+        			return !r.contains(sample);
+        		case INCLUDED:
+        			return r.contains(sample);
+        	}
+        }
+
+        return true;
+	}
 
 }

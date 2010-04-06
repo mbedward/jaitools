@@ -55,7 +55,11 @@ package jaitools.numeric;
  */
 public class Range<T extends Number & Comparable> {
 
-    /**
+	public static enum Type{
+		INCLUDED, EXCLUDED, UNDEFINED
+	}
+
+	/**
      * Integer flag value for negative infinity. Can be used as an
      * argument to the {@linkplain #Range} constructor for point
      * (degenerate) intervals.

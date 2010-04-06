@@ -21,8 +21,10 @@
 package jaitools.media.jai.zonalstats;
 
 import jaitools.CollectionFactory;
-import jaitools.numeric.StreamingSampleStats;
+import jaitools.numeric.Range;
 import jaitools.numeric.Statistic;
+import jaitools.numeric.StreamingSampleStats;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.SortedSet;
@@ -97,14 +99,27 @@ public class ZonalStats {
      * @param band selected image band or {@code null} for all bands
      * @param zone selected zone or {@code null} for all zones
      * @param stat selected statistic or {@code null} for all statistics
+     * @param ranges selected ranges or {@code null} for all ranges
      */
-    private ZonalStats(ZonalStats src, Integer band, Integer zone, Statistic stat) {
+    private ZonalStats(ZonalStats src, Integer band, Integer zone, Statistic stat, List<Range> ranges) {
         results = CollectionFactory.list();
         for (Result r : src.results) {
             if ((band == null || r.getImageBand() == band) &&
                 (zone == null || r.getZone() == zone) &&
                 (stat == null || r.getStatistic() == stat)) {
-                results.add(r);
+            	if (ranges == null || ranges.isEmpty()) {
+            		results.add(r);
+            	} else {
+            		if (r.getRanges().containsAll(ranges)) {
+            			results.add(r);
+            		} else{
+            			for (Range range: ranges){
+	            			if (r.getRanges().contains(range))
+	            				results.add(r);
+            			}
+            		}
+            	}
+                
             }
         }
     }
@@ -113,15 +128,24 @@ public class ZonalStats {
      * Store the results for the given zone. Package-private method used by
      * {@code ZonalStatsOpImage}.
      */
-    void setResults(int band, int zone, StreamingSampleStats stats) {
+    void setResults(int band, int zone, StreamingSampleStats stats, List<Range> includedRanges) {
         for (Statistic s : stats.getStatistics()) {
-            Result r = new Result(band, zone, s,
+            Result r = new Result(band, zone, s, includedRanges, 
                     stats.getStatisticValue(s),
                     stats.getNumOffered(s),
-                    stats.getNumAccepted(s));
+                    stats.getNumAccepted(s), 
+                    stats.getNumNaN(s));
 
             results.add(r);
         }
+    }
+    
+    /**
+     * Store the results for the given zone. Package-private method used by
+     * {@code ZonalStatsOpImage}.
+     */
+    void setResults(int band, int zone, StreamingSampleStats stats) {
+        setResults(band, zone, stats, null);
     }
 
     /**
@@ -154,7 +178,7 @@ public class ZonalStats {
      *         (data are shared with the source object rather than copied)
      */
     public ZonalStats band(int b) {
-        return new ZonalStats(this, b, null, null);
+        return new ZonalStats(this, b, null, null, null);
     }
 
     /**
@@ -168,7 +192,7 @@ public class ZonalStats {
      *         (data are shared with the source object rather than copied)
      */
     public ZonalStats zone(int z) {
-        return new ZonalStats(this, null, z, null);
+        return new ZonalStats(this, null, z, null, null);
     }
 
     /**
@@ -182,7 +206,21 @@ public class ZonalStats {
      *         (data are shared with the source object rather than copied)
      */
     public ZonalStats statistic(Statistic s) {
-        return new ZonalStats(this, null, null, s);
+        return new ZonalStats(this, null, null, s, null);
+    }
+    
+    /**
+     * Get the subset of results for the given {@code Ranges}.
+     *
+     * See the example of chaining this method in the class docs.
+     *
+     * @param ranges the Ranges
+     *
+     * @return a new {@code ZonalStats} object containing results for the ranges
+     *         (data are shared with the source object rather than copied)
+     */
+    public ZonalStats ranges(List<Range> ranges) {
+        return new ZonalStats(this, null, null, null, ranges);
     }
 
     /**

@@ -22,8 +22,10 @@ package jaitools.media.jai.zonalstats;
 
 import jaitools.CollectionFactory;
 import jaitools.numeric.Range;
-import jaitools.numeric.StreamingSampleStats;
+import jaitools.numeric.RangeUtils;
 import jaitools.numeric.Statistic;
+import jaitools.numeric.StreamingSampleStats;
+
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
@@ -67,7 +69,9 @@ public class ZonalStatsOpImage extends NullOpImage {
     private final Rectangle dataImageBounds;
     private final RenderedImage zoneImage;
     private final AffineTransform zoneTransform;
-    private final List<Range<Double>> excludedRanges;
+    private final List<Range<Double>> ranges;
+    private final boolean rangeLocalStats;
+    private Range.Type rangesType;
 
     private SortedSet<Integer> zones;
 
@@ -92,7 +96,7 @@ public class ZonalStatsOpImage extends NullOpImage {
      *
      * @param zoneTransform
      * 
-     * @param excludedRanges a {@link List} of {@link Range}s, that will be filtered out
+     * @param ranges a {@link List} of {@link Range}s, that will be filtered out
      *        of the process. This means that values inside the supplied ranges 
      *        will not be considered as valid and discarded.
      * 
@@ -106,7 +110,47 @@ public class ZonalStatsOpImage extends NullOpImage {
             Integer[] bands,
             ROI roi,
             AffineTransform zoneTransform,
-            List<Range<Double>> excludedRanges) {
+            List<Range<Double>> ranges) {
+    	this (dataImage, zoneImage, config, layout, stats, bands, roi, zoneTransform, ranges, Range.Type.EXCLUDED, false);
+    }
+    
+    /**
+     * Constructor.
+     *
+     * @param dataImage a {@code RenderedImage} from which data values will be read.
+     *
+     * @param zoneImage an optional {@code RenderedImage} of integral data type that defines
+     *        the zones for which to calculate summary data.
+     * 
+     * @param config configurable attributes of the image (see {@link AreaOpImage}).
+     *
+     * @param layout an optional {@code ImageLayout} object.
+     *
+     * @param stats an array of {@code Statistic} constants specifying the data required.
+     *
+     * @param bands the data image band to process.
+     *
+     * @param roi an optional {@code ROI} for data image masking.
+     *
+     * @param zoneTransform
+     * 
+     * @param ranges a {@link List} of {@link Range}s, that will be filtered out/in
+     *        of the process. This means that values inside the supplied ranges 
+     *        will not/will be considered as valid and discarded.
+     * 
+     * @see ZonalStatsDescriptor
+     * @see Statistic
+     */
+    public ZonalStatsOpImage(RenderedImage dataImage, RenderedImage zoneImage, 
+            Map<?, ?> config,
+            ImageLayout layout,
+            Statistic[] stats, 
+            Integer[] bands,
+            ROI roi,
+            AffineTransform zoneTransform,
+            List<Range<Double>> ranges,
+            Range.Type rangesType,
+            final boolean rangeLocalStats) {
 
         super(dataImage, layout, config, OpImage.OP_COMPUTE_BOUND);
 
@@ -121,14 +165,15 @@ public class ZonalStatsOpImage extends NullOpImage {
         this.srcBands = bands;
         this.roi = roi;
         this.zoneTransform = zoneTransform;
-
-        this.excludedRanges = CollectionFactory.list();
-        if (excludedRanges != null && !excludedRanges.isEmpty()) {
+        this.rangeLocalStats = rangeLocalStats;
+        this.ranges = CollectionFactory.list();
+        this.rangesType = rangesType;
+        if (ranges != null && !ranges.isEmpty()) {
+        	
             // copy the ranges defensively
-            for (Range<Double> r : excludedRanges) {
-                this.excludedRanges.add(new Range<Double>(r));
+            for (Range<Double> r : ranges) {
+                this.ranges.add(new Range<Double>(r));
             }
-
         }
     }
 
@@ -164,7 +209,10 @@ public class ZonalStatsOpImage extends NullOpImage {
         if (zoneImage != null) {
             return compileZonalStatistics();
         } else {
-            return compileUnzonedStatistics();
+        	if (!rangeLocalStats)
+        		return compileUnzonedStatistics();
+        	else
+        		return compileRangeStatistics();
         }
     }
 
@@ -181,9 +229,9 @@ public class ZonalStatsOpImage extends NullOpImage {
             Map<Integer, StreamingSampleStats> resultsPerBand = CollectionFactory.sortedMap();
             results.put(srcBand, resultsPerBand);
             for( Integer zone : zones ) {
-                StreamingSampleStats sampleStats = new StreamingSampleStats();
-                for (Range<Double> r : excludedRanges) {
-                    sampleStats.addExcludedRange(r);
+                StreamingSampleStats sampleStats = new StreamingSampleStats(Range.Type.EXCLUDED);
+                for (Range<Double> r : ranges) {
+                    sampleStats.addRange(r);
                 }
                 sampleStats.setStatistics(stats);
                 resultsPerBand.put(zone, sampleStats);
@@ -268,9 +316,9 @@ public class ZonalStatsOpImage extends NullOpImage {
         // create the stats
         final StreamingSampleStats sampleStatsPerBand[] = new StreamingSampleStats[srcBands.length];
         for (int index = 0; index < srcBands.length; index++) {
-            final StreamingSampleStats sampleStats = new StreamingSampleStats();
-            for (Range<Double> r : excludedRanges) {
-                sampleStats.addExcludedRange(r);
+            final StreamingSampleStats sampleStats = new StreamingSampleStats(rangesType);
+            for (Range<Double> r : ranges) {
+                sampleStats.addRange(r);
             }
             sampleStats.setStatistics(stats);
             sampleStatsPerBand[index] = sampleStats;
@@ -298,11 +346,93 @@ public class ZonalStatsOpImage extends NullOpImage {
         } while( !dataIter.nextLineDone() );
 
         // get the results
-        ZonalStats zs = new ZonalStats();
+        final ZonalStats zs = new ZonalStats();
         for (int index = 0; index < srcBands.length; index++) {
-            StreamingSampleStats sampleStats = sampleStatsPerBand[index];
-            zs.setResults(srcBands[index], zoneID, sampleStats);
+            final StreamingSampleStats sampleStats = sampleStatsPerBand[index];
+            List<Range> inclRanges = null;
+            if (ranges != null && !ranges.isEmpty()){
+            	switch(rangesType){
+            		case INCLUDED:
+            			inclRanges = CollectionFactory.list();
+            			inclRanges.addAll(ranges);
+            			break;
+            		case EXCLUDED:
+            			inclRanges = CollectionFactory.list();
+            			List<Range<Double>> incRanges = RangeUtils.createComplement(ranges);
+            			inclRanges.addAll(incRanges);
+            			break;
+            	}
+            }
+            zs.setResults(srcBands[index], zoneID, sampleStats, inclRanges);
         }
+        return zs;
+    }
+    
+    /**
+     * Used to calculate statistics when no zone image was provided.
+     *
+     * @return the results as a {@code ZonalStats} instance
+     */
+    private ZonalStats compileRangeStatistics() {
+        buildZoneList();
+        Integer zoneID = zones.first();
+        ZonalStats zs = new ZonalStats();
+        List<Range> localRanges = null;
+        switch (rangesType){
+        	case EXCLUDED:
+        		List<Range<Double>> inRanges = RangeUtils.createComplement(ranges);
+        		localRanges = CollectionFactory.list();
+        		localRanges.addAll(inRanges);
+        		break;
+        	case INCLUDED:
+        		localRanges = CollectionFactory.list();
+        		localRanges.addAll(ranges);
+        		break;
+        	case UNDEFINED:
+        		throw new UnsupportedOperationException("Unable to compute range local statistics on UNDEFINED ranges type");
+        }
+
+        for (Range<Double> range: localRanges){
+        	
+	        // create the stats
+	        final StreamingSampleStats sampleStatsPerBand[] = new StreamingSampleStats[srcBands.length];
+	        for (int index = 0; index < srcBands.length; index++) {
+	            final StreamingSampleStats sampleStats = new StreamingSampleStats(rangesType);
+                sampleStats.addRange(range);
+	            sampleStats.setStatistics(stats);
+	            sampleStatsPerBand[index] = sampleStats;
+	        }
+	
+	        final double[] sampleValues = new double[dataImage.getSampleModel().getNumBands()];
+	        RectIter dataIter = RectIterFactory.create(dataImage, null);
+	        int y = dataImage.getMinY();
+	        do {
+	            int x = dataImage.getMinX();
+	            do {
+	                if (roi == null || roi.contains(x, y)) {
+	                    dataIter.getPixel(sampleValues);
+	                    for (int index = 0; index < srcBands.length; index++) {
+	                        final double value = sampleValues[srcBands[index]];
+	                        sampleStatsPerBand[index].offer(value);
+	                    }
+	                }
+	                x++;
+	            } while (!dataIter.nextPixelDone() );
+	
+	            dataIter.startPixels();
+	            y++;
+	
+	        } while( !dataIter.nextLineDone() );
+	
+	        // get the results
+	        for (int index = 0; index < srcBands.length; index++) {
+	            StreamingSampleStats sampleStats = sampleStatsPerBand[index];
+	            List<Range> resultRanges = CollectionFactory.list();
+	            resultRanges.add(range);
+	            zs.setResults(srcBands[index], zoneID, sampleStats, resultRanges);
+	        }
+    	}
+       
         return zs;
     }
 

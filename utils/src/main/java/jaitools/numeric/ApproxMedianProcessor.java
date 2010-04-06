@@ -113,7 +113,7 @@ public class ApproxMedianProcessor extends AbstractProcessor {
      * {@inheritDoc}
      */
     protected boolean update(Double sample) {
-        if (!isExcluded(sample)) {
+    	if (isAccepted(sample)) {
             if (buf0.isFull()) {
                 cascade(0);
             }

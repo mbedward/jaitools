@@ -20,6 +20,8 @@
 package jaitools.numeric;
 
 import jaitools.CollectionFactory;
+import jaitools.numeric.Range.Type;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -84,14 +86,20 @@ public class StreamingSampleStats {
 
     private ProcessorFactory factory = new ProcessorFactory();
     private List<Processor> processors;
-    private List<Range<Double>> excludedRanges;
+    private List<Range<Double>> ranges;
+	private final Range.Type rangesType;
 
     /**
      * Constructor
      */
     public StreamingSampleStats() {
+        this(Range.Type.EXCLUDED);
+    }
+    
+    public StreamingSampleStats(Range.Type rangesType) {
         processors = CollectionFactory.list();
-        excludedRanges = CollectionFactory.list();
+        ranges = CollectionFactory.list();
+        this.rangesType = rangesType;
     }
 
     /**
@@ -113,8 +121,8 @@ public class StreamingSampleStats {
                 processors.add(p);
                 
                 // apply cached excluded ranges to the new processor
-                for (Range<Double> excluded : excludedRanges) {
-                    p.addExcludedRange(excluded);
+                for (Range<Double> range : ranges) {
+                	p.addRange(range,rangesType);
                 }
             }
         }
@@ -153,13 +161,43 @@ public class StreamingSampleStats {
      * the excluded range will be applied to them as well.
      *
      * @param exclude the {@code Range} to exclude
+     * @deprecated use {@link #addRange(Range)} 
      */
     public void addExcludedRange(Range<Double> exclude) {
-        excludedRanges.add(new Range<Double>(exclude));
+        ranges.add(new Range<Double>(exclude));
 
         for (Processor p : processors) {
             p.addExcludedRange(exclude);
         }
+    }
+    
+    /**
+     * Add a range of values to exclude from the calculation of <b>all</b>
+     * statistics. If further statistics are set after calling this method
+     * the excluded range will be applied to them as well.
+     *
+     * @param exclude the {@code Range} to exclude
+     */
+    public void addRange(Range<Double> range) {
+        ranges.add(new Range<Double>(range));
+
+        for (Processor p : processors) {
+            p.addRange(range, Range.Type.EXCLUDED);
+        }
+    }
+    
+    /**
+     * Add a range of values to exclude from the calculation of <b>all</b>
+     * statistics. If further statistics are set after calling this method
+     * the excluded range will be applied to them as well.
+     *
+     * @param exclude the {@code Range} to exclude
+     */
+    public void addRange(Range<Double> range, Range.Type rangesType) {
+        for (Processor p : processors) {
+            p.addRange(range, rangesType);
+        }
+        ranges.add(new Range<Double>(range));
     }
 
     /**
@@ -247,6 +285,27 @@ public class StreamingSampleStats {
     }
 
     /**
+     * Get the number of sample values that are NaN
+     * Note that different statistics might have been set at different
+     * times in the sampling process.
+     *
+     * @param stat the statistic
+     *
+     * @return number of samples that are NaN
+     *
+     * @throws IllegalArgumentException if the statistic hasn't been set
+     */
+    public long getNumNaN(Statistic stat) {
+        Processor p = findProcessor(stat);
+        if (p == null) {
+            throw new IllegalArgumentException(
+                    "requesting sample size for a statistic that is not set: " + stat);
+        }
+
+        return p.getNumNaN();
+    }
+    
+    /**
      * Offer a sample value. Offered values are filtered through excluded ranges.
      * {@code Double.NaNs} and {@code nulls} are excluded by default.
      *
@@ -268,11 +327,9 @@ public class StreamingSampleStats {
      * @param samples the new sample values
      */
     public void addSamples(Double[] samples) {
-        for (Processor p : processors) {
             for (int i = 0; i < samples.length; i++) {
                 offer(samples[i]);
             }
-        }
     }
 
     /**
