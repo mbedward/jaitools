@@ -172,7 +172,6 @@ public class RangeUtils {
      */
     public static <T extends Number & Comparable> List<Range<T>> simplify(Collection<Range<T>> ranges) {
         List<Range<T>> inputs = new ArrayList<Range<T>>(ranges);
-        List<Range<T>> simplified = new ArrayList<Range<T>>();
         RangeComparator<T> comparator = new RangeComparator<T>();
 
         boolean changed;
