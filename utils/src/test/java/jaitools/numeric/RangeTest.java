@@ -65,4 +65,49 @@ public class RangeTest {
         assertFalse(r.equals(different));
     }
 
+    @Test
+    public void testInfinitePointNEQInfiniteInterval() {
+        System.out.println("   testInfinitePointNEQInfiniteInterval");
+
+        Range<Integer> p = Range.create(null, Range.INF);
+        Range<Integer> r = Range.create(null, false, null, false);
+
+        assertFalse(p.equals(r));
+        assertFalse(r.equals(p));
+    }
+
+    @Test
+    public void testFinitePointToString() {
+        System.out.println("   testPointToString");
+
+        Range<Integer> r = Range.create(10);
+        assertEquals("Range[10]", r.toString());
+    }
+
+    @Test
+    public void testInfinitePointToString() {
+        System.out.println("   testInfinitePointToString");
+
+        Range<Integer> r = Range.create(null, Range.INF);
+        assertEquals("Range(Inf)", r.toString());
+
+        r = Range.create(null, Range.NEG_INF);
+        assertEquals("Range(-Inf)", r.toString());
+    }
+    
+    @Test
+    public void testFiniteIntervalToString() {
+        System.out.println("   testFiniteIntervalToString");
+
+        Range<Integer> r = Range.create(-10, true, 10, false);
+        assertEquals("Range[-10, 10)", r.toString());
+    }
+
+    @Test
+    public void testOpenIntervalToString() {
+        System.out.println("   testOpenIntervalToString");
+
+        Range<Integer> r = Range.create(null, true, 10, true);
+        assertEquals("Range(-Inf, 10]", r.toString());
+    }
 }

@@ -577,7 +577,14 @@ public class Range<T extends Number & Comparable> {
         if (getClass() != obj.getClass()) {
             return false;
         }
+
         final Range<T> other = (Range<T>) obj;
+
+        // need this to guard against incorrect matching of infinite points
+        // with the whole number line
+        if (this.isPoint != other.isPoint) {
+            return false;
+        }
         if (this.minValue != other.minValue && (this.minValue == null || !this.minValue.equals(other.minValue))) {
             return false;
         }
@@ -621,16 +628,24 @@ public class Range<T extends Number & Comparable> {
         if (isMinClosed()) {
             sb.append(isMinIncluded() ? '[' : '(');
             sb.append(getMin());
-            sb.append(", ");
         } else {
-            sb.append("[-Inf, ");
+            if (isPoint()) {
+                sb.append(isMinInf() ? "(Inf" : "(-Inf");
+            } else {
+                sb.append("(-Inf");
+            }
         }
 
-        if (isMaxClosed()) {
-            sb.append(getMax());
-            sb.append(isMaxIncluded() ? ']' : ')');
+        if (isPoint()) {
+            sb.append(isMinIncluded() ? ']' : ')');
         } else {
-            sb.append("Inf]");
+            sb.append(", ");
+            if (isMaxClosed()) {
+                sb.append(getMax());
+                sb.append(isMaxIncluded() ? ']' : ')');
+            } else {
+                sb.append("Inf)");
+            }
         }
 
         return sb.toString();
