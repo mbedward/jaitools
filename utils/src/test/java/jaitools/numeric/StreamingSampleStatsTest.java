@@ -57,7 +57,7 @@ public class StreamingSampleStatsTest {
         System.out.println("   test mean with excluded range");
         StreamingSampleStats stats = new StreamingSampleStats();
         stats.setStatistic(Statistic.MEAN);
-        stats.addExcludedRange(Range.create(null, true, 0.0, false));
+        stats.addRange(Range.create(null, false, 0.0, false), Range.Type.EXCLUDE);
 
         for (int val = -1000; val <= 1000; val++) {
             stats.offer((double)val);
@@ -192,7 +192,7 @@ public class StreamingSampleStatsTest {
         StreamingSampleStats streamStats = new StreamingSampleStats();
         streamStats.setStatistic(Statistic.MEDIAN);
         streamStats.setStatistic(Statistic.APPROX_MEDIAN);
-        streamStats.addExcludedRange(Range.create(null, true, 0.0, false));
+        streamStats.addRange(Range.create(null, false, 0.0, false), Range.Type.EXCLUDE);
 
         List<Double> values = CollectionFactory.list();
 
@@ -206,7 +206,6 @@ public class StreamingSampleStatsTest {
         }
 
         double exact = streamStats.getStatisticValue(Statistic.MEDIAN);
-        System.out.println("exact: " + exact);
         assertEquals(500.0, exact, TOL);
 
         double error = Math.abs(exact - streamStats.getStatisticValue(Statistic.APPROX_MEDIAN));
