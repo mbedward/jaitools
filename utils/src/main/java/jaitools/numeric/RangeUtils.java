@@ -67,27 +67,83 @@ public class RangeUtils {
     }
 
 
+    /**
+     * Create the complement of a {@code Range}. This is equivalent to subtracting the
+     * input from the infinite interval.
+     * <p>
+     * If the input is a finite interval or point, the result will be a list of
+     * two {@code Ranges}. For example: the complement of [-5, 5) is made up of
+     * (-Inf, -5) and [5, Inf).
+     * <p>
+     * If the input is an interval open at one end, the result list will contain
+     * a single {@code Range}. For example: the complement of (-Inf, 5) is [5, Inf).
+     * <p>
+     * If the input is a point at positive or negative infinity its complement is,
+     * by convention, (-Inf, Inf).
+     * <p>
+     * If the input is the infinite interval (-Inf, Inf) the result list will be
+     * empty.
+     *
+     * @param range input range
+     * 
+     * @return a list of 0, 1 or 2 {@code Ranges} which form the complement
+     *
+     * @see #createComplement(java.util.Collection)
+     */
     public static <T extends Number & Comparable> List<Range<T>> createComplement(Range<T> range) {
+        return subtract(range, new Range<T>(null, false, null, false));
+    }
+
+    /**
+     * Create the complement of the given list of {@code Ranges}. This method first
+     * calls {@linkplain #simplify} on the inputs and then subtracts each of the
+     * resulting {@code Ranges} from the whole number line.
+     *
+     * @param ranges input ranges
+     *
+     * @return a list of {@code Ranges} which form the complement (may be empty)
+     *
+     * @see #createComplement(jaitools.numeric.Range)
+     */
+    public static <T extends Number & Comparable> List<Range<T>> createComplement(Collection<Range<T>> ranges) {
+        List<Range<T>> inputs = simplify(ranges);
         List<Range<T>> complements = new ArrayList<Range<T>>();
 
-        // special case: point range
-        if (range.isPoint()) {
-            if (range.isMinInf() || range.isMinNegInf()) {
-                complements.add(Range.create((T)null, true, (T)null, true));
-                
-            } else {  // finite point
-                complements.add(Range.create(null, true, range.getMin(), false));
-                complements.add(Range.create(range.getMin(), false, null, true));
-            }
+        /*
+         * Start with the whole number line, then subtract each of
+         * the input ranges from it
+         */
+        complements.add(new Range<T>(null, true, null, true));
 
-        } else {  // interval range
-            if (range.isMinClosed()) {
-                complements.add(Range.create(null, true, range.getMin(), !range.isMinIncluded()));
+        for (int i = 0; i < inputs.size(); i++) {
+            boolean changed = false;
+            Range<T> rin = inputs.get(i);
+            for (int j = 0; j < complements.size() && !changed; j++) {
+                Range<T> rc = complements.get(j);
+                List<Range<T>> diff = subtract(rin, rc);
+                final int ndiff = diff.size();
+                switch (ndiff) {
+                    case 0:
+                        complements.remove(j);
+                        changed = true;
+                        break;
+
+                    case 1:
+                        if (!diff.get(0).equals(rc)) {
+                            complements.remove(j);
+                            complements.add(diff.get(0));
+                            changed = true;
+                        }
+                        break;
+
+                    case 2:
+                        complements.remove(j);
+                        complements.addAll(diff);
+                        changed = true;
+                        break;
+                }
+
             }
-            if (range.isMaxClosed()) {
-                complements.add(Range.create(range.getMax(), !range.isMaxIncluded(), null, true));
-            }
-            // BIG LETTERS
         }
 
         return complements;
@@ -205,6 +261,36 @@ public class RangeUtils {
      *         do not intersect
      */
     public static <T extends Number & Comparable> Range<T> intersection(Range<T> r1, Range<T> r2) {
+        if (r1.isPoint()) {
+            if (r2.isPoint()) {
+                if (r1.equals(r2)) {
+                    return new Range<T>(r1);
+                } else {
+                    return null;
+                }
+
+            } else {  // r2 is an interval
+                if ((r1.isMinInf() && r2.isMaxOpen()) ||
+                        (r1.isMinNegInf() && r2.isMinOpen()) ||
+                        r2.contains(r1.getMin())) {
+                    return new Range<T>(r1);
+                } else {
+                    return null;
+                }
+            }
+        } else if (r2.isPoint()) {  // r1 is an interval
+            if ((r2.isMinInf() && r1.isMaxOpen()) ||
+                    (r2.isMinNegInf() && r1.isMinOpen()) ||
+                    r1.contains(r2.getMin())) {
+                return new Range<T>(r2);
+            } else {
+                return null;
+            }
+        }
+
+        /*
+         * From here, we are comparing two interval ranges
+         */
         RangeComparator<T> rc = new RangeComparator<T>();
         RangeComparator.Result result = rc.compare(r1, r2);
         if (RangeComparator.isIntersection(result)) {
@@ -263,7 +349,7 @@ public class RangeUtils {
      * 
      * @return 0, 1 or 2 {@code Ranges} representing the result of {@code r2 - r1}
      */
-    public static <T extends Number & Comparable> List<Range<T>> subtact(Range<T> r1, Range<T> r2) {
+    public static <T extends Number & Comparable> List<Range<T>> subtract(Range<T> r1, Range<T> r2) {
         List<Range<T>> difference = new ArrayList<Range<T>>();
         /*
          * Check for equality between inputs
@@ -275,18 +361,18 @@ public class RangeUtils {
         Range<T> common = intersection(r1, r2);
         
         /*
-         * Check if r1 enclosed r2
-         */
-        if (common.equals(r2)) {
-            return difference;  // empty list
-        }
-
-        /*
          * Check for no overlap between inputs
          */
         if (common == null) {
             difference.add( new Range<T>(r2) );
             return difference;
+        }
+
+        /*
+         * Check if r1 enclosed r2
+         */
+        if (common.equals(r2)) {
+            return difference;  // empty list
         }
 
         RangeComparator<T> rc = new RangeComparator<T>();

@@ -20,6 +20,7 @@
 
 package jaitools.numeric;
 
+import jaitools.CollectionFactory;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Test;
@@ -42,29 +43,13 @@ public class RangeUtilsTest {
         Range<Integer> point = Range.create(value);
 
         List<Range<Integer>> compList = RangeUtils.createComplement(point);
-        assertEquals(2, compList.size());
 
-        // expected ranges [-Inf, value) and (value, Inf]
-        Range<Integer> expLow = Range.create(null, true, value, false);
-        Range<Integer> expHigh = Range.create(value, false, null, true);
+        List<Range<Integer>> expected = CollectionFactory.list();
+        expected.add(Range.create(null, false, value, false));
+        expected.add(Range.create(value, false, null, false));
 
-        // don't assume the ranges are in order
-        Range<Integer> low, high;
-        if (compList.get(0).isMinOpen()) {
-            low = compList.get(0);
-            high = compList.get(1);
-        } else {
-            low = compList.get(1);
-            assertTrue(low.isMinOpen());
-            high = compList.get(0);
-        }
-        assertTrue(high.isMaxOpen());
-
-        assertEquals(value, low.getMax().intValue());
-        assertFalse(low.isMaxIncluded());
-
-        assertEquals(value, high.getMin().intValue());
-        assertFalse(high.isMinIncluded());
+        assertEquals(expected.size(), compList.size());
+        assertTrue(compList.containsAll(expected));
     }
 
     /**
@@ -94,20 +79,12 @@ public class RangeUtilsTest {
         List<Range<Integer>> compList = RangeUtils.createComplement(input);
         assertEquals(2, compList.size());
 
-        // don't assume order
-        Range<Integer> low, high;
-        if (compList.get(0).isMinOpen()) {
-            low = compList.get(0);
-            high = compList.get(1);
-        } else {
-            low = compList.get(1);
-            high = compList.get(0);
-        }
+        List<Range<Integer>> expected = CollectionFactory.list();
+        expected.add(Range.create(null, false, -10, false));
+        expected.add(Range.create(10, true, null, false));
 
-        assertEquals(input.getMin().intValue(), low.getMax().intValue());
-        assertFalse(low.isMaxIncluded());
-        assertEquals(input.getMax().intValue(), high.getMin().intValue());
-        assertTrue(high.isMinIncluded());
+        assertEquals(expected.size(), compList.size());
+        assertTrue(compList.containsAll(expected));
     }
 
     @Test
@@ -115,24 +92,93 @@ public class RangeUtilsTest {
         System.out.println("   createComplementOfOpenInterval");
 
         // min open
-        Range<Integer> input = Range.create(null, true, 10, true);
+        Range<Integer> input = Range.create(null, false, 10, true);
         List<Range<Integer>> compList = RangeUtils.createComplement(input);
-        assertEquals(1, compList.size());
 
-        Range<Integer> result = compList.get(0);
-        assertEquals(input.getMax().intValue(), result.getMin().intValue());
-        assertFalse(result.isMinIncluded());
-        assertTrue(result.isMaxOpen());
+        List<Range<Integer>> expected = CollectionFactory.list();
+        expected.add(Range.create(10, false, null, false));
+
+        assertEquals(expected.size(), compList.size());
+        assertTrue(compList.containsAll(expected));
         
         // max open
-        input = Range.create(10, true, null, true);
+        input = Range.create(10, true, null, false);
         compList = RangeUtils.createComplement(input);
-        assertEquals(1, compList.size());
 
-        result = compList.get(0);
-        assertEquals(input.getMin().intValue(), result.getMax().intValue());
-        assertFalse(result.isMaxIncluded());
-        assertTrue(result.isMinOpen());
+        expected.clear();
+        expected.add(Range.create(null, false, 10, false));
+
+        assertEquals(expected.size(), compList.size());
+        assertTrue(compList.containsAll(expected));
+    }
+
+    @Test
+    public void testCreateComplementOfTwoFiniteIntervals() {
+        System.out.println("   testCreateComplementOfTwoFiniteIntervals");
+
+        List<Range<Integer>> ranges = CollectionFactory.list();
+        ranges.add(Range.create(-10, true, -5, false));
+        ranges.add(Range.create(5, true, 10, false));
+        List<Range<Integer>> compList = RangeUtils.createComplement(ranges);
+
+        List<Range<Integer>> expected = CollectionFactory.list();
+        expected.add(Range.create(null, false, -10, false));
+        expected.add(Range.create(-5, true, 5, false));
+        expected.add(Range.create(10, true, null, false));
+
+        assertEquals(expected.size(), compList.size());
+        assertTrue(compList.containsAll(expected));
+    }
+
+    @Test
+    public void testCreateComplementOfOverlappingIntervals() {
+        System.out.println("   testCreateComplementOfTwoFiniteIntervals");
+
+        List<Range<Integer>> ranges = CollectionFactory.list();
+        ranges.add(Range.create(-10, true, 5, false));
+        ranges.add(Range.create(0, true, 10, false));
+        List<Range<Integer>> compList = RangeUtils.createComplement(ranges);
+
+        List<Range<Integer>> expected = CollectionFactory.list();
+        expected.add(Range.create(null, false, -10, false));
+        expected.add(Range.create(10, true, null, false));
+
+        assertEquals(expected.size(), compList.size());
+        assertTrue(compList.containsAll(expected));
+    }
+
+    @Test
+    public void testCreateComplementOfOpenIntervals() {
+        System.out.println("   testCreateComplementOfOpenIntervals");
+
+        List<Range<Integer>> ranges = CollectionFactory.list();
+        ranges.add(Range.create(null, false, -5, false));
+        ranges.add(Range.create(5, true, null, false));
+        List<Range<Integer>> compList = RangeUtils.createComplement(ranges);
+
+        List<Range<Integer>> expected = CollectionFactory.list();
+        expected.add(Range.create(-5, true, 5, false));
+
+        assertEquals(expected.size(), compList.size());
+        assertTrue(compList.containsAll(expected));
+    }
+
+    @Test
+    public void testCreateComplementOfFinitePoints() {
+        System.out.println("   testCreateComplementOfFinitePoints");
+
+        List<Range<Integer>> ranges = CollectionFactory.list();
+        ranges.add(Range.create(-5));
+        ranges.add(Range.create(5));
+        List<Range<Integer>> compList = RangeUtils.createComplement(ranges);
+
+        List<Range<Integer>> expected = CollectionFactory.list();
+        expected.add(Range.create(null, false, -5, false));
+        expected.add(Range.create(-5, false, 5, false));
+        expected.add(Range.create(5, false, null, false));
+
+        assertEquals(expected.size(), compList.size());
+        assertTrue(compList.containsAll(expected));
     }
 
     @Test
@@ -140,11 +186,11 @@ public class RangeUtilsTest {
         System.out.println("   testSortRanges");
 
         List<Range<Integer>> sortedInputs = new ArrayList<Range<Integer>>();
-        sortedInputs.add( Range.create(null, true, 5, true) );
+        sortedInputs.add( Range.create(null, false, 5, true) );
         sortedInputs.add( Range.create(-10, true, 5, true) );
         sortedInputs.add( Range.create(0) );
         sortedInputs.add( Range.create(5, true, 10, true) );
-        sortedInputs.add( Range.create(5, true, null, true) );
+        sortedInputs.add( Range.create(5, true, null, false) );
 
         List<Range<Integer>> disorderedInputs = new ArrayList<Range<Integer>>();
         for (int i : new int[]{4, 2, 3, 1, 0}) {
@@ -163,7 +209,7 @@ public class RangeUtilsTest {
         System.out.println("   testSimplify");
 
         List<Range<Integer>> inputs = new ArrayList<Range<Integer>>();
-        inputs.add( Range.create(null, true, 5, false));
+        inputs.add( Range.create(null, false, 5, false));
         inputs.add( Range.create(0));
         inputs.add( Range.create(0, true, 5, false));
         inputs.add( Range.create(5, true, 10, true));
@@ -171,7 +217,7 @@ public class RangeUtilsTest {
 
         List<Range<Integer>> result = RangeUtils.simplify(inputs);
         assertEquals(2, result.size());
-        assertEquals(new Range<Integer>(null, true, 10, true), result.get(0));
+        assertEquals(new Range<Integer>(null, false, 10, true), result.get(0));
         assertEquals(new Range<Integer>(20, true, 30, true), result.get(1));
     }
 
@@ -179,14 +225,14 @@ public class RangeUtilsTest {
     public void testIntersection() {
         System.out.println("   testIntersection");
         
-        Range<Integer> r1 = Range.create(null, true, 5, false);
-        Range<Integer> r2 = Range.create(-5, false, null, true);
+        Range<Integer> r1 = Range.create(null, false, 5, false);
+        Range<Integer> r2 = Range.create(-5, false, null, false);
         Range<Integer> result = RangeUtils.intersection(r2, r1);
 
         Range<Integer> expected = Range.create(-5, false, 5, false);
         assertEquals(expected, result);
 
-        Range<Integer> r3 = Range.create(5, true, null, true);
+        Range<Integer> r3 = Range.create(5, true, null, false);
         result = RangeUtils.intersection(r3, r1);
         assertNull(result);
     }
@@ -195,15 +241,15 @@ public class RangeUtilsTest {
     public void testSubtract() {
         System.out.println("   testSubtract");
 
-        Range<Integer> r1 = Range.create(null, true, null, true);
+        Range<Integer> r1 = Range.create(null, false, null, false);
         Range<Integer> r2 = Range.create(-5, false, 5, true);
 
-        List<Range<Integer>> result = RangeUtils.subtact(r1, r2);
+        List<Range<Integer>> result = RangeUtils.subtract(r1, r2);
         assertEquals(0, result.size());
 
-        result = RangeUtils.subtact(r2, r1);
+        result = RangeUtils.subtract(r2, r1);
         assertEquals(2, result.size());
-        assertEquals(new Range<Integer>(null, true, -5, true), result.get(0));
-        assertEquals(new Range<Integer>(5, false, null, true), result.get(1));
+        assertEquals(new Range<Integer>(null, false, -5, true), result.get(0));
+        assertEquals(new Range<Integer>(5, false, null, false), result.get(1));
     }
 }
