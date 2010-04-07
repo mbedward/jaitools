@@ -623,14 +623,14 @@ public class Range<T extends Number & Comparable> {
             sb.append(getMin());
             sb.append(", ");
         } else {
-            sb.append("[-Inf, ");
+            sb.append("(-Inf, ");
         }
 
         if (isMaxClosed()) {
             sb.append(getMax());
             sb.append(isMaxIncluded() ? ']' : ')');
         } else {
-            sb.append("Inf]");
+            sb.append("Inf)");
         }
 
         return sb.toString();
