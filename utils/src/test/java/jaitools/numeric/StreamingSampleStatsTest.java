@@ -40,7 +40,8 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testMean() {
-        System.out.println("   test mean");
+        System.out.println("   testMean");
+
         StreamingSampleStats stats = new StreamingSampleStats();
         stats.setStatistic(Statistic.MEAN);
 
@@ -54,10 +55,11 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testMeanWithExcludedRange() {
-        System.out.println("   test mean with excluded range");
+        System.out.println("   testMeanWithExcludedRange");
+
         StreamingSampleStats stats = new StreamingSampleStats();
         stats.setStatistic(Statistic.MEAN);
-        stats.addExcludedRange(Range.create(null, true, 0.0, false));
+        stats.addRange(Range.create(null, false, 0.0, false), Range.Type.EXCLUDE);
 
         for (int val = -1000; val <= 1000; val++) {
             stats.offer((double)val);
@@ -69,7 +71,8 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testMeanSingleValue() {
-        System.out.println("   test mean single value");
+        System.out.println("   testMeanSingleValue");
+
         StreamingSampleStats stats = new StreamingSampleStats();
         stats.setStatistic(Statistic.MEAN);
         stats.offer(singleValue);
@@ -79,7 +82,8 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testZeroVariance() {
-        System.out.println("   test zero variance");
+        System.out.println("   testZeroVariance");
+
         StreamingSampleStats stats = new StreamingSampleStats();
         stats.setStatistic(Statistic.VARIANCE);
 
@@ -93,7 +97,8 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testVariance() {
-        System.out.println("   test variance");
+        System.out.println("   testVariance");
+
         StreamingSampleStats stats = new StreamingSampleStats();
         stats.setStatistic(Statistic.VARIANCE);
 
@@ -108,7 +113,8 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testVarianceSingleValue() {
-        System.out.println("   test variance single value");
+        System.out.println("   testVarianceSingleValue");
+
         StreamingSampleStats stats = new StreamingSampleStats();
         stats.setStatistic(Statistic.VARIANCE);
         stats.offer(singleValue);
@@ -118,7 +124,8 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testMinMaxRange() {
-        System.out.println("   test min, max and range");
+        System.out.println("   testMinMaxRange");
+
         StreamingSampleStats streamStats = new StreamingSampleStats();
         Statistic[] stats = {
             Statistic.MIN, Statistic.MAX, Statistic.RANGE
@@ -148,7 +155,8 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testMinMaxRangeSingleValue() {
-        System.out.println("   test min, max and range single value");
+        System.out.println("   testMinMaxRangeSingleValue");
+
         StreamingSampleStats streamStats = new StreamingSampleStats();
         Statistic[] stats = {
             Statistic.MIN, Statistic.MAX, Statistic.RANGE
@@ -163,7 +171,8 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testMedian() {
-        System.out.println("   test exact and approximate median");
+        System.out.println("   testMedian");
+
         StreamingSampleStats streamStats = new StreamingSampleStats();
         streamStats.setStatistic(Statistic.MEDIAN);
         streamStats.setStatistic(Statistic.APPROX_MEDIAN);
@@ -188,11 +197,11 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testMedianWithRange() {
-        System.out.println("   test medians with excluded range");
+        System.out.println("   testMedianWithRange");
         StreamingSampleStats streamStats = new StreamingSampleStats();
         streamStats.setStatistic(Statistic.MEDIAN);
         streamStats.setStatistic(Statistic.APPROX_MEDIAN);
-        streamStats.addExcludedRange(Range.create(null, true, 0.0, false));
+        streamStats.addRange(Range.create(null, false, 0.0, false), Range.Type.EXCLUDE);
 
         List<Double> values = CollectionFactory.list();
 
@@ -206,7 +215,6 @@ public class StreamingSampleStatsTest {
         }
 
         double exact = streamStats.getStatisticValue(Statistic.MEDIAN);
-        System.out.println("exact: " + exact);
         assertEquals(500.0, exact, TOL);
 
         double error = Math.abs(exact - streamStats.getStatisticValue(Statistic.APPROX_MEDIAN));
@@ -215,7 +223,7 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testSum() {
-        System.out.println("   test sum");
+        System.out.println("   testSum");
         StreamingSampleStats stats = new StreamingSampleStats();
         stats.setStatistic(Statistic.SUM);
 
@@ -226,10 +234,10 @@ public class StreamingSampleStatsTest {
         double result = stats.getStatisticValue(Statistic.SUM);
         assertEquals(0.0, result, TOL);
     }
-    
+
     @Test
     public void testExactMedianSingleValue() {
-        System.out.println("   test exact median single value");
+        System.out.println("   testExactMedianSingleValue");
         StreamingSampleStats streamStats = new StreamingSampleStats();
         streamStats.setStatistic(Statistic.MEDIAN);
 
@@ -239,11 +247,24 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testApproxMedianSingleValue() {
-        System.out.println("   test approx median single value");
+        System.out.println("   testApproxMedianSingleValue");
+
         StreamingSampleStats streamStats = new StreamingSampleStats();
         streamStats.setStatistic(Statistic.APPROX_MEDIAN);
 
         streamStats.offer(singleValue);
         assertEquals(singleValue, streamStats.getStatisticValue(Statistic.APPROX_MEDIAN));
+    }
+
+    @Test
+    public void testNaNValues() {
+        System.out.println("   testNaNValues");
+
+        StreamingSampleStats streamStats = new StreamingSampleStats();
+        streamStats.setStatistic(Statistic.SUM);
+
+        streamStats.offer(new Double[] { 0.0, Double.NaN, 1.0, Double.NaN, 2.0});
+        assertEquals(3.0, streamStats.getStatisticValue(Statistic.SUM), TOL);
+        assertEquals(2, streamStats.getNumNaN(Statistic.SUM));
     }
 }

@@ -52,7 +52,7 @@ public class SumProcessor extends AbstractProcessor {
      * {@inheritDoc}
      */
     protected boolean update(Double sample) {
-        if (!isExcluded(sample)) {
+    	if (isAccepted(sample)) {
             sum += sample;
             return true;
         }

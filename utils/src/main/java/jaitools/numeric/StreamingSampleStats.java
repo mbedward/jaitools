@@ -20,6 +20,7 @@
 package jaitools.numeric;
 
 import jaitools.CollectionFactory;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -71,27 +72,41 @@ import java.util.logging.Logger;
  * for (Statistic s : stats) {
  *     System.out.println(String.format("%s: %.4f", s, strmStats.getStatisticValue(s)));
  * }
- * 
+ *
  * </code></pre>
- * 
+ *
  * @author Michael Bedward
+ * @author Daniele Romagnoli, GeoSolutions S.A.S.
  * @since 1.0
  * @source $URL$
  * @version $Id$
  */
 public class StreamingSampleStats {
-    private static final Logger LOGGER = Logger.getLogger("jaitools.numeric");
 
+    private static final Logger LOGGER = Logger.getLogger("jaitools.numeric");
     private ProcessorFactory factory = new ProcessorFactory();
     private List<Processor> processors;
-    private List<Range<Double>> excludedRanges;
+    private List<Range<Double>> ranges;
+    private final Range.Type rangesType;
 
     /**
-     * Constructor
+     * Default constructor
      */
     public StreamingSampleStats() {
+        this(Range.Type.EXCLUDE);
+    }
+
+    /**
+     * Create a new instance with specified use of {@code Ranges}.
+     *
+     * @param rangesType normally either {@linkplain Range.Type#INCLUDE} to indicate that
+     *        {@code Ranges} will define values to operate on, or {@linkplain Range.Type#EXCLUDE}
+     *        when {@code Ranges} will define values to exclude from operations.
+     */
+    public StreamingSampleStats(Range.Type rangesType) {
         processors = CollectionFactory.list();
-        excludedRanges = CollectionFactory.list();
+        ranges = CollectionFactory.list();
+        this.rangesType = rangesType;
     }
 
     /**
@@ -111,10 +126,10 @@ public class StreamingSampleStats {
                 LOGGER.severe("Unsupported Statistic: " + stat);
             } else {
                 processors.add(p);
-                
+
                 // apply cached excluded ranges to the new processor
-                for (Range<Double> excluded : excludedRanges) {
-                    p.addExcludedRange(excluded);
+                for (Range<Double> range : ranges) {
+                    p.addRange(range, rangesType);
                 }
             }
         }
@@ -153,13 +168,45 @@ public class StreamingSampleStats {
      * the excluded range will be applied to them as well.
      *
      * @param exclude the {@code Range} to exclude
+     *
+     * @deprecated Please use {@link #addRange(Range)}
      */
     public void addExcludedRange(Range<Double> exclude) {
-        excludedRanges.add(new Range<Double>(exclude));
+        ranges.add(new Range<Double>(exclude));
 
         for (Processor p : processors) {
             p.addExcludedRange(exclude);
         }
+    }
+
+    /**
+     * Add a range of values to include/exclude from the calculation of <b>all</b>
+     * statistics. If further statistics are set after calling this method
+     * the range will be applied to them as well.
+     *
+     * @param range the {@code Range} to include/exclude
+     */
+    public void addRange(Range<Double> range) {
+        ranges.add(new Range<Double>(range));
+
+        for (Processor p : processors) {
+            p.addRange(range);
+        }
+    }
+
+    /**
+     * Add a range of values to exclude/include from the calculation of <b>all</b>
+     * statistics. If further statistics are set after calling this method
+     * the range will be applied to them as well.
+     *
+     * @param range the {@code Range} to include/exclude
+     * @param rangesType one of {@linkplain Range.Type#INCLUDE} or {@linkplain Range.Type#EXCLUDE}
+     */
+    public void addRange(Range<Double> range, Range.Type rangesType) {
+        for (Processor p : processors) {
+            p.addRange(range, rangesType);
+        }
+        ranges.add(new Range<Double>(range));
     }
 
     /**
@@ -206,7 +253,7 @@ public class StreamingSampleStats {
      * times in the sampling process.
      *
      * @param stat the statistic
-     * 
+     *
      * @return number of samples that have been accepted
      *
      * @throws IllegalArgumentException if the statistic hasn't been set
@@ -247,13 +294,31 @@ public class StreamingSampleStats {
     }
 
     /**
+     * Get the number of sample values that are NaN
+     * Note that different statistics might have been set at different
+     * times in the sampling process.
+     *
+     * @param stat the statistic
+     *
+     * @return number of NaN samples received
+     *
+     * @throws IllegalArgumentException if the statistic hasn't been set
+     */
+    public long getNumNaN(Statistic stat) {
+        Processor p = findProcessor(stat);
+        if (p == null) {
+            throw new IllegalArgumentException(
+                    "requesting sample size for a statistic that is not set: " + stat);
+        }
+
+        return p.getNumNaN();
+    }
+
+    /**
      * Offer a sample value. Offered values are filtered through excluded ranges.
      * {@code Double.NaNs} and {@code nulls} are excluded by default.
      *
      * @param sample the sample value
-     *
-     * @see #getNumOffered
-     * @see #getNumAccepted
      */
     public void offer(Double sample) {
         for (Processor p : processors) {
@@ -265,13 +330,11 @@ public class StreamingSampleStats {
      * Convenience method: adds an array of new sample values and
      * updates all currently set statistics.
      *
-     * @param samples the new sample values
+     * @param samples the sample values
      */
-    public void addSamples(Double[] samples) {
-        for (Processor p : processors) {
-            for (int i = 0; i < samples.length; i++) {
-                offer(samples[i]);
-            }
+    public void offer(Double[] samples) {
+        for (int i = 0; i < samples.length; i++) {
+            offer(samples[i]);
         }
     }
 
@@ -300,9 +363,8 @@ public class StreamingSampleStats {
         for (Statistic s : getStatistics()) {
             results.put(s, getStatisticValue(s));
         }
-        
+
         return results;
     }
-
 }
 
