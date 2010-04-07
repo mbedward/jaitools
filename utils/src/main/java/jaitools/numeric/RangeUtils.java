@@ -29,7 +29,8 @@ import java.util.List;
  * Provides static helper methods to transform, sort and merge {@code Range} objects.
  *
  * @author Michael Bedward
- * @since 1.1
+ * @author Daniele Romagnoli, GeoSolutions S.A.S.
+ * @since 1.0
  * @version $Id: RangeUtils.java 1160 2010-04-07 08:45:17Z michael.bedward $
  */
 public class RangeUtils {

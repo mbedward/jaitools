@@ -87,7 +87,7 @@ public class ExactMedianProcessor extends AbstractProcessor {
      */
     @Override
     protected boolean update(Double sample) {
-    	if (isAccepted(sample)) {
+        if (isAccepted(sample)) {
             values.add(sample);
             calculationRequired = true;
             return true;
