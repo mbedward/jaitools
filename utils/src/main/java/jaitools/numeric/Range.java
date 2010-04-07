@@ -127,7 +127,7 @@ public class Range<T extends Number & Comparable> {
      * relevant NEGATIVE_INFINITY value can also be used.
      *
      * @param minIncluded true if the lower bound is to be included in the
-     * range; false to exclude the lower bound; overridden to be true if the
+     * range; false to exclude the lower bound; overridden to be false if the
      * lower bound is open
      *
      * @param maxValue the upper bound; passing null for this parameter
@@ -135,7 +135,7 @@ public class Range<T extends Number & Comparable> {
      * relevant NEGATIVE_INFINITY value can also be used.
      *
      * @param maxIncluded true if the upper bound is to be included in the
-     * range; false to exclude the upper bound; overridden to be true if the
+     * range; false to exclude the upper bound; overridden to be false if the
      * upper bound is open
      *
      * @return a new Range object with the specified type and bounds
@@ -164,7 +164,7 @@ public class Range<T extends Number & Comparable> {
      * relevant NEGATIVE_INFINITY value can also be used.
      *
      * @param minIncluded true if the lower bound is to be included in the
-     * range; false to exclude the lower bound; overridden to be true if the
+     * range; false to exclude the lower bound; overridden to be false if the
      * lower bound is open
      *
      * @param maxValue the upper bound; passing null for this parameter
@@ -172,7 +172,7 @@ public class Range<T extends Number & Comparable> {
      * relevant NEGATIVE_INFINITY value can also be used.
      *
      * @param maxIncluded true if the upper bound is to be included in the
-     * range; false to exclude the upper bound; overridden to be true if the
+     * range; false to exclude the upper bound; overridden to be false if the
      * upper bound is open
      */
     public Range(T minValue, boolean minIncluded, T maxValue, boolean maxIncluded) {
@@ -219,7 +219,7 @@ public class Range<T extends Number & Comparable> {
         } else {
             this.minValue = null;
             this.minOpen = true;
-            this.minIncluded = true;
+            this.minIncluded = false;
         }
 
         maxType = FINITE;
@@ -259,7 +259,7 @@ public class Range<T extends Number & Comparable> {
         } else {
             this.maxValue = null;
             this.maxOpen = true;
-            this.maxIncluded = true;
+            this.maxIncluded = false;
         }
 
         /*
@@ -315,7 +315,8 @@ public class Range<T extends Number & Comparable> {
      * <ul>
      * <li> getting the min or max value of the range will return null
      * <li> the upper and lower bounds are treated as open
-     * <li> the upper and lower bounds are treated as not included
+     * <li> the upper and lower bounds are treated as not included (ie. an
+     *      infinite point does not contain itself !)
      * </ul>
      *
      * @param value the value to set for both min and max end-points
@@ -357,14 +358,20 @@ public class Range<T extends Number & Comparable> {
         if (bound == FINITE) {
             this.maxValue = this.minValue = value;
             this.maxType = this.minType = FINITE;
-            this.maxIncluded = this.minIncluded = true;
             this.maxOpen = this.minOpen = false;
+            this.maxIncluded = this.minIncluded = true;
 
-        } else {
+        } else {  // point at +ve or -ve infinity
             this.maxValue = this.minValue = null;
             this.maxType = this.minType = bound;
-            this.maxIncluded = this.minIncluded = true;
             this.minOpen = this.maxOpen = true;
+            /*
+             * While it seems strange to have a point that doesn't
+             * include itself, setting minIncluded and maxIncluded to
+             * true would be inconsistent with treatment for proper
+             * intervals (and perhaps illogical)
+             */
+            this.maxIncluded = this.minIncluded = false;
         }
     }
 
