@@ -24,7 +24,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -48,32 +47,47 @@ public class Lookup {
     public static List<Class> getProviders(String spiName) {
         List providers = new ArrayList<Class>();
 
-        InputStream str = ClassLoader.getSystemResourceAsStream(prefix + spiName);
-        if (str != null) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(str));
-            String line = null;
-
-            try {
-            while ((line = reader.readLine()) != null) {
-                String text = line.trim();
-                if (text.length() > 0 && !text.startsWith("#")) {
-                    try {
-                        providers.add(Class.forName(text));
-                    } catch (ClassNotFoundException ex) {
-                        LOGGER.warning("Class not found: " + text);
+        ClassLoader cl = Lookup.class.getClassLoader();
+        if (cl != null) {
+            InputStream str = cl.getResourceAsStream(prefix + spiName);
+            if (str != null) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(str));
+                String line = null;
+    
+                try {
+                    while ((line = reader.readLine()) != null) {
+                        String text = line.trim();
+                        if (text.length() > 0 && !text.startsWith("#")) {
+                            try {
+                                providers.add(Class.forName(text));
+                            } catch (ClassNotFoundException ex) {
+                                LOGGER.warning("Class not found: " + text);
+                            }
+                        }
                     }
+                } catch (IOException ex) {
+                    LOGGER.severe("Problem reading services file: " + spiName);
+                } finally {
+                    
+                    try {
+                            str.close();
+                    } catch (Throwable e) {
+                        // ignore
+                    }
+                    
+                    try {
+                        if (reader != null) {
+                            reader.close();
+                        }
+                    } catch (Throwable e) {
+                        // ignore
+                    }    
                 }
-            }} catch (IOException ex) {
-                LOGGER.severe("Problem reading services file: " + spiName);
-            }
-
-            try {
-                reader.close();
-            } catch (IOException ex) {
-                // ignore
+    
+                
             }
         }
-        
+
         return providers;
     }
 }
