@@ -82,11 +82,14 @@ public class ZonalStatsRIF implements RenderedImageFactory {
 
         Integer[] bands = (Integer[]) paramBlock.getObjectParameter(ZonalStatsDescriptor.BAND_ARG);
 
-        Object localStats = paramBlock.getObjectParameter(ZonalStatsDescriptor.RANGE_LOCAL_STATS);
+        Object localStats = paramBlock.getObjectParameter(ZonalStatsDescriptor.RANGE_LOCAL_STATS_ARG);
         Boolean rangeLocalStats = localStats != null ? (Boolean) localStats : Boolean.FALSE;
         
         Object rng = paramBlock.getObjectParameter(ZonalStatsDescriptor.RANGES_ARG);
         List<Range<Double>> ranges = rng != null ? (List<Range<Double>>) rng : null;
+
+        Object noDataRng = paramBlock.getObjectParameter(ZonalStatsDescriptor.NODATA_RANGES_ARG);
+        List<Range<Double>> noDataRanges = rng != null ? (List<Range<Double>>) noDataRng : null;
         
         Object rngType = paramBlock.getObjectParameter(ZonalStatsDescriptor.RANGES_TYPE_ARG);
         Range.Type rangesType = rngType != null ? (Range.Type) rngType : rng != null ? Range.Type.EXCLUDE : Range.Type.UNDEFINED; 
@@ -131,7 +134,8 @@ public class ZonalStatsRIF implements RenderedImageFactory {
                 zoneTransform,
                 ranges,
                 rangesType,
-                rangeLocalStats
+                rangeLocalStats,
+                noDataRanges
                 );
     }
 }

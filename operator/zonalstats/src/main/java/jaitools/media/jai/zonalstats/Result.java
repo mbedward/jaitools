@@ -40,21 +40,17 @@ public class Result {
     private long numOffered;
     private long numAccepted;
     private long numNaN;
+    private long numNoData;
 
     public long getNumNaN() {
         return numNaN;
     }
-
-    public Result(int imageBand, int zone, Statistic stat, Double value, long numOffered, long numAccepted) {
-        this.imageBand = imageBand;
-        this.zone = zone;
-        this.stat = stat;
-        this.value = value;
-        this.numOffered = numOffered;
-        this.numAccepted = numAccepted;
-    }
     
-    public Result(int imageBand, int zone, Statistic stat, List<Range> ranges, Double value, long numOffered, long numAccepted, long numNaN) {
+    public long getNumNoData() {
+        return numNoData;
+    }
+
+    public Result(int imageBand, int zone, Statistic stat, List<Range> ranges, Double value, long numOffered, long numAccepted, long numNaN, long numNoData) {
         this.imageBand = imageBand;
         this.zone = zone;
         this.stat = stat;
@@ -62,6 +58,7 @@ public class Result {
         this.numOffered = numOffered;
         this.numAccepted = numAccepted;
         this.numNaN = numNaN;
+        this.numNoData = numNoData;
         this.ranges = ranges;
     }
     
@@ -96,8 +93,8 @@ public class Result {
     @Override
     public String toString() {
     	String rangess = ranges != null && !ranges.isEmpty() ? ranges.toString() : ""; 
-        return String.format("band %d zone %d %s: %.4f N=%d (%d) %s",
-                imageBand, zone, stat, value, numAccepted, numOffered, rangess);
+        return String.format("band %d zone %d %s: %.4f N=%d (%d - ND:%d - NaN:%d) %s",
+                imageBand, zone, stat, value, numAccepted, numOffered, numNoData, numNaN, rangess);
     }
 
 

@@ -74,6 +74,9 @@ public class ZonalStatsOpImage extends NullOpImage {
     /** Optional ranges to exclude/include values from/in statistics computations */
     private final List<Range<Double>> ranges;
     
+    /** Optional ranges to specify which values should be considered as NoData and then excluded from computations */
+    private final List<Range<Double>> noDataRanges;
+    
     /** Compute separated statistics on ranges if true */
     private final boolean rangeLocalStats;
     
@@ -119,7 +122,7 @@ public class ZonalStatsOpImage extends NullOpImage {
             ROI roi,
             AffineTransform zoneTransform,
             List<Range<Double>> excludedRanges) {
-    	this (dataImage, zoneImage, config, layout, stats, bands, roi, zoneTransform, excludedRanges, Range.Type.EXCLUDE, false);
+    	this (dataImage, zoneImage, config, layout, stats, bands, roi, zoneTransform, excludedRanges, Range.Type.EXCLUDE, false, null);
     }
     
     /**
@@ -165,7 +168,8 @@ public class ZonalStatsOpImage extends NullOpImage {
             AffineTransform zoneTransform,
             List<Range<Double>> ranges,
             Range.Type rangesType,
-            final boolean rangeLocalStats) {
+            final boolean rangeLocalStats,
+            List<Range<Double>> noDataRanges) {
 
         super(dataImage, layout, config, OpImage.OP_COMPUTE_BOUND);
 
@@ -188,6 +192,15 @@ public class ZonalStatsOpImage extends NullOpImage {
             // copy the ranges defensively
             for (Range<Double> r : ranges) {
                 this.ranges.add(new Range<Double>(r));
+            }
+        }
+        
+        this.noDataRanges = CollectionFactory.list();
+        if (noDataRanges != null && !noDataRanges.isEmpty()) {
+            
+            // copy the ranges defensively
+            for (Range<Double> r : noDataRanges) {
+                this.noDataRanges.add(new Range<Double>(r));
             }
         }
     }
@@ -247,6 +260,9 @@ public class ZonalStatsOpImage extends NullOpImage {
                 StreamingSampleStats sampleStats = new StreamingSampleStats(Range.Type.EXCLUDE);
                 for (Range<Double> r : ranges) {
                     sampleStats.addRange(r);
+                }
+                for (Range<Double> r : noDataRanges) {
+                    sampleStats.addNoDataRange(r);
                 }
                 sampleStats.setStatistics(stats);
                 resultsPerBand.put(zone, sampleStats);
@@ -335,6 +351,9 @@ public class ZonalStatsOpImage extends NullOpImage {
             for (Range<Double> r : ranges) {
                 sampleStats.addRange(r);
             }
+            for (Range<Double> r : noDataRanges) {
+                sampleStats.addNoDataRange(r);
+            }
             sampleStats.setStatistics(stats);
             sampleStatsPerBand[index] = sampleStats;
         }
@@ -413,7 +432,10 @@ public class ZonalStatsOpImage extends NullOpImage {
 	        final StreamingSampleStats sampleStatsPerBand[] = new StreamingSampleStats[srcBands.length];
 	        for (int index = 0; index < srcBands.length; index++) {
 	            final StreamingSampleStats sampleStats = new StreamingSampleStats(rangesType);
-                sampleStats.addRange(range);
+                    sampleStats.addRange(range);
+                    for (Range<Double> noDataRange: noDataRanges){
+                        sampleStats.addNoDataRange(noDataRange);
+                    }
 	            sampleStats.setStatistics(stats);
 	            sampleStatsPerBand[index] = sampleStats;
 	        }

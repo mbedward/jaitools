@@ -256,15 +256,16 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
     static final int ZONE_TRANSFORM_ARG = 3;
     static final int RANGES_ARG = 4;
     static final int RANGES_TYPE_ARG = 5;
-    static final int RANGE_LOCAL_STATS = 6;
+    static final int RANGE_LOCAL_STATS_ARG = 6;
+    static final int NODATA_RANGES_ARG = 7;
 
-    private static final String[] paramNames = {"stats", "bands", "roi", "zoneTransform", "ranges", "rangesType", "rangeLocalStats"};
+    private static final String[] paramNames = {"stats", "bands", "roi", "zoneTransform", "ranges", "rangesType", "rangeLocalStats", "noDataRanges"};
 
     private static final Class<?>[] paramClasses = {Statistic[].class, Integer[].class,
-            javax.media.jai.ROI.class, AffineTransform.class, List.class, Range.Type.class, Boolean.class };
+            javax.media.jai.ROI.class, AffineTransform.class, List.class, Range.Type.class, Boolean.class, List.class };
 
     private static final Object[] paramDefaults = {NO_PARAMETER_DEFAULT,
-            new Integer[]{Integer.valueOf(0)}, (ROI) null, (AffineTransform) null, (List) null, Range.Type.UNDEFINED, Boolean.FALSE};
+            new Integer[]{Integer.valueOf(0)}, (ROI) null, (AffineTransform) null, (List) null, Range.Type.UNDEFINED, Boolean.FALSE, (List) null};
 
     /** Constructor. */
     public ZonalStatsDescriptor() {
@@ -313,7 +314,12 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
                         "arg6Desc",
                         String.format("%s (default %s) - an optional range argument type "
                             + "that define whether to calculate global statistics or splitted by ranges",
-                            paramNames[RANGE_LOCAL_STATS], paramDefaults[RANGE_LOCAL_STATS])}
+                            paramNames[RANGE_LOCAL_STATS_ARG], paramDefaults[RANGE_LOCAL_STATS_ARG])},
+                {
+                        "arg7Desc",
+                        String.format("%s (default %s) - an optional List of Ranges "
+                            + "that define dataImage values to be considered as noData and then be excluded from calculations",
+                            paramNames[NODATA_RANGES_ARG], paramDefaults[NODATA_RANGES_ARG])},
 
         },
 
@@ -355,12 +361,13 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
             Statistic[] stats, Integer[] bands, ROI roi, AffineTransform zoneTransform,
             List<Range<Double>> ranges, RenderingHints hints ) {
 
-        return create(dataImage, zoneImage, stats, bands, roi, zoneTransform, ranges, Range.Type.EXCLUDE, false, hints);
+        return create(dataImage, zoneImage, stats, bands, roi, zoneTransform, ranges, Range.Type.EXCLUDE, false, null, hints);
     }
     
     public static RenderedImage create( RenderedImage dataImage, RenderedImage zoneImage,
             Statistic[] stats, Integer[] bands, ROI roi, AffineTransform zoneTransform,
-            List<Range<Double>> ranges, Range.Type rangesType, boolean rangeLocalStats, RenderingHints hints ) {
+            List<Range<Double>> ranges, Range.Type rangesType, boolean rangeLocalStats, 
+            List<Range<Double>> noDataRanges, RenderingHints hints ) {
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats", RenderedRegistryMode.MODE_NAME);
 
@@ -372,7 +379,8 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
         pb.setParameter(paramNames[ZONE_TRANSFORM_ARG], zoneTransform);
         pb.setParameter(paramNames[RANGES_ARG], ranges);
         pb.setParameter(paramNames[RANGES_TYPE_ARG], rangesType);
-        pb.setParameter(paramNames[RANGE_LOCAL_STATS], rangeLocalStats);
+        pb.setParameter(paramNames[RANGE_LOCAL_STATS_ARG], rangeLocalStats);
+        pb.setParameter(paramNames[NODATA_RANGES_ARG], noDataRanges);
 
         return JAI.create("ZonalStats", pb, hints);
     }
@@ -402,6 +410,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
             msg.append("ZonalStats operator takes 1 or 2 source images");
             return false;
         }
+        
         // CHECKING RANGES
         Object rangeObject = pb.getObjectParameter(RANGES_ARG);
         if (rangeObject != null) {
@@ -422,11 +431,11 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
                 			Range r1 = rr.get(i);
                 			Range r2 = rr.get(i+1);
                 			RangeComparator.Result result = rc.compare(r1, r2);
-                    	    	if (RangeComparator.isIntersection(result)) {
-                    	    		ok = false;
-                    	    		msg.append(paramNames[RANGES_ARG] + " arg can't contain intersecting ranges");
-                    	    		break;
-                    	    	}
+                            	        if (RangeComparator.isIntersection(result)) {
+                            	    		ok = false;
+                            	    		msg.append(paramNames[RANGES_ARG] + " arg can't contain intersecting ranges");
+                            	    		break;
+                            	    	}
                 			
                 		}
                 	}
@@ -436,6 +445,27 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
                 if (rangeObject != null) {
                     ok = false;
                     msg.append(paramNames[RANGES_ARG] + " arg has to be of type List<Range<Double>>");
+                }
+            }
+            if (!ok) {
+                return false;
+            }
+        }
+        
+     // CHECKING NoData RANGES
+        Object noDataRangeObject = pb.getObjectParameter(NODATA_RANGES_ARG);
+        if (noDataRangeObject != null) {
+            boolean ok = true;
+            if (noDataRangeObject instanceof List) {
+                Object range = ((List) noDataRangeObject).get(0);
+                if (!(range instanceof Range)) {
+                        msg.append(paramNames[NODATA_RANGES_ARG] + " arg has to be of type List<Range<Double>>");
+                    ok = false;
+                } 
+            } else {
+                if (noDataRangeObject != null) {
+                    ok = false;
+                    msg.append(paramNames[NODATA_RANGES_ARG] + " arg has to be of type List<Range<Double>>");
                 }
             }
             if (!ok) {

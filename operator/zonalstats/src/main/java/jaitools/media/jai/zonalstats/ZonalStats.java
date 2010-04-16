@@ -135,7 +135,8 @@ public class ZonalStats {
                     stats.getStatisticValue(s),
                     stats.getNumOffered(s),
                     stats.getNumAccepted(s), 
-                    stats.getNumNaN(s));
+                    stats.getNumNaN(s),
+                    stats.getNumNoData(s));
 
             results.add(r);
         }
