@@ -76,6 +76,7 @@ public class ZonalStatsTest {
     private static RenderedImage constant1Image = createConstantImage(new Double[]{1.0});
     private static RenderedImage twoValueImage = createTwoValuesImage();
     private static RenderedImage multibandImage = createMultibandImage();
+    private static RenderedImage multibandImageNoData = createMultibandImageNoData();
 
 
     @Test
@@ -388,7 +389,46 @@ public class ZonalStatsTest {
         assertTrue(stats.statistic(Statistic.MIN).results().get(0).getValue() >= min);
         assertTrue(stats.statistic(Statistic.MAX).results().get(0).getValue() <= max);
     }
+    
+    @Test
+    public void testNoDataRanges() {
+        if(LOGGER.isLoggable(Level.INFO))
+                LOGGER.info("   test testNoDataRanges");
 
+        ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
+        pb.setSource("dataImage", multibandImageNoData);
+        pb.setParameter("stats", new Statistic[]{Statistic.MIN, Statistic.MAX, Statistic.RANGE});
+
+        // set NoData range values
+        List<Range<Double>> noRanges = CollectionFactory.list();
+        noRanges.add(Range.create(-9999.0d, null));
+        pb.setParameter("noDataRanges", noRanges);
+        
+        pb.setParameter("bands", new Integer[]{0, 2});
+
+        RenderedOp op = JAI.create("ZonalStats", pb);
+        ZonalStats stats = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+
+        for (Result r : stats.results()) {
+            switch (r.getStatistic()) {
+                case MIN:
+                case MAX:
+                    assertTrue(DoubleComparison.dequal(r.getImageBand(), r.getValue()-1));
+                    assertTrue(DoubleComparison.dequal(2360, r.getNumNoData()));
+                    assertTrue(DoubleComparison.dequal(992, r.getNumNaN()));
+                    assertTrue(DoubleComparison.dequal(5832, r.getNumAccepted()));
+                    break;
+                case RANGE:
+                    assertTrue(DoubleComparison.dequal(0, r.getValue()));
+                    assertTrue(DoubleComparison.dequal(2360, r.getNumNoData()));
+                    assertTrue(DoubleComparison.dequal(992, r.getNumNaN()));
+                    assertTrue(DoubleComparison.dequal(5832, r.getNumAccepted()));
+                    break;
+                default:
+                    fail("unexpected statistic: " + r.getStatistic());
+            }
+        }
+    }
 
     private void assertSingleResult(RenderedOp op, Statistic stat, Double value) {
         ZonalStats stats = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
@@ -491,6 +531,50 @@ public class ZonalStatsTest {
 
                 for( int m = 0; m < numBands; m++ ) {
                     if (iToEdge < 5 || jToEdge < 5) {
+                        values[m] = Double.NaN;
+                    } else if (iToEdge < 10 || jToEdge < 10) {
+                        values[m] = -9999.0;
+                    } else
+                        values[m] = m + 1.0;  // make band values different
+                }
+                iter.setPixel(values);
+                j++;
+            } while( !iter.nextPixelDone() );
+            iter.startPixels();
+            i++;
+        } while( !iter.nextLineDone() );
+
+        return img;
+    }
+    
+    /**
+     * Create a 3 band image. Each band has an outer border of Double.NaN; an
+     * inner border of -9999; and then interior values of band index + 1.
+     */
+    private static PlanarImage createMultibandImageNoData() {
+        final int numBands = 3;
+        final int[] bandOffsets = {0, 1, 2};
+
+        SampleModel sm = new PixelInterleavedSampleModel(
+                DataBuffer.TYPE_DOUBLE,
+                TILE_WIDTH, TILE_WIDTH,
+                numBands, numBands*TILE_WIDTH,
+                bandOffsets);
+
+        TiledImage img = new TiledImage(0, 0, WIDTH, HEIGHT, 0, 0, sm, null);
+
+        WritableRectIter iter = RectIterFactory.createWritable(img, null);
+
+        final double[] values = new double[numBands];
+        int i = 0;
+        do {
+            int iToEdge = Math.min(i, WIDTH - i - 1);
+            int j = 0;
+            do {
+                int jToEdge = Math.min(j, WIDTH - j - 1);
+
+                for( int m = 0; m < numBands; m++ ) {
+                    if (iToEdge < 4 || jToEdge < 4) {
                         values[m] = Double.NaN;
                     } else if (iToEdge < 10 || jToEdge < 10) {
                         values[m] = -9999.0;
