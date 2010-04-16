@@ -87,6 +87,7 @@ public class StreamingSampleStats {
     private ProcessorFactory factory = new ProcessorFactory();
     private List<Processor> processors;
     private List<Range<Double>> ranges;
+    private List<Range<Double>> noDataRanges;
     private final Range.Type rangesType;
 
     /**
@@ -106,6 +107,7 @@ public class StreamingSampleStats {
     public StreamingSampleStats(Range.Type rangesType) {
         processors = CollectionFactory.list();
         ranges = CollectionFactory.list();
+        noDataRanges = CollectionFactory.list();
         this.rangesType = rangesType;
     }
 
@@ -130,6 +132,10 @@ public class StreamingSampleStats {
                 // apply cached excluded ranges to the new processor
                 for (Range<Double> range : ranges) {
                     p.addRange(range, rangesType);
+                }
+                
+                for (Range<Double> nRange : noDataRanges) {
+                    p.addNoDataRange(nRange);
                 }
             }
         }
@@ -176,6 +182,34 @@ public class StreamingSampleStats {
 
         for (Processor p : processors) {
             p.addExcludedRange(exclude);
+        }
+    }
+    
+    /**
+     * Add a range of values to be considered as NoData and then to be excluded 
+     * from the calculation of <b>all</b> statistics. NoData ranges take precedence
+     * over included / excluded data ranges.
+     *
+     * @param noData the {@code Range} containing NoData values
+     */
+    public void addNoDataRange(Range<Double> noData) {
+        noDataRanges.add(new Range<Double>(noData));
+
+        for (Processor p : processors) {
+            p.addNoDataRange(noData);
+        }
+    }
+
+    /**
+     * Convenience method for specifying a single value to be considered as NoData.
+     *
+     * @param noData the value to be treated as NoData
+     *
+     * @see #addNoDataRange(jaitools.numeric.Range)
+     */
+    public void addNoDataValue(Double noData) {
+        if (noData != null && !noData.isNaN()) {
+            addNoDataRange(new Range<Double>(noData));
         }
     }
 
@@ -313,6 +347,28 @@ public class StreamingSampleStats {
 
         return p.getNumNaN();
     }
+    
+    /**
+     * Get the number of sample values that are noData (including NaN).
+     * Note that different statistics might have been set at different
+     * times in the sampling process.
+     *
+     * @param stat the statistic
+     *
+     * @return number of NoData samples received
+     *
+     * @throws IllegalArgumentException if the statistic hasn't been set
+     */
+    public long getNumNoData(Statistic stat) {
+        Processor p = findProcessor(stat);
+        if (p == null) {
+            throw new IllegalArgumentException(
+                    "requesting sample size for a statistic that is not set: " + stat);
+        }
+
+        return p.getNumNoData();
+    }
+
 
     /**
      * Offer a sample value. Offered values are filtered through excluded ranges.
