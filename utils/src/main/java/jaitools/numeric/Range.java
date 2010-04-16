@@ -523,7 +523,7 @@ public class Range<T extends Number & Comparable> {
 
         if (isPoint) {
             if (minType == FINITE) {
-                return minValue == value;
+                return NumberOperations.compare(minValue, value) == 0;
 
             } else if (minType == NAN) {
                 if (value instanceof Double) {

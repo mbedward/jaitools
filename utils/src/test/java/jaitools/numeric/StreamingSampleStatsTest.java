@@ -267,4 +267,50 @@ public class StreamingSampleStatsTest {
         assertEquals(3.0, streamStats.getStatisticValue(Statistic.SUM), TOL);
         assertEquals(2, streamStats.getNumNaN(Statistic.SUM));
     }
+
+    @Test
+    public void testNoDataValues() {
+        System.out.println("   testNoDataValues");
+
+        StreamingSampleStats streamStats = new StreamingSampleStats();
+
+        final Range<Double> noDataRange = Range.create(null, false, 0.0, true);
+        streamStats.addNoDataRange(noDataRange);
+
+        final double noDataValue = 1.0;
+        streamStats.addNoDataValue(noDataValue);
+
+        streamStats.setStatistic(Statistic.SUM);
+
+        double total = 0;
+        for (double d = -1.0; d <= 1.0; d += 0.01) {
+            streamStats.offer(d);
+            if (!noDataRange.contains(d) && !DoubleComparison.dequal(d, noDataValue)) {
+                total += d;
+            }
+        }
+
+        assertEquals(total, streamStats.getStatisticValue(Statistic.SUM), TOL);
+    }
+
+    @Test
+    public void testNumNoData() {
+        System.out.println("   testNumNoData");
+
+        StreamingSampleStats streamStats = new StreamingSampleStats();
+
+        final Range<Double> noDataRange = Range.create(null, false, 0.0, true);
+        streamStats.addNoDataRange(noDataRange);
+
+        final double noDataValue = 1.0;
+        streamStats.addNoDataValue(noDataValue);
+
+        streamStats.setStatistic(Statistic.SUM);
+
+        for (double d : new double[] {Double.NaN, -5, 5, -3, 3, -1, 1, 0, Double.NaN}) {
+            streamStats.offer(d);
+        }
+
+        assertEquals(7, streamStats.getNumNoData(Statistic.SUM));
+    }
 }

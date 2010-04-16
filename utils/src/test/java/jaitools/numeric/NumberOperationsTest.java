@@ -20,8 +20,6 @@
 
 package jaitools.numeric;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -195,6 +193,60 @@ public class NumberOperationsTest {
                 assertTrue( clazz.isInstance(numbers[j]) );
             }
         }
+    }
+
+    @Test
+    public void testIntegralComparison() {
+        System.out.println("   testIntegralComparison");
+
+        Number a = Integer.valueOf(1);
+        Number b = Integer.valueOf(2);
+
+        assertEquals(0, NumberOperations.compare(a, a));
+        assertEquals(-1, NumberOperations.compare(a, b));
+        assertEquals(1, NumberOperations.compare(b, a));
+    }
+
+    @Test
+    public void testFloatComparison() {
+        System.out.println("   testFloatComparison");
+
+        Number a = Float.valueOf(1);
+        Number b = Float.valueOf(2);
+
+        assertEquals(0, NumberOperations.compare(a, a));
+        assertEquals(-1, NumberOperations.compare(a, b));
+        assertEquals(1, NumberOperations.compare(b, a));
+    }
+
+    @Test
+    public void testFloatComparisonSpecialValues() {
+        System.out.println("   testFloatComparisonSpecialValues");
+
+        assertEquals(0, NumberOperations.compare(Float.NaN, Float.NaN));
+        assertEquals(1, NumberOperations.compare(Float.NaN, Float.POSITIVE_INFINITY));
+        assertEquals(-1, NumberOperations.compare(Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY));
+    }
+
+    @Test
+    public void testDoubleComparison() {
+        System.out.println("   testDoubleComparison");
+
+        Number a = Double.valueOf(1);
+        Number b = Double.valueOf(2);
+
+        assertEquals(0, NumberOperations.compare(a, a));
+        assertEquals(-1, NumberOperations.compare(a, b));
+        assertEquals(1, NumberOperations.compare(b, a));
+    }
+
+    @Test
+    public void testDoubleComparisonSpecialValues() {
+        System.out.println("   testDoubleComparisonSpecialValues");
+
+        assertEquals(0, NumberOperations.compare(Double.NaN, Double.NaN));
+        assertEquals(1, NumberOperations.compare(Double.NaN, Double.POSITIVE_INFINITY));
+        assertEquals(-1, NumberOperations.compare(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY));
     }
 
 }

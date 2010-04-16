@@ -56,6 +56,26 @@ public interface Processor {
     public void addExcludedRange(Range<Double> exclude);
 
     /**
+     * Set a {@code Range} of values to be considered as NoData. Processors
+     * count the number of NoData values offered as samples but exclude them from
+     * calculations.
+     * <p>
+     * NoData ranges take precedence over included / excluded data ranges.
+     *
+     * @param noData a range of values to be excluded
+     */
+    public void addNoDataRange(Range<Double> noData);
+
+    /**
+     * Convenience method for specifying a single value to be considered as NoData.
+     *
+     * @param noData the value to be treated as NoData
+     *
+     * @see #addNoDataRange(jaitools.numeric.Range)
+     */
+    public void addNoDataValue(Double noData);
+
+    /**
      * Set a {@code Range} of values to exclude from/include in calculations
      *
      * @param range a range of values to be checked
@@ -97,6 +117,13 @@ public interface Processor {
      * @deprecated Please use {@link #getRanges()}
      */
     public List<Range<Double>> getExcludedRanges();
+
+    /**
+     * Retrieve the {@code Ranges} of sample values to be considered as NoData.
+     *
+     * @return the NoData {@code Ranges} or an empty list if no NoData are defined
+     */
+    public List<Range<Double>> getNoDataRanges();
 
     /**
      * Retrieve the {@code Ranges} of sample values excluded from/included in calculations.
@@ -156,6 +183,17 @@ public interface Processor {
      * @return number of NaN samples
      */
     public long getNumNaN();
+
+    /**
+     * Get the number of NoData samples passed to the processor. This count
+     * includes values in user-specified NoData ranges and Double.NaN values.
+     *
+     * @return number of NoData samples
+     *
+     * @see #addNoDataRange(jaitools.numeric.Range)
+     * @see #addNoDataValue(java.lang.Double)
+     */
+    public long getNumNoData();
 
     /**
      * Get the value of the statistic calculated by this processor.

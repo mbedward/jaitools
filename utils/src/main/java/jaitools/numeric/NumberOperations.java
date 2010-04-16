@@ -34,6 +34,14 @@ import java.util.Map;
  */
 public class NumberOperations {
 
+    /* Tolerance for float comparisons */
+    public static final float DEFAULT_FLOAT_TOL = 1.0e-4f;
+    private static float floatTol = DEFAULT_FLOAT_TOL;
+
+    /* Tolerance for double comparisons */
+    public static final double DEFAULT_DOUBLE_TOL = 1.0e-8f;
+    private static double doubleTol = DEFAULT_DOUBLE_TOL;
+
     /**
      * Information about the {@code Number} classes supported including
      * their relative ranks in terms of numeric precision
@@ -129,7 +137,8 @@ public class NumberOperations {
         ADD,
         SUBTRACT,
         MULTIPLY,
-        DIVIDE;
+        DIVIDE,
+        COMPARE;
     }
 
     /**
@@ -186,6 +195,60 @@ public class NumberOperations {
      */
     public static Number divide(Number n1, Number n2) {
         return calculate(OpType.DIVIDE, n1, n2);
+    }
+
+    /**
+     * Compare value {@code n1} to value {@code n2}. If one or both of the values are
+     * Float or Double the comparison is done within the currently set float or double
+     * tolerance.
+     *
+     * @param n1 the first value
+     * @param n2 the second value
+     *
+     * @return -1 if the first value is less than the second; 1 if the first value
+     *         is greater than the second; 0 if the two values are equal.
+     *
+     * @see #getFloatTolerance()
+     * @see #setFloatTolerance(float)
+     */
+    public static int compare(Number n1, Number n2) {
+        return (int)Math.round(calculate(OpType.COMPARE, n1, n2).doubleValue());
+    }
+
+    /**
+     * Get the current tolerance used for Float comparisons.
+     *
+     * @return the current tolerance
+     */
+    public static float getFloatTolerance() {
+        return floatTol;
+    }
+
+    /**
+     * Set the tolerance used for Float comparisons.
+     *
+     * @param tol a small positive value
+     */
+    public static void setFloatTolerance(float tol) {
+        floatTol = Math.abs(tol);
+    }
+
+    /**
+     * Get the current tolerance used for Double comparisons.
+     *
+     * @return the current tolerance
+     */
+    public static double getDoubleTolerance() {
+        return doubleTol;
+    }
+
+    /**
+     * Set the tolerance used for Double comparisons.
+     *
+     * @param tol a small positive value
+     */
+    public static void setFloatTolerance(double tol) {
+        doubleTol = Math.abs(tol);
     }
 
     /**
@@ -518,6 +581,10 @@ public class NumberOperations {
             case DIVIDE:
                 result = val1 / val2;
                 break;
+
+            case COMPARE:
+                result = (val1 < val2 ? -1 : (val1 > val2 ? 1 : 0));
+                break;
         }
 
         return Long.valueOf(result);
@@ -534,6 +601,10 @@ public class NumberOperations {
      */
     private static Float floatCalculation(OpType opType, Number n1, Number n2) {
         float result = 0;
+
+        if (opType == OpType.COMPARE) {
+            return (float) floatComparison(n1, n2);
+        }
 
         if (n1 instanceof Float) {
             Float fn1 = (Float) n1;
@@ -574,6 +645,35 @@ public class NumberOperations {
     }
 
     /**
+     * Compare two values as floats using the currently set tolerance
+     *
+     * @param n1 first value
+     * @param n2 second value
+     *
+     * @return -1 if the first value is less than the second; 1 if the
+     *         first value is greater than the second; 0 if the two values
+     *         are equal
+     */
+    private static int floatComparison(Number n1, Number n2) {
+        float val1 = floatValue(n1);
+        float val2 = floatValue(n2);
+
+        if (Float.isInfinite(val1) || Float.isNaN(val1) ||
+            Float.isInfinite(val2) || Float.isNaN(val2)) {
+            return Float.compare(val1, val2);
+        }
+
+        int result;
+        if (Math.abs(val1 - val2) < floatTol) {
+            result = 0;
+        } else {
+            result = (val1 < val2 ? -1 : 1);
+        }
+
+        return result;
+    }
+
+    /**
      * Perform a calculation on two values using double precision.
      *
      * @param type the type of calculation
@@ -584,6 +684,10 @@ public class NumberOperations {
      */
     private static Double doubleCalculation(OpType opType, Number n1, Number n2) {
         double result = 0;
+
+        if (opType == OpType.COMPARE) {
+            return (double) doubleComparison(n1, n2);
+        }
 
         if (n1 instanceof Double) {
             Double dn1 = (Double) n1;
@@ -621,6 +725,35 @@ public class NumberOperations {
         }
 
         return Double.valueOf(result);
+    }
+
+    /**
+     * Compare two values as floats using the currently set tolerance
+     *
+     * @param n1 first value
+     * @param n2 second value
+     *
+     * @return -1 if the first value is less than the second; 1 if the
+     *         first value is greater than the second; 0 if the two values
+     *         are equal
+     */
+    private static int doubleComparison(Number n1, Number n2) {
+        double val1 = doubleValue(n1);
+        double val2 = doubleValue(n2);
+
+        if (Double.isInfinite(val1) || Double.isNaN(val1) ||
+            Double.isInfinite(val2) || Double.isNaN(val2)) {
+            return Double.compare(val1, val2);
+        }
+
+        int result;
+        if (Math.abs(val1 - val2) < doubleTol) {
+            result = 0;
+        } else {
+            result = (val1 < val2 ? -1 : 1);
+        }
+
+        return result;
     }
 
     /**

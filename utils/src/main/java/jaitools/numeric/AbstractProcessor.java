@@ -42,16 +42,26 @@ public abstract class AbstractProcessor implements Processor {
     protected long numOffered;
     protected long numAccepted;
     protected long numNaN;
+    protected long numNoData;
+
+    /* Ranges of data values to include / exclude from calculations */
     private List<Range<Double>> ranges;
+
+    /* Stores how ranges are to be interpreted: inclusion or exclusion */
     private Range.Type rangesType;
+
+    /* Ranges of data values to treat as NoData and exclude from calculations */
+    private List<Range<Double>> noDataRanges;
+
 
     /**
      * Default constructor.
      */
     public AbstractProcessor() {
         ranges = CollectionFactory.list();
+        noDataRanges = CollectionFactory.list();
         rangesType = Range.Type.UNDEFINED;
-        numOffered = numAccepted = 0;
+        numOffered = numAccepted = numNaN = numNoData = 0;
     }
 
     /**
@@ -63,8 +73,9 @@ public abstract class AbstractProcessor implements Processor {
      */
     public AbstractProcessor(final Range.Type rangesType) {
         ranges = CollectionFactory.list();
+        noDataRanges = CollectionFactory.list();
         this.rangesType = rangesType;
-        numOffered = numAccepted = 0;
+        numOffered = numAccepted = numNaN = numNoData = 0;
     }
 
     /**
@@ -85,6 +96,29 @@ public abstract class AbstractProcessor implements Processor {
             ranges.add(new Range<Double>(exclude));
         }
     }
+
+    /**
+     * {@inheritDoc}
+     *
+     * Adding a {@code Range} to the noData ranges
+     *
+     */
+    public void addNoDataRange(Range<Double> noData) {
+        if (noData != null) {
+            // copy the input Range defensively
+            noDataRanges.add(new Range<Double>(noData));
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void addNoDataValue(Double noData) {
+        if (noData != null && !noData.isNaN()) {
+            noDataRanges.add(new Range<Double>(noData));
+        }
+    }
+
 
     /**
      * {@inheritDoc}
@@ -213,6 +247,13 @@ public abstract class AbstractProcessor implements Processor {
     /**
      * {@inheritDoc}
      */
+    public List<Range<Double>> getNoDataRanges() {
+        return Collections.unmodifiableList(noDataRanges);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public void setRangesType(final Range.Type rangesType) {
         if (this.rangesType != Range.Type.UNDEFINED) {
             throw new UnsupportedOperationException("Cannot change RangesType once already defined");
@@ -236,7 +277,17 @@ public abstract class AbstractProcessor implements Processor {
         }
         if (sample.isNaN()) {
             numNaN++;
+            numNoData++;
             return false;
+        }
+
+        if (noDataRanges != null){
+            for (Range<Double> r : noDataRanges) {
+                if (r.contains(sample)) {
+                    numNoData++;
+                    return false;
+                }
+            }
         }
 
         if (ranges == null || ranges.isEmpty()) {
@@ -256,4 +307,12 @@ public abstract class AbstractProcessor implements Processor {
         }
         return isAccepted;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public long getNumNoData() {
+        return numNoData;
+    }
+
 }
