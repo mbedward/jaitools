@@ -21,6 +21,8 @@
 package jaitools.media.jai.zonalstats;
 
 import jaitools.numeric.Range;
+import jaitools.numeric.RangeComparator;
+import jaitools.numeric.RangeUtils;
 import jaitools.numeric.Statistic;
 
 import java.awt.Rectangle;
@@ -61,7 +63,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * could be mapped to a single zone image pixel.
  * <p>
  * The range of data image values that contribute to the analysis can be constrained
- * by supplying a List of {@linkplain Range} objects, each of which defines a range 
+ * by supplying a List of {@linkplain Range} objects, each of which defines a range
  * of data values to <b>exclude</b>.
  * <p>
  * Use of this operator is similar to the standard JAI statistics operators such as
@@ -94,7 +96,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  *
  * pb.setParameter("stats", stats);
  * RenderedOp op = JAI.create("ZonalStats", pb);
- * 
+ *
  * ZonalStats stats = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
  *
  * // print results to console
@@ -157,10 +159,10 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * pb.setParameter("zoneTransform", tr);
  * </code></pre>
  *
- * Asking for statistics on multiple bands. 
+ * Asking for statistics on multiple bands.
  * <p>
- * By default the stats are calculated on a single default 0 index band. It 
- * is possible also to request calculations on multiple bands, by passing the 
+ * By default the stats are calculated on a single default 0 index band. It
+ * is possible also to request calculations on multiple bands, by passing the
  * band indexes as a parameter.
  * <pre><code>
  * ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
@@ -229,6 +231,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  *
  * @author Michael Bedward
  * @author Andrea Antonello
+ * @author Daniele Romagnoli, GeoSolutions S.A.S.
  * @since 1.0
  * @source $URL$
  * @version $Id$
@@ -251,15 +254,18 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
     static final int BAND_ARG = 1;
     static final int ROI_ARG = 2;
     static final int ZONE_TRANSFORM_ARG = 3;
-    static final int EXCLUDE_RANGE_ARG = 4;
+    static final int RANGES_ARG = 4;
+    static final int RANGES_TYPE_ARG = 5;
+    static final int RANGE_LOCAL_STATS_ARG = 6;
+    static final int NODATA_RANGES_ARG = 7;
 
-    private static final String[] paramNames = {"stats", "bands", "roi", "zoneTransform", "exclude"};
+    private static final String[] paramNames = {"stats", "bands", "roi", "zoneTransform", "ranges", "rangesType", "rangeLocalStats", "noDataRanges"};
 
     private static final Class<?>[] paramClasses = {Statistic[].class, Integer[].class,
-            javax.media.jai.ROI.class, AffineTransform.class, List.class};
+            javax.media.jai.ROI.class, AffineTransform.class, List.class, Range.Type.class, Boolean.class, List.class };
 
     private static final Object[] paramDefaults = {NO_PARAMETER_DEFAULT,
-            new Integer[]{Integer.valueOf(0)}, (ROI) null, (AffineTransform) null, (List) null};
+            new Integer[]{Integer.valueOf(0)}, (ROI) null, (AffineTransform) null, (List) null, Range.Type.UNDEFINED, Boolean.FALSE, (List) null};
 
     /** Constructor. */
     public ZonalStatsDescriptor() {
@@ -296,7 +302,24 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
                         "arg4Desc",
                         String.format("%s (default %s) - an optional List of Ranges "
                                 + "that define dataImage values to exclude from calculations",
-                                paramNames[EXCLUDE_RANGE_ARG], paramDefaults[EXCLUDE_RANGE_ARG])}
+                                paramNames[RANGES_ARG], paramDefaults[RANGES_ARG])},
+
+                {
+                        "arg5Desc",
+                        String.format("%s (default %s) - in case of Ranges, specify if they "
+                        		+ "are included or excluded in calculations",
+                            paramNames[RANGES_TYPE_ARG], paramDefaults[RANGES_TYPE_ARG])},
+
+                {
+                        "arg6Desc",
+                        String.format("%s (default %s) - an optional range argument type "
+                            + "that define whether to calculate global statistics or splitted by ranges",
+                            paramNames[RANGE_LOCAL_STATS_ARG], paramDefaults[RANGE_LOCAL_STATS_ARG])},
+                {
+                        "arg7Desc",
+                        String.format("%s (default %s) - an optional List of Ranges "
+                            + "that define dataImage values to be considered as noData and then be excluded from calculations",
+                            paramNames[NODATA_RANGES_ARG], paramDefaults[NODATA_RANGES_ARG])},
 
         },
 
@@ -336,7 +359,15 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
      */
     public static RenderedImage create( RenderedImage dataImage, RenderedImage zoneImage,
             Statistic[] stats, Integer[] bands, ROI roi, AffineTransform zoneTransform,
-            List<Range<Double>> exclude, RenderingHints hints ) {
+            List<Range<Double>> ranges, RenderingHints hints ) {
+
+        return create(dataImage, zoneImage, stats, bands, roi, zoneTransform, ranges, Range.Type.EXCLUDE, false, null, hints);
+    }
+
+    public static RenderedImage create( RenderedImage dataImage, RenderedImage zoneImage,
+            Statistic[] stats, Integer[] bands, ROI roi, AffineTransform zoneTransform,
+            List<Range<Double>> ranges, Range.Type rangesType, boolean rangeLocalStats,
+            List<Range<Double>> noDataRanges, RenderingHints hints ) {
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats", RenderedRegistryMode.MODE_NAME);
 
@@ -346,7 +377,10 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
         pb.setParameter(paramNames[BAND_ARG], bands);
         pb.setParameter(paramNames[ROI_ARG], roi);
         pb.setParameter(paramNames[ZONE_TRANSFORM_ARG], zoneTransform);
-        pb.setParameter(paramNames[EXCLUDE_RANGE_ARG], exclude);
+        pb.setParameter(paramNames[RANGES_ARG], ranges);
+        pb.setParameter(paramNames[RANGES_TYPE_ARG], rangesType);
+        pb.setParameter(paramNames[RANGE_LOCAL_STATS_ARG], rangeLocalStats);
+        pb.setParameter(paramNames[NODATA_RANGES_ARG], noDataRanges);
 
         return JAI.create("ZonalStats", pb, hints);
     }
@@ -376,25 +410,80 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
             msg.append("ZonalStats operator takes 1 or 2 source images");
             return false;
         }
-        // CHECKING EXCLUSION RANGES
-        Object rangeObject = pb.getObjectParameter(EXCLUDE_RANGE_ARG);
+
+        // CHECKING RANGES
+        Object rangeObject = pb.getObjectParameter(RANGES_ARG);
         if (rangeObject != null) {
             boolean ok = true;
             if (rangeObject instanceof List) {
                 Object range = ((List) rangeObject).get(0);
                 if (!(range instanceof Range)) {
+                	msg.append(paramNames[RANGES_ARG] + " arg has to be of type List<Range<Double>>");
                     ok = false;
+                } else {
+                	List ranges = (List)rangeObject;
+                	List sortedRanges = RangeUtils.sort(ranges);
+                	final int elements = sortedRanges.size();
+                	if (elements > 1){
+                		RangeComparator rc = new RangeComparator();
+                		List<Range> rr = (List<Range>) sortedRanges;
+                		for (int i = 0; i<elements - 1; i++){
+                			Range r1 = rr.get(i);
+                			Range r2 = rr.get(i+1);
+                			RangeComparator.Result result = rc.compare(r1, r2);
+                            	        if (RangeComparator.isIntersection(result)) {
+                            	    		ok = false;
+                            	    		msg.append(paramNames[RANGES_ARG] + " arg can't contain intersecting ranges");
+                            	    		break;
+                            	    	}
+
+                		}
+                	}
                 }
+
             } else {
                 if (rangeObject != null) {
                     ok = false;
+                    msg.append(paramNames[RANGES_ARG] + " arg has to be of type List<Range<Double>>");
                 }
             }
             if (!ok) {
-                msg.append(paramNames[EXCLUDE_RANGE_ARG] + " arg has to be of type List<Range<Double>>");
                 return false;
             }
         }
+
+     // CHECKING NoData RANGES
+        Object noDataRangeObject = pb.getObjectParameter(NODATA_RANGES_ARG);
+        if (noDataRangeObject != null) {
+            boolean ok = true;
+            if (noDataRangeObject instanceof List) {
+                Object range = ((List) noDataRangeObject).get(0);
+                if (!(range instanceof Range)) {
+                        msg.append(paramNames[NODATA_RANGES_ARG] + " arg has to be of type List<Range<Double>>");
+                    ok = false;
+                }
+            } else {
+                if (noDataRangeObject != null) {
+                    ok = false;
+                    msg.append(paramNames[NODATA_RANGES_ARG] + " arg has to be of type List<Range<Double>>");
+                }
+            }
+            if (!ok) {
+                return false;
+            }
+        }
+
+        Object rangesType = pb.getObjectParameter(RANGES_TYPE_ARG);
+        if (rangesType != null){
+        	if (rangesType instanceof Range.Type){
+        		Range.Type rt = (Range.Type) rangesType;
+        		if (rangeObject != null && rt == Range.Type.UNDEFINED){
+        			msg.append(paramNames[RANGES_TYPE_ARG] + " arg has to be of Type.EXCLUDED or Type.INCLUDED when specifying a Ranges List");
+                    return false;
+        		}
+        	}
+        }
+
         // CHECKING BANDS
         Object bandsObject = pb.getObjectParameter(BAND_ARG);
         Integer[] bands = null;
@@ -433,7 +522,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
 
         // CHECKING ZONE IMAGE BOUNDS
         if (pb.getNumSources() == 2) {
-        	
+
         	// get the zone image and check that it covers at least partially the data image
             RenderedImage zoneImg = pb.getRenderedSource(ZONE_IMAGE);
             int dataType = zoneImg.getSampleModel().getDataType();
@@ -466,7 +555,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
                 if (!zoneBoundsTransformed.intersects(dataBounds)) {
                     msg.append("Zone image bounds are outside the data image bounds");
                     return false;
-                }  
+                }
             }
             else
             {
@@ -474,7 +563,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
                 if (!dataBounds.intersects(zoneBounds)) {
                     msg.append("Zone image bounds are outside the data image bounds");
                     return false;
-                }            	
+                }
             }
 
         }

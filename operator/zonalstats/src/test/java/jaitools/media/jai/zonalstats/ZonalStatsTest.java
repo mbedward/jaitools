@@ -63,7 +63,7 @@ import static org.junit.Assert.*;
 public class ZonalStatsTest {
 
     private static final Logger LOGGER = Logger.getLogger("ZonalStatsTest");
-    
+
     private static final int WIDTH = 128;
     private static final int HEIGHT = 64;
     private static final int TILE_WIDTH = 64;
@@ -147,7 +147,7 @@ public class ZonalStatsTest {
         pb.setSource("dataImage", dataImage);
         pb.setSource("zoneImage", createConstantImage(new Integer[]{0}, new Point(WIDTH, WIDTH)));
         boolean gotException = false;
-        try { 
+        try {
             JAI.create("ZonalStats", pb);
         } catch (Throwable ex) {
             gotException = true;
@@ -202,7 +202,7 @@ public class ZonalStatsTest {
         RenderedOp op = JAI.create("ZonalStats", pb);
         assertSingleResult(op, Statistic.MAX, Double.valueOf(MAX_DATUM));
     }
-    
+
     @Test
     public void testMean() {
         if(LOGGER.isLoggable(Level.INFO))
@@ -379,7 +379,8 @@ public class ZonalStatsTest {
         double max = MAX_DATUM - 1;
         exclusions.add(Range.create(max, false, null, true));
 
-        pb.setParameter("exclude", exclusions);
+        pb.setParameter("ranges", exclusions);
+        pb.setParameter("rangesType", Range.Type.EXCLUDE);
 
         RenderedOp op = JAI.create("ZonalStats", pb);
         ZonalStats stats = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
@@ -411,9 +412,9 @@ public class ZonalStatsTest {
         pb.setParameter("width", (float) WIDTH);
         pb.setParameter("height", (float) WIDTH);
         pb.setParameter("bandValues", bandValues);
-        
+
         if(hints!=null&&hints.containsKey(JAI.KEY_IMAGE_LAYOUT)){
-        	
+
             final ImageLayout layout =(ImageLayout) hints.get(JAI.KEY_IMAGE_LAYOUT);
             layout.setTileGridXOffset(0).setTileGridYOffset(0).setTileHeight(128).setTileWidth(128);
         }
