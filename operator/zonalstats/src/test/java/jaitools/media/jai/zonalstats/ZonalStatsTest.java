@@ -21,7 +21,6 @@
 package jaitools.media.jai.zonalstats;
 
 import jaitools.CollectionFactory;
-import jaitools.numeric.DoubleComparison;
 import jaitools.numeric.Range;
 import jaitools.numeric.Statistic;
 
@@ -63,6 +62,8 @@ import static org.junit.Assert.*;
 public class ZonalStatsTest {
 
     private static final Logger LOGGER = Logger.getLogger("ZonalStatsTest");
+
+    private static final double EPS = 1.0e-6;
     
     private static final int WIDTH = 128;
     private static final int HEIGHT = 64;
@@ -336,17 +337,17 @@ public class ZonalStatsTest {
         for (Result r : stats.results()) {
             switch (r.getStatistic()) {
                 case MIN:
-                    assertTrue(DoubleComparison.dequal(-9999.0, r.getValue()));
+                    assertEquals(-9999.0, r.getValue(), EPS);
                     flag[MIN]++ ;
                     break;
 
                 case MAX:
-                    assertTrue(DoubleComparison.dequal(r.getImageBand() + 1, r.getValue()));
+                    assertEquals(r.getImageBand() + 1, r.getValue(), EPS);
                     flag[MAX]++;
                     break;
 
                 case RANGE:
-                    assertTrue(DoubleComparison.dequal(r.getImageBand() + 10000.0, r.getValue()));
+                    assertEquals(r.getImageBand() + 10000.0, r.getValue(), EPS);
                     flag[RANGE]++;
                     break;
 
@@ -413,20 +414,20 @@ public class ZonalStatsTest {
             switch (r.getStatistic()) {
                 case MIN:
                 case MAX:
-                    assertTrue(DoubleComparison.dequal(r.getImageBand(), r.getValue()-1));
-                    assertTrue(DoubleComparison.dequal(2360, r.getNumNoData()));
-                    assertTrue(DoubleComparison.dequal(992, r.getNumNaN()));
-                    assertTrue(DoubleComparison.dequal(5832, r.getNumAccepted()));
+                    assertEquals(r.getImageBand(), r.getValue()-1, EPS);
                     break;
+
                 case RANGE:
-                    assertTrue(DoubleComparison.dequal(0, r.getValue()));
-                    assertTrue(DoubleComparison.dequal(2360, r.getNumNoData()));
-                    assertTrue(DoubleComparison.dequal(992, r.getNumNaN()));
-                    assertTrue(DoubleComparison.dequal(5832, r.getNumAccepted()));
+                    assertEquals(0.0, r.getValue(), EPS);
                     break;
+
                 default:
                     fail("unexpected statistic: " + r.getStatistic());
             }
+
+            assertEquals(2360, r.getNumNoData());
+            assertEquals(992, r.getNumNaN());
+            assertEquals(5832, r.getNumAccepted());
         }
     }
 
@@ -434,7 +435,7 @@ public class ZonalStatsTest {
         ZonalStats stats = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
         Result r = stats.band(0).zone(0).statistic(stat).results().get(0);
         assertEquals(stat, r.getStatistic());
-        assertTrue(DoubleComparison.dequal(value, r.getValue()));
+        assertEquals(value, r.getValue(), EPS);
     }
 
     private static PlanarImage createConstantImage( Number[] bandValues ) {
