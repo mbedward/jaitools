@@ -31,7 +31,7 @@ import java.util.List;
  * @author Michael Bedward
  * @author Daniele Romagnoli, GeoSolutions S.A.S.
  * @since 1.0
- * @version $Id$
+ * @version $Id: RangeUtils.java 1160 2010-04-07 08:45:17Z michael.bedward $
  */
 public class RangeUtils {
 
@@ -86,7 +86,7 @@ public class RangeUtils {
      * empty.
      *
      * @param range input range
-     * 
+     *
      * @return a list of 0, 1 or 2 {@code Ranges} which form the complement
      *
      * @see #createComplement(java.util.Collection)
@@ -343,10 +343,10 @@ public class RangeUtils {
      * the result will be equal to the second. If the two inputs are equal, or the first
      * input encloses the second, the result will be an empty list. If the first input
      * is strictly contained within the second the result will be two {@code Ranges}.
-     * 
+     *
      * @param r1 the first range
      * @param r2 the second range
-     * 
+     *
      * @return 0, 1 or 2 {@code Ranges} representing the result of {@code r2 - r1}
      */
     public static <T extends Number & Comparable> List<Range<T>> subtract(Range<T> r1, Range<T> r2) {
@@ -359,7 +359,7 @@ public class RangeUtils {
         }
 
         Range<T> common = intersection(r1, r2);
-        
+
         /*
          * Check for no overlap between inputs
          */

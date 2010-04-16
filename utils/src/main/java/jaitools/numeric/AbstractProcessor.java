@@ -96,7 +96,7 @@ public abstract class AbstractProcessor implements Processor {
             ranges.add(new Range<Double>(exclude));
         }
     }
-
+    
     /**
      * {@inheritDoc}
      *
@@ -201,7 +201,7 @@ public abstract class AbstractProcessor implements Processor {
      * Process a sample value that has been offered by the client.
      *
      * @param sample the sample value
-     *
+     * 
      * @return true if the sample is accepted (ie. used for calculations);
      *         false otherwise
      */
@@ -250,7 +250,7 @@ public abstract class AbstractProcessor implements Processor {
     public List<Range<Double>> getNoDataRanges() {
         return Collections.unmodifiableList(noDataRanges);
     }
-
+    
     /**
      * {@inheritDoc}
      */
@@ -280,7 +280,7 @@ public abstract class AbstractProcessor implements Processor {
             numNoData++;
             return false;
         }
-
+        
         if (noDataRanges != null){
             for (Range<Double> r : noDataRanges) {
                 if (r.contains(sample)) {

@@ -4,7 +4,7 @@
 
     <groupId>com.googlecode.jaitools</groupId>
     <artifactId>jaitools</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.0.1</version>
 
     <packaging>pom</packaging>
     <name>JAI-tools</name>
@@ -30,9 +30,9 @@
     </mailingLists>
 
     <scm>
-        <connection>scm:svn:http://jai-tools.googlecode.com/svn/trunk/</connection>
-        <developerConnection>scm:svn:https://jai-tools.googlecode.com/svn/trunk/</developerConnection>
-        <url>http://code.google.com/p/jai-tools/source/browse/</url>
+        <connection>scm:svn:http://jai-tools.googlecode.com/svn/tags/1.0.1</connection>
+        <developerConnection>scm:svn:https://jai-tools.googlecode.com/svn/tags/1.0.1</developerConnection>
+        <url>http://code.google.com/p/jai-tools/source/browse/tags/1.0.1</url>
     </scm>
 
     <licenses>
@@ -57,6 +57,7 @@
                 <version>2.0-beta-9</version>
                 <configuration>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <mavenExecutorId>forked-path</mavenExecutorId>
                 </configuration>
             </plugin>
             <plugin>
@@ -92,6 +93,11 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-eclipse-plugin</artifactId>
+                <version>2.5</version>
             </plugin>
         </plugins>
     </build>

@@ -72,9 +72,9 @@ import java.util.logging.Logger;
  * for (Statistic s : stats) {
  *     System.out.println(String.format("%s: %.4f", s, strmStats.getStatisticValue(s)));
  * }
- *
+ * 
  * </code></pre>
- *
+ * 
  * @author Michael Bedward
  * @author Daniele Romagnoli, GeoSolutions S.A.S.
  * @since 1.0
@@ -133,7 +133,7 @@ public class StreamingSampleStats {
                 for (Range<Double> range : ranges) {
                     p.addRange(range, rangesType);
                 }
-
+                
                 for (Range<Double> nRange : noDataRanges) {
                     p.addNoDataRange(nRange);
                 }
@@ -184,9 +184,9 @@ public class StreamingSampleStats {
             p.addExcludedRange(exclude);
         }
     }
-
+    
     /**
-     * Add a range of values to be considered as NoData and then to be excluded
+     * Add a range of values to be considered as NoData and then to be excluded 
      * from the calculation of <b>all</b> statistics. NoData ranges take precedence
      * over included / excluded data ranges.
      *
@@ -287,7 +287,7 @@ public class StreamingSampleStats {
      * times in the sampling process.
      *
      * @param stat the statistic
-     *
+     * 
      * @return number of samples that have been accepted
      *
      * @throws IllegalArgumentException if the statistic hasn't been set
@@ -347,7 +347,7 @@ public class StreamingSampleStats {
 
         return p.getNumNaN();
     }
-
+    
     /**
      * Get the number of sample values that are noData (including NaN).
      * Note that different statistics might have been set at different

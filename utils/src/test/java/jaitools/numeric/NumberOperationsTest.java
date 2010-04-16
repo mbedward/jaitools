@@ -28,8 +28,8 @@ import static org.junit.Assert.*;
  *
  * @author Michael Bedward
  * @since 1.1
- * @source $URL$
- * @version $Id$
+ * @source $URL: https://jai-tools.googlecode.com/svn/trunk/utils/src/test/java/jaitools/numeric/NumberOperationsTest.java $
+ * @version $Id: NumberOperationsTest.java 1173 2010-04-16 10:48:48Z michael.bedward $
  */
 public class NumberOperationsTest {
 

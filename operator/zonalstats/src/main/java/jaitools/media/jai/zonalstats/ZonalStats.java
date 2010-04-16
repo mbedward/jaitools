@@ -72,7 +72,7 @@ import java.util.SortedSet;
  * }
  *
  * </code></pre>
- *
+ * 
  * @see Result
  * @see ZonalStatsDescriptor
  *
@@ -120,7 +120,7 @@ public class ZonalStats {
             			}
             		}
             	}
-
+                
             }
         }
     }
@@ -131,17 +131,17 @@ public class ZonalStats {
      */
     void setResults(int band, int zone, StreamingSampleStats stats, List<Range> includedRanges) {
         for (Statistic s : stats.getStatistics()) {
-            Result r = new Result(band, zone, s, includedRanges,
+            Result r = new Result(band, zone, s, includedRanges, 
                     stats.getStatisticValue(s),
                     stats.getNumOffered(s),
-                    stats.getNumAccepted(s),
+                    stats.getNumAccepted(s), 
                     stats.getNumNaN(s),
                     stats.getNumNoData(s));
 
             results.add(r);
         }
     }
-
+    
     /**
      * Store the results for the given zone. Package-private method used by
      * {@code ZonalStatsOpImage}.
@@ -165,7 +165,7 @@ public class ZonalStats {
         for (Result r : results) {
             ids.add(r.getZone());
         }
-
+        
         return ids;
     }
 
@@ -210,11 +210,11 @@ public class ZonalStats {
     public ZonalStats statistic(Statistic s) {
         return new ZonalStats(this, null, null, s, null);
     }
-
+    
     /**
      * Get the subset of results for the given {@code Ranges}.
      *
-     * @param ranges the Ranges
+     * @param ranges the Ranges 
      *
      * @return a new {@code ZonalStats} object containing results for the ranges
      *         (data are shared with the source object rather than copied)

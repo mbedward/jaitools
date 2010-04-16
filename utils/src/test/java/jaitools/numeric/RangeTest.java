@@ -56,7 +56,7 @@ public class RangeTest {
     @Test
     public void testEquals() {
         System.out.println("   testEquals");
-        
+
         Range<Integer> r = Range.create(-10, true, 10, false);
         Range<Integer> same = Range.create(-10, true, 10, false);
         Range<Integer> different = Range.create(-10, false, 10, true);
@@ -94,7 +94,7 @@ public class RangeTest {
         r = Range.create(null, Range.NEG_INF);
         assertEquals("Range(-Inf)", r.toString());
     }
-    
+
     @Test
     public void testFiniteIntervalToString() {
         System.out.println("   testFiniteIntervalToString");

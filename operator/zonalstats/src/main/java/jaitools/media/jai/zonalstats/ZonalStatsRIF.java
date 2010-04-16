@@ -60,7 +60,7 @@ public class ZonalStatsRIF implements RenderedImageFactory {
      * Create a new instance of ZonalStatsOpImage in the rendered layer.
      *
      * @param paramBlock specifies the source image, the optional zone image,
-     * and the following parameters: "stats", "band", "roi", "zoneTransform", "ranges",
+     * and the following parameters: "stats", "band", "roi", "zoneTransform", "ranges", 
      * "rangesType", "rangeLocalStats"
      *
      * @param renderHints optional RenderingHints object
@@ -84,15 +84,15 @@ public class ZonalStatsRIF implements RenderedImageFactory {
 
         Object localStats = paramBlock.getObjectParameter(ZonalStatsDescriptor.RANGE_LOCAL_STATS_ARG);
         Boolean rangeLocalStats = localStats != null ? (Boolean) localStats : Boolean.FALSE;
-
+        
         Object rng = paramBlock.getObjectParameter(ZonalStatsDescriptor.RANGES_ARG);
         List<Range<Double>> ranges = rng != null ? (List<Range<Double>>) rng : null;
 
         Object noDataRng = paramBlock.getObjectParameter(ZonalStatsDescriptor.NODATA_RANGES_ARG);
         List<Range<Double>> noDataRanges = noDataRng != null ? (List<Range<Double>>) noDataRng : null;
-
+        
         Object rngType = paramBlock.getObjectParameter(ZonalStatsDescriptor.RANGES_TYPE_ARG);
-        Range.Type rangesType = rngType != null ? (Range.Type) rngType : rng != null ? Range.Type.EXCLUDE : Range.Type.UNDEFINED;
+        Range.Type rangesType = rngType != null ? (Range.Type) rngType : rng != null ? Range.Type.EXCLUDE : Range.Type.UNDEFINED; 
 
         SampleModel sm = layout.getSampleModel(null);
         if (sm == null || sm.getNumBands() != stats.length) {

@@ -31,7 +31,7 @@ import java.util.List;
  * @author Michael Bedward
  */
 public class Result {
-
+    
     private List<Range> ranges;
     private int imageBand;
     private int zone;
@@ -45,7 +45,7 @@ public class Result {
     public long getNumNaN() {
         return numNaN;
     }
-
+    
     public long getNumNoData() {
         return numNoData;
     }
@@ -61,7 +61,7 @@ public class Result {
         this.numNoData = numNoData;
         this.ranges = ranges;
     }
-
+    
     public Collection<Range> getRanges() {
         return Collections.unmodifiableCollection(ranges);
     }
@@ -92,7 +92,7 @@ public class Result {
 
     @Override
     public String toString() {
-    	String rangess = ranges != null && !ranges.isEmpty() ? ranges.toString() : "";
+    	String rangess = ranges != null && !ranges.isEmpty() ? ranges.toString() : ""; 
         return String.format("band %d zone %d %s: %.4f N=%d (%d - ND:%d - NaN:%d) %s",
                 imageBand, zone, stat, value, numAccepted, numOffered, numNoData, numNaN, rangess);
     }

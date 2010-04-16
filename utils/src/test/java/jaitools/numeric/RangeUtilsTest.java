@@ -31,7 +31,7 @@ import static org.junit.Assert.*;
  *
  * @author Michael Bedward
  * @since 1.1
- * @version $Id$
+ * @version $Id: RangeUtilsTest.java 1160 2010-04-07 08:45:17Z michael.bedward $
  */
 public class RangeUtilsTest {
 

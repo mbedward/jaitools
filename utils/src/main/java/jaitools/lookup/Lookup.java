@@ -65,17 +65,17 @@ public class Lookup {
      */
     public static List<Class> getProviders(String spiName) {
         List<Class> providers = null;
-        
+
         WeakReference<List<Class>> ref = cache.get(spiName);
         if (ref != null) {
             providers = ref.get();
         }
-        
+
         if (providers == null) {
             providers = getProvidersFromSpiFile(spiName);
             cache.put(spiName, new WeakReference<List<Class>>(providers));
         }
-        
+
         return providers;
     }
 
@@ -129,7 +129,7 @@ public class Lookup {
             if (str != null) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(str));
                 String line = null;
-    
+
                 try {
                     while ((line = reader.readLine()) != null) {
                         String text = line.trim();
@@ -144,20 +144,20 @@ public class Lookup {
                 } catch (IOException ex) {
                     LOGGER.severe("Problem reading services file: " + spiName);
                 } finally {
-                    
+
                     try {
                             str.close();
                     } catch (Throwable e) {
                         // ignore
                     }
-                    
+
                     try {
                         if (reader != null) {
                             reader.close();
                         }
                     } catch (Throwable e) {
                         // ignore
-                    }    
+                    }
                 }
             } else {
                 LOGGER.severe("Could not find " + prefix + spiName);
