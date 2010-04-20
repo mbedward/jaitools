@@ -1,11 +1,11 @@
 /*
  * Copyright 2009 Michael Bedward
- * 
+ *
  * This file is part of jai-tools.
 
  * jai-tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of the 
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
 
  * jai-tools is distributed in the hope that it will be useful,
@@ -13,9 +13,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
 
- * You should have received a copy of the GNU Lesser General Public 
+ * You should have received a copy of the GNU Lesser General Public
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 
 package jaitools.media.jai.regionalize;
@@ -35,23 +35,66 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * of connected pixels with uniform value, where value comparisons
  * take into account a user-specified tolerance.
  * <p>
- * <b>Note: At present, this operator only deals with a single
- * specified band.</b>
+ * Note: At present, this operator only deals with a single band.
  * <p>
- * A pixel is connected to another pixel if a path can be defined
- * between them that only passes through pixels with the same value,
- * taking unit steps horizontally, vertically and, optionally,
- * diagonally.
+ * <b>Algorithm</b><p>
+ * The operator scans the source image left to right, top to bottom. When
+ * it reaches a pixel that has not been allocated to a region yet it uses
+ * that pixel as the starting point for a flood-fill search (similar to
+ * flood-filling in a paint program). The value of the starting pixel is
+ * recorded as the reference value for the new region. The search works
+ * its way outwards from the starting pixel, testing other pixels for
+ * inclusion in the region. A pixel will be included if: <br>
+ * <pre>      |value - reference value| <= tolerance </pre>
+ * where tolerance is a user-specified parameter.
  * <p>
- * Each region that is identified in the source image is allocated
- * a unique integer ID. The product of the operation is an image
- * with data of TYPE_INT, where each pixel has its region ID as its
- * value. A {@linkplain RegionData} object is also returned as 
- * a property of the output image.  It can be retrieved by calling
- * the {@code getProperty} method on this operator with "regiondata"
- * as the property name (this name can also be referred to with
+ * If the diagonal parameter is set to true, the flood-fill search will
+ * include pixels that can only be reached via a diagonal step; if false,
+ * only orthogonal steps are taken.
+ * <p>
+ * The search continues until no further pixels can be added to the region.
+ * The region is then allocated a unique integer ID and summary statistics
+ * (bounds, number of pixels, reference value) are recorded for it.
+ * <p>
+ * The output of the operation is an image of data type TYPE_INT, where each
+ * pixel's value is its region ID. A {@linkplain RegionData} object can be
+ * retrieved as a property of the output image using the property name
  * {@linkplain RegionalizeDescriptor#REGION_DATA_PROPERTY}).
  * <p>
+ * <b>Example</b>
+ * <pre><code>
+ * RenderedImage myImg = ...
+ *
+ * ParameterBlockJAI pb = new ParameterBlockJAI("regionalize");
+ * pb.setSource("source0", myImg);
+ * pb.setParameter("band", 0);
+ * pb.setParameter("tolerance", 0.1d);
+ * pb.setParameter("diagonal", false);
+ * RenderedOp regionImg = JAI.create("Regionalize", pb);
+ *
+ * // have a look at the image (this will force rendering and
+ * // the calculation of region data)
+ * jaitools.utils.ImageFrame frame = new jaitools.utils.ImageFrame();
+ * frame.displayImage(op, "Regions");
+ *
+ * // print the summary data
+ * RegionData regData =
+ *    (RegionData)op.getProperty(RegionalizeDescriptor.REGION_DATA_PROPERTY);
+ *
+ * List&lt;Region> regions = regData.getData();
+ * Iterator&lt;Region> iter = regions.iterator();
+ * System.out.println("ID\tValue\tSize\tMin X\tMax X\tMin Y\tMax Y");
+ * while (iter.hasNext()) {
+ *     Region r = iter.next();
+ *     System.out.println( String.format("%d\t%.2f\t%d\t%d\t%d\t%d\t%d",
+ *         r.getId(),
+ *         r.getRefValue(),
+ *         r.getNumPixels(),
+ *         r.getMinX(),
+ *         r.getMaxX(),
+ *         r.getMinY(),
+ *         r.getMaxY() ));
+ * </code></pre>
  *
  * <b>Parameters</b>
  * <table border="1">
@@ -68,7 +111,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * <td>diagonal</td><td>boolean</td><td>false</td>
  * </tr>
  * </table>
- * 
+ *
  * @author Michael Bedward
  * @since 1.0
  * @source $URL$
@@ -112,13 +155,13 @@ public class RegionalizeDescriptor extends OperationDescriptorImpl {
                 },
 
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
-                
+
                 1,                                              // number of sources
-                
+
                 paramNames,
                 paramClasses,
                 paramDefaults,
-                    
+
                 null                                            // valid values (none defined)
                 );
 
