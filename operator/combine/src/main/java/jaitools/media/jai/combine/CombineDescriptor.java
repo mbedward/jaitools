@@ -50,17 +50,16 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * specified. The "0" should be understood as the <em>minimal</em> number of sources required.
  *
  * @since 2.1
- * @source $URL: http://svn.osgeo.org/geotools/trunk/modules/library/coverage/src/main/java/org/geotools/image/jai/CombineDescriptor.java $
- * @version $Id: CombineDescriptor.java 30643 2008-06-12 18:27:03Z acuster $
+ * @source $URL$
+ * @version $Id$
  * @author Remi Eve
  * @author Martin Desruisseaux (IRD)
  */
 public class CombineDescriptor extends OperationDescriptorImpl {
+
+    private static final long serialVersionUID = 4398739920268305751L;
+
     /**
-	 * 
-	 */
-	private static final long serialVersionUID = 4398739920268305751L;
-	/**
      * The operation name, which is {@value}.
      */
     public static final String OPERATION_NAME = "Combine";

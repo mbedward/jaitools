@@ -46,11 +46,11 @@ import javax.media.jai.CRIFImpl;
 
 
 /**
- * The image factory for the {@link Combine} operation.
+ * The image factory for the {@link CombineOpImage} operation.
  *
  * @since 2.1
- * @source $URL: http://svn.osgeo.org/geotools/trunk/modules/library/coverage/src/main/java/org/geotools/image/jai/CombineCRIF.java $
- * @version $Id: CombineCRIF.java 34640 2009-12-10 00:29:32Z simonegiannecchini $
+ * @source $URL$
+ * @version $Id$
  * @author Remi Eve
  * @author Martin Desruisseaux (IRD)
  */
@@ -72,13 +72,13 @@ public class CombineCRIF extends CRIFImpl {
         final double[][]          matrix = (double[][])       param.getObjectParameter(0);
         final CombineTransform transform = (CombineTransform) param.getObjectParameter(1);
         return transform==null && isDyadic(sources, matrix) ?
-               new Combine.Dyadic(sources, matrix, hints)   :
-               new Combine       (sources, matrix, transform, hints);
+               new CombineOpImage.Dyadic(sources, matrix, hints)   :
+               new CombineOpImage       (sources, matrix, transform, hints);
     }
 
     /**
      * Returns {@code true} if the combine operation could be done through
-     * the optimized {@code Combine.Dyadic} class.
+     * the optimized {@code CombineOpImage.Dyadic} class.
      */
     private static boolean isDyadic(final List<Object> sources, final double[][] matrix) {
         if (sources.size() != 2) {
