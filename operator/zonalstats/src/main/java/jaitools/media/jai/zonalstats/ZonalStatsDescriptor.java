@@ -307,7 +307,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
                 {
                         "arg5Desc",
                         String.format("%s (default %s) - in case of Ranges, specify if they "
-                        		+ "are included or excluded in calculations",
+                                + "are included or excluded in calculations",
                             paramNames[RANGES_TYPE_ARG], paramDefaults[RANGES_TYPE_ARG])},
 
                 {
@@ -404,7 +404,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
      * </ul>
      */
     @SuppressWarnings("unchecked")
-	@Override
+    @Override
     public boolean validateArguments( String modeName, ParameterBlock pb, StringBuffer msg ) {
         if (pb.getNumSources() == 0 || pb.getNumSources() > 2) {
             msg.append("ZonalStats operator takes 1 or 2 source images");
@@ -418,27 +418,27 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
             if (rangeObject instanceof List) {
                 Object range = ((List) rangeObject).get(0);
                 if (!(range instanceof Range)) {
-                	msg.append(paramNames[RANGES_ARG] + " arg has to be of type List<Range<Double>>");
+                    msg.append(paramNames[RANGES_ARG] + " arg has to be of type List<Range<Double>>");
                     ok = false;
                 } else {
-                	List ranges = (List)rangeObject;
-                	List sortedRanges = RangeUtils.sort(ranges);
-                	final int elements = sortedRanges.size();
-                	if (elements > 1){
-                		RangeComparator rc = new RangeComparator();
-                		List<Range> rr = (List<Range>) sortedRanges;
-                		for (int i = 0; i<elements - 1; i++){
-                			Range r1 = rr.get(i);
-                			Range r2 = rr.get(i+1);
-                			RangeComparator.Result result = rc.compare(r1, r2);
-                            	        if (RangeComparator.isIntersection(result)) {
-                            	    		ok = false;
-                            	    		msg.append(paramNames[RANGES_ARG] + " arg can't contain intersecting ranges");
-                            	    		break;
-                            	    	}
+                    List ranges = (List) rangeObject;
+                    List sortedRanges = RangeUtils.sort(ranges);
+                    final int elements = sortedRanges.size();
+                    if (elements > 1) {
+                        RangeComparator rc = new RangeComparator();
+                        List<Range> rr = (List<Range>) sortedRanges;
+                        for (int i = 0; i < elements - 1; i++) {
+                            Range r1 = rr.get(i);
+                            Range r2 = rr.get(i + 1);
+                            RangeComparator.Result result = rc.compare(r1, r2);
+                            if (RangeComparator.isIntersection(result)) {
+                                ok = false;
+                                msg.append(paramNames[RANGES_ARG] + " arg can't contain intersecting ranges");
+                                break;
+                            }
 
-                		}
-                	}
+                        }
+                    }
                 }
 
             } else {
@@ -474,14 +474,14 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
         }
 
         Object rangesType = pb.getObjectParameter(RANGES_TYPE_ARG);
-        if (rangesType != null){
-        	if (rangesType instanceof Range.Type){
-        		Range.Type rt = (Range.Type) rangesType;
-        		if (rangeObject != null && rt == Range.Type.UNDEFINED){
-        			msg.append(paramNames[RANGES_TYPE_ARG] + " arg has to be of Type.EXCLUDED or Type.INCLUDED when specifying a Ranges List");
+        if (rangesType != null) {
+            if (rangesType instanceof Range.Type) {
+                Range.Type rt = (Range.Type) rangesType;
+                if (rangeObject != null && rt == Range.Type.UNDEFINED) {
+                    msg.append(paramNames[RANGES_TYPE_ARG] + " arg has to be of Type.EXCLUDED or Type.INCLUDED when specifying a Ranges List");
                     return false;
-        		}
-        	}
+                }
+            }
         }
 
         // CHECKING BANDS
@@ -523,7 +523,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
         // CHECKING ZONE IMAGE BOUNDS
         if (pb.getNumSources() == 2) {
 
-        	// get the zone image and check that it covers at least partially the data image
+            // get the zone image and check that it covers at least partially the data image
             RenderedImage zoneImg = pb.getRenderedSource(ZONE_IMAGE);
             int dataType = zoneImg.getSampleModel().getDataType();
             boolean integralType = false;
@@ -549,17 +549,15 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
 
             final Rectangle zoneBounds = new Rectangle(zoneImg.getMinX(), zoneImg.getMinY(), zoneImg.getWidth(), zoneImg.getHeight());
             if (tr != null && !tr.isIdentity()) {
-            	// given that we are using an affine transform for this it might happen that we
-            	// are getting here is an elaborate shape that is badly approximated by its bbox
+                // given that we are using an affine transform for this it might happen that we
+                // are getting here is an elaborate shape that is badly approximated by its bbox
                 final Shape zoneBoundsTransformed = tr.createTransformedShape(zoneBounds);
                 if (!zoneBoundsTransformed.intersects(dataBounds)) {
                     msg.append("Zone image bounds are outside the data image bounds");
                     return false;
                 }
-            }
-            else
-            {
-            	// ok, in this case we can go with the simple bounds
+            } else {
+                // ok, in this case we can go with the simple bounds
                 if (!dataBounds.intersects(zoneBounds)) {
                     msg.append("Zone image bounds are outside the data image bounds");
                     return false;
@@ -570,5 +568,4 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
 
         return true;
     }
-
 }

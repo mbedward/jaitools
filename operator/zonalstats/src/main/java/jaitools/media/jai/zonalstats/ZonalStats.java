@@ -108,18 +108,19 @@ public class ZonalStats {
             if ((band == null || r.getImageBand() == band) &&
                 (zone == null || r.getZone() == zone) &&
                 (stat == null || r.getStatistic() == stat)) {
-            	if (ranges == null || ranges.isEmpty()) {
-            		results.add(r);
-            	} else {
-            		if (r.getRanges().containsAll(ranges)) {
-            			results.add(r);
-            		} else{
-            			for (Range range: ranges){
-	            			if (r.getRanges().contains(range))
-	            				results.add(r);
-            			}
-            		}
-            	}
+                if (ranges == null || ranges.isEmpty()) {
+                    results.add(r);
+                } else {
+                    if (r.getRanges().containsAll(ranges)) {
+                        results.add(r);
+                    } else {
+                        for (Range range : ranges) {
+                            if (r.getRanges().contains(range)) {
+                                results.add(r);
+                            }
+                        }
+                    }
+                }
 
             }
         }

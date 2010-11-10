@@ -122,7 +122,7 @@ public class ZonalStatsOpImage extends NullOpImage {
             ROI roi,
             AffineTransform zoneTransform,
             List<Range<Double>> excludedRanges) {
-    	this (dataImage, zoneImage, config, layout, stats, bands, roi, zoneTransform, excludedRanges, Range.Type.EXCLUDE, false, null);
+        this (dataImage, zoneImage, config, layout, stats, bands, roi, zoneTransform, excludedRanges, Range.Type.EXCLUDE, false, null);
     }
 
     /**
@@ -150,10 +150,10 @@ public class ZonalStatsOpImage extends NullOpImage {
      *        will be considered as invalid/valid and discarded/accepted.
      *
      * @param rangesType specify if the provided ranges argument should be considered
-     * 		  as Included or Excluded. See {@link Range.Type}.
+     *        as Included or Excluded. See {@link Range.Type}.
      *
      * @param rangeLocalStats if {@code true}, the statistics should be computed for ranges,
-     * 		  separately.
+     *        separately.
      *
      *
      * @see ZonalStatsDescriptor
@@ -177,8 +177,8 @@ public class ZonalStatsOpImage extends NullOpImage {
         this.zoneImage = zoneImage;
 
         dataImageBounds = new Rectangle(
-        		dataImage.getMinX(), dataImage.getMinY(),
-        		dataImage.getWidth(), dataImage.getHeight());
+                dataImage.getMinX(), dataImage.getMinY(),
+                dataImage.getWidth(), dataImage.getHeight());
 
         this.stats = stats;
         this.srcBands = bands;
@@ -237,10 +237,11 @@ public class ZonalStatsOpImage extends NullOpImage {
         if (zoneImage != null) {
             return compileZonalStatistics();
         } else {
-        	if (!rangeLocalStats)
-        		return compileUnzonedStatistics();
-        	else
-        		return compileRangeStatistics();
+            if (!rangeLocalStats) {
+                return compileUnzonedStatistics();
+            } else {
+                return compileRangeStatistics();
+            }
         }
     }
 
@@ -384,18 +385,18 @@ public class ZonalStatsOpImage extends NullOpImage {
         for (int index = 0; index < srcBands.length; index++) {
             final StreamingSampleStats sampleStats = sampleStatsPerBand[index];
             List<Range> inclRanges = null;
-            if (ranges != null && !ranges.isEmpty()){
-            	switch(rangesType){
-            		case INCLUDE:
-            			inclRanges = CollectionFactory.list();
-            			inclRanges.addAll(ranges);
-            			break;
-            		case EXCLUDE:
-            			inclRanges = CollectionFactory.list();
-            			List<Range<Double>> incRanges = RangeUtils.createComplement(RangeUtils.sort(ranges));
-            			inclRanges.addAll(incRanges);
-            			break;
-            	}
+            if (ranges != null && !ranges.isEmpty()) {
+                switch (rangesType) {
+                    case INCLUDE:
+                        inclRanges = CollectionFactory.list();
+                        inclRanges.addAll(ranges);
+                        break;
+                    case EXCLUDE:
+                        inclRanges = CollectionFactory.list();
+                        List<Range<Double>> incRanges = RangeUtils.createComplement(RangeUtils.sort(ranges));
+                        inclRanges.addAll(incRanges);
+                        break;
+                }
             }
             zs.setResults(srcBands[index], zoneID, sampleStats, inclRanges);
         }
@@ -412,63 +413,63 @@ public class ZonalStatsOpImage extends NullOpImage {
         final Integer zoneID = zones.first();
         final ZonalStats zs = new ZonalStats();
         List<Range> localRanges = null;
-        switch (rangesType){
-        	case EXCLUDE:
-        		List<Range<Double>> inRanges = RangeUtils.createComplement(RangeUtils.sort(ranges));
-        		localRanges = CollectionFactory.list();
-        		localRanges.addAll(inRanges);
-        		break;
-        	case INCLUDE:
-        		localRanges = CollectionFactory.list();
-        		localRanges.addAll(ranges);
-        		break;
-        	case UNDEFINED:
-        		throw new UnsupportedOperationException("Unable to compute range local statistics on UNDEFINED ranges type");
+        switch (rangesType) {
+            case EXCLUDE:
+                List<Range<Double>> inRanges = RangeUtils.createComplement(RangeUtils.sort(ranges));
+                localRanges = CollectionFactory.list();
+                localRanges.addAll(inRanges);
+                break;
+            case INCLUDE:
+                localRanges = CollectionFactory.list();
+                localRanges.addAll(ranges);
+                break;
+            case UNDEFINED:
+                throw new UnsupportedOperationException("Unable to compute range local statistics on UNDEFINED ranges type");
         }
 
-        for (Range<Double> range: localRanges){
+        for (Range<Double> range : localRanges) {
 
-	        // create the stats
-	        final StreamingSampleStats sampleStatsPerBand[] = new StreamingSampleStats[srcBands.length];
-	        for (int index = 0; index < srcBands.length; index++) {
-	            final StreamingSampleStats sampleStats = new StreamingSampleStats(rangesType);
-                    sampleStats.addRange(range);
-                    for (Range<Double> noDataRange: noDataRanges){
-                        sampleStats.addNoDataRange(noDataRange);
+            // create the stats
+            final StreamingSampleStats sampleStatsPerBand[] = new StreamingSampleStats[srcBands.length];
+            for (int index = 0; index < srcBands.length; index++) {
+                final StreamingSampleStats sampleStats = new StreamingSampleStats(rangesType);
+                sampleStats.addRange(range);
+                for (Range<Double> noDataRange : noDataRanges) {
+                    sampleStats.addNoDataRange(noDataRange);
+                }
+                sampleStats.setStatistics(stats);
+                sampleStatsPerBand[index] = sampleStats;
+            }
+
+            final double[] sampleValues = new double[dataImage.getSampleModel().getNumBands()];
+            RectIter dataIter = RectIterFactory.create(dataImage, null);
+            int y = dataImage.getMinY();
+            do {
+                int x = dataImage.getMinX();
+                do {
+                    if (roi == null || roi.contains(x, y)) {
+                        dataIter.getPixel(sampleValues);
+                        for (int index = 0; index < srcBands.length; index++) {
+                            final double value = sampleValues[srcBands[index]];
+                            sampleStatsPerBand[index].offer(value);
+                        }
                     }
-	            sampleStats.setStatistics(stats);
-	            sampleStatsPerBand[index] = sampleStats;
-	        }
+                    x++;
+                } while (!dataIter.nextPixelDone());
 
-	        final double[] sampleValues = new double[dataImage.getSampleModel().getNumBands()];
-	        RectIter dataIter = RectIterFactory.create(dataImage, null);
-	        int y = dataImage.getMinY();
-	        do {
-	            int x = dataImage.getMinX();
-	            do {
-	                if (roi == null || roi.contains(x, y)) {
-	                    dataIter.getPixel(sampleValues);
-	                    for (int index = 0; index < srcBands.length; index++) {
-	                        final double value = sampleValues[srcBands[index]];
-	                        sampleStatsPerBand[index].offer(value);
-	                    }
-	                }
-	                x++;
-	            } while (!dataIter.nextPixelDone() );
+                dataIter.startPixels();
+                y++;
 
-	            dataIter.startPixels();
-	            y++;
+            } while (!dataIter.nextLineDone());
 
-	        } while( !dataIter.nextLineDone() );
-
-	        // get the results
-	        for (int index = 0; index < srcBands.length; index++) {
-	            StreamingSampleStats sampleStats = sampleStatsPerBand[index];
-	            List<Range> resultRanges = CollectionFactory.list();
-	            resultRanges.add(range);
-	            zs.setResults(srcBands[index], zoneID, sampleStats, resultRanges);
-	        }
-    	}
+            // get the results
+            for (int index = 0; index < srcBands.length; index++) {
+                StreamingSampleStats sampleStats = sampleStatsPerBand[index];
+                List<Range> resultRanges = CollectionFactory.list();
+                resultRanges.add(range);
+                zs.setResults(srcBands[index], zoneID, sampleStats, resultRanges);
+            }
+        }
 
         return zs;
     }
