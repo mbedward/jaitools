@@ -34,7 +34,30 @@ import java.util.SortedSet;
  * An instance of this class is stored as a property of the destination
  * image.
  * <p>
- * Chaining methods are provided to select a subset of the results...
+ * The result for each combination of data image band, zone image integer zone (if
+ * provided) and requested statistic is stored as a {@code Result} object.
+ * The most basic usage is to iterate through the results as follows...
+ * <pre><code>
+ * RenderedOp op = JAI.create("zonalstats", myParamBlock);
+ * ZonalStats allStats = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
+ * for (Result r : allStats.results()) {
+ *     System.out.prinln(r);
+ * }
+ * </code></pre>
+ * 
+ * Alternatively, the attributes of {@code Result} objects can be retrieved selectively...
+ * <pre><code>
+ * ZonalStats allStats = ...
+ * for (Result r : allStats.results()) {
+ *     if (r.getStatistic() == Statistic.MEAN) {
+ *         System.out.printf("%4d %4d %8.4f\n", 
+ *             r.getImageBand(), r.getZone(), r.getValue());
+ *     }
+ * }
+ * </code></pre>
+ * 
+ * For most uses it may be easier to use the chaining methods provided by {@code ZonalStats}
+ * to select the subset of results required...
  * <pre><code>
  * ZonalStats allStats = ...
  *
