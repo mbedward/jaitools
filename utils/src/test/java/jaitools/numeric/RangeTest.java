@@ -27,14 +27,15 @@ import static org.junit.Assert.*;
  * @author Michael Bedward
  */
 public class RangeTest {
+    
+    final int ivalue = 42;
 
     @Test
     public void testCreateInterval() {
         System.out.println("   testCreateInterval");
 
-        final int value = 42;
 
-        Range<Integer> r = Range.create(null, false, value, true);
+        Range<Integer> r = Range.create(null, false, ivalue, true);
         assertTrue(r.isMinOpen());
         assertTrue(r.isMinNegInf());
         assertNull(r.getMin());
@@ -42,7 +43,39 @@ public class RangeTest {
         assertFalse(r.isMaxOpen());
         assertFalse(r.isMaxInf());
         assertNotNull(r.getMax());
-        assertEquals(value, r.getMax().intValue());
+        assertEquals(ivalue, r.getMax().intValue());
+    }
+    
+    @Test
+    public void testValueInRange() {
+        System.out.println("   testValueInRange");
+        
+        Range<Integer> r = Range.create(ivalue / 2, true, 2 * ivalue, true);
+        assertTrue(r.contains(ivalue));
+    }
+    
+    @Test
+    public void testValueOutOfRange() {
+        System.out.println("   testValueOutOfRange");
+        
+        Range<Integer> r = Range.create(ivalue + 1, true, 2 * ivalue, true);
+        assertFalse(r.contains(ivalue));
+    }
+    
+    @Test
+    public void testValueAtIncludedEndpoint() {
+        System.out.println("   testValueAtIncludedEndpoint");
+        
+        Range<Integer> r = Range.create(ivalue, true, 2 * ivalue, true);
+        assertTrue(r.contains(ivalue));
+    }
+    
+    @Test
+    public void testValueAtExcludedEndpoint() {
+        System.out.println("   testValueAtExcludedEndpoint");
+        
+        Range<Integer> r = Range.create(ivalue, false, 2 * ivalue, true);
+        assertFalse(r.contains(ivalue));
     }
 
     @Test
