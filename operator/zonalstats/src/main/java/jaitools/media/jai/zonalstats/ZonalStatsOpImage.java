@@ -294,6 +294,7 @@ public class ZonalStatsOpImage extends NullOpImage {
                 dataIter.startPixels();
                 zoneIter.startPixels();
                 zoneIter.nextLineDone(); // safe call
+                y++;
 
             } while( !dataIter.nextLineDone() );
 
