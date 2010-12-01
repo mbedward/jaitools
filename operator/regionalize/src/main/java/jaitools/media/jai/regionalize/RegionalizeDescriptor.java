@@ -144,7 +144,7 @@ public class RegionalizeDescriptor extends OperationDescriptorImpl {
         super(new String[][]{
                     {"GlobalName", "Regionalize"},
                     {"LocalName", "Regionalize"},
-                    {"Vendor", "jaitools"},
+                    {"Vendor", "jaitools.media.jai"},
                     {"Description", "Identifies sufficiently uniform regions in a source image"},
                     {"DocURL", "http://code.google.com/p/jai-tools/"},
                     {"Version", "1.0.0"},

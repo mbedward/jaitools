@@ -158,7 +158,7 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
         super(new String[][]{
                     {"GlobalName", "MaskedConvolve"},
                     {"LocalName", "MaskedConvolve"},
-                    {"Vendor", "jaitools"},
+                    {"Vendor", "jaitools.media.jai"},
                     {"Description", "Convolve a rendered image masked by an associated ROI"},
                     {"DocURL", "http://code.google.com/p/jai-tools/"},
                     {"Version", "1.0.0"},
