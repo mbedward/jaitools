@@ -71,17 +71,34 @@ public class InterpreterDemo {
     final int imgHeight = 400;
 
     /**
-     * Run the demonstration
+     * Run the demonstration. The optional {@code arg} can be either
+     * the path to a user-supplied script or one of "chessboard",
+     * "interference" or "ripple".
      * 
-     * @param args ignored
+     * @param args (optional) the script to run
      */
     public static void main(String[] args) throws Exception {
         InterpreterDemo demo = new InterpreterDemo();
-        
-        URL url = demo.getClass().getResource("/scripts/ripple.jfl");
-        File f = new File(url.toURI());
 
-        demo.compileAndRun(f);
+        URL url = demo.getClass().getResource("/scripts/ripple.jfl");
+
+        if (args.length == 1) {
+            String arg = args[0];
+            System.out.println(arg);
+            File file = new File(arg);
+            if (file.exists()) {
+                url = file.toURI().toURL();
+            } else {
+                int dot = arg.lastIndexOf('.');
+                if (dot < 0) {
+                    arg = arg + ".jfl";
+                }
+                url = demo.getClass().getResource("/scripts/" + arg);
+            }
+        }
+
+        File f = new File(url.toURI());
+        demo.compileAndRun(f);        
     }
 
     /**
