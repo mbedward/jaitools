@@ -90,7 +90,7 @@ public class RangeLookupDescriptor extends OperationDescriptorImpl {
         super(new String[][]{
                     {"GlobalName", "RangeLookup"},
                     {"LocalName", "RangeLookup"},
-                    {"Vendor", "jaitools"},
+                    {"Vendor", "jaitools.media.jai"},
                     {"Description", "Maps source image value ranges to destination image values"},
                     {"DocURL", "http://code.google.com/p/jai-tools/"},
                     {"Version", "1.0.0"},

@@ -70,7 +70,7 @@ public class CombineDescriptor extends OperationDescriptorImpl {
     public CombineDescriptor() {
         super(new String[][]{{"GlobalName",  OPERATION_NAME},
                              {"LocalName",   OPERATION_NAME},
-                             {"Vendor",      "jai-tools"},
+                             {"Vendor",      "jaitools.media.jai"},
                              {"Description", "Combine rendered images using a linear relation."},
                              {"DocURL",      "http://www.geotools.org/"}, 
                              {"Version",     "1.0"},
