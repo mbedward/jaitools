@@ -28,6 +28,7 @@ import java.util.Vector;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.OpImage;
 import javax.media.jai.ROI;
+import javax.media.jai.ROIShape;
 
 /**
  * Abstract base class for operators that generate non-image attributes from a
@@ -42,8 +43,20 @@ public abstract class AttributeOpImage extends OpImage {
 
     /**
      * An optional ROI to define the region over which to derive attributes.
+     * If an ROI is not provided this will be set to an ROIShape having the
+     * bounds of the source image.
      */
     protected ROI roi;
+    
+    /**
+     * Flag indicating whether the ROI is simple (ROIShape) or not.
+     */
+    protected boolean isShapeROI;
+
+    /**
+     * Bounds of the source image as a convenience.
+     */
+    protected Rectangle srcBounds;
 
 
     /**
@@ -59,7 +72,13 @@ public abstract class AttributeOpImage extends OpImage {
               null,
               false);
 
-        this.roi = roi;
+        if (roi == null) {
+            this.roi = new ROIShape(getSourceImage(0).getBounds());
+            isShapeROI = true;
+        } else {
+            this.roi = roi;
+            isShapeROI = roi instanceof ROIShape;
+        }
     }
     
     /**
