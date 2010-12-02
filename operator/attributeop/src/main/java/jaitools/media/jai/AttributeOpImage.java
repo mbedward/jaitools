@@ -36,8 +36,8 @@ import javax.media.jai.ROIShape;
  *
  * @author Michael Bedward
  * @since 1.1
- * @source $URL: $
- * @version $Id: $
+ * @source $URL$
+ * @version $Id$
  */
 public abstract class AttributeOpImage extends OpImage {
 
@@ -79,6 +79,8 @@ public abstract class AttributeOpImage extends OpImage {
             this.roi = roi;
             isShapeROI = roi instanceof ROIShape;
         }
+        
+        srcBounds = getSourceImage(0).getBounds();
     }
     
     /**
@@ -212,8 +214,57 @@ public abstract class AttributeOpImage extends OpImage {
      *
      * @throws IllegalArgumentException if {@code name} is {@code null}
      */
-    public abstract Object getAttribute(String name);
+    protected abstract Object getAttribute(String name);
+    
+    protected Class<?> getAttributeClass(String name) {
+        return Object.class;
+    }
 
     protected abstract String[] getAttributeNames();
+    
+    private boolean isAttributeName(String name) {
+        String[] attributeNames = getAttributeNames();
+        for (int i = 0; i < attributeNames.length; i++) {
+            if (name.equalsIgnoreCase(attributeNames[i])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public Object getProperty(String name) {
+        if (isAttributeName(name)) {
+            return getAttribute(name);
+        }
+        
+        return super.getProperty(name);
+    }
+
+    @Override
+    public Class getPropertyClass(String name) {
+        if (isAttributeName(name)) {
+            return getAttributeClass(name);
+        }
+        
+        return super.getPropertyClass(name);
+    }
+
+    @Override
+    public String[] getPropertyNames() {
+        String[] superNames = super.getPropertyNames();
+        if (superNames == null) superNames = new String[0];
+        
+        String[] myNames = getAttributeNames();
+        if (myNames == null) myNames = new String[0];
+        
+        String[] names = new String[superNames.length + myNames.length];
+        
+        int i, k = 0;
+        for (i = 0; i < superNames.length; i++) names[k++] = superNames[i];
+        for (i = 0; i < myNames.length; i++) names[k++] = myNames[i];
+        
+        return names;
+    }
     
 }
