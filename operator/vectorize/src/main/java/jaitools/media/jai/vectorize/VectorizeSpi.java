@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2010 Michael Bedward
  * 
  * This file is part of jai-tools.
 
@@ -31,7 +31,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * operation and its associated image factories.
  *
  * @author Michael Bedward
- * @since 1.0
+ * @since 1.1
  * @source $URL$
  * @version $Id$
  */

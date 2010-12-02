@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2010 Michael Bedward
  * 
  * This file is part of jai-tools.
 
@@ -24,6 +24,7 @@ import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
 import java.awt.image.renderable.RenderedImageFactory;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import javax.media.jai.ROI;
@@ -32,7 +33,7 @@ import javax.media.jai.ROI;
  * The image factory for the Vectorize operator.
  *
  * @author Michael Bedward
- * @since 1.0
+ * @since 1.1
  * @source $URL$
  * @version $Id$
  */
@@ -59,6 +60,7 @@ public class VectorizeRIF implements RenderedImageFactory {
         List<Double> outsideValues = null;
         Object obj = paramBlock.getObjectParameter(VectorizeDescriptor.OUTSIDE_VALUES_ARG);
         if (obj != null) {
+            outsideValues = new ArrayList<Double>();
             Collection coll = (Collection) obj;
             for (Object val : coll) {
                 outsideValues.add(((Number)val).doubleValue());

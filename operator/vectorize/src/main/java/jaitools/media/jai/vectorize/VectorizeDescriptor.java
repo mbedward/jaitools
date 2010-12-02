@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2010 Michael Bedward
  * 
  * This file is part of jai-tools.
  *
@@ -24,6 +24,7 @@ import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
 import java.util.Collection;
+import java.util.Collections;
 import javax.media.jai.JAI;
 import javax.media.jai.OperationDescriptorImpl;
 import javax.media.jai.ParameterBlockJAI;
@@ -35,16 +36,22 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * Vectorize regions of uniform data within a source image.
  * 
  * @author Michael Bedward
- * @since 1.0
+ * @since 1.1
  * @source $URL$
  * @version $Id$
  */
 public class VectorizeDescriptor extends OperationDescriptorImpl {
+    
+    /**
+     * Name used to access the vectorized region boundaries as
+     * a destination image property.
+     */
+    public static final String VECTOR_PROPERTY_NAME = "vectors";
 
-    static final int ROI_ARG = 1;
-    static final int BAND_ARG = 2;
-    static final int OUTSIDE_VALUES_ARG = 3;
-    static final int INSIDE_EDGES_ARG = 4;
+    static final int ROI_ARG = 0;
+    static final int BAND_ARG = 1;
+    static final int OUTSIDE_VALUES_ARG = 2;
+    static final int INSIDE_EDGES_ARG = 3;
 
     private static final String[] paramNames = {
         "roi",
@@ -62,8 +69,8 @@ public class VectorizeDescriptor extends OperationDescriptorImpl {
 
     private static final Object[] paramDefaults = {
          (ROI) null,
-         Integer.valueOf(1),
-         (Collection) null,
+         Integer.valueOf(0),
+         Collections.EMPTY_LIST,
          Boolean.TRUE,
     };
 
@@ -79,7 +86,7 @@ public class VectorizeDescriptor extends OperationDescriptorImpl {
                     
                     {"arg0Desc", paramNames[0] + " an optional ROI"},
                     
-                    {"arg1Desc", paramNames[1] + " (Integer, default=1) " +
+                    {"arg1Desc", paramNames[1] + " (Integer, default=0) " +
                               "the source image band to process"},
                     
                     {"arg2Desc", paramNames[2] + " (Collection, default=null) " +

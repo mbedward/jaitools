@@ -52,15 +52,6 @@ import javax.media.jai.iterator.RandomIterFactory;
  */
 public class VectorizeOpImage extends AttributeOpImage {
     
-    /**
-     * Name used to access the vectorized region boundaries as
-     * an attribute.
-     * 
-     * @see #getAttribute(java.lang.String)
-     */
-    public static final String VECTOR_ATTRIBUTE_NAME = "vectors";
-    
-    
     // positions in curData matrix just to avoid confusion
     private static final int TL = 0;
     private static final int TR = 1;
@@ -175,15 +166,18 @@ public class VectorizeOpImage extends AttributeOpImage {
         return cachedVectors.get();
     }
         
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected String[] getAttributeNames() {
-        return new String[] {VECTOR_ATTRIBUTE_NAME};
+        return new String[] {VectorizeDescriptor.VECTOR_PROPERTY_NAME};
     }
     
 
     private List<Geometry> doVectorize() {
-        lines = new ArrayList<LineString>();
         geomFactory = new GeometryFactory();
+        lines = new ArrayList<LineString>();
         vertLines = new HashMap<Integer, LineSegment>();
         cornerTouches = new ArrayList<Coordinate>();
         
