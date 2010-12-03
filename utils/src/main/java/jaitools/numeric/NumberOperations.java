@@ -262,9 +262,15 @@ public class NumberOperations {
      */
     private static Number calculate(OpType type, Number n1, Number n2) {
         Number result = null;
-        ClassInfo ci = ClassInfo.get(highestClass(n1, n2));
+        ClassInfo ciIn = ClassInfo.get(highestClass(n1, n2));
+        ClassInfo ciOut = null; 
+        if (type == OpType.COMPARE) {
+            ciOut = ClassInfo.INTEGER;
+        } else {
+            ciOut = ciIn;
+        }
 
-        switch (ci) {
+        switch (ciIn) {
             case BYTE:
             case SHORT:
             case INTEGER:
@@ -284,7 +290,7 @@ public class NumberOperations {
                 throw new UnsupportedOperationException("Unrecognized number class");
         }
 
-        return newInstance(result, ci.getNumberClass());
+        return newInstance(result, ciOut);
     }
 
     /**
@@ -382,6 +388,7 @@ public class NumberOperations {
                 } else {
                     value = (long) Math.max( Math.min(number.floatValue(), Long.MAX_VALUE), Long.MIN_VALUE );
                 }
+                break;
 
             case DOUBLE:
                 Double d = (Double) number;
@@ -392,6 +399,7 @@ public class NumberOperations {
                 } else {
                     value = (long) Math.max( Math.min(number.doubleValue(), Long.MAX_VALUE), Long.MIN_VALUE );
                 }
+                break;
 
             default:
                 throw new IllegalStateException("Unrecognized number class: " + number.getClass().getName());
@@ -466,18 +474,30 @@ public class NumberOperations {
                 return number.doubleValue();
         }
     }
-
+    
     /**
      * Return a new instance of class {@code clazz} taking its value from {@code number}
      *
      * @param number the number object whose value will be copied
      * @param clazz the class of the new instance
      *
-     * @return a new instance of class {@code clazz}
+     * @return a new instance of the request class with value {@code number}
      */
     public static Number newInstance(Number number, Class<? extends Number> clazz) {
         ClassInfo ci = ClassInfo.get(clazz);
+        return newInstance(number, ci);
+    }
 
+    /**
+     * Return a new instance of the class described by {@code ci} taking its value 
+     * from {@code number}
+     *
+     * @param number the number object whose value will be copied
+     * @param ci a ClassInfo object
+     *
+     * @return a new instance of the request class with value {@code number}
+     */
+    private static Number newInstance(Number number, ClassInfo ci) {
         switch (ci) {
             case BYTE:
                 return newByte(number);
@@ -498,7 +518,7 @@ public class NumberOperations {
                 return newDouble(number);
 
             default:
-                throw new UnsupportedOperationException("Unrecognized class: " + clazz.getName());
+                throw new IllegalArgumentException("Unrecognized ClassInfo arg: " + ci);
         }
 
     }
@@ -581,10 +601,13 @@ public class NumberOperations {
             case DIVIDE:
                 result = val1 / val2;
                 break;
-
+                
             case COMPARE:
                 result = (val1 < val2 ? -1 : (val1 > val2 ? 1 : 0));
                 break;
+                
+            default:
+                throw new IllegalArgumentException("Invalid OpType: " + type);
         }
 
         return Long.valueOf(result);

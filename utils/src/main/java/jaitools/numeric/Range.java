@@ -543,8 +543,22 @@ public class Range<T extends Number & Comparable> {
                 return false;
             }
 
-            Range<T> r = Range.create(value);
-            return intersects(r);
+            int comp;
+            if (minValue != null) {
+                comp = NumberOperations.compare(value, minValue);
+                if (comp < 0 || (!minIncluded && comp == 0)) {
+                    return false;
+        }
+    }
+
+            if (maxValue != null) {
+                comp = NumberOperations.compare(value, maxValue);
+                if (comp > 0 || (!maxIncluded && comp == 0)) {
+                    return false;
+                }
+            }
+            
+            return true;
         }
     }
 
