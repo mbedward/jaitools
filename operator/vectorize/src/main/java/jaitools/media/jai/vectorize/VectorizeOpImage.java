@@ -33,6 +33,7 @@ import jaitools.media.jai.AttributeOpImage;
 import java.awt.image.RenderedImage;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,17 +53,11 @@ import javax.media.jai.iterator.RandomIterFactory;
  */
 public class VectorizeOpImage extends AttributeOpImage {
     
-    // positions in curData matrix just to avoid confusion
+    // positions in the 2x2 sample window
     private static final int TL = 0;
     private static final int TR = 1;
     private static final int BL = 2;
     private static final int BR = 3;
-
-    // these are used to identify the orientation of corner touches
-    // between possibly separate polygons with the same value
-    private static final int TL_BR = 4;
-    private static final int TR_BL = 5;
-    private static final int CROSS = 6;
 
     // Precision of comparison in the function different(a, b)
     // TODO: enable this to be set by the user
@@ -106,14 +101,6 @@ public class VectorizeOpImage extends AttributeOpImage {
      */
     private GeometryFactory geomFactory;
 
-    /*
-     * list of corner touches between possibly separate polygons of
-     * the same value. Each Coordinate has x:y = col:row and z set
-     * to either TL_BR or TR_BL to indicate the orientation of the
-     * corner touch.
-     */
-    List<Coordinate> cornerTouches;
-    
     SoftReference<List<Geometry>> cachedVectors;
     
 
@@ -179,7 +166,6 @@ public class VectorizeOpImage extends AttributeOpImage {
         geomFactory = new GeometryFactory();
         lines = new ArrayList<LineString>();
         vertLines = new HashMap<Integer, LineSegment>();
-        cornerTouches = new ArrayList<Coordinate>();
         
         vectorizeBoundaries();
         return assemblePolygons();
@@ -193,29 +179,28 @@ public class VectorizeOpImage extends AttributeOpImage {
      */
     private List<Geometry> assemblePolygons() {
 
-        Coordinate p = new Coordinate();
+        List<Geometry> polygons = new ArrayList<Geometry>();
         RandomIter imgIter = RandomIterFactory.create(getSourceImage(0), null);
 
         Polygonizer polygonizer = new Polygonizer();
         polygonizer.add(lines);
-        List<Geometry> polygons = new ArrayList<Geometry>();
-        polygons.addAll( polygonizer.getPolygons() );
+        Collection<Geometry> rawPolys = polygonizer.getPolygons();
 
         int index = 0;
-        for (Geometry geom : polygons) {
+        for (Geometry geom : rawPolys) {
             Polygon poly = (Polygon) geom;
             InteriorPointArea ipa = new InteriorPointArea(poly);
             Coordinate c = ipa.getInteriorPoint();
-            Point insidePt = geomFactory.createPoint(c);
+            Point pt = geomFactory.createPoint(c);
 
-            if (!poly.contains(insidePt)) {
+            if (!poly.contains(pt)) {
                 // try another method to generate an interior point
                 boolean found = false;
                 for (Coordinate ringC : poly.getExteriorRing().getCoordinates()) {
                     c.x = ringC.x + 0.5;
                     c.y = ringC.y;
-                    insidePt = geomFactory.createPoint(c);
-                    if (poly.contains(insidePt)) {
+                    pt = geomFactory.createPoint(c);
+                    if (poly.contains(pt)) {
                         found = true;
                         break;
                     }
@@ -226,15 +211,15 @@ public class VectorizeOpImage extends AttributeOpImage {
                 }
             }
 
-            p.setCoordinate(c);
             double val = imgIter.getSampleDouble((int) c.x, (int) c.y, band);
 
             if (!isOutside(val)) {
                 if (insideEdges) {
-                    geom.setUserData(val);
+                    poly.setUserData(val);
                 } else {
-                    geom.setUserData(inside);
+                    poly.setUserData(inside);
                 }
+                polygons.add(poly);
             }
         }
         
@@ -262,7 +247,7 @@ public class VectorizeOpImage extends AttributeOpImage {
         }
         
         final Double OUT = outsideValues.first();
-
+        
         // NOTE: the for-loop indices are set to emulate a one pixel width border
         // around the source image area
         for (int y = srcBounds.y - 1; y < srcBounds.y + srcBounds.height; y++) {
@@ -335,209 +320,235 @@ public class VectorizeOpImage extends AttributeOpImage {
         int xvec = xpixel + 1;
         int yvec = ypixel + 1;
 
-        switch (nbrConfig(sample)) {
-        case 0:
-            /*
-             * Vertical edge:
-             * 
-             *   AB
-             *   AB
-             * 
-             * No update required.
-             */
-            break;
+        int configIndex = nbrConfig(sample);
+        switch (configIndex) {
+            case 0:
+                /*
+                 * Vertical edge:
+                 * 
+                 *   AB
+                 *   AB
+                 * 
+                 * No update required.
+                 */
+                break;
 
-        case 1:
-            /*
-             * Corner:
-             * 
-             *   AA
-             *   AB
-             * 
-             * Begin new horizontal.
-             * Begin new vertical.
-             */
-            horizLine = new LineSegment();
-            horizLine.p0.x = xvec;
+            case 1:
+                /*
+                 * Corner:
+                 * 
+                 *   AA
+                 *   AB
+                 * 
+                 * Begin new horizontal.
+                 * Begin new vertical.
+                 */
+                horizLine = new LineSegment();
+                horizLine.p0.x = xvec;
 
-            seg = new LineSegment();
-            seg.p0.y = yvec;
-            vertLines.put(xvec, seg);
-            break;
+                seg = new LineSegment();
+                seg.p0.y = yvec;
+                vertLines.put(xvec, seg);
+                break;
 
-        case 2:
-            /*
-             * Horizontal edge:
-             * 
-             *   AA
-             *   BB
-             * 
-             * No update required.
-             */
-            break;
+            case 2:
+                /*
+                 * Horizontal edge:
+                 * 
+                 *   AA
+                 *   BB
+                 * 
+                 * No update required.
+                 */
+                break;
 
-        case 3:
-            /*
-             * Corner:
-             * 
-             *   AA
-             *   BA
-             * 
-             * End current horizontal. 
-             * Begin new vertical.
-             */
-            horizLine.p1.x = xvec;
-            addHorizLine(yvec);
-            horizLine = null;
+            case 3:
+                /*
+                 * Corner:
+                 * 
+                 *   AA
+                 *   BA
+                 * 
+                 * End current horizontal. 
+                 * Begin new vertical.
+                 */
+                horizLine.p1.x = xvec;
+                addHorizLine(yvec);
+                horizLine = null;
 
-            seg = new LineSegment();
-            seg.p0.y = yvec;
-            vertLines.put(xvec, seg);
-            break;
+                seg = new LineSegment();
+                seg.p0.y = yvec;
+                vertLines.put(xvec, seg);
+                break;
 
-        case 4:
-            /*
-             * Corner:
-             * 
-             *   AB
-             *   BB
-             * 
-             * End current horizontal. 
-             * End current vertical.
-             */
-            horizLine.p1.x = xvec;
-            addHorizLine(yvec);
-            horizLine = null;
+            case 4:
+                /*
+                 * Corner:
+                 * 
+                 *   AB
+                 *   BB
+                 * 
+                 * End current horizontal. 
+                 * End current vertical.
+                 */
+                horizLine.p1.x = xvec;
+                addHorizLine(yvec);
+                horizLine = null;
 
-            seg = vertLines.get(xvec);
-            seg.p1.y = yvec;
-            addVertLine(xvec);
-            vertLines.remove(xvec);
-            break;
+                seg = vertLines.get(xvec);
+                seg.p1.y = yvec;
+                addVertLine(xvec);
+                vertLines.remove(xvec);
+                break;
 
-        case 5:
-            /*
-             * Corner:
-             * 
-             *   AB
-             *   AA
-             * 
-             * Begin new horizontal. 
-             * End current vertical.
-             */
-            horizLine = new LineSegment();
-            horizLine.p0.x = xvec;
+            case 5:
+                /*
+                 * Corner:
+                 * 
+                 *   AB
+                 *   AA
+                 * 
+                 * Begin new horizontal. 
+                 * End current vertical.
+                 */
+                horizLine = new LineSegment();
+                horizLine.p0.x = xvec;
 
-            seg = vertLines.get(xvec);
-            seg.p1.y = yvec;
-            addVertLine(xvec);
-            vertLines.remove(xvec);
-            break;
+                seg = vertLines.get(xvec);
+                seg.p1.y = yvec;
+                addVertLine(xvec);
+                vertLines.remove(xvec);
+                break;
 
-        case 6:
-            /*
-             * Inverted T:
-             * 
-             *   AB
-             *   CC
-             * 
-             * End current horizontal. 
-             * Begin new horizontal. 
-             * End current vertical.
-             */
-            horizLine.p1.x = xpixel;
-            addHorizLine(ypixel);
+            case 6:
+                /*
+                 * T-junction:
+                 * 
+                 *   AB
+                 *   CC
+                 * 
+                 * End current horizontal. 
+                 * Begin new horizontal. 
+                 * End current vertical.
+                 */
+                horizLine.p1.x = xvec;
+                addHorizLine(yvec);
 
-            horizLine.p0.x = xpixel;
+                horizLine.p0.x = xvec;
 
-            seg = vertLines.get(xpixel);
-            seg.p1.y = ypixel;
-            addVertLine(xpixel);
-            vertLines.remove(xpixel);
-            break;
+                seg = vertLines.get(xvec);
+                seg.p1.y = yvec;
+                addVertLine(xvec);
+                vertLines.remove(xvec);
+                break;
 
-        case 7:
-            // T in lower half
-            // end horizontal line; start new horizontal line; start new vertical line
-            horizLine.p1.x = xpixel;
-            addHorizLine(ypixel);
+            case 7:
+                /*
+                 * T-junction:
+                 * 
+                 *   AA
+                 *   BC
+                 * 
+                 * End current horizontal. 
+                 * Begin new horizontal. 
+                 * Begin new vertical.
+                 */
+                horizLine.p1.x = xvec;
+                addHorizLine(yvec);
 
-            horizLine.p0.x = xpixel;
+                horizLine.p0.x = xvec;
 
-            seg = new LineSegment();
-            seg.p0.y = ypixel;
-            vertLines.put(xpixel, seg);
-            break;
+                seg = new LineSegment();
+                seg.p0.y = yvec;
+                vertLines.put(xvec, seg);
+                break;
 
-        case 8:
-            // T pointing left
-            // end horizontal line; end vertical line; start new vertical line
-            horizLine.p1.x = xpixel;
-            addHorizLine(ypixel);
-            horizLine = null;
+            case 8:
+                /*
+                 * T-junction:
+                 * 
+                 *   AB
+                 *   CB
+                 * 
+                 * End current horizontal.
+                 * End current vertical.
+                 * Begin new vertical.
+                 */
+                horizLine.p1.x = xvec;
+                addHorizLine(yvec);
+                horizLine = null;
 
-            seg = vertLines.get(xpixel);
-            seg.p1.y = ypixel;
-            addVertLine(xpixel);
+                seg = vertLines.get(xvec);
+                seg.p1.y = yvec;
+                addVertLine(xvec);
 
-            seg = new LineSegment();
-            seg.p0.y = ypixel;
-            vertLines.put(xpixel, seg);
-            break;
+                seg = new LineSegment();
+                seg.p0.y = yvec;
+                vertLines.put(xvec, seg);
+                break;
 
-        case 9:
-            // T pointing right
-            // start new horizontal line; end vertical line; start new vertical line
-            horizLine = new LineSegment();
-            horizLine.p0.x = xpixel;
+            case 9:
+                /*
+                 * T-junction:
+                 * 
+                 *   AB
+                 *   AC
+                 * 
+                 * Begin new horizontal.
+                 * End current vertical.
+                 * Begin new vertical.
+                 */
+                horizLine = new LineSegment();
+                horizLine.p0.x = xvec;
 
-            seg = vertLines.get(xpixel);
-            seg.p1.y = ypixel;
-            addVertLine(xpixel);
+                seg = vertLines.get(xvec);
+                seg.p1.y = yvec;
+                addVertLine(xvec);
 
-            seg = new LineSegment();
-            seg.p0.y = ypixel;
-            vertLines.put(xpixel, seg);
-            break;
+                seg = new LineSegment();
+                seg.p0.y = yvec;
+                vertLines.put(xvec, seg);
+                break;
 
-        case 10:
-            // cross
-            // end horizontal line; start new horizontal line
-            // end vertical line; start new vertical line
-            horizLine.p1.x = xpixel;
-            addHorizLine(ypixel);
+            case 10:
+            case 11:
+            case 12:
+            case 13:
+                /*
+                 * Cross:
+                 * 
+                 *   AB  AB  AB  AB
+                 *   BC  CA  BA  CD
+                 * 
+                 * End current horizontal.
+                 * Begin new horizontal.
+                 * End current vertical.
+                 * Begin new vertical.
+                 */
+                horizLine.p1.x = xvec;
+                addHorizLine(yvec);
 
-            horizLine.p0.x = xpixel;
+                horizLine.p0.x = xvec;
 
-            seg = vertLines.get(xpixel);
-            seg.p1.y = ypixel;
-            addVertLine(xpixel);
+                seg = vertLines.get(xvec);
+                seg.p1.y = yvec;
+                addVertLine(xvec);
 
-            seg = new LineSegment();
-            seg.p0.y = ypixel;
-            vertLines.put(xpixel, seg);
+                seg = new LineSegment();
+                seg.p0.y = yvec;
+                vertLines.put(xvec, seg);
+                break;
 
-            int z = -1;
-            if (isDifferent(sample[TL], sample[BR])) {
-                if (!isDifferent(sample[TR], sample[BL])) {
-                    z = CROSS;
-                }
-            } else {
-                if (isDifferent(sample[TR], sample[BL])) {
-                    z = TL_BR;
-                } else {
-                    z = TR_BL;
-                }
-            }
-            if (z != -1) {
-                cornerTouches.add(new Coordinate(xpixel, ypixel, z));
-            }
-            break;
-
-        case 11:
-            // uniform
-            // nothing to do
-            break;
+            case 14:
+                /*
+                 * Uniform:
+                 * 
+                 *   AA
+                 *   AA
+                 * 
+                 * No update required.
+                 */
+                break;
         }
     }
 
@@ -551,32 +562,47 @@ public class VectorizeOpImage extends AttributeOpImage {
      *  4) AB   5) AB   6) AB   7) AA
      *     BB      AA      CC      BC
      *
-     *  8) AB   9) AB  10) AB  11) AA
-     *     CB      AC      CD      AA
+     *  8) AB   9) AB  10) AB  11) AB
+     *     CB      AC      BC      CA
+     * 
+     * 12) AB  13) AB  14) AA
+     *     BA      CD      AA
      * </pre>
      * These patterns are those used in the GRASS raster to vector routine.
-     * @param curData array of current data window values
+     * @param sample array of current data window values
      * @return integer id of the matching configuration
      */
-    private int nbrConfig(double[] curData) {
-        if (isDifferent(curData[TL], curData[TR])) { // 0, 4, 5, 6, 8, 9, 10
-            if (isDifferent(curData[TL], curData[BL])) { // 4, 6, 8, 10
-                if (isDifferent(curData[BL], curData[BR])) { // 8, 10
-                    if (isDifferent(curData[TR], curData[BR])) {
-                        return 10;
-                    } else {
-                        return 8;
+    private int nbrConfig(double[] sample) {
+        if (isDifferent(sample[TL], sample[TR])) { // 0, 4, 5, 6, 8, 9, 10-13
+            if (isDifferent(sample[TL], sample[BL])) { // 4, 6, 8, 10-13
+                if (isDifferent(sample[BL], sample[BR])) { // 8, 10-13
+                    if (isDifferent(sample[TL], sample[BR])) { // 10, 13
+                        if (isDifferent(sample[TR], sample[BL])) {
+                            return 13;
+                        } else {
+                            return 10;
+                        }
+                    } else { // 8, 11, 12
+                        if (isDifferent(sample[TR], sample[BL])) { // 8, 11
+                            if (isDifferent(sample[TL], sample[BR])) {
+                                return 8;
+                            } else {
+                                return 12;
+                            }
+                        } else {
+                            return 12;
+                        }
                     }
                 } else { // 4, 6
-                    if (isDifferent(curData[TR], curData[BR])) {
+                    if (isDifferent(sample[TR], sample[BR])) {
                         return 6;
                     } else {
                         return 4;
                     }
                 }
             } else { // 0, 5, 9
-                if (isDifferent(curData[BL], curData[BR])) { // 0, 9
-                    if (isDifferent(curData[TR], curData[BR])) {
+                if (isDifferent(sample[BL], sample[BR])) { // 0, 9
+                    if (isDifferent(sample[TR], sample[BR])) {
                         return 9;
                     } else {
                         return 0;
@@ -586,9 +612,9 @@ public class VectorizeOpImage extends AttributeOpImage {
                 }
             }
         } else { // 1, 2, 3, 7, 11
-            if (isDifferent(curData[TL], curData[BL])) { // 2, 3, 7
-                if (isDifferent(curData[BL], curData[BR])) { // 3, 7
-                    if (isDifferent(curData[TR], curData[BR])) {
+            if (isDifferent(sample[TL], sample[BL])) { // 2, 3, 7
+                if (isDifferent(sample[BL], sample[BR])) { // 3, 7
+                    if (isDifferent(sample[TR], sample[BR])) {
                         return 7;
                     } else {
                         return 3;
@@ -596,11 +622,11 @@ public class VectorizeOpImage extends AttributeOpImage {
                 } else {
                     return 2;
                 }
-            } else { // 1, 11
-                if (isDifferent(curData[TR], curData[BR])) {
+            } else { // 1, 14
+                if (isDifferent(sample[TR], sample[BR])) {
                     return 1;
                 } else {
-                    return 11;
+                    return 14;
                 }
             }
         }
@@ -608,12 +634,12 @@ public class VectorizeOpImage extends AttributeOpImage {
 
     /**
      * Create a LineString for a newly constructed horizontal border segment
-     * @param row index of the image row in the top left cell of the current data window
+     * @param y y ordinate of the line
      */
-    private void addHorizLine(int row) {
+    private void addHorizLine(int y) {
         Coordinate[] coords = new Coordinate[] { 
-            new Coordinate(horizLine.p0.x, row),
-            new Coordinate(horizLine.p1.x, row) 
+            new Coordinate(horizLine.p0.x, y),
+            new Coordinate(horizLine.p1.x, y) 
         };
 
         lines.add(geomFactory.createLineString(coords));
@@ -621,13 +647,13 @@ public class VectorizeOpImage extends AttributeOpImage {
 
     /**
      * Create a LineString for a newly constructed vertical border segment
-     * @param col index of the image column in the top-left cell of the current data window
+     * @param x x ordinate of the line
      */
-    private void addVertLine(int col) {
+    private void addVertLine(int x) {
         
         Coordinate[] coords = new Coordinate[] {
-            new Coordinate(col, vertLines.get(col).p0.y),
-            new Coordinate(col, vertLines.get(col).p1.y)
+            new Coordinate(x, vertLines.get(x).p0.y),
+            new Coordinate(x, vertLines.get(x).p1.y)
         };
         
         lines.add(geomFactory.createLineString(coords));
