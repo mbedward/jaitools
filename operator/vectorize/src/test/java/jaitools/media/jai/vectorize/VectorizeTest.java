@@ -20,12 +20,20 @@
 
 package jaitools.media.jai.vectorize;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Collections;
+import java.util.HashMap;
+import javax.media.jai.ROI;
+import java.util.Map;
+import java.awt.image.RenderedImage;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 
 import jaitools.imageutils.ImageUtils;
 
 import java.util.Collection;
-import java.util.Collections;
 
 import javax.media.jai.JAI;
 import javax.media.jai.OperationRegistry;
@@ -43,43 +51,168 @@ import static org.junit.Assert.*;
  *
  * @author Michael Bedward
  * @since 1.1
- * @source $URL: $
- * @version $Id: $
+ * @source $URL$
+ * @version $Id$
  */
 public class VectorizeTest {
+    
+    public static final GeometryFactory gf = new GeometryFactory();
     
     @BeforeClass
     public static void setup() {
         ensureRegistered();
     }
 
+    /**
+     * Test vectorizing a small image where all pixels have 
+     * equal value. We leave the outsideValues arg at its null default
+     * so all image pixels are treated as inside.
+     * 
+     * Expected result is a single polygon with coordinates equal to those
+     * of the source image bounding rectangle.
+     */
     @Test
-    public void singleSmallRegion_WithOutside() {
+    public void imageBoundary() throws Exception {
         final int IMAGE_WIDTH = 10;
-        final int OUTSIDE_WIDTH = 2;
         
-        TiledImage img = ImageUtils.createConstantImage(
+        TiledImage src = ImageUtils.createConstantImage(
                 IMAGE_WIDTH, IMAGE_WIDTH, Integer.valueOf(0));
+
+        RenderedOp dest = doOp(src, null);
+        List<Polygon> polys = getPolygons(dest, 1);
         
-        for (int y = OUTSIDE_WIDTH; y < IMAGE_WIDTH - OUTSIDE_WIDTH; y++) {
-            for (int x = OUTSIDE_WIDTH; x < IMAGE_WIDTH - OUTSIDE_WIDTH; x++) {
-                img.setSample(x, y, 0, 1);
+        Coordinate[] expected = {
+            new Coordinate(0, 0),
+            new Coordinate(0, 10),
+            new Coordinate(10, 10),
+            new Coordinate(10, 0),
+            new Coordinate(0, 0)
+        };
+        assertPolygons(expected, polys.get(0));
+    }
+    
+    /**
+     * Vectorize a test image that has a single block of inside pixels
+     * surrounded by a margin of outside pixels.
+     * 
+     * Expected result is a single polygon surrounding the inside pixels.
+     */
+    @Test
+    public void imageWithOutsideMargin() throws Exception {
+        final int IMAGE_WIDTH = 10;
+        final int MARGIN_WIDTH = 2;
+        
+        final int OUTSIDE = 0;
+        final int INSIDE = 1;
+        
+        TiledImage src = ImageUtils.createConstantImage(
+                IMAGE_WIDTH, IMAGE_WIDTH, Integer.valueOf(0));
+
+        for (int y = MARGIN_WIDTH; y < IMAGE_WIDTH - MARGIN_WIDTH; y++) {
+            for (int x = MARGIN_WIDTH; x < IMAGE_WIDTH - MARGIN_WIDTH; x++) {
+                src.setSample(x, y, 0, 1);
             }
         }
-
-        ParameterBlockJAI pb = new ParameterBlockJAI("Vectorize");
-        pb.setSource("source0", img);
-        pb.setParameter("outsideValues", Collections.singleton(Integer.valueOf(0)));
         
-        RenderedOp outImg = JAI.create("Vectorize", pb);
-        Object prop = outImg.getProperty(VectorizeDescriptor.VECTOR_PROPERTY_NAME);
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("outsideValues", Collections.singleton(OUTSIDE));
+        
+        RenderedOp dest = doOp(src, args);
+        List<Polygon> polys = getPolygons(dest, 1);
 
-        assertTrue(prop instanceof Collection);
+        Coordinate[] expected = {
+            new Coordinate(2, 2),
+            new Coordinate(2, 8),
+            new Coordinate(8, 8),
+            new Coordinate(8, 2),
+            new Coordinate(2, 2)
+        };
+        assertPolygons(expected, polys.get(0));
+    }
+
+    /**
+     * Helper function. Builds parameter block and runs the operation.
+     * 
+     * @param sourceImg source image
+     * @param args optional {@code Map} of arguments
+     * 
+     * @return the destination image
+     */
+    private RenderedOp doOp(RenderedImage sourceImg, Map<String, Object> args) {
+        ParameterBlockJAI pb = new ParameterBlockJAI("Vectorize");
+        pb.setSource("source0", sourceImg);
+        
+        if (args != null) {
+            ROI roi = (ROI) args.get("roi");
+            if (roi != null) pb.setParameter("roi", roi);
+            
+            Integer band = (Integer) args.get("band");
+            if (band != null) pb.setParameter("band", band);
+            
+            Collection<? extends Number> outsideValues = (Collection<? extends Number>) args.get("outsideValues");
+            if (outsideValues != null) pb.setParameter("outsideValues", outsideValues);
+            
+            Boolean insideEdges = (Boolean) args.get("insideEdges");
+            if (insideEdges != null) pb.setParameter("insideEdges", insideEdges);
+        }
+        
+        return JAI.create("Vectorize", pb);
+    }
+    
+    /**
+     * Helper function. Gets the vectors property from a destination
+     * image and checks the following:
+     * <ol type="1">
+     * <li> The property is a {@code Collection} </li>
+     * <li> Its size equals {@code expectedN} </li>
+     * <li> It contains {@code Polygons}
+     * </ol>
+     * If these checks are satisfied, the {@code Polygons} are returned.
+     * 
+     * @param dest property from the destination image
+     * @param expectedN expected number of polygons
+     * 
+     * @return the polygons
+     */
+    private List<Polygon> getPolygons(RenderedOp dest, int expectedN) {
+        Object prop = dest.getProperty(VectorizeDescriptor.VECTOR_PROPERTY_NAME);
+        assertTrue(prop != null && prop instanceof Collection);
         
         Collection coll = (Collection) prop;
-        for (Object obj : coll) {
+        assertEquals(expectedN, coll.size());
+        
+        List<Polygon> polys = new ArrayList<Polygon>();
+        if (expectedN > 0) {
+            Object obj = coll.iterator().next();
             assertTrue(obj instanceof Polygon);
+            
+            polys.addAll(coll);
         }
+        
+        
+        return polys;
+    }
+    
+    /**
+     * Assert equality of expected and observed polygons.
+     * 
+     * @param expected coordinates defining the expected polygon
+     * @param observed observed polygon
+     */
+    private void assertPolygons(Coordinate[] expected, Polygon observed) {
+        assertPolygons(gf.createPolygon(gf.createLinearRing(expected), null), observed);
+    }
+    
+    /**
+     * Assert equality of expected and observed polygons.
+     * 
+     * @param expected expected polygon
+     * @param observed observed polygon
+     */
+    private void assertPolygons(Polygon expected, Polygon observed) {
+        expected.normalize();
+        observed.normalize();
+        assertTrue(expected.equalsExact(observed, 0.5d));
     }
     
     /**

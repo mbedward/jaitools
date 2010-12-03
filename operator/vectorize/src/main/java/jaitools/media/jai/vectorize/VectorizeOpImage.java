@@ -248,9 +248,13 @@ public class VectorizeOpImage extends AttributeOpImage {
      */
     private void vectorizeBoundaries() {
 
-        // a 2x2 matrix of double values used as a moving window
-        double[] curData = new double[4];
+        // array treated as a 2x2 matrix of double values used as a moving window
+        double[] sample = new double[4];
+        
+        // array treated as a 2x2 matrix of boolean flags used to indicate which
+        // sampling window pixels are within the source image and ROI
         boolean[] flag = new boolean[4];
+        
         RandomIter imageIter = RandomIterFactory.create(getSourceImage(0), null);
 
         if (!insideEdges) {
@@ -262,36 +266,36 @@ public class VectorizeOpImage extends AttributeOpImage {
         // NOTE: the for-loop indices are set to emulate a one pixel width border
         // around the source image area
         for (int y = srcBounds.y - 1; y < srcBounds.y + srcBounds.height; y++) {
-            curData[TR] = curData[BR] = OUT;
+            sample[TR] = sample[BR] = OUT;
             flag[TR] = flag[BR] = false;
             
             boolean yFlag = srcBounds.contains(srcBounds.x, y);
             boolean yNextFlag = srcBounds.contains(srcBounds.x, y+1);
 
             for (int x = srcBounds.x - 1; x < srcBounds.x + srcBounds.width; x++) {
-                curData[TL] = curData[TR];
+                sample[TL] = sample[TR];
                 flag[TL] = flag[TR];
-                curData[BL] = curData[BR];
+                sample[BL] = sample[BR];
                 flag[BL] = flag[BR];
                 
                 flag[TR] = yFlag && srcBounds.contains(x+1, y) && roi.contains(x+1, y);
                 flag[BR] = yNextFlag && srcBounds.contains(x+1, y+1) && roi.contains(x+1, y+1);
 
-                curData[TR] = (flag[TR] ? imageIter.getSampleDouble(x + 1, y, band) : OUT);
-                if (isOutside(curData[TR])) {
-                    curData[TR] = OUT;
+                sample[TR] = (flag[TR] ? imageIter.getSampleDouble(x + 1, y, band) : OUT);
+                if (isOutside(sample[TR])) {
+                    sample[TR] = OUT;
                 } else if (!insideEdges) {
-                    curData[TR] = inside;
+                    sample[TR] = inside;
                 }
 
-                curData[BR] = (flag[BR] ? imageIter.getSampleDouble(x + 1, y + 1, band) : OUT);
-                if (isOutside(curData[BR])) {
-                    curData[BR] = OUT;
+                sample[BR] = (flag[BR] ? imageIter.getSampleDouble(x + 1, y + 1, band) : OUT);
+                if (isOutside(sample[BR])) {
+                    sample[BR] = OUT;
                 } else if (!insideEdges) {
-                    curData[BR] = inside;
+                    sample[BR] = inside;
                 }
 
-                updateCoordList(y, x, curData);
+                updateCoordList(x, y, sample);
             }
         }
     }
@@ -322,161 +326,211 @@ public class VectorizeOpImage extends AttributeOpImage {
      * This method controls the construction of line segments that border regions of uniform data
      * in the raster. See the {@linkplain #nbrConfig} method for more details.
      *
-     * @param row index of the image row in the top left cell of the 2x2 data window
-     * @param col index of the image col in the top left cell of the 2x2 data window
-     * @param curData values in the current data window
+     * @param xpixel index of the image col in the top left cell of the 2x2 data window
+     * @param ypixel index of the image row in the top left cell of the 2x2 data window
+     * @param sample current sampling window data
      */
-    private void updateCoordList(int row, int col, double[] curData) {
+    private void updateCoordList(int xpixel, int ypixel, double[] sample) {
         LineSegment seg;
+        int xvec = xpixel + 1;
+        int yvec = ypixel + 1;
 
-        switch (nbrConfig(curData)) {
+        switch (nbrConfig(sample)) {
         case 0:
-            // vertical line continuing
-            // nothing to do
+            /*
+             * Vertical edge:
+             * 
+             *   AB
+             *   AB
+             * 
+             * No update required.
+             */
             break;
 
         case 1:
-            // bottom right corner
-            // new horizontal and vertical lines
+            /*
+             * Corner:
+             * 
+             *   AA
+             *   AB
+             * 
+             * Begin new horizontal.
+             * Begin new vertical.
+             */
             horizLine = new LineSegment();
-            horizLine.p0.x = col;
+            horizLine.p0.x = xvec;
 
             seg = new LineSegment();
-            seg.p0.y = row;
-            vertLines.put(col, seg);
+            seg.p0.y = yvec;
+            vertLines.put(xvec, seg);
             break;
 
         case 2:
-            // horizontal line continuing
-            // nothing to do
+            /*
+             * Horizontal edge:
+             * 
+             *   AA
+             *   BB
+             * 
+             * No update required.
+             */
             break;
 
         case 3:
-            // bottom left corner
-            // end of horizontal line; start of new vertical line
-            horizLine.p1.x = col;
-            addHorizLine(row);
+            /*
+             * Corner:
+             * 
+             *   AA
+             *   BA
+             * 
+             * End current horizontal. 
+             * Begin new vertical.
+             */
+            horizLine.p1.x = xvec;
+            addHorizLine(yvec);
             horizLine = null;
 
             seg = new LineSegment();
-            seg.p0.y = row;
-            vertLines.put(col, seg);
+            seg.p0.y = yvec;
+            vertLines.put(xvec, seg);
             break;
 
         case 4:
-            // top left corner
-            // end of horizontal line; end of vertical line
-            horizLine.p1.x = col;
-            addHorizLine(row);
+            /*
+             * Corner:
+             * 
+             *   AB
+             *   BB
+             * 
+             * End current horizontal. 
+             * End current vertical.
+             */
+            horizLine.p1.x = xvec;
+            addHorizLine(yvec);
             horizLine = null;
 
-            seg = vertLines.get(col);
-            seg.p1.y = row;
-            addVertLine(col);
-            vertLines.remove(col);
+            seg = vertLines.get(xvec);
+            seg.p1.y = yvec;
+            addVertLine(xvec);
+            vertLines.remove(xvec);
             break;
 
         case 5:
-            // top right corner
-            // start horiztonal line; end vertical line
+            /*
+             * Corner:
+             * 
+             *   AB
+             *   AA
+             * 
+             * Begin new horizontal. 
+             * End current vertical.
+             */
             horizLine = new LineSegment();
-            horizLine.p0.x = col;
+            horizLine.p0.x = xvec;
 
-            seg = vertLines.get(col);
-            seg.p1.y = row;
-            addVertLine(col);
-            vertLines.remove(col);
+            seg = vertLines.get(xvec);
+            seg.p1.y = yvec;
+            addVertLine(xvec);
+            vertLines.remove(xvec);
             break;
 
         case 6:
-            // inverted T in upper half
-            // end horiztonal line; start new horizontal line; end vertical line
-            horizLine.p1.x = col;
-            addHorizLine(row);
+            /*
+             * Inverted T:
+             * 
+             *   AB
+             *   CC
+             * 
+             * End current horizontal. 
+             * Begin new horizontal. 
+             * End current vertical.
+             */
+            horizLine.p1.x = xpixel;
+            addHorizLine(ypixel);
 
-            horizLine.p0.x = col;
+            horizLine.p0.x = xpixel;
 
-            seg = vertLines.get(col);
-            seg.p1.y = row;
-            addVertLine(col);
-            vertLines.remove(col);
+            seg = vertLines.get(xpixel);
+            seg.p1.y = ypixel;
+            addVertLine(xpixel);
+            vertLines.remove(xpixel);
             break;
 
         case 7:
             // T in lower half
             // end horizontal line; start new horizontal line; start new vertical line
-            horizLine.p1.x = col;
-            addHorizLine(row);
+            horizLine.p1.x = xpixel;
+            addHorizLine(ypixel);
 
-            horizLine.p0.x = col;
+            horizLine.p0.x = xpixel;
 
             seg = new LineSegment();
-            seg.p0.y = row;
-            vertLines.put(col, seg);
+            seg.p0.y = ypixel;
+            vertLines.put(xpixel, seg);
             break;
 
         case 8:
             // T pointing left
             // end horizontal line; end vertical line; start new vertical line
-            horizLine.p1.x = col;
-            addHorizLine(row);
+            horizLine.p1.x = xpixel;
+            addHorizLine(ypixel);
             horizLine = null;
 
-            seg = vertLines.get(col);
-            seg.p1.y = row;
-            addVertLine(col);
+            seg = vertLines.get(xpixel);
+            seg.p1.y = ypixel;
+            addVertLine(xpixel);
 
             seg = new LineSegment();
-            seg.p0.y = row;
-            vertLines.put(col, seg);
+            seg.p0.y = ypixel;
+            vertLines.put(xpixel, seg);
             break;
 
         case 9:
             // T pointing right
             // start new horizontal line; end vertical line; start new vertical line
             horizLine = new LineSegment();
-            horizLine.p0.x = col;
+            horizLine.p0.x = xpixel;
 
-            seg = vertLines.get(col);
-            seg.p1.y = row;
-            addVertLine(col);
+            seg = vertLines.get(xpixel);
+            seg.p1.y = ypixel;
+            addVertLine(xpixel);
 
             seg = new LineSegment();
-            seg.p0.y = row;
-            vertLines.put(col, seg);
+            seg.p0.y = ypixel;
+            vertLines.put(xpixel, seg);
             break;
 
         case 10:
             // cross
             // end horizontal line; start new horizontal line
             // end vertical line; start new vertical line
-            horizLine.p1.x = col;
-            addHorizLine(row);
+            horizLine.p1.x = xpixel;
+            addHorizLine(ypixel);
 
-            horizLine.p0.x = col;
+            horizLine.p0.x = xpixel;
 
-            seg = vertLines.get(col);
-            seg.p1.y = row;
-            addVertLine(col);
+            seg = vertLines.get(xpixel);
+            seg.p1.y = ypixel;
+            addVertLine(xpixel);
 
             seg = new LineSegment();
-            seg.p0.y = row;
-            vertLines.put(col, seg);
+            seg.p0.y = ypixel;
+            vertLines.put(xpixel, seg);
 
             int z = -1;
-            if (isDifferent(curData[TL], curData[BR])) {
-                if (!isDifferent(curData[TR], curData[BL])) {
+            if (isDifferent(sample[TL], sample[BR])) {
+                if (!isDifferent(sample[TR], sample[BL])) {
                     z = CROSS;
                 }
             } else {
-                if (isDifferent(curData[TR], curData[BL])) {
+                if (isDifferent(sample[TR], sample[BL])) {
                     z = TL_BR;
                 } else {
                     z = TR_BL;
                 }
             }
             if (z != -1) {
-                cornerTouches.add(new Coordinate(col, row, z));
+                cornerTouches.add(new Coordinate(xpixel, ypixel, z));
             }
             break;
 
