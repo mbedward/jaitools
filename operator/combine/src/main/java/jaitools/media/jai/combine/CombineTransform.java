@@ -48,8 +48,8 @@ package jaitools.media.jai.combine;
  * values by their logarithm.
  *
  * @since 2.1
- * @source $URL: http://svn.osgeo.org/geotools/trunk/modules/library/coverage/src/main/java/org/geotools/image/jai/CombineTransform.java $
- * @version $Id: CombineTransform.java 30643 2008-06-12 18:27:03Z acuster $
+ * @source $URL$
+ * @version $Id$
  * @author Martin Desruisseaux (IRD)
  */
 public interface CombineTransform {
