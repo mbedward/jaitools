@@ -19,6 +19,7 @@
  */
 package jaitools.media.jai.vectorize;
 
+import java.awt.Rectangle;
 import jaitools.numeric.NumberOperations;
 import java.awt.image.RenderedImage;
 import java.util.Set;
@@ -41,6 +42,7 @@ import javax.media.jai.JAI;
 import javax.media.jai.ROI;
 import javax.media.jai.OperationRegistry;
 import javax.media.jai.ParameterBlockJAI;
+import javax.media.jai.ROIShape;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.TiledImage;
 import javax.media.jai.registry.RenderedRegistryMode;
@@ -366,6 +368,55 @@ public class VectorizeTest {
         assertPolygons(expected, polys);
     }
     
+    /**
+     * Test image with uniform pixel values. ROI covering part of the image.
+     */
+    @Test
+    public void imageBoundaryWithROI() throws Exception {
+        final int IMAGE_WIDTH = 100;
+        
+        TiledImage src = ImageUtils.createConstantImage(IMAGE_WIDTH, IMAGE_WIDTH, Integer.valueOf(0));
+        
+        final int ROIW = IMAGE_WIDTH / 2;
+        ROI roi = new ROIShape(new Rectangle(0, 0, ROIW, ROIW));
+        
+        args.put("roi", roi);
+        RenderedOp dest = doOp(src, args);
+        
+        String wkt = String.format("POLYGON((0 0, 0 %d, %d %d, %d 0, 0 0))", 
+                ROIW, ROIW, ROIW, ROIW);
+        ExpectedPoly ep = new ExpectedPoly(wkt, 0);
+        assertPolygons(ep, getPolygons(dest, 1));
+    }
+    
+    /**
+     * An ROI created from an image such that pixels alternate
+     * between included and excluded. A very small source image
+     * is used to avoid a slow test.
+     */
+    @Test
+    public void smallSquaresROI() throws Exception {
+        final int IMAGE_WIDTH = 10;
+        final int SQUARE_WIDTH = 1;
+        
+        RenderedImage src = ImageUtils.createConstantImage(IMAGE_WIDTH, IMAGE_WIDTH, Integer.valueOf(0));
+        
+        RenderedImage roiImg =
+                createChessboardImage(IMAGE_WIDTH, SQUARE_WIDTH,
+                new Valuer() {
+
+                    public int getValue(int areaX, int areaY) {
+                        return (areaX % 2 == areaY % 2 ? 1 : 0);
+                    }
+                });
+        
+        ROI roi = new ROI(roiImg, 1);
+        
+        args.put("roi", roi);
+        RenderedOp dest = doOp(src, args);
+        getPolygons(dest, 50);
+    }
+    
 
     /**
      * Interface used with the {@link #createChessboardImage} method. 
@@ -562,4 +613,6 @@ public class VectorizeTest {
             return -1;
         }
     }
+    
+    
 }

@@ -213,7 +213,7 @@ public class VectorizeOpImage extends AttributeOpImage {
 
             double val = imgIter.getSampleDouble((int) c.x, (int) c.y, band);
 
-            if (!isOutside(val)) {
+            if (roi.contains(c.x, c.y) && !isOutside(val)) {
                 if (insideEdges) {
                     poly.setUserData(val);
                 } else {
