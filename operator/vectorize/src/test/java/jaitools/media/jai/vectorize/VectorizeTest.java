@@ -317,6 +317,29 @@ public class VectorizeTest {
 
         assertPolygons(expected, polys);
     }
+    
+    /**
+     * Test image has alternating square blocks of pixels
+     * with value of 0 or 1 like a chessboard pattern.
+     * Here we set the insideEdges arg to false. Expected
+     * result is a single polygon for the image boundary.
+     */
+    @Test
+    public void chessboardNoInsideEdges() throws Exception {
+        final int IMAGE_WIDTH = 100;
+        final int SQUARE_WIDTH = 25;
+        
+        Valuer valuer = new Valuer() {
+            public int getValue(int areaX, int areaY) {
+                return (areaX % 2 == areaY % 2 ? 1 : 0);
+            }
+        };
+        
+        RenderedImage src = createChessboardImage(IMAGE_WIDTH, SQUARE_WIDTH, valuer);
+        args.put("insideEdges", Boolean.FALSE);
+        RenderedOp dest = doOp(src, args);
+        List<Polygon> polys = getPolygons(dest, 1);
+    }
 
     /**
      * Test image has alternating square blocks of pixels

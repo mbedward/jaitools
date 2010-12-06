@@ -37,7 +37,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import javax.media.jai.ROI;
 import javax.media.jai.iterator.RandomIter;
@@ -58,6 +60,55 @@ public class VectorizeOpImage extends AttributeOpImage {
     private static final int TR = 1;
     private static final int BL = 2;
     private static final int BR = 3;
+
+    /*
+     * Possible configurations of values in the 2x2 sample window: 
+     *
+     * <pre>
+     *  0) AB   1) AA   2) AA   3) AA
+     *     AB      AB      BB      BA
+     *
+     *  4) AB   5) AB   6) AB   7) AA
+     *     BB      AA      CC      BC
+     *
+     *  8) AB   9) AB  10) AB  11) AB
+     *     CB      AC      BC      CA
+     * 
+     * 12) AB  13) AB  14) AA
+     *     BA      CD      AA
+     * </pre>
+     * 
+     * These patterns are adapted from those used in the GRASS raster to 
+     * vector routine.
+     * 
+     * The following map is a lookup table for the sample window pattern
+     * where the key is constructed as follows (bit 6 is left-most):
+     * bit 6 = TR != TL
+     * bit 5 = BL != TL
+     * bit 4 = BL != TR
+     * bit 3 = BR != TL
+     * bit 2 = BR != TR
+     * bit 1 = BR != BL
+     */
+    private static final SortedMap<Integer, Integer> NBR_CONFIG_LOOKUP = new TreeMap<Integer, Integer>();
+    static {
+        NBR_CONFIG_LOOKUP.put( 0x2d, 0 );  // 101101
+        NBR_CONFIG_LOOKUP.put( 0x07, 1 );  // 000111
+        NBR_CONFIG_LOOKUP.put( 0x1e, 2 );  // 011110
+        NBR_CONFIG_LOOKUP.put( 0x19, 3 );  // 011001
+        NBR_CONFIG_LOOKUP.put( 0x34, 4 );  // 110100
+        NBR_CONFIG_LOOKUP.put( 0x2a, 5 );  // 101010
+        NBR_CONFIG_LOOKUP.put( 0x3e, 6 );  // 111110
+        NBR_CONFIG_LOOKUP.put( 0x1f, 7 );  // 011111
+        NBR_CONFIG_LOOKUP.put( 0x3d, 8 );  // 111101
+        NBR_CONFIG_LOOKUP.put( 0x2f, 9 );  // 101111
+        NBR_CONFIG_LOOKUP.put( 0x37, 10 ); // 110111
+        NBR_CONFIG_LOOKUP.put( 0x3b, 11 ); // 111011
+        NBR_CONFIG_LOOKUP.put( 0x33, 12 ); // 110011
+        NBR_CONFIG_LOOKUP.put( 0x3f, 13 ); // 111111
+        NBR_CONFIG_LOOKUP.put( 0x00, 14 ); // 000000
+    }
+    
 
     // Precision of comparison in the function different(a, b)
     // TODO: enable this to be set by the user
@@ -553,83 +604,26 @@ public class VectorizeOpImage extends AttributeOpImage {
     }
 
     /**
-     * Examine the values in the 2x2 kernel and match to one of
-     * the cases in the table below:
-     * <pre>
-     *  0) AB   1) AA   2) AA   3) AA
-     *     AB      AB      BB      BA
-     *
-     *  4) AB   5) AB   6) AB   7) AA
-     *     BB      AA      CC      BC
-     *
-     *  8) AB   9) AB  10) AB  11) AB
-     *     CB      AC      BC      CA
+     * Examine the values in the 2x2 sample window and return
+     * the integer id of the configuration (0 - 14) based on
+     * the NBR_CONFIG_LOOKUP {@code Map}.
      * 
-     * 12) AB  13) AB  14) AA
-     *     BA      CD      AA
-     * </pre>
-     * These patterns are those used in the GRASS raster to vector routine.
-     * @param sample array of current data window values
-     * @return integer id of the matching configuration
+     * @param sample sample window values
+     * @return configuration id
      */
     private int nbrConfig(double[] sample) {
-        if (isDifferent(sample[TL], sample[TR])) { // 0, 4, 5, 6, 8, 9, 10-13
-            if (isDifferent(sample[TL], sample[BL])) { // 4, 6, 8, 10-13
-                if (isDifferent(sample[BL], sample[BR])) { // 8, 10-13
-                    if (isDifferent(sample[TL], sample[BR])) { // 10, 13
-                        if (isDifferent(sample[TR], sample[BL])) {
-                            return 13;
-                        } else {
-                            return 10;
-                        }
-                    } else { // 8, 11, 12
-                        if (isDifferent(sample[TR], sample[BL])) { // 8, 11
-                            if (isDifferent(sample[TL], sample[BR])) {
-                                return 8;
-                            } else {
-                                return 12;
-                            }
-                        } else {
-                            return 12;
-                        }
-                    }
-                } else { // 4, 6
-                    if (isDifferent(sample[TR], sample[BR])) {
-                        return 6;
-                    } else {
-                        return 4;
-                    }
-                }
-            } else { // 0, 5, 9
-                if (isDifferent(sample[BL], sample[BR])) { // 0, 9
-                    if (isDifferent(sample[TR], sample[BR])) {
-                        return 9;
-                    } else {
-                        return 0;
-                    }
-                } else {
-                    return 5;
-                }
-            }
-        } else { // 1, 2, 3, 7, 11
-            if (isDifferent(sample[TL], sample[BL])) { // 2, 3, 7
-                if (isDifferent(sample[BL], sample[BR])) { // 3, 7
-                    if (isDifferent(sample[TR], sample[BR])) {
-                        return 7;
-                    } else {
-                        return 3;
-                    }
-                } else {
-                    return 2;
-                }
-            } else { // 1, 14
-                if (isDifferent(sample[TR], sample[BR])) {
-                    return 1;
-                } else {
-                    return 14;
-                }
-            }
-        }
+        int flag = 0;
+        
+        flag |= (isDifferent(sample[TR], sample[TL]) << 5);
+        
+        flag |= (isDifferent(sample[BL], sample[TL]) << 4);
+        flag |= (isDifferent(sample[BL], sample[TR]) << 3);
+        
+        flag |= (isDifferent(sample[BR], sample[TL]) << 2);
+        flag |= (isDifferent(sample[BR], sample[TR]) << 1);
+        flag |=  isDifferent(sample[BR], sample[BL]);
+        
+        return NBR_CONFIG_LOOKUP.get(flag);
     }
 
     /**
@@ -661,7 +655,7 @@ public class VectorizeOpImage extends AttributeOpImage {
 
     private boolean isOutside(double value) {
         for (Double d : outsideValues) {
-            if (!isDifferent(d, value)) {
+            if (isDifferent(d, value) == 0) {
                 return true;
             }
         }
@@ -674,19 +668,19 @@ public class VectorizeOpImage extends AttributeOpImage {
      *
      * @param a first value
      * @param b second value
-     * @return true if the values are different; false otherwise
+     * @return 1 if the values are different; 0 otherwise
      */
-    private boolean isDifferent(double a, double b) {
+    private int isDifferent(double a, double b) {
         if (Double.isNaN(a) ^ Double.isNaN(b)) {
-            return true;
+            return 1;
         } else if (Double.isNaN(a) && Double.isNaN(b)) {
-            return false;
+            return 0;
         }
 
         if (Math.abs(a - b) > EPSILON) {
-            return true;
+            return 1;
         } else {
-            return false;
+            return 0;
         }
     }
 
