@@ -23,8 +23,10 @@ package jaitools.media.jai.contour;
 import javax.media.jai.OperationDescriptorImpl;
 
 /**
- *
- * @author michael
+ * @author Michael Bedward
+ * @since 1.1
+ * @source $URL$
+ * @version $Id$
  */
 class ContourDescriptor extends OperationDescriptorImpl {
     public final static String CONTOUR_PROPERTY_NAME = "contours";

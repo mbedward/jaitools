@@ -22,6 +22,7 @@
         <module>maskedconvolve</module>
         <module>rangelookup</module>
         <module>regionalize</module>
+        <module>vectorize</module>
         <module>zonalstats</module>
     </modules>
 </project>

@@ -22,7 +22,6 @@ package jaitools.demo.zonalstats;
 import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
 import jaitools.jiffle.runtime.JiffleRunner;
-import jaitools.media.jai.zonalstats.Result;
 import jaitools.media.jai.zonalstats.ZonalStats;
 import jaitools.media.jai.zonalstats.ZonalStatsDescriptor;
 import jaitools.numeric.Statistic;

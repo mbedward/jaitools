@@ -14,49 +14,55 @@
     </build>
     <dependencies>
         <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>utils</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>kernel</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>kernelstats</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>maskedconvolve</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>jiffle</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>regionalize</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>rangelookup</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>vectorize</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>zonalstats</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>

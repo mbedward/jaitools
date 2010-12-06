@@ -14,6 +14,10 @@
     <name>Vectorize operator</name>
     <description>Vectorizes the boundaries of regions with uniform value</description>
     
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+  
     <dependencies>
         <dependency>
             <groupId>com.vividsolutions</groupId>
@@ -21,15 +25,14 @@
             <type>jar</type>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>attributeop</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>utils</artifactId>
             <version>${project.version}</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
