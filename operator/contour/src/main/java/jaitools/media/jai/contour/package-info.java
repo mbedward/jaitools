@@ -18,21 +18,9 @@
  * 
  */
 
-package jaitools.media.jai.contour;
-
-import javax.media.jai.OperationDescriptorImpl;
-
 /**
- * @author Michael Bedward
- * @since 1.1
- * @source $URL$
- * @version $Id$
+ * Performs the "Contour" operation, tracing smooth contours at specified
+ * levels by interpolation of values in a band of the source image.
  */
-class ContourDescriptor extends OperationDescriptorImpl {
-    public final static String CONTOUR_PROPERTY_NAME = "contours";
 
-    public ContourDescriptor(String[][] resources, String[] supportedModes, String[] sourceNames, Class[][] sourceClasses, String[] paramNames, Class[][] paramClasses, Object[][] paramDefaults, Object[][] validParamValues) {
-        super(resources, supportedModes, sourceNames, sourceClasses, paramNames, paramClasses, paramDefaults, validParamValues);
-    }
-
-}
+package jaitools.media.jai.contour;

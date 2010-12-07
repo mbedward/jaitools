@@ -21,9 +21,13 @@
   
     <dependencies>
         <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>attributeop</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.vividsolutions</groupId>
+            <artifactId>jts</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
