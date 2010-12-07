@@ -37,8 +37,8 @@ public class JAITools {
      *
      * @todo use global version vars
      */
-    public static final String getVersion() {
-        return "1.0.0";
+    public static String getVersion() {
+        return "1.1.0";
     }
 
     /**
