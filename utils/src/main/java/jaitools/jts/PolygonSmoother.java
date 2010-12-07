@@ -43,6 +43,14 @@ import java.util.Map;
 public class PolygonSmoother {
     private GeometryFactory geomFactory;
     
+    public PolygonSmoother() {
+        this.geomFactory = new GeometryFactory();
+    }
+
+    public PolygonSmoother(GeometryFactory gf) {
+        this.geomFactory = gf;
+    }
+    
     /**
      * Class to hold interpolation parameters for a given point.
      */
@@ -213,10 +221,6 @@ public class PolygonSmoother {
      * @return the smoothed {@code Polygon}
      */
     public Polygon smooth(Polygon p, double alpha, int pointsPerSegment) {
-        
-        if (geomFactory == null) {
-            geomFactory = new GeometryFactory();
-        }
         
         Coordinate[] coords = p.getExteriorRing().getCoordinates();
         int Nvertices = coords.length - 1;  // first coord == last coord
