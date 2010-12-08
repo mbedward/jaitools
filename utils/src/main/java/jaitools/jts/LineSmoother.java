@@ -22,10 +22,13 @@ package jaitools.jts;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -39,18 +42,67 @@ import java.util.Map;
  * Note: the code here is <b>not</b> that written by Maxim to accompany his
  * algorithm description. Rather, it is an original implementation and any
  * errors are my fault.
+ * 
+ * @author Michael Bedward
+ * @since 1.1
+ * @source $URL$
+ * @version $Id$
  */
-public class PolygonSmoother {
+public class LineSmoother {
+
+    /**
+     * Defines methods to control the smoothing process.
+     * {@code LineSmoother} has a default implementation
+     * that specifies a constant number of vertices in smoothed
+     * segments and no lower bound on the distance between
+     * input vertices for smoothing.
+     * <p>
+     * To customize smoothing, pass your own implementation
+     * to {@link LineSmoother#setControl(jaitools.jts.LineSmoother.Control) }.
+     */
+    public static interface Control {
+        /**
+         * Gets the minimum distance between input vertices
+         * for the segment to be smoothed. Segments smaller
+         * than this will be copied to the output unchanged.
+         * 
+         * @return minimum segment length for smoothing
+         */
+        double getMinLength();
+        
+        /**
+         * Given an input segment length, returns the number
+         * of vertices to use for the smoothed segment. This 
+         * number includes the segment end-points.
+         * 
+         * @param length input segment length
+         * 
+         * @return number of vertices in the smoothed segment
+         *         including the end-points
+         */
+        int getNumVertices(double length);
+    }
+    
+    /**
+     * Default smoothing control. Specifies no minimum 
+     * vertex distance and a constant number of points
+     * per smoothed segment.
+     */
+    private Control DEFAULT_CONTROL = new Control() {
+        public double getMinLength() {
+            return 0.0;
+        }
+        
+        public int getNumVertices(double length) {
+            return 10;
+        }
+    };
+    
+    private Control control = DEFAULT_CONTROL;
+    
     private GeometryFactory geomFactory;
     
-    public PolygonSmoother() {
-        this.geomFactory = new GeometryFactory();
-    }
 
-    public PolygonSmoother(GeometryFactory gf) {
-        this.geomFactory = gf;
-    }
-    
     /**
      * Class to hold interpolation parameters for a given point.
      */
@@ -62,14 +114,52 @@ public class PolygonSmoother {
     /**
      * Cache of previously calculated interpolation parameters
      */
-    Map<Integer, WeakReference<InterpPoint[]>> lookup = 
+    private Map<Integer, WeakReference<InterpPoint[]>> lookup = 
             new HashMap<Integer, WeakReference<InterpPoint[]>>();
+
+    /**
+     * Default constructor.
+     */
+    public LineSmoother() {
+    }
+
+    /**
+     * Constructor.
+     * 
+     * @param geomFactory an instance of {@code GeometryFactory} to use when
+     *        creating smoothed {@code Geometry} objects
+     * 
+     * @throws IllegalArgumentException if {@code geomFactory} is {@code null}
+     */
+    public LineSmoother(GeometryFactory geomFactory) {
+        if (geomFactory == null) {
+            throw new IllegalArgumentException("geomFactory must not be null");
+        }
+        this.geomFactory = geomFactory;
+    }
+    
+    /**
+     * Set a new {@code Control} object to customize smoothing
+     * behaviour.
+     * 
+     * @param control the control to use for smoothing
+     * 
+     * @throws IllegalArgumentException if {@code control} is {@code null}
+     */
+    public void setControl(Control control) {
+        if (control == null) {
+            throw new IllegalArgumentException("control must not be null");
+        }
+        
+        this.control = control;
+    }
 
     /**
      * Get the interpolation parameters for a Bezier curve approximated
      * by the given number of vertices. 
      * 
      * @param npoints number of vertices
+     * 
      * @return array of {@code InterpPoint} objects holding the parameter values
      */
     private InterpPoint[] getInterpPoints(int npoints) {
@@ -102,11 +192,12 @@ public class PolygonSmoother {
      * Calculates a pair of Bezier control points for each vertex in an
      * array of {@code Coordinates}.
      * 
-     * @param coords vertex coordinates
+     * @param coords input vertices
      * @param N number of coordinates in {@coords} to use
      * @param alpha tightness of fit
      * 
-     * @return array of {@code Coordinates} for positions of control points
+     * @return 2D array of {@code Coordinates} for positions of each pair of
+     *         control points per input vertex
      */
     private Coordinate[][] getControlPoints(Coordinate[] coords, int N, double alpha) {
         if (alpha < 0.0 || alpha > 1.0) {
@@ -205,6 +296,48 @@ public class PolygonSmoother {
     }
     
     /**
+     * Helper method for the public {@code smooth} methods. Smooths
+     * segments defined by vertices in {@code coords}.
+     * 
+     * @param coords input vertices
+     * @param N number of input vertices to consider
+     * @param controlPoints array of control points where first dimension
+     *        is same length as {@code coords} and second dimension is length 2
+     * 
+     * @return vertices of smoothed segments
+     */
+    private Coordinate[] getSmoothCoordinates(Coordinate[] coords, 
+            int N, 
+            Coordinate[][] controlPoints) {
+                
+        List<Coordinate> smoothCoords = new ArrayList<Coordinate>();
+        double dist;
+        for (int i = 0; i < N; i++) {
+            int next = (i + 1) % N;
+            
+            dist = coords[i].distance(coords[next]);
+            if (dist < control.getMinLength()) {
+                // segment too short - just copy input coordinate
+                smoothCoords.add(new Coordinate(coords[i]));
+                
+            } else {
+                int smoothN = control.getNumVertices(dist);
+                Coordinate[] segment = cubicBezier(
+                        coords[i], coords[next],
+                        controlPoints[i][1], controlPoints[next][0],
+                        smoothN);
+            
+                int copyN = i < N - 1 ? segment.length - 1 : segment.length;
+                for (int k = 0; k < copyN; k++) {
+                    smoothCoords.add(segment[k]);
+                }
+            }
+        }
+
+        return smoothCoords.toArray(new Coordinate[0]);
+    }
+    
+    /**
      * Creates a new {@code Polygon} whose exterior shell is a smoothed
      * version of the input {@code Polygon}.
      * <p>
@@ -221,27 +354,38 @@ public class PolygonSmoother {
      * @return the smoothed {@code Polygon}
      */
     public Polygon smooth(Polygon p, double alpha, int pointsPerSegment) {
-        
         Coordinate[] coords = p.getExteriorRing().getCoordinates();
-        int Nvertices = coords.length - 1;  // first coord == last coord
+        final int N = coords.length - 1;  // first coord == last coord
         
-        Coordinate[][] controlPoints = getControlPoints(coords, Nvertices, alpha);
-        
-        Coordinate[] smoothCoords = new Coordinate[Nvertices * pointsPerSegment];
-        for (int i = 0, k = 0; i < Nvertices; i++) {
-            int next = (i + 1) % Nvertices;
-            
-            Coordinate[] segment = cubicBezier(
-                    coords[i], coords[next],
-                    controlPoints[i][1], controlPoints[next][0],
-                    pointsPerSegment);
-            
-            for (int j = 0; j < pointsPerSegment; j++, k++) {
-                smoothCoords[k] = segment[j];
-            }
-        }
+        Coordinate[][] controlPoints = getControlPoints(coords, N, alpha);
+        Coordinate[] smoothCoords = getSmoothCoordinates(coords, N, controlPoints);
         
         LinearRing shell = geomFactory.createLinearRing(smoothCoords);
         return geomFactory.createPolygon(shell, null);
+    }
+    
+    /**
+     * Creates a new {@code LineString} which is a smoothed version of 
+     * the input {@code LineString}.
+     * 
+     * @param ls the input {@code LineString}
+     * 
+     * @param alpha a value between 0 and 1 (inclusive) specifying the tightness
+     *        of fit of the smoothed boundary (0 is loose)
+     * 
+     * @return the smoothed {@code LineString}
+     */
+    public LineString smooth(LineString ls, double alpha) {
+        Coordinate[] coords = ls.getCoordinates();
+        
+        Coordinate[][] controlPoints = getControlPoints(coords, coords.length, alpha);
+        Coordinate[] smoothCoords = getSmoothCoordinates(coords, coords.length, controlPoints);
+        
+        return geomFactory.createLineString(smoothCoords);
+    }
+    
+    public Coordinate[] smooth(Coordinate[] coords, double alpha, int pointsPerSegment) {
+        Coordinate[][] controlPoints = getControlPoints(coords, coords.length, alpha);
+        return getSmoothCoordinates(coords, coords.length, controlPoints);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2010 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -30,22 +30,22 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
- * Unit tests for PolygonSmoother.
+ * Unit tests for LineSmoother.
  *
  * @author Michael Bedward
  * @since 1.1
  * @source $URL$
  * @version $Id$
  */
-public class PolygonSmootherTest {
+public class LineSmootherTest {
     
     private static final GeometryFactory gf = new GeometryFactory();
     private static final WKTReader reader = new WKTReader(gf);
-    private PolygonSmoother smoother;
+    private LineSmoother smoother;
     
     @Before
     public void setup() {
-        smoother = new PolygonSmoother(gf);
+        smoother = new LineSmoother(gf);
     }
 
     /**
