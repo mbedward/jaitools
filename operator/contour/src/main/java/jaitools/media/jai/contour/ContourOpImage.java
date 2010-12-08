@@ -19,8 +19,19 @@
  */
 package jaitools.media.jai.contour;
 
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LineSegment;
+import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.operation.linemerge.LineMerger;
 import jaitools.media.jai.AttributeOpImage;
+import jaitools.numeric.DoubleComparison;
 import java.awt.image.RenderedImage;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.SortedSet;
 import javax.media.jai.ROI;
 import javax.media.jai.iterator.RandomIter;
@@ -45,15 +56,30 @@ import javax.media.jai.iterator.RandomIterFactory;
  */
 public class ContourOpImage extends AttributeOpImage {
 
-    private static final int TL = 1;
-    private static final int TR = 2;
-    private static final int BL = 3;
-    private static final int BR = 4;
+    private static final double EPS = 1.0e-8d;
+    private static final int TL = 0;
+    private static final int TR = 1;
+    private static final int BL = 2;
+    private static final int BR = 3;
     private int band;
     private SortedSet<Double> contourIntervals;
+    private List<LineString> contourLines;
+    private GeometryFactory geomFactory;
+
+    static class ContourSegment extends LineSegment {
+
+        double value;
+
+        public ContourSegment(double x0, double y0, double x1, double y1, double value) {
+            super(x0, y0, x1, y1);
+            this.value = value;
+        }
+    }
 
     public ContourOpImage(RenderedImage source, ROI roi) {
         super(source, roi);
+
+        this.geomFactory = new GeometryFactory();
     }
 
     @Override
@@ -66,7 +92,95 @@ public class ContourOpImage extends AttributeOpImage {
         return new String[]{ContourDescriptor.CONTOUR_PROPERTY_NAME};
     }
 
-    private void traceContours() {
+    private void getContours() {
+        contourLines = new ArrayList<LineString>();
+        LineMerger merger = null;
+        List<LineString> lines = null;
+
+        RenderedImage src = getSourceImage(0);
+        int numTiles = 0;
+        for (int tileY = src.getMinTileY(), ny = 0; ny < src.getNumYTiles(); tileY++, ny++) {
+            for (int tileX = src.getMinTileX(), nx = 0; nx < src.getNumXTiles(); tileX++, nx++) {
+                numTiles++;
+
+                Map<Double, List<LineSegment>> segments = getContourSegments(tileX, tileY);
+
+                for (Entry<Double, List<LineSegment>> e : segments.entrySet()) {
+                    Double zvalue = e.getKey();
+                    List<LineSegment> zlist = e.getValue();
+
+                    if (zlist == null || !zlist.isEmpty()) {
+                        lines = new ArrayList<LineString>();
+
+                        for (int i = zlist.size() - 1; i >= 0; i--) {
+                            LineSegment seg = zlist.remove(i);
+                            // Skip over any degenerate segments which can be produced by
+                            // the traceContours algorithm
+                            if (!seg.p0.equals2D(seg.p1)) {
+                                lines.add(seg.toGeometry(geomFactory));
+                            }
+                        }
+
+                        merger = new LineMerger();
+                        merger.add(lines);
+                        Collection<LineString> mergedLines = merger.getMergedLineStrings();
+
+                        for (LineString line : mergedLines) {
+                            line.setUserData(zvalue);
+                        }
+
+                        contourLines.addAll(mergedLines);
+                    }
+                }
+            }
+        }
+
+        // Finally, merge the lines from separate tiles
+        if (numTiles > 1) {
+            List<LineString> mergedContourLines = new ArrayList<LineString>();
+
+            for (Double z : contourIntervals) {
+                lines = new ArrayList<LineString>();
+                
+                for (int i = contourLines.size() - 1; i >= 0; i--) {
+                    LineString line = contourLines.get(i);
+                    if (DoubleComparison.dequal((Double) line.getUserData(), z)) {
+                        contourLines.remove(i);
+                    }
+                    lines.add(line);
+                }
+
+                if (!lines.isEmpty()) {
+                    merger = new LineMerger();
+                    merger.add(lines);
+                    Collection<LineString> mergedLines = merger.getMergedLineStrings();
+                    
+                    for (LineString line : mergedLines) {
+                        line.setUserData(z);
+                    }
+                    
+                    mergedContourLines.addAll(mergedLines);
+                }
+            }
+            
+            contourLines = mergedContourLines;
+        }
+    }
+
+    
+    /**
+     * Create segments of contour lines for the specified source image tile
+     * using the CONREC algorithm of Paul Bourke.
+     * 
+     * @param tileX tile X index
+     * @param tileY tile Y index
+     * 
+     * @return the generated contour segments
+     */
+    private Map<Double, List<LineSegment>> getContourSegments(int tileX, int tileY) {
+
+        Map<Double, List<LineSegment>> segments = new HashMap<Double, List<LineSegment>>();
+
         double[] sample = new double[4];
         double[] h = new double[5];
         double[] xh = new double[5];
@@ -74,7 +188,7 @@ public class ContourOpImage extends AttributeOpImage {
         int[] sh = new int[5];
         double temp1, temp2;
 
-        int[][][] castab = {
+        int[][][] configLookup = {
             {{0, 0, 8}, {0, 2, 5}, {7, 6, 9}},
             {{0, 3, 4}, {1, 3, 1}, {4, 3, 0}},
             {{9, 6, 7}, {5, 2, 0}, {8, 0, 0}}
@@ -87,7 +201,7 @@ public class ContourOpImage extends AttributeOpImage {
             sample[BR] = iter.getSampleDouble(srcBounds.x, y, band);
             sample[TR] = iter.getSampleDouble(srcBounds.x, y + 1, band);
 
-            for (int x = srcBounds.x + 1, ix = 0; ix < srcBounds.width; x++, ix++) {
+            for (int x = srcBounds.x + 1, ix = 1; ix < srcBounds.width; x++, ix++) {
                 sample[BL] = sample[BR];
                 sample[BR] = iter.getSampleDouble(x, y, band);
                 sample[TL] = sample[TR];
@@ -105,11 +219,15 @@ public class ContourOpImage extends AttributeOpImage {
                     continue;
                 }
 
-                // im = 0,1,1,0
-                // jm = 0,0,1,1
                 for (Double z : contourIntervals) {
                     if (z < dmin || z > dmax) {
                         continue;
+                    }
+
+                    List<LineSegment> zlist = segments.get(z);
+                    if (zlist == null) {
+                        zlist = new ArrayList<LineSegment>();
+                        segments.put(z, zlist);
                     }
 
                     h[4] = sample[TL] - z;
@@ -148,91 +266,88 @@ public class ContourOpImage extends AttributeOpImage {
                             m3 = 1;
                         }
 
-                        int config = castab[sh[m1] + 1][sh[m2] + 1][sh[m3] + 1];
+                        int config = configLookup[sh[m1] + 1][sh[m2] + 1][sh[m3] + 1];
                         if (config == 0) {
                             continue;
                         }
 
-                        double x1 = 0.0, y1 = 0.0, x2 = 0.0, y2 = 0.0;
+                        double x0 = 0.0, y0 = 0.0, x1 = 0.0, y1 = 0.0;
                         switch (config) {
                             case 1: /* Line between vertices 1 and 2 */
-                                x1 = xh[m1];
-                                y1 = yh[m1];
-                                x2 = xh[m2];
-                                y2 = yh[m2];
+                                x0 = xh[m1];
+                                y0 = yh[m1];
+                                x1 = xh[m2];
+                                y1 = yh[m2];
                                 break;
-                                
+
                             case 2: /* Line between vertices 2 and 3 */
-                                x1 = xh[m2];
-                                y1 = yh[m2];
-                                x2 = xh[m3];
-                                y2 = yh[m3];
-                                break;
-                                
-                            case 3: /* Line between vertices 3 and 1 */
+                                x0 = xh[m2];
+                                y0 = yh[m2];
                                 x1 = xh[m3];
                                 y1 = yh[m3];
-                                x2 = xh[m1];
-                                y2 = yh[m1];
                                 break;
-                                
-                            case 4: /* Line between vertex 1 and side 2-3 */
+
+                            case 3: /* Line between vertices 3 and 1 */
+                                x0 = xh[m3];
+                                y0 = yh[m3];
                                 x1 = xh[m1];
                                 y1 = yh[m1];
-                                x2 = sect(m2, m3, h, xh);
-                                y2 = sect(m2, m3, h, yh);
                                 break;
-                                
-                            case 5: /* Line between vertex 2 and side 3-1 */
-                                x1 = xh[m2];
-                                y1 = yh[m2];
-                                x2 = sect(m3, m1, h, xh);
-                                y2 = sect(m3, m1, h, yh);
-                                break;
-                                
-                            case 6: /* Line between vertex 3 and side 1-2 */
-                                x1 = xh[m3];
-                                y1 = yh[m3];
-                                x2 = sect(m3, m2, h, xh);
-                                y2 = sect(m3, m2, h, yh);
-                                break;
-                                
-                            case 7: /* Line between sides 1-2 and 2-3 */
-                                x1 = sect(m1, m2, h, xh);
-                                y1 = sect(m1, m2, h, yh);
-                                x2 = sect(m2, m3, h, xh);
-                                y2 = sect(m2, m3, h, yh);
-                                break;
-                                
-                            case 8: /* Line between sides 2-3 and 3-1 */
+
+                            case 4: /* Line between vertex 1 and side 2-3 */
+                                x0 = xh[m1];
+                                y0 = yh[m1];
                                 x1 = sect(m2, m3, h, xh);
                                 y1 = sect(m2, m3, h, yh);
-                                x2 = sect(m3, m1, h, xh);
-                                y2 = sect(m3, m1, h, yh);
                                 break;
-                                
-                            case 9: /* Line between sides 3-1 and 1-2 */
+
+                            case 5: /* Line between vertex 2 and side 3-1 */
+                                x0 = xh[m2];
+                                y0 = yh[m2];
                                 x1 = sect(m3, m1, h, xh);
                                 y1 = sect(m3, m1, h, yh);
-                                x2 = sect(m1, m2, h, xh);
-                                y2 = sect(m1, m2, h, yh);
+                                break;
+
+                            case 6: /* Line between vertex 3 and side 1-2 */
+                                x0 = xh[m3];
+                                y0 = yh[m3];
+                                x1 = sect(m3, m2, h, xh);
+                                y1 = sect(m3, m2, h, yh);
+                                break;
+
+                            case 7: /* Line between sides 1-2 and 2-3 */
+                                x0 = sect(m1, m2, h, xh);
+                                y0 = sect(m1, m2, h, yh);
+                                x1 = sect(m2, m3, h, xh);
+                                y1 = sect(m2, m3, h, yh);
+                                break;
+
+                            case 8: /* Line between sides 2-3 and 3-1 */
+                                x0 = sect(m2, m3, h, xh);
+                                y0 = sect(m2, m3, h, yh);
+                                x1 = sect(m3, m1, h, xh);
+                                y1 = sect(m3, m1, h, yh);
+                                break;
+
+                            case 9: /* Line between sides 3-1 and 1-2 */
+                                x0 = sect(m3, m1, h, xh);
+                                y0 = sect(m3, m1, h, yh);
+                                x1 = sect(m1, m2, h, xh);
+                                y1 = sect(m1, m2, h, yh);
                                 break;
                         }
-                        
-                        joinContour(x1, y1, x2, y2, z);
 
+                        zlist.add(new LineSegment(x0, y0, x1, y1));
                     }
                 }
             }
         }
 
+        return segments;
     }
 
     private double sect(int p1, int p2, double[] h, double[] coord) {
         return (h[p2] * coord[p1] - h[p1] * coord[p2]) / (h[p2] - h[p1]);
     }
 
-    private void joinContour(double x1, double y1, double x2, double y2, Double z) {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
 }

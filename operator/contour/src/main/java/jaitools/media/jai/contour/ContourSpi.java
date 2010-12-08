@@ -51,6 +51,7 @@ public class ContourSpi implements OperationRegistrySpi {
      * and their factories.
      */
     public void updateRegistry(OperationRegistry registry) {
+        /*
         OperationDescriptor op = new ContourDescriptor();
         registry.registerDescriptor(op);
         String descName = op.getName();
@@ -61,6 +62,8 @@ public class ContourSpi implements OperationRegistrySpi {
                                  descName,
                                  productName,
                                  rif);
+         * 
+         */
 
     }
 }

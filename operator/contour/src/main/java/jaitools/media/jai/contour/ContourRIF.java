@@ -26,8 +26,12 @@ import java.awt.image.renderable.ParameterBlock;
 import java.awt.image.renderable.RenderedImageFactory;
 
 /**
- *
- * @author michael
+ * The image factory for the Contour operator.
+ * 
+ * @author Michael Bedward
+ * @since 1.1
+ * @source $URL$
+ * @version $Id$
  */
 class ContourRIF implements RenderedImageFactory {
 
