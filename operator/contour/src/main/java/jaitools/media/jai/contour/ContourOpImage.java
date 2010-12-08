@@ -26,6 +26,7 @@ import com.vividsolutions.jts.operation.linemerge.LineMerger;
 import jaitools.media.jai.AttributeOpImage;
 import jaitools.numeric.DoubleComparison;
 import java.awt.image.RenderedImage;
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -33,19 +34,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedSet;
+import java.util.TreeSet;
 import javax.media.jai.ROI;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 
 /**
- * Generate smooth contours from a source image.
+ * Generate contours from a source image.
  * <p>
  * The interpolation algorithm used is that of Paul Bourke. Originally published
  * in Byte magazine (1987) as the CONREC contouring subroutine written in
  * FORTRAN.
  * <p>
  * The implementation here is adapted from Paul Bourke's C code for the
- * CONRC algorithm available at: 
+ * CONREC algorithm available at: 
  * <a href="http://local.wasp.uwa.edu.au/~pbourke/papers/conrec/">
  * http://local.wasp.uwa.edu.au/~pbourke/papers/conrec/</a>
  *
@@ -57,45 +59,108 @@ import javax.media.jai.iterator.RandomIterFactory;
 public class ContourOpImage extends AttributeOpImage {
 
     private static final double EPS = 1.0e-8d;
+    
     private static final int TL = 0;
     private static final int TR = 1;
     private static final int BL = 2;
     private static final int BR = 3;
+    
+    /** The source image band to process */
     private int band;
+    
+    /** Values at which to generate contour intervals */
     private SortedSet<Double> contourIntervals;
-    private List<LineString> contourLines;
+    
+    /** Output contour lines */
+    private SoftReference<List<LineString>> cachedContours;
+    
+    /** Geometry factory used to create LineStrings */
     private GeometryFactory geomFactory;
+    
+    /** Whether to smooth the contour lines */
+    private final boolean smooth;
 
-    static class ContourSegment extends LineSegment {
 
-        double value;
-
-        public ContourSegment(double x0, double y0, double x1, double y1, double value) {
-            super(x0, y0, x1, y1);
-            this.value = value;
-        }
-    }
-
-    public ContourOpImage(RenderedImage source, ROI roi) {
+    /**
+     * Constructor.
+     * 
+     * @param source the source image
+     * 
+     * @param roi an optional {@code ROI} to constrain the areas for which
+     *        contours are generated
+     * 
+     * @param band the band of the source image to process
+     * 
+     * @param intervals values for which to generate contours
+     * 
+     * @param smooth whether contour lines should be smoothed using
+     *        Bezier interpolation
+     */
+    public ContourOpImage(RenderedImage source, 
+            ROI roi, 
+            int band,
+            Collection<? extends Number> intervals,
+            boolean smooth) {
+                
         super(source, roi);
 
+        this.band = band;
+        
+        this.contourIntervals = new TreeSet<Double>();
+        for (Number z : intervals) {
+            this.contourIntervals.add(z.doubleValue());
+        }
+        
+        this.smooth = smooth;
+        
         this.geomFactory = new GeometryFactory();
     }
 
+    /**
+     * {@inheritDoc }
+     */
     @Override
     protected Object getAttribute(String name) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (cachedContours == null || cachedContours.get() == null) {
+            synchronized(this) {
+                cachedContours = new SoftReference<List<LineString>>(createContours());
+            }
+        }
+        
+        return cachedContours.get();
     }
 
+    /**
+     * {@inheritDoc }
+     */
     @Override
     protected String[] getAttributeNames() {
         return new String[]{ContourDescriptor.CONTOUR_PROPERTY_NAME};
     }
 
-    private void getContours() {
-        contourLines = new ArrayList<LineString>();
+    /**
+     * {@inheritDoc }
+     */
+    @Override
+    protected Class<?> getAttributeClass(String name) {
+        if (ContourDescriptor.CONTOUR_PROPERTY_NAME.equalsIgnoreCase(name)) {
+            return List.class;
+        }
+        
+        return super.getAttributeClass(name);
+    }
+    
+
+    /**
+     * Controls contour generation. Each tile of the source image is processed
+     * in turn. The resulting contour lines are then merged.
+     * 
+     * @return generated contours
+     */
+    private List<LineString> createContours() {
+        List<LineString> contours = new ArrayList<LineString>();
         LineMerger merger = null;
-        List<LineString> lines = null;
+        List<LineString> tempLines = null;
 
         RenderedImage src = getSourceImage(0);
         int numTiles = 0;
@@ -110,26 +175,26 @@ public class ContourOpImage extends AttributeOpImage {
                     List<LineSegment> zlist = e.getValue();
 
                     if (zlist == null || !zlist.isEmpty()) {
-                        lines = new ArrayList<LineString>();
+                        tempLines = new ArrayList<LineString>();
 
                         for (int i = zlist.size() - 1; i >= 0; i--) {
                             LineSegment seg = zlist.remove(i);
                             // Skip over any degenerate segments which can be produced by
                             // the traceContours algorithm
                             if (!seg.p0.equals2D(seg.p1)) {
-                                lines.add(seg.toGeometry(geomFactory));
+                                tempLines.add(seg.toGeometry(geomFactory));
                             }
                         }
 
                         merger = new LineMerger();
-                        merger.add(lines);
+                        merger.add(tempLines);
                         Collection<LineString> mergedLines = merger.getMergedLineStrings();
 
                         for (LineString line : mergedLines) {
                             line.setUserData(zvalue);
                         }
 
-                        contourLines.addAll(mergedLines);
+                        contours.addAll(mergedLines);
                     }
                 }
             }
@@ -140,19 +205,19 @@ public class ContourOpImage extends AttributeOpImage {
             List<LineString> mergedContourLines = new ArrayList<LineString>();
 
             for (Double z : contourIntervals) {
-                lines = new ArrayList<LineString>();
+                tempLines = new ArrayList<LineString>();
                 
-                for (int i = contourLines.size() - 1; i >= 0; i--) {
-                    LineString line = contourLines.get(i);
+                for (int i = contours.size() - 1; i >= 0; i--) {
+                    LineString line = contours.get(i);
                     if (DoubleComparison.dequal((Double) line.getUserData(), z)) {
-                        contourLines.remove(i);
+                        contours.remove(i);
                     }
-                    lines.add(line);
+                    tempLines.add(line);
                 }
 
-                if (!lines.isEmpty()) {
+                if (!tempLines.isEmpty()) {
                     merger = new LineMerger();
-                    merger.add(lines);
+                    merger.add(tempLines);
                     Collection<LineString> mergedLines = merger.getMergedLineStrings();
                     
                     for (LineString line : mergedLines) {
@@ -163,14 +228,37 @@ public class ContourOpImage extends AttributeOpImage {
                 }
             }
             
-            contourLines = mergedContourLines;
+            contours = mergedContourLines;
         }
+        
+        return contours;
     }
 
     
     /**
-     * Create segments of contour lines for the specified source image tile
-     * using the CONREC algorithm of Paul Bourke.
+     * Create contour segments for the specified source image tile.
+     * The algorithm used is CONREC, devised by Paul Bourke (see class notes).
+     * <p>
+     * The source image is scanned with a 2x2 sample window. The algorithm
+     * then treats these values as corner vertex values for a square that is
+     * sub-divided into four triangles. This results in an additional centre
+     * vertex.
+     * <p>
+     * The following diagram, taken from the C implementation of CONREC,
+     * shows how vertices and triangles are indexed:
+     * <pre>
+                  vertex 4 +-------------------+ vertex 3
+                           | \               / |
+                           |   \    m=3    /   |
+                           |     \       /     |
+                           |       \   /       |
+                           |  m=2    X   m=2   |   centre vertex is 0
+                           |       /   \       |
+                           |     /       \     |
+                           |   /    m=1    \   |
+                           | /               \ |
+                  vertex 1 +-------------------+ vertex 2
+     * </pre>
      * 
      * @param tileX tile X index
      * @param tileY tile Y index
@@ -346,6 +434,17 @@ public class ContourOpImage extends AttributeOpImage {
         return segments;
     }
 
+    /**
+     * Calculate an X or Y ordinate for a contour segment end-point
+     * relative to the difference in value between two sampling positions.
+     * 
+     * @param p1 index of the first sampling position
+     * @param p2 index of the second sampling position
+     * @param h source image values at sampling positions
+     * @param coord X or Y ordinates of the 4 corner sampling positions
+     * 
+     * @return the calculated X or Y ordinate
+     */
     private double sect(int p1, int p2, double[] h, double[] coord) {
         return (h[p2] * coord[p1] - h[p1] * coord[p2]) / (h[p2] - h[p1]);
     }

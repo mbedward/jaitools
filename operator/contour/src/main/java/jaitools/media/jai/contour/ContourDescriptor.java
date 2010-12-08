@@ -20,7 +20,10 @@
 
 package jaitools.media.jai.contour;
 
+import java.util.Collection;
 import javax.media.jai.OperationDescriptorImpl;
+import javax.media.jai.ROI;
+import javax.media.jai.registry.RenderedRegistryMode;
 
 /**
  * @author Michael Bedward
@@ -28,11 +31,67 @@ import javax.media.jai.OperationDescriptorImpl;
  * @source $URL$
  * @version $Id$
  */
-class ContourDescriptor extends OperationDescriptorImpl {
+public class ContourDescriptor extends OperationDescriptorImpl {
     public final static String CONTOUR_PROPERTY_NAME = "contours";
+    
+    static final int ROI_ARG = 0;
+    static final int BAND_ARG = 1;
+    static final int LEVELS_ARG = 2;
+    static final int SMOOTH_ARG = 3;
 
-    public ContourDescriptor(String[][] resources, String[] supportedModes, String[] sourceNames, Class[][] sourceClasses, String[] paramNames, Class[][] paramClasses, Object[][] paramDefaults, Object[][] validParamValues) {
-        super(resources, supportedModes, sourceNames, sourceClasses, paramNames, paramClasses, paramDefaults, validParamValues);
+    private static final String[] paramNames = {
+        "roi",
+        "band",
+        "levels",
+        "smooth"
+    };
+
+    private static final Class[] paramClasses = {
+         javax.media.jai.ROI.class,
+         Integer.class,
+         Collection.class,
+         Boolean.class
+    };
+
+    private static final Object[] paramDefaults = {
+         (ROI) null,
+         Integer.valueOf(0),
+         NO_PARAMETER_DEFAULT,
+         Boolean.FALSE,
+    };
+
+    
+
+    public ContourDescriptor() {
+        super(new String[][]{
+                    {"GlobalName", "Contour"},
+                    {"LocalName", "Contour"},
+                    {"Vendor", "jaitools.media.jai"},
+                    {"Description", "Traces contours based on source image values"},
+                    {"DocURL", "http://code.google.com/p/jai-tools/"},
+                    {"Version", "1.1.0"},
+                    
+                    {"arg0Desc", paramNames[0] + " an optional ROI"},
+                    
+                    {"arg1Desc", paramNames[1] + " (Integer, default=0) " +
+                              "the source image band to process"},
+                    
+                    {"arg2Desc", paramNames[2] + " (Collection<? extends Number>, required) " +
+                              "values for which to generate contours"},
+                    
+                    {"arg3Desc", paramNames[3] + " (Boolean, default=false) " +
+                              "whether to smooth contour lines with Bezier interpolation"}
+                },
+                new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
+                
+                1,                                              // number of sources
+                
+                paramNames,
+                paramClasses,
+                paramDefaults,
+                    
+                null                                            // valid values (none defined)
+                );    
     }
 
 }

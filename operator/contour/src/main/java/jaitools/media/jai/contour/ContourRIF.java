@@ -24,6 +24,10 @@ import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
 import java.awt.image.renderable.RenderedImageFactory;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import javax.media.jai.ROI;
 
 /**
  * The image factory for the Contour operator.
@@ -33,13 +37,34 @@ import java.awt.image.renderable.RenderedImageFactory;
  * @source $URL$
  * @version $Id$
  */
-class ContourRIF implements RenderedImageFactory {
+public class ContourRIF implements RenderedImageFactory {
 
     public ContourRIF() {
     }
 
-    public RenderedImage create(ParameterBlock paramBlock, RenderingHints hints) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
+    /**
+     * Creates a new instance of ContourOpImage in the rendered layer.
+     *
+     * @param paramBlock specifies the source image and the parameters
+     *        "roi", "band", "outsideValues" and "insideEdges"
+     *
+     * @param renderHints rendering hints (ignored)
+     */
+    public RenderedImage create(ParameterBlock paramBlock,
+            RenderingHints renderHints) {
+        
+        ROI roi = (ROI) paramBlock.getObjectParameter(ContourDescriptor.ROI_ARG);
+        int band = paramBlock.getIntParameter(ContourDescriptor.BAND_ARG);
+        
+        List<Double> contourLevels = new ArrayList<Double>();
+        Object obj = paramBlock.getObjectParameter(ContourDescriptor.LEVELS_ARG);
+        Collection coll = (Collection) obj;
+        for (Object val : coll) {
+            contourLevels.add(((Number)val).doubleValue());
+        }
+        
+        Boolean smooth = (Boolean) paramBlock.getObjectParameter(ContourDescriptor.SMOOTH_ARG);
 
+        return new ContourOpImage(paramBlock.getRenderedSource(0), roi, band, contourLevels, smooth);
+    }
 }
