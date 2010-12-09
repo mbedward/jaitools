@@ -22,6 +22,7 @@ package jaitools.media.jai.contour;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineSegment;
 import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.PrecisionModel;
 import com.vividsolutions.jts.operation.linemerge.LineMerger;
 import jaitools.media.jai.AttributeOpImage;
 import java.awt.Rectangle;
@@ -144,7 +145,8 @@ public class ContourOpImage extends AttributeOpImage {
         
         this.smooth = smooth;
         
-        this.geomFactory = new GeometryFactory();
+        PrecisionModel pm = new PrecisionModel(100);
+        this.geomFactory = new GeometryFactory(pm);
     }
 
     /**
@@ -310,13 +312,16 @@ public class ContourOpImage extends AttributeOpImage {
         
         final PlanarImage src = getSourceImage(0);
         Raster tile = src.getTile(tileX, tileY);
-        Rectangle bounds = tile.getBounds();
+        Rectangle bounds = tile.getBounds().intersection(srcBounds);
+        
+        int maxx = bounds.x + bounds.width - 1;
+        int maxy = bounds.y + bounds.height - 1;
 
-        for (int y = bounds.y, iy = 0; iy < bounds.height - 1; y++, iy++) {
+        for (int y = bounds.y; y < maxy; y++) {
             sample[BR] = tile.getSampleDouble(bounds.x, y, band);
             sample[TR] = tile.getSampleDouble(bounds.x, y + 1, band);
-
-            for (int x = bounds.x + 1, ix = 1; ix < bounds.width; x++, ix++) {
+            
+            for (int x = bounds.x + 1; x <= maxx; x++) {
                 sample[BL] = sample[BR];
                 sample[BR] = tile.getSampleDouble(x, y, band);
                 sample[TL] = sample[TR];
