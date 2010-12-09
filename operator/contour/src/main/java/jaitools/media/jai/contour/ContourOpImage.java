@@ -28,6 +28,7 @@ import jaitools.numeric.DoubleComparison;
 import java.awt.image.RenderedImage;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -40,16 +41,37 @@ import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 
 /**
- * Generate contours from a source image.
+ * Generates contours for user-specified levels of values in the source image.
+ * The contours are returned as a {@code Collection} of
+ * {@link com.vividsolutions.jts.geom.LineString}s.
  * <p>
  * The interpolation algorithm used is that of Paul Bourke. Originally published
  * in Byte magazine (1987) as the CONREC contouring subroutine written in
- * FORTRAN.
- * <p>
- * The implementation here is adapted from Paul Bourke's C code for the
- * CONREC algorithm available at: 
+ * FORTRAN. The implementation here was adapted from Paul Bourke's C code for the
+ * algorithm available at: 
  * <a href="http://local.wasp.uwa.edu.au/~pbourke/papers/conrec/">
  * http://local.wasp.uwa.edu.au/~pbourke/papers/conrec/</a>
+ * <p>
+ * Example of use:
+ * <pre><code>
+ * RenderedImage src = ...
+ * ParameterBlockJAI pb = new ParameterBlockJAI("Contour");
+ * pb.setSource("source0", src);
+ * 
+ * // specify values at which contours are to be traced
+ * List&lt;Double&gt; levels = Arrays.asList(new double[]{14.0, 14.5, 15.0, 15.5, 16.0})
+ * pb.setParameter("levels", levels)
+ * 
+ * RenderedOp dest = JAI.create("Contour", pb);
+ * Collection<LineString> contours = (Collection<LineString>) 
+ *         dest.getProperty(ContourDescriptor.CONTOUR_PROPERTY_NAME);
+ *
+ * for (LineString contour : contours) {
+ *   // get this contour's value
+ *   Double contourValue = (Double) contour.getUserData();
+ *   ...
+ * }
+ * </code></pre>
  *
  * @author Michael Bedward
  * @since 1.1
