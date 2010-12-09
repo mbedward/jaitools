@@ -73,14 +73,14 @@ public class InterpreterDemo {
     /**
      * Run the demonstration. The optional {@code arg} can be either
      * the path to a user-supplied script or one of "chessboard",
-     * "interference" or "ripple".
+     * "interference", "ripple" or "squircle".
      * 
      * @param args (optional) the script to run
      */
     public static void main(String[] args) throws Exception {
         InterpreterDemo demo = new InterpreterDemo();
 
-        URL url = demo.getClass().getResource("/scripts/ripple.jfl");
+        URL url = demo.getClass().getResource("/scripts/ripples.jfl");
 
         if (args.length == 1) {
             String arg = args[0];
