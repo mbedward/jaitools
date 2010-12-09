@@ -24,21 +24,19 @@ import com.vividsolutions.jts.geom.LineSegment;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.operation.linemerge.LineMerger;
 import jaitools.media.jai.AttributeOpImage;
-import jaitools.numeric.DoubleComparison;
+import java.awt.Rectangle;
+import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import javax.media.jai.PlanarImage;
 import javax.media.jai.ROI;
-import javax.media.jai.iterator.RandomIter;
-import javax.media.jai.iterator.RandomIterFactory;
 
 /**
  * Generates contours for user-specified levels of values in the source image.
@@ -91,13 +89,20 @@ public class ContourOpImage extends AttributeOpImage {
     private int band;
     
     /** Values at which to generate contour intervals */
-    private SortedSet<Double> contourIntervals;
+    private SortedSet<Double> contourLevels;
     
     /** Output contour lines */
     private SoftReference<List<LineString>> cachedContours;
     
     /** Geometry factory used to create LineStrings */
     private GeometryFactory geomFactory;
+    
+    /** 
+     * Whether to merge contour lines across tile boundaries
+     * during the tracing process. This can be very slow for
+     * dense contours and large images.
+     */
+    private boolean mergeTiles;
     
     /** Whether to smooth the contour lines */
     private final boolean smooth;
@@ -115,6 +120,9 @@ public class ContourOpImage extends AttributeOpImage {
      * 
      * @param intervals values for which to generate contours
      * 
+     * @param mergeTiles whether to merge contour lines across source
+     *        image tile boundaries (can be very slow for dense contours)
+     * 
      * @param smooth whether contour lines should be smoothed using
      *        Bezier interpolation
      */
@@ -122,15 +130,16 @@ public class ContourOpImage extends AttributeOpImage {
             ROI roi, 
             int band,
             Collection<? extends Number> intervals,
+            boolean mergeTiles,
             boolean smooth) {
                 
         super(source, roi);
 
         this.band = band;
         
-        this.contourIntervals = new TreeSet<Double>();
+        this.contourLevels = new TreeSet<Double>();
         for (Number z : intervals) {
-            this.contourIntervals.add(z.doubleValue());
+            this.contourLevels.add(z.doubleValue());
         }
         
         this.smooth = smooth;
@@ -180,27 +189,26 @@ public class ContourOpImage extends AttributeOpImage {
      * @return generated contours
      */
     private List<LineString> createContours() {
-        List<LineString> contours = new ArrayList<LineString>();
+        Map<Integer, List<LineString>> contours = new HashMap<Integer, List<LineString>>();
         LineMerger merger = null;
         List<LineString> tempLines = null;
 
         RenderedImage src = getSourceImage(0);
-        int numTiles = 0;
+        int tileIndex = 0;
         for (int tileY = src.getMinTileY(), ny = 0; ny < src.getNumYTiles(); tileY++, ny++) {
-            for (int tileX = src.getMinTileX(), nx = 0; nx < src.getNumXTiles(); tileX++, nx++) {
-                numTiles++;
+            for (int tileX = src.getMinTileX(), nx = 0; nx < src.getNumXTiles(); tileX++, nx++, tileIndex++) {
+                
+                Map<Integer, List<LineSegment>> segments = getContourSegments(tileX, tileY);
 
-                Map<Double, List<LineSegment>> segments = getContourSegments(tileX, tileY);
+                int levelIndex = 0;
+                for (Double levelValue : contourLevels) {
+                    List<LineSegment> levelSegments = segments.get(levelIndex);
 
-                for (Entry<Double, List<LineSegment>> e : segments.entrySet()) {
-                    Double zvalue = e.getKey();
-                    List<LineSegment> zlist = e.getValue();
-
-                    if (zlist == null || !zlist.isEmpty()) {
+                    if (!(levelSegments == null || levelSegments.isEmpty())) {
                         tempLines = new ArrayList<LineString>();
 
-                        for (int i = zlist.size() - 1; i >= 0; i--) {
-                            LineSegment seg = zlist.remove(i);
+                        for (int i = levelSegments.size() - 1; i >= 0; i--) {
+                            LineSegment seg = levelSegments.remove(i);
                             // Skip over any degenerate segments which can be produced by
                             // the traceContours algorithm
                             if (!seg.p0.equals2D(seg.p1)) {
@@ -210,50 +218,46 @@ public class ContourOpImage extends AttributeOpImage {
 
                         merger = new LineMerger();
                         merger.add(tempLines);
-                        Collection<LineString> mergedLines = merger.getMergedLineStrings();
+                        Collection<LineString> tileContours = merger.getMergedLineStrings();
 
-                        for (LineString line : mergedLines) {
-                            line.setUserData(zvalue);
+                        List<LineString> levelContours = contours.get(levelIndex);
+                        
+                        if (levelContours == null) {
+                            levelContours = new ArrayList<LineString>();
+                            contours.put(levelIndex, levelContours);
                         }
-
-                        contours.addAll(mergedLines);
+                        
+                        if (levelContours.isEmpty() || !mergeTiles) {
+                            levelContours.addAll(tileContours);
+                        } else {
+                            merger = new LineMerger();
+                            merger.add(levelContours);
+                            merger.add(tileContours);
+                            levelContours.clear();
+                            levelContours.addAll( merger.getMergedLineStrings() );
+                        }
                     }
+                    
+                    levelIndex++ ;
                 }
             }
         }
 
-        // Finally, merge the lines from separate tiles
-        if (numTiles > 1) {
-            List<LineString> mergedContourLines = new ArrayList<LineString>();
+        List<LineString> mergedContourLines = new ArrayList<LineString>();
 
-            for (Double z : contourIntervals) {
-                tempLines = new ArrayList<LineString>();
-                
-                for (int i = contours.size() - 1; i >= 0; i--) {
-                    LineString line = contours.get(i);
-                    if (DoubleComparison.dequal((Double) line.getUserData(), z)) {
-                        contours.remove(i);
-                    }
-                    tempLines.add(line);
+        int levelIndex = 0;
+        for (Double levelValue : contourLevels) {
+            List<LineString> levelContours = contours.remove(levelIndex);
+            if (!(levelContours == null || levelContours.isEmpty())) {
+                for (LineString line : levelContours) {
+                    line.setUserData(levelValue);
                 }
-
-                if (!tempLines.isEmpty()) {
-                    merger = new LineMerger();
-                    merger.add(tempLines);
-                    Collection<LineString> mergedLines = merger.getMergedLineStrings();
-                    
-                    for (LineString line : mergedLines) {
-                        line.setUserData(z);
-                    }
-                    
-                    mergedContourLines.addAll(mergedLines);
-                }
+                mergedContourLines.addAll(levelContours);
             }
-            
-            contours = mergedContourLines;
+            levelIndex++ ;
         }
         
-        return contours;
+        return mergedContourLines;
     }
 
     
@@ -287,9 +291,9 @@ public class ContourOpImage extends AttributeOpImage {
      * 
      * @return the generated contour segments
      */
-    private Map<Double, List<LineSegment>> getContourSegments(int tileX, int tileY) {
+    private Map<Integer, List<LineSegment>> getContourSegments(int tileX, int tileY) {
 
-        Map<Double, List<LineSegment>> segments = new HashMap<Double, List<LineSegment>>();
+        Map<Integer, List<LineSegment>> segments = new HashMap<Integer, List<LineSegment>>();
 
         double[] sample = new double[4];
         double[] h = new double[5];
@@ -303,19 +307,20 @@ public class ContourOpImage extends AttributeOpImage {
             {{0, 3, 4}, {1, 3, 1}, {4, 3, 0}},
             {{9, 6, 7}, {5, 2, 0}, {8, 0, 0}}
         };
+        
+        final PlanarImage src = getSourceImage(0);
+        Raster tile = src.getTile(tileX, tileY);
+        Rectangle bounds = tile.getBounds();
 
+        for (int y = bounds.y, iy = 0; iy < bounds.height - 1; y++, iy++) {
+            sample[BR] = tile.getSampleDouble(bounds.x, y, band);
+            sample[TR] = tile.getSampleDouble(bounds.x, y + 1, band);
 
-        RandomIter iter = RandomIterFactory.create(getSourceImage(0), srcBounds);
-
-        for (int y = srcBounds.y, iy = 0; iy < srcBounds.height - 1; y++, iy++) {
-            sample[BR] = iter.getSampleDouble(srcBounds.x, y, band);
-            sample[TR] = iter.getSampleDouble(srcBounds.x, y + 1, band);
-
-            for (int x = srcBounds.x + 1, ix = 1; ix < srcBounds.width; x++, ix++) {
+            for (int x = bounds.x + 1, ix = 1; ix < bounds.width; x++, ix++) {
                 sample[BL] = sample[BR];
-                sample[BR] = iter.getSampleDouble(x, y, band);
+                sample[BR] = tile.getSampleDouble(x, y, band);
                 sample[TL] = sample[TR];
-                sample[TR] = iter.getSampleDouble(x, y + 1, band);
+                sample[TR] = tile.getSampleDouble(x, y + 1, band);
 
                 temp1 = Math.min(sample[BL], sample[TL]);
                 temp2 = Math.min(sample[BR], sample[TR]);
@@ -325,37 +330,38 @@ public class ContourOpImage extends AttributeOpImage {
                 temp2 = Math.max(sample[BR], sample[TR]);
                 double dmax = Math.max(temp1, temp2);
 
-                if (dmax < contourIntervals.first() || dmin > contourIntervals.last()) {
+                if (dmax < contourLevels.first() || dmin > contourLevels.last()) {
                     continue;
                 }
 
-                for (Double z : contourIntervals) {
-                    if (z < dmin || z > dmax) {
+                int levelIndex = 0;
+                for (Double levelValue : contourLevels) {
+                    if (levelValue < dmin || levelValue > dmax) {
                         continue;
                     }
 
-                    List<LineSegment> zlist = segments.get(z);
+                    List<LineSegment> zlist = segments.get(levelIndex);
                     if (zlist == null) {
                         zlist = new ArrayList<LineSegment>();
-                        segments.put(z, zlist);
+                        segments.put(levelIndex, zlist);
                     }
 
-                    h[4] = sample[TL] - z;
+                    h[4] = sample[TL] - levelValue;
                     xh[4] = x - 1;
                     yh[4] = y + 1;
                     sh[4] = Double.compare(h[4], 0.0);
 
-                    h[3] = sample[TR] - z;
+                    h[3] = sample[TR] - levelValue;
                     xh[3] = x;
                     yh[3] = y + 1;
                     sh[3] = Double.compare(h[3], 0.0);
 
-                    h[2] = sample[BR] - z;
+                    h[2] = sample[BR] - levelValue;
                     xh[2] = x;
                     yh[2] = y;
                     sh[2] = Double.compare(h[2], 0.0);
 
-                    h[1] = sample[BL] - z;
+                    h[1] = sample[BL] - levelValue;
                     xh[1] = x - 1;
                     yh[1] = y;
                     sh[1] = Double.compare(h[1], 0.0);
@@ -449,6 +455,8 @@ public class ContourOpImage extends AttributeOpImage {
 
                         zlist.add(new LineSegment(x0, y0, x1, y1));
                     }
+                    
+                    levelIndex++ ;
                 }
             }
         }

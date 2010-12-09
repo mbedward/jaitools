@@ -37,12 +37,14 @@ public class ContourDescriptor extends OperationDescriptorImpl {
     static final int ROI_ARG = 0;
     static final int BAND_ARG = 1;
     static final int LEVELS_ARG = 2;
-    static final int SMOOTH_ARG = 3;
+    static final int MERGE_TILES_ARG = 3;
+    static final int SMOOTH_ARG = 4;
 
     private static final String[] paramNames = {
         "roi",
         "band",
         "levels",
+        "mergeTiles",
         "smooth"
     };
 
@@ -50,6 +52,7 @@ public class ContourDescriptor extends OperationDescriptorImpl {
          javax.media.jai.ROI.class,
          Integer.class,
          Collection.class,
+         Boolean.class,
          Boolean.class
     };
 
@@ -57,6 +60,7 @@ public class ContourDescriptor extends OperationDescriptorImpl {
          (ROI) null,
          Integer.valueOf(0),
          NO_PARAMETER_DEFAULT,
+         Boolean.TRUE,
          Boolean.FALSE,
     };
 
@@ -79,7 +83,10 @@ public class ContourDescriptor extends OperationDescriptorImpl {
                     {"arg2Desc", paramNames[2] + " (Collection<? extends Number>, required) " +
                               "values for which to generate contours"},
                     
-                    {"arg3Desc", paramNames[3] + " (Boolean, default=false) " +
+                    {"arg2Desc", paramNames[3] + " (Boolean, default=true) " +
+                              "whether to merge contour lines across source image tile boundaries"},
+                    
+                    {"arg3Desc", paramNames[4] + " (Boolean, default=false) " +
                               "whether to smooth contour lines with Bezier interpolation"}
                 },
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
