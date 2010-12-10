@@ -21,8 +21,8 @@
 package jaitools.jts;
 
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.io.WKTReader;
 
 import org.junit.Before;
@@ -49,55 +49,24 @@ public class LineSmootherTest {
     }
 
     /**
-     * Smooth a very simple polygon. Check that the output polygon covers the 
-     * input polygon and contains all of the input's vertices.
+     * Smooth a simple, horizontal zig-sag line string of five coordinates.
+     * Test that all input vertices are present in the smoothed line and that
+     * the smoothed line lies within the bounding rectangle of the input line.
+     * @throws Exception 
      */
     @Test
-    public void squarePoly() throws Exception {
-        Polygon p = (Polygon) reader.read("POLYGON((0 0, 0 100, 100 100, 100 0, 0 0))");
-        Polygon ps = smoother.smooth(p, 0.0, 10);
+    public void zigZag() throws Exception {
+        LineString line = (LineString) reader.read("LINESTRING(0 0, 10 10, 20 0, 30 -10, 40 0)");
+        LineString sline = smoother.smooth(line, 0.0);
         
-        assertTrue(ps.covers(p));
-        
-        Coordinate[] pscoords = ps.getCoordinates();
-        for (Coordinate c : p.getCoordinates()) {
-            // Hopelessly inefficient but ok for this small test
-            boolean found = false;
-            for (int j = 0; j < pscoords.length; j++) {
-                if (c.equals2D(pscoords[j])) {
-                    found = true;
-                    break;
-                }
+        Coordinate[] coords = line.getCoordinates();
+        int i = 0;
+        for (Coordinate scoord : sline.getCoordinates()) {
+            if (scoord.equals2D(coords[i])) {
+                i++ ;
             }
-            
-            assertTrue(found);
         }
-    }
-
-    /**
-     * Smooth a very simple polygon but this time with a tight fit. 
-     * Check that the output polygon covers the input polygon and contains 
-     * all of the input's vertices.
-     */
-    @Test
-    public void squarePolyTight() throws Exception {
-        Polygon p = (Polygon) reader.read("POLYGON((0 0, 0 100, 100 100, 100 0, 0 0))");
-        Polygon ps = smoother.smooth(p, 0.9, 10);
-        
-        assertTrue(ps.covers(p));
-        
-        Coordinate[] pscoords = ps.getCoordinates();
-        for (Coordinate c : p.getCoordinates()) {
-            // Hopelessly inefficient but ok for this small test
-            boolean found = false;
-            for (int j = 0; j < pscoords.length; j++) {
-                if (c.equals2D(pscoords[j])) {
-                    found = true;
-                    break;
-                }
-            }
-            
-            assertTrue(found);
-        }
+        assertEquals(coords.length, i);
+        assertTrue(line.getEnvelopeInternal().contains(sline.getEnvelopeInternal()));
     }
 }
