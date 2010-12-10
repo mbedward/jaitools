@@ -51,7 +51,7 @@ import static org.junit.Assert.*;
  */
 public class ContourTest {
     
-    enum Gradient { VERTICAL, HORIZONTAL };
+    enum Gradient { VERTICAL, HORIZONTAL, RADIAL };
     
     private static final int IMAGE_WIDTH = 100;
     
@@ -113,6 +113,29 @@ public class ContourTest {
     }
     
     /**
+     * Trace a single ring contour from a source image with a radial value
+     * gradient and check that each vertex of the contour is within an 
+     * acceptable distance from the image centre.
+     */
+    @Test
+    public void singleContourRadialGradient() {
+        PlanarImage src = createGradientImage(Gradient.RADIAL);
+        
+        final double value = IMAGE_WIDTH / 3.0d;
+        args.put("levels", Collections.singleton(value));
+        Collection<LineString> contours = doOp(src);
+
+        assertEquals(1, contours.size());
+        
+        LineString contour = contours.iterator().next();
+        Coordinate mid = new Coordinate(IMAGE_WIDTH/2, IMAGE_WIDTH/2);
+        final double tol = value / 100.0;
+        for (Coordinate c : contour.getCoordinates()) {
+            assertTrue(dequal(value, c.distance(mid), tol));
+        }
+    }
+    
+    /**
      * Helper method: runs the operation and retrieves the contours.
      * 
      * @param src the source image
@@ -169,21 +192,35 @@ public class ContourTest {
     private PlanarImage createGradientImage(Gradient gradient) {
         TiledImage src = ImageUtils.createConstantImage(IMAGE_WIDTH, IMAGE_WIDTH, Double.valueOf(0));
         
-        if (gradient == Gradient.VERTICAL) {
-            for (int y = 0; y < IMAGE_WIDTH; y++) {
-                for (int x = 0; x < IMAGE_WIDTH; x++) {
-                    src.setSample(x, y, 0, y);
+        switch (gradient) {
+            case HORIZONTAL:
+                for (int y = 0; y < IMAGE_WIDTH; y++) {
+                    for (int x = 0; x < IMAGE_WIDTH; x++) {
+                        src.setSample(x, y, 0, x);
+                    }
                 }
-            }
-        } else {
-            for (int y = 0; y < IMAGE_WIDTH; y++) {
-                for (int x = 0; x < IMAGE_WIDTH; x++) {
-                    src.setSample(x, y, 0, x);
+                break;
+                
+            case RADIAL:
+                double mid = IMAGE_WIDTH / 2;
+                for (int y = 0; y < IMAGE_WIDTH; y++) {
+                    double yd2 = (y - mid)*(y - mid);
+                    for (int x = 0; x < IMAGE_WIDTH; x++) {
+                        double xd2 = (x - mid)*(x - mid);
+                        src.setSample(x, y, 0, Math.sqrt(yd2 + xd2));
+                    }
                 }
-            }
+                break;
+                
+            case VERTICAL:
+                for (int y = 0; y < IMAGE_WIDTH; y++) {
+                    for (int x = 0; x < IMAGE_WIDTH; x++) {
+                        src.setSample(x, y, 0, y);
+                    }
+                }
+                break;
         }
 
         return src;
     }
-
 }
