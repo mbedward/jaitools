@@ -19,6 +19,8 @@
  */
 package jaitools.media.jai.contour;
 
+import com.vividsolutions.jts.algorithm.CGAlgorithms;
+import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineSegment;
 import com.vividsolutions.jts.geom.LineString;
@@ -98,6 +100,9 @@ public class ContourOpImage extends AttributeOpImage {
     /** Geometry factory used to create LineStrings */
     private GeometryFactory geomFactory;
     
+    /** Whether to simplify contour lines by removing coincident vertices */
+    private final boolean simplify;
+    
     /** 
      * Whether to merge contour lines across tile boundaries
      * during the tracing process. This can be very slow for
@@ -121,6 +126,9 @@ public class ContourOpImage extends AttributeOpImage {
      * 
      * @param intervals values for which to generate contours
      * 
+     * @param simplify whether to simplify contour lines by removing
+     *        colinear vertices
+     * 
      * @param mergeTiles whether to merge contour lines across source
      *        image tile boundaries (can be very slow for dense contours)
      * 
@@ -131,6 +139,7 @@ public class ContourOpImage extends AttributeOpImage {
             ROI roi, 
             int band,
             Collection<? extends Number> intervals,
+            boolean simplify,
             boolean mergeTiles,
             boolean smooth) {
                 
@@ -143,6 +152,8 @@ public class ContourOpImage extends AttributeOpImage {
             this.contourLevels.add(z.doubleValue());
         }
         
+        this.simplify = simplify;
+        this.mergeTiles = mergeTiles;
         this.smooth = smooth;
         
         PrecisionModel pm = new PrecisionModel(100);
@@ -221,6 +232,14 @@ public class ContourOpImage extends AttributeOpImage {
                         merger = new LineMerger();
                         merger.add(tempLines);
                         Collection<LineString> tileContours = merger.getMergedLineStrings();
+                        
+                        if (simplify) {
+                            List<LineString> simplifiedContours = new ArrayList<LineString>();
+                            for (LineString tc : tileContours) {
+                                simplifiedContours.add( removeColinearVertices(tc) );
+                            }
+                            tileContours = simplifiedContours;
+                        }
 
                         List<LineString> levelContours = contours.get(levelIndex);
                         
@@ -275,18 +294,31 @@ public class ContourOpImage extends AttributeOpImage {
      * The following diagram, taken from the C implementation of CONREC,
      * shows how vertices and triangles are indexed:
      * <pre>
-                  vertex 4 +-------------------+ vertex 3
-                           | \               / |
-                           |   \    m=3    /   |
-                           |     \       /     |
-                           |       \   /       |
-                           |  m=2    X   m=2   |   centre vertex is 0
-                           |       /   \       |
-                           |     /       \     |
-                           |   /    m=1    \   |
-                           | /               \ |
-                  vertex 1 +-------------------+ vertex 2
+     *            vertex 4 +-------------------+ vertex 3
+     *                     | \               / |
+     *                     |   \    m=3    /   |
+     *                     |     \       /     |
+     *                     |       \   /       |
+     *                     |  m=4    X   m=2   |   centre vertex is 0
+     *                     |       /   \       |
+     *                     |     /       \     |
+     *                     |   /    m=1    \   |
+     *                     | /               \ |
+     *            vertex 1 +-------------------+ vertex 2
+     * 
      * </pre>
+     * Each triangle is then categorized on which of its vertices are below,
+     * at or above the contour level being considered. Triangle vertices 
+     * (m1, m2, m3) are indexed such that:
+     * <ul>
+     * <li> m1 is the square vertex with index == triangle index
+     * <li> m2 is square vertex 0
+     * <li> m3 is square vertex m+1 (or 1 when m == 4)
+     * </ul>
+     * The original CONREC algorithm produces some duplicate line segments
+     * which is not a problem when only plotting contours. However, here we
+     * try to avoid any duplication because this can confuse the merging of
+     * line segments into JTS LineStrings later.
      * 
      * @param tileX tile X index
      * @param tileY tile Y index
@@ -350,7 +382,7 @@ public class ContourOpImage extends AttributeOpImage {
                         zlist = new ArrayList<LineSegment>();
                         segments.put(levelIndex, zlist);
                     }
-
+                    
                     h[4] = sample[TL] - levelValue;
                     xh[4] = x - 1;
                     yh[4] = y + 1;
@@ -381,11 +413,7 @@ public class ContourOpImage extends AttributeOpImage {
                     for (int m = 1; m <= 4; m++) {
                         m1 = m;
                         m2 = 0;
-                        if (m != 4) {
-                            m3 = m + 1;
-                        } else {
-                            m3 = 1;
-                        }
+                        m3 = m == 4 ? 1 : m + 1;
 
                         int config = configLookup[sh[m1] + 1][sh[m2] + 1][sh[m3] + 1];
                         if (config == 0) {
@@ -393,64 +421,83 @@ public class ContourOpImage extends AttributeOpImage {
                         }
 
                         double x0 = 0.0, y0 = 0.0, x1 = 0.0, y1 = 0.0;
+                        boolean addSegment = true;
                         switch (config) {
-                            case 1: /* Line between vertices 1 and 2 */
+                            /* Line between vertices 1 and 2 */
+                            case 1: 
                                 x0 = xh[m1];
                                 y0 = yh[m1];
                                 x1 = xh[m2];
                                 y1 = yh[m2];
                                 break;
 
-                            case 2: /* Line between vertices 2 and 3 */
+                            /* Line between vertices 2 and 3 */
+                            case 2: 
                                 x0 = xh[m2];
                                 y0 = yh[m2];
                                 x1 = xh[m3];
                                 y1 = yh[m3];
                                 break;
 
-                            case 3: /* Line between vertices 3 and 1 */
-                                x0 = xh[m3];
-                                y0 = yh[m3];
-                                x1 = xh[m1];
-                                y1 = yh[m1];
+                            /* 
+                             * Line between vertices 3 and 1.
+                             * We only want to generate this segment
+                             * for triangles m=2 and m=3, otherwise
+                             * we will end up with duplicate segments.
+                             */
+                            case 3: 
+                                if (m == 2 || m == 3) {
+                                    x0 = xh[m3];
+                                    y0 = yh[m3];
+                                    x1 = xh[m1];
+                                    y1 = yh[m1];
+                                } else {
+                                    addSegment = false;
+                                }
                                 break;
 
-                            case 4: /* Line between vertex 1 and side 2-3 */
+                            /* Line between vertex 1 and side 2-3 */
+                            case 4: 
                                 x0 = xh[m1];
                                 y0 = yh[m1];
                                 x1 = sect(m2, m3, h, xh);
                                 y1 = sect(m2, m3, h, yh);
                                 break;
 
-                            case 5: /* Line between vertex 2 and side 3-1 */
+                            /* Line between vertex 2 and side 3-1 */
+                            case 5: 
                                 x0 = xh[m2];
                                 y0 = yh[m2];
                                 x1 = sect(m3, m1, h, xh);
                                 y1 = sect(m3, m1, h, yh);
                                 break;
 
-                            case 6: /* Line between vertex 3 and side 1-2 */
+                            /* Line between vertex 3 and side 1-2 */
+                            case 6: 
                                 x0 = xh[m3];
                                 y0 = yh[m3];
                                 x1 = sect(m3, m2, h, xh);
                                 y1 = sect(m3, m2, h, yh);
                                 break;
 
-                            case 7: /* Line between sides 1-2 and 2-3 */
+                            /* Line between sides 1-2 and 2-3 */
+                            case 7: 
                                 x0 = sect(m1, m2, h, xh);
                                 y0 = sect(m1, m2, h, yh);
                                 x1 = sect(m2, m3, h, xh);
                                 y1 = sect(m2, m3, h, yh);
                                 break;
 
-                            case 8: /* Line between sides 2-3 and 3-1 */
+                            /* Line between sides 2-3 and 3-1 */
+                            case 8: 
                                 x0 = sect(m2, m3, h, xh);
                                 y0 = sect(m2, m3, h, yh);
                                 x1 = sect(m3, m1, h, xh);
                                 y1 = sect(m3, m1, h, yh);
                                 break;
 
-                            case 9: /* Line between sides 3-1 and 1-2 */
+                            /* Line between sides 3-1 and 1-2 */
+                            case 9: 
                                 x0 = sect(m3, m1, h, xh);
                                 y0 = sect(m3, m1, h, yh);
                                 x1 = sect(m1, m2, h, xh);
@@ -458,7 +505,9 @@ public class ContourOpImage extends AttributeOpImage {
                                 break;
                         }
 
-                        zlist.add(new LineSegment(x0, y0, x1, y1));
+                        if (addSegment) {
+                            zlist.add(new LineSegment(x0, y0, x1, y1));
+                        }
                     }
                     
                     levelIndex++ ;
@@ -482,6 +531,34 @@ public class ContourOpImage extends AttributeOpImage {
      */
     private double sect(int p1, int p2, double[] h, double[] coord) {
         return (h[p2] * coord[p1] - h[p1] * coord[p2]) / (h[p2] - h[p1]);
+    }
+    
+    private LineString removeColinearVertices(LineString ls) {
+        Coordinate[] coords = ls.getCoordinates();
+        final int N = coords.length;
+        
+        List<Integer> retain = new ArrayList<Integer>();
+        retain.add(0);
+        
+        int i0 = 0, i1 = 1, i2 = 2;
+        while (i2 < N) {
+            int orientation = CGAlgorithms.computeOrientation(
+                    coords[i0], coords[i1], coords[i2]);
+            if (orientation != 0) {
+                retain.add(i1);
+                i0++;
+            }
+            i1++; i2++;
+        }
+        retain.add(N - 1);
+        
+        Coordinate[] newCoords = new Coordinate[retain.size()];
+        int k = 0;
+        for (Integer i : retain) {
+            newCoords[k++] = coords[i];
+        }
+        
+        return geomFactory.createLineString(newCoords);
     }
 
 }

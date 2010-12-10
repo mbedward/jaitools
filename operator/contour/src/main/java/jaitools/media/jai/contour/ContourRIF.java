@@ -63,10 +63,12 @@ public class ContourRIF implements RenderedImageFactory {
             contourLevels.add(((Number)val).doubleValue());
         }
         
+        Boolean simplify = (Boolean) paramBlock.getObjectParameter(ContourDescriptor.SIMPLIFY_ARG);
+
         Boolean mergeTiles = (Boolean) paramBlock.getObjectParameter(ContourDescriptor.MERGE_TILES_ARG);
 
         Boolean smooth = (Boolean) paramBlock.getObjectParameter(ContourDescriptor.SMOOTH_ARG);
 
-        return new ContourOpImage(paramBlock.getRenderedSource(0), roi, band, contourLevels, mergeTiles, smooth);
+        return new ContourOpImage(paramBlock.getRenderedSource(0), roi, band, contourLevels, simplify, mergeTiles, smooth);
     }
 }

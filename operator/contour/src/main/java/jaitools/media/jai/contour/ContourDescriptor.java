@@ -20,6 +20,7 @@
 
 package jaitools.media.jai.contour;
 
+import java.awt.image.renderable.ParameterBlock;
 import java.util.Collection;
 import javax.media.jai.OperationDescriptorImpl;
 import javax.media.jai.ROI;
@@ -37,13 +38,15 @@ public class ContourDescriptor extends OperationDescriptorImpl {
     static final int ROI_ARG = 0;
     static final int BAND_ARG = 1;
     static final int LEVELS_ARG = 2;
-    static final int MERGE_TILES_ARG = 3;
-    static final int SMOOTH_ARG = 4;
+    static final int SIMPLIFY_ARG = 3;
+    static final int MERGE_TILES_ARG = 4;
+    static final int SMOOTH_ARG = 5;
 
     private static final String[] paramNames = {
         "roi",
         "band",
         "levels",
+        "simplify",
         "mergeTiles",
         "smooth"
     };
@@ -53,6 +56,7 @@ public class ContourDescriptor extends OperationDescriptorImpl {
          Integer.class,
          Collection.class,
          Boolean.class,
+         Boolean.class,
          Boolean.class
     };
 
@@ -60,6 +64,7 @@ public class ContourDescriptor extends OperationDescriptorImpl {
          (ROI) null,
          Integer.valueOf(0),
          NO_PARAMETER_DEFAULT,
+         Boolean.TRUE,
          Boolean.TRUE,
          Boolean.FALSE,
     };
@@ -83,10 +88,13 @@ public class ContourDescriptor extends OperationDescriptorImpl {
                     {"arg2Desc", paramNames[2] + " (Collection<? extends Number>, required) " +
                               "values for which to generate contours"},
                     
-                    {"arg2Desc", paramNames[3] + " (Boolean, default=true) " +
+                    {"arg3Desc", paramNames[3] + " (Boolean, default=true) " +
                               "whether to merge contour lines across source image tile boundaries"},
                     
-                    {"arg3Desc", paramNames[4] + " (Boolean, default=false) " +
+                    {"arg4Desc", paramNames[4] + " (Boolean, default=true) " +
+                              "whether to simplify contour lines by removing colinear vertices"},
+                    
+                    {"arg5Desc", paramNames[5] + " (Boolean, default=false) " +
                               "whether to smooth contour lines with Bezier interpolation"}
                 },
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
@@ -101,4 +109,19 @@ public class ContourDescriptor extends OperationDescriptorImpl {
                 );    
     }
 
+    @Override
+    protected boolean validateParameters(String modeName, ParameterBlock pb, StringBuffer msg) {
+        boolean ok = super.validateParameters(modeName, pb, msg);
+        
+        if (ok) {
+            final String levelsError = "levels parameter must be a Collection of one or more numbers";
+            Collection levels = (Collection) pb.getObjectParameter(LEVELS_ARG);
+            if (levels == null || levels.isEmpty()) {
+                ok = false;
+                msg.append(levelsError);
+            }
+        }
+        
+        return ok;
+    }    
 }
