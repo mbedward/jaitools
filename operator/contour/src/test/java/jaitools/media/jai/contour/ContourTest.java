@@ -20,6 +20,8 @@
 
 package jaitools.media.jai.contour;
 
+import java.util.Arrays;
+import java.util.List;
 import javax.media.jai.ROI;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.LineString;
@@ -62,6 +64,30 @@ public class ContourTest {
         args = new HashMap<String, Object>();
     }
 
+    /**
+     * Test that omitting levels parameter provokes an IllegalArgumentExceptiona
+     */
+    @Test(expected=IllegalArgumentException.class)
+    public void missingLevelsParameter() {
+        PlanarImage src = ImageUtils.createConstantImage(IMAGE_WIDTH, IMAGE_WIDTH, 0);
+        doOp(src);
+    }
+    
+    /**
+     * Test for graceful response to a source image with no values in the
+     * request contour range. Expected result is an empty {@code Collection}.
+     */
+    @Test
+    public void noContours() {
+        PlanarImage src = ImageUtils.createConstantImage(IMAGE_WIDTH, IMAGE_WIDTH, 0);
+        List<Integer> levels = Arrays.asList(new Integer[]{-10, -5, 5, 10});
+        args.put("levels", levels);
+        Collection<LineString> contours = doOp(src);
+        
+        assertNotNull(contours);
+        assertEquals(0, contours.size());
+    }
+    
     /**
      * Trace a single contour in a source image with a vertical
      * gradient of values. Contour simplification is on (default).
