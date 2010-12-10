@@ -26,6 +26,8 @@ import com.vividsolutions.jts.geom.LineSegment;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.PrecisionModel;
 import com.vividsolutions.jts.operation.linemerge.LineMerger;
+import jaitools.jts.LineSmoother;
+import jaitools.jts.SmootherControl;
 import jaitools.media.jai.AttributeOpImage;
 import java.awt.Rectangle;
 import java.awt.image.Raster;
@@ -110,9 +112,30 @@ public class ContourOpImage extends AttributeOpImage {
      */
     private boolean mergeTiles;
     
-    /** Whether to smooth the contour lines */
+    /** Whether to apply Bezier smoothing to the contour lines */
     private final boolean smooth;
 
+    /** 
+     * Alpha parameter controlling Bezier smoothing
+     * (see {@link LineSmoother})
+     */
+    private double smoothAlpha = 0.0;
+    
+    /**
+     * Control object for Bezier smoothing. Note that length units here
+     * are pixels.
+     */
+    private final SmootherControl smootherControl = new SmootherControl() {
+
+        public double getMinLength() {
+            return 0.1;
+        }
+
+        public int getNumVertices(double length) {
+            return (int) Math.max(5, length * 10);
+        }
+    };
+    
 
     /**
      * Constructor.
@@ -264,6 +287,9 @@ public class ContourOpImage extends AttributeOpImage {
             }
         }
 
+        /*
+         * Assemble contours into a simple list and assign values 
+         */
         List<LineString> mergedContourLines = new ArrayList<LineString>();
 
         int levelIndex = 0;
@@ -276,6 +302,21 @@ public class ContourOpImage extends AttributeOpImage {
                 mergedContourLines.addAll(levelContours);
             }
             levelIndex++ ;
+        }
+        
+        /*
+         * Bezier smoothing of contours
+         */
+        if (smooth) {
+            LineSmoother smoother = new LineSmoother(geomFactory);
+            smoother.setControl(smootherControl);
+            
+            final int N = mergedContourLines.size();
+            for (int i = N - 1; i >= 0; i--) {
+                LineString contour = mergedContourLines.remove(i);
+                LineString smoothed = smoother.smooth(contour, smoothAlpha);
+                mergedContourLines.add(smoothed);
+            }
         }
         
         return mergedContourLines;
