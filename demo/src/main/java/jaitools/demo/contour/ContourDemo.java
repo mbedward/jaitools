@@ -6,15 +6,15 @@
 package jaitools.demo.contour;
 
 import com.vividsolutions.jts.geom.LineString;
+
 import jaitools.demo.DemoImageProvider;
 import jaitools.demo.ImageReceiver;
-import jaitools.demo.JTSFrame;
-import jaitools.imageutils.ImageUtils;
+import jaitools.swing.JTSFrame;
 import jaitools.media.jai.contour.ContourDescriptor;
 import jaitools.swing.ImageFrame;
+
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Rectangle;
 import java.awt.image.RenderedImage;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,7 +22,6 @@ import java.util.List;
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
-import javax.media.jai.TiledImage;
 import javax.swing.SwingUtilities;
 
 
