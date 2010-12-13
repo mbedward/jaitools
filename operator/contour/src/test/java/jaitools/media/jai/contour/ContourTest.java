@@ -27,6 +27,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.LineString;
 
 import jaitools.imageutils.ImageUtils;
+import java.util.ArrayList;
 import static jaitools.numeric.DoubleComparison.*;
 
 import java.util.Map;
@@ -65,7 +66,8 @@ public class ContourTest {
     }
 
     /**
-     * Test that omitting levels parameter provokes an IllegalArgumentExceptiona
+     * Test that omitting both the levels and interval parameters provokes 
+     * an IllegalArgumentExceptiona
      */
     @Test(expected=IllegalArgumentException.class)
     public void missingLevelsParameter() {
@@ -101,7 +103,7 @@ public class ContourTest {
         assertEquals(1, contours.size());
         
         LineString contour = contours.iterator().next();
-        assertContour(contour, 0, IMAGE_WIDTH/2, IMAGE_WIDTH-1, IMAGE_WIDTH/2, 2);
+        assertContour(contour, 0, IMAGE_WIDTH/2, IMAGE_WIDTH-1, IMAGE_WIDTH/2);
     }
     
     /**
@@ -119,7 +121,8 @@ public class ContourTest {
         assertEquals(1, contours.size());
         
         LineString contour = contours.iterator().next();
-        assertContour(contour, 0, IMAGE_WIDTH/2, IMAGE_WIDTH-1, IMAGE_WIDTH/2, IMAGE_WIDTH);
+        assertEquals(IMAGE_WIDTH, contour.getCoordinates().length);
+        assertContour(contour, 0, IMAGE_WIDTH/2, IMAGE_WIDTH-1, IMAGE_WIDTH/2);
     }
     
     /**
@@ -135,7 +138,7 @@ public class ContourTest {
         assertEquals(1, contours.size());
         
         LineString contour = contours.iterator().next();
-        assertContour(contour, IMAGE_WIDTH/2, 0, IMAGE_WIDTH/2, IMAGE_WIDTH-1, 2);
+        assertContour(contour, IMAGE_WIDTH/2, 0, IMAGE_WIDTH/2, IMAGE_WIDTH-1);
     }
     
     /**
@@ -161,6 +164,52 @@ public class ContourTest {
         }
     }
     
+    
+    /**
+     * Generate contours at values determined by the interval parameter.
+     */
+    @Test
+    public void intervalContoursVerticalGradient() {
+        PlanarImage src = createGradientImage(Gradient.VERTICAL);
+        
+        int interval = 10;
+        args.put("interval", IMAGE_WIDTH / interval);
+        Collection<LineString> contours = doOp(src);
+        
+        List<Integer> levels = new ArrayList<Integer>();
+        for (int level = interval; level < IMAGE_WIDTH; level += interval) {
+            levels.add(level);
+        }
+        
+        for (LineString contour : contours) {
+            int z = ((Number)contour.getUserData()).intValue();
+            assertTrue(levels.contains(z));
+            levels.remove(Integer.valueOf(z)); // remove by value, not index !
+            
+            assertContour(contour, 0, z, IMAGE_WIDTH - 1, z);
+        }
+    }
+    
+    /**
+     * Test that the levels parameter overrides the interval parameter
+     * when both are supplied.
+     */
+    @Test
+    public void levelsParamOverridesIntervalParam() {
+        PlanarImage src = createGradientImage(Gradient.VERTICAL);
+        
+        final int LEVEL = 42;
+        args.put("levels", Collections.singleton(LEVEL));
+        args.put("interval", IMAGE_WIDTH / 3);
+        Collection<LineString> contours = doOp(src);
+        
+        assertEquals(1, contours.size());
+        
+        int val = ((Number)contours.iterator().next().getUserData()).intValue();
+        assertEquals(42, val);
+    }
+    
+    
     /**
      * Helper method: runs the operation and retrieves the contours.
      * 
@@ -175,6 +224,7 @@ public class ContourTest {
         if (args.containsKey("roi")) pb.setParameter("roi", (ROI)args.get("roi"));
         if (args.containsKey("band")) pb.setParameter("band", (Integer)args.get("band"));
         if (args.containsKey("levels")) pb.setParameter("levels", (Collection)args.get("levels"));
+        if (args.containsKey("interval")) pb.setParameter("interval", (Number)args.get("interval"));
         if (args.containsKey("simplify")) pb.setParameter("simplify", (Boolean)args.get("simplify"));
         if (args.containsKey("mergeTiles")) pb.setParameter("mergeTiles", (Boolean)args.get("mergeTiles"));
         if (args.containsKey("smooth")) pb.setParameter("smooth", (Boolean)args.get("smooth"));
@@ -197,10 +247,10 @@ public class ContourTest {
      * @param y1 expected last y
      * @param N  expected number of coordinates
      */
-    private void assertContour(LineString contour, double x0, double y0, double x1, double y1, int N) {
+    private void assertContour(LineString contour, double x0, double y0, double x1, double y1) {
         contour.normalize(); 
         Coordinate[] coords = contour.getCoordinates();
-        assertEquals(coords.length, N);
+        final int N = coords.length;
         
         assertTrue( dequal(coords[0].x, x0) );
         assertTrue( dequal(coords[0].y, y0) );

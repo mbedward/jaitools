@@ -53,14 +53,24 @@ public class ContourRIF implements RenderedImageFactory {
     public RenderedImage create(ParameterBlock paramBlock,
             RenderingHints renderHints) {
         
+        Object obj = null;
+        
         ROI roi = (ROI) paramBlock.getObjectParameter(ContourDescriptor.ROI_ARG);
         int band = paramBlock.getIntParameter(ContourDescriptor.BAND_ARG);
         
-        List<Double> contourLevels = new ArrayList<Double>();
-        Object obj = paramBlock.getObjectParameter(ContourDescriptor.LEVELS_ARG);
-        Collection coll = (Collection) obj;
-        for (Object val : coll) {
-            contourLevels.add(((Number)val).doubleValue());
+        List<Double> contourLevels = null;
+        Double interval = null;
+        
+        Collection levels = (Collection) paramBlock.getObjectParameter(ContourDescriptor.LEVELS_ARG);
+        if (levels != null && !levels.isEmpty()) {
+            contourLevels = new ArrayList<Double>();
+            for (Object val : levels) {
+                contourLevels.add(((Number)val).doubleValue());
+            }
+        } else {
+            // No contour levels - use interval parameter
+            obj = paramBlock.getObjectParameter(ContourDescriptor.INTERVAL_ARG);
+            interval = ((Number)obj).doubleValue();
         }
         
         Boolean simplify = (Boolean) paramBlock.getObjectParameter(ContourDescriptor.SIMPLIFY_ARG);
@@ -69,6 +79,6 @@ public class ContourRIF implements RenderedImageFactory {
 
         Boolean smooth = (Boolean) paramBlock.getObjectParameter(ContourDescriptor.SMOOTH_ARG);
 
-        return new ContourOpImage(paramBlock.getRenderedSource(0), roi, band, contourLevels, simplify, mergeTiles, smooth);
+        return new ContourOpImage(paramBlock.getRenderedSource(0), roi, band, contourLevels, interval, simplify, mergeTiles, smooth);
     }
 }

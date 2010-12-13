@@ -26,20 +26,22 @@ import com.vividsolutions.jts.geom.LineSegment;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.PrecisionModel;
 import com.vividsolutions.jts.operation.linemerge.LineMerger;
+
 import jaitools.jts.LineSmoother;
 import jaitools.jts.SmootherControl;
+import static jaitools.numeric.DoubleComparison.*;
 import jaitools.media.jai.AttributeOpImage;
+
 import java.awt.Rectangle;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import javax.media.jai.PlanarImage;
 import javax.media.jai.ROI;
 
@@ -48,33 +50,13 @@ import javax.media.jai.ROI;
  * The contours are returned as a {@code Collection} of
  * {@link com.vividsolutions.jts.geom.LineString}s.
  * <p>
- * The interpolation algorithm used is that of Paul Bourke. Originally published
+ * The interpolation algorithm used is that of Paul Bourke: originally published
  * in Byte magazine (1987) as the CONREC contouring subroutine written in
  * FORTRAN. The implementation here was adapted from Paul Bourke's C code for the
  * algorithm available at: 
  * <a href="http://local.wasp.uwa.edu.au/~pbourke/papers/conrec/">
  * http://local.wasp.uwa.edu.au/~pbourke/papers/conrec/</a>
  * <p>
- * Example of use:
- * <pre><code>
- * RenderedImage src = ...
- * ParameterBlockJAI pb = new ParameterBlockJAI("Contour");
- * pb.setSource("source0", src);
- * 
- * // specify values at which contours are to be traced
- * List&lt;Double&gt; levels = Arrays.asList(new double[]{14.0, 14.5, 15.0, 15.5, 16.0})
- * pb.setParameter("levels", levels)
- * 
- * RenderedOp dest = JAI.create("Contour", pb);
- * Collection<LineString> contours = (Collection<LineString>) 
- *         dest.getProperty(ContourDescriptor.CONTOUR_PROPERTY_NAME);
- *
- * for (LineString contour : contours) {
- *   // get this contour's value
- *   Double contourValue = (Double) contour.getUserData();
- *   ...
- * }
- * </code></pre>
  *
  * @author Michael Bedward
  * @since 1.1
@@ -94,7 +76,14 @@ public class ContourOpImage extends AttributeOpImage {
     private int band;
     
     /** Values at which to generate contour intervals */
-    private SortedSet<Double> contourLevels;
+    private List<Double> contourLevels;
+    
+    /** 
+     * Interval between contours. This is used if specific contour
+     * levels are not requested. Contours will be generated such that
+     * the value of each is an integer multiple of this value.
+     */
+    private Double contourInterval;
     
     /** Output contour lines */
     private SoftReference<List<LineString>> cachedContours;
@@ -138,7 +127,8 @@ public class ContourOpImage extends AttributeOpImage {
     
 
     /**
-     * Constructor.
+     * Constructor. Note that one of {@code levels} or {@code interval} must
+     * be supplied. If both are supplied {@code interval} is ignored.
      * 
      * @param source the source image
      * 
@@ -147,7 +137,10 @@ public class ContourOpImage extends AttributeOpImage {
      * 
      * @param band the band of the source image to process
      * 
-     * @param intervals values for which to generate contours
+     * @param levels values for which to generate contours
+     * 
+     * @param interval interval between contour levels (ignored if {@code levels}
+     *        is supplied)
      * 
      * @param simplify whether to simplify contour lines by removing
      *        colinear vertices
@@ -161,7 +154,8 @@ public class ContourOpImage extends AttributeOpImage {
     public ContourOpImage(RenderedImage source, 
             ROI roi, 
             int band,
-            Collection<? extends Number> intervals,
+            Collection<? extends Number> levels,
+            Double interval,
             boolean simplify,
             boolean mergeTiles,
             boolean smooth) {
@@ -170,9 +164,20 @@ public class ContourOpImage extends AttributeOpImage {
 
         this.band = band;
         
-        this.contourLevels = new TreeSet<Double>();
-        for (Number z : intervals) {
-            this.contourLevels.add(z.doubleValue());
+        this.contourLevels = new ArrayList<Double>();
+        if (levels != null && !levels.isEmpty()) {
+            // Use specific levels
+            for (Number z : levels) {
+                this.contourLevels.add(z.doubleValue());
+            }
+            Collections.sort(contourLevels);
+            
+        } else if (interval != null && !interval.isNaN()) {
+            // Use requested interval with levels 'discovered' as the
+            // image is scanned
+            this.contourInterval = interval;
+        } else {
+            throw new IllegalArgumentException("At least one of levels or interval must be supplied");
         }
         
         this.simplify = simplify;
@@ -389,6 +394,17 @@ public class ContourOpImage extends AttributeOpImage {
         
         int maxx = bounds.x + bounds.width - 1;
         int maxy = bounds.y + bounds.height - 1;
+        
+        /*
+         * If we are using contour interval rather than specified levels,
+         * check that we have all required intervals for this tile.
+         */
+        if (contourInterval != null) {
+            if (!checkContourLevels(tile, bounds)) {
+                // tile had no non-missing values
+                return segments;
+            }
+        }
 
         for (int y = bounds.y; y < maxy; y++) {
             sample[BR] = tile.getSampleDouble(bounds.x, y, band);
@@ -408,12 +424,8 @@ public class ContourOpImage extends AttributeOpImage {
                 temp2 = Math.max(sample[BR], sample[TR]);
                 double dmax = Math.max(temp1, temp2);
 
-                if (dmax < contourLevels.first() || dmin > contourLevels.last()) {
-                    continue;
-                }
-
-                int levelIndex = 0;
-                for (Double levelValue : contourLevels) {
+                for (int levelIndex = 0; levelIndex < contourLevels.size(); levelIndex++) {
+                    double levelValue = contourLevels.get(levelIndex);
                     if (levelValue < dmin || levelValue > dmax) {
                         continue;
                     }
@@ -550,14 +562,13 @@ public class ContourOpImage extends AttributeOpImage {
                             zlist.add(new LineSegment(x0, y0, x1, y1));
                         }
                     }
-                    
-                    levelIndex++ ;
                 }
             }
         }
 
         return segments;
     }
+    
 
     /**
      * Calculate an X or Y ordinate for a contour segment end-point
@@ -600,6 +611,68 @@ public class ContourOpImage extends AttributeOpImage {
         }
         
         return geomFactory.createLineString(newCoords);
+    }
+
+    /**
+     * Scans the image tile and checks that required contour values are in the
+     * {@code contourLevels} list. 
+     * <p>
+     * Note: this method is only called when contour levels are being set 
+     * according to a specified interval rather than user-supplied levels.
+     * 
+     * @param tile the image tile
+     * @param bounds bounds of data in the tile
+     * 
+     * @return true if the tile had non-NaN values, false otherwise.
+     */
+    private boolean checkContourLevels(Raster tile, Rectangle bounds) {
+        double minVal = 0, maxVal = 0;
+        boolean first = true;
+
+        int maxy = bounds.y + bounds.height - 1;
+        int maxx = bounds.x + bounds.width - 1;
+        boolean hasNonNan = false;
+        
+        for (int y = bounds.y; y < maxy; y++) {
+            for (int x = bounds.x + 1; x <= maxx; x++) {
+                double val = tile.getSampleDouble(x, y, band);
+                if (!Double.isNaN(val)) {
+                    hasNonNan = true;
+                    if (first) {
+                        minVal = maxVal = val;
+                        first = false;
+                    } else if (val < minVal) {
+                        minVal = val;
+                    } else if (val > maxVal) {
+                        maxVal = val;
+                    }
+                }
+            }
+        }
+        
+        if (!hasNonNan) return false;
+        
+        double z = Math.floor(minVal / contourInterval) * contourInterval;
+        if (dcomp(z, minVal) < 0) z += contourInterval;
+        
+        boolean found;
+        while (dcomp(z, maxVal) <= 0) {
+            found = false;
+            for (Double level : contourLevels) {
+                if (dequal(z, level)) {
+                    found = true;
+                    break;
+                }
+            }
+            
+            if (!found) {
+                contourLevels.add(z);
+            }
+            
+            z += contourInterval;
+        }
+        
+        return true;
     }
 
 }
