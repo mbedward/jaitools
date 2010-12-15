@@ -18,6 +18,7 @@
     </description>
 
     <modules>
+        <module>contour</module>
         <module>kernelstats</module>
         <module>maskedconvolve</module>
         <module>rangelookup</module>
