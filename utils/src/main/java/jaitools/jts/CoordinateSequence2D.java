@@ -43,7 +43,10 @@ public class CoordinateSequence2D implements CoordinateSequence {
     }
 
     public CoordinateSequence2D(double... xy) {
-        if (xy != null) {
+        if (xy == null) {
+            x = new double[0];
+            y = new double[0];
+        } else {
             if (xy.length % 2 != 0) {
                 throw new IllegalArgumentException("xy must have an even number of values");
             }
@@ -70,6 +73,10 @@ public class CoordinateSequence2D implements CoordinateSequence {
     }
 
     public void getCoordinate(int index, Coordinate coord) {
+        if (coord == null) {
+            coord = new Coordinate();
+        }
+        
         coord.x = x[index];
         coord.y = y[index];
     }
