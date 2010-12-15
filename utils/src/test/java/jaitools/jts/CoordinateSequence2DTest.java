@@ -159,6 +159,37 @@ public class CoordinateSequence2DTest {
     }
 
     @Test
+    public void testSetX() {
+        System.out.println("setX");
+        
+        CoordinateSequence2D cs = new CoordinateSequence2D(2);
+        cs.setX(1, 42);
+        
+        assertEquals(42, cs.getX(1), TOL);
+    }
+
+    @Test
+    public void testSetY() {
+        System.out.println("setY");
+        
+        CoordinateSequence2D cs = new CoordinateSequence2D(2);
+        cs.setY(1, 42);
+        
+        assertEquals(42, cs.getY(1), TOL);
+    }
+
+    @Test
+    public void testSetXY() {
+        System.out.println("setXY");
+        
+        CoordinateSequence2D cs = new CoordinateSequence2D(2);
+        cs.setXY(1, 42, -1);
+        
+        assertEquals(42, cs.getX(1), TOL);
+        assertEquals(-1, cs.getY(1), TOL);
+    }
+
+    @Test
     public void testToCoordinateArray() {
         System.out.println("toCoordinateArray");
 
@@ -202,37 +233,6 @@ public class CoordinateSequence2DTest {
             assertEquals(cs.getX(i), copy.getX(i), TOL);
             assertEquals(cs.getY(i), copy.getY(i), TOL);
         }
-    }
-
-    @Test
-    public void testSetX() {
-        System.out.println("setX");
-        
-        CoordinateSequence2D cs = new CoordinateSequence2D(2);
-        cs.setX(1, 42);
-        
-        assertEquals(42, cs.getX(1), TOL);
-    }
-
-    @Test
-    public void testSetY() {
-        System.out.println("setY");
-        
-        CoordinateSequence2D cs = new CoordinateSequence2D(2);
-        cs.setY(1, 42);
-        
-        assertEquals(42, cs.getY(1), TOL);
-    }
-
-    @Test
-    public void testSetXY() {
-        System.out.println("setXY");
-        
-        CoordinateSequence2D cs = new CoordinateSequence2D(2);
-        cs.setXY(1, 42, -1);
-        
-        assertEquals(42, cs.getX(1), TOL);
-        assertEquals(-1, cs.getY(1), TOL);
     }
 
 }
