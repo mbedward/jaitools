@@ -84,19 +84,27 @@ public class VectorBinarizeRIF implements RenderedImageFactory {
         
         PixelCoordType coordType = (PixelCoordType) paramBlock.getObjectParameter(VectorBinarizeDescriptor.COORD_TYPE_ARG);
         
+        /**
+         * TODO: this section seems to be working with respect to setting a default
+         * SampleModel, but if the user provides non-default tile dimensions via an
+         * ImageLayout in the hints JAI always seems to override them.
+         */
         SampleModel sm = null;
-        
+        Dimension tileSize = null;
         if (renderHints != null && renderHints.containsKey(JAI.KEY_IMAGE_LAYOUT)) {
             ImageLayout il = (ImageLayout) renderHints.get(JAI.KEY_IMAGE_LAYOUT);
             if (il != null) {
                 sm = il.getSampleModel(null);
+                tileSize = new Dimension(il.getTileWidth(null), il.getTileHeight(null));
             }
         }
         
         if (sm == null) {
-            // use default SampleModel
-            Dimension tsize = JAI.getDefaultTileSize();
-            sm = new MultiPixelPackedSampleModel(DataBuffer.TYPE_BYTE, tsize.width, tsize.height, 1);
+            // use default SampleModel class
+            if (tileSize == null) {
+                tileSize = JAI.getDefaultTileSize();
+            }
+            sm = new MultiPixelPackedSampleModel(DataBuffer.TYPE_BYTE, tileSize.width, tileSize.height, 1);
         }
         
         return new VectorBinarizeOpImage(sm, renderHints, minx, miny, width, height, pg, coordType);
