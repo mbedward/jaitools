@@ -18,6 +18,7 @@
     </description>
 
     <modules>
+        <module>attributeop</module>
         <module>contour</module>
         <module>kernelstats</module>
         <module>maskedconvolve</module>
@@ -25,6 +26,6 @@
         <module>regionalize</module>
         <module>vectorize</module>
         <module>zonalstats</module>
-    <module>VectorBinarize</module>
+        <module>vectorbinarize</module>
   </modules>
 </project>
