@@ -28,7 +28,11 @@ import com.vividsolutions.jts.geom.prep.PreparedGeometry;
 import jaitools.imageutils.PixelCoordType;
 import jaitools.jts.CoordinateSequence2D;
 
+import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBuffer;
+import java.awt.image.MultiPixelPackedSampleModel;
 import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
 import java.util.Arrays;
@@ -36,6 +40,7 @@ import java.util.Map;
 
 import javax.media.jai.PlanarImage;
 import javax.media.jai.SourcelessOpImage;
+import javax.media.jai.TiledImage;
 
 /**
  * Creates a binary image based on tests of pixel inclusion in a polygonal {@code Geometry}.
@@ -76,12 +81,14 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
 
     @Override
     protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
-        if (geomContainsRect(destRect)) {
-            int[] data = new int[destRect.width * destRect.height];
-            Arrays.fill(data, 1);
-            dest.setSamples(destRect.x, destRect.y, destRect.width, destRect.height, 0, data);
-            
+        // check relationship between geometry and the tile we're computing
+        updateTestRect(destRect);
+        if (geom.contains(testRect)) {
+            solidFill(dest, destRect, 1);
+        } else if(geom.disjoint(testRect)) {
+            solidFill(dest, destRect, 0);
         } else {
+            // can't use graphics2d rendering here since we miss LiteShape from GeoTools here...
             double delta = (coordType == PixelCoordType.CENTER ? 0.5 : 0.0);
             for (int y = destRect.y, iy = 0; iy < destRect.height; y++, iy++) {
                 testPointCS.setY(0, y + delta);
@@ -94,7 +101,14 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
         }
     }
 
-    private boolean geomContainsRect(Rectangle destRect) {
+    private void solidFill(WritableRaster dest, Rectangle destRect, int value) {
+        int[] data = new int[destRect.width * destRect.height];
+        Arrays.fill(data, value);
+        dest.setSamples(destRect.x, destRect.y, destRect.width, destRect.height, 0, data);
+    }
+
+
+    private void updateTestRect(Rectangle destRect) {
         final double delta = (coordType == PixelCoordType.CENTER ? 0.5 : 0.0);
         testRectCS.setXY(0, destRect.x + delta, destRect.y + delta);
         testRectCS.setXY(1, destRect.x + delta, destRect.y + destRect.height - delta);
@@ -102,7 +116,5 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
         testRectCS.setXY(3, destRect.x + destRect.width - delta, destRect.y + delta);
         testRectCS.setXY(4, destRect.x + delta, destRect.y + delta);
         testRect.geometryChanged();
-
-        return geom.contains(testRect);
     }
 }
