@@ -80,6 +80,8 @@ public class VectorBinarizeRIF implements RenderedImageFactory {
             
         } else if (obj instanceof PreparedGeometry) {
             pg = (PreparedGeometry) obj;
+        } else {
+            throw new IllegalArgumentException("The geometry must be a JTS polygon or multipolygon");
         }
         
         PixelCoordType coordType = (PixelCoordType) paramBlock.getObjectParameter(VectorBinarizeDescriptor.COORD_TYPE_ARG);
