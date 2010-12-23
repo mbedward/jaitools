@@ -22,6 +22,7 @@ package jaitools.media.jai.vectorbinarize;
 
 import com.vividsolutions.jts.geom.Polygonal;
 import com.vividsolutions.jts.geom.prep.PreparedGeometry;
+import jaitools.imageutils.PixelCoordType;
 import java.awt.image.renderable.ParameterBlock;
 import javax.media.jai.OperationDescriptorImpl;
 import javax.media.jai.registry.RenderedRegistryMode;
@@ -61,27 +62,6 @@ import javax.media.jai.registry.RenderedRegistryMode;
  */
 public class VectorBinarizeDescriptor extends OperationDescriptorImpl {
     
-    /** 
-     * Constants for the type of coordinates to use when testing the inclusion 
-     * of a pixel in the {@code Geometry}: either 
-     * {@link VectorBinarizeDescriptor.CoordType#CORNER} or
-     * {@link VectorBinarizeDescriptor.CoordType#CENTER}.
-     */
-    public enum CoordType {
-        /** 
-         * Test inclusion with pixel corner coordinates, equivalent
-         * to the standard integer x and y ordinates. This is the 
-         * default.
-         */
-        CORNER,
-        
-        /** 
-         * Test inclusion with pixel center coordinates (equal to
-         * x + 0.5, y + 0.5)
-         */
-        CENTER
-    };
-    
     static final int MINX_ARG = 0;
     static final int MINY_ARG = 1;
     static final int WIDTH_ARG = 2;
@@ -104,7 +84,7 @@ public class VectorBinarizeDescriptor extends OperationDescriptorImpl {
         Integer.class,
         Integer.class,
         Object.class,
-        CoordType.class
+        PixelCoordType.class
     };
 
     private static final Object[] paramDefaults = {
@@ -113,7 +93,7 @@ public class VectorBinarizeDescriptor extends OperationDescriptorImpl {
         NO_PARAMETER_DEFAULT,
         NO_PARAMETER_DEFAULT,
         NO_PARAMETER_DEFAULT,
-        CoordType.CORNER
+        PixelCoordType.CORNER
     };
 
     
@@ -138,7 +118,7 @@ public class VectorBinarizeDescriptor extends OperationDescriptorImpl {
                     {"arg4Desc", paramNames[4] + " the reference Geometry: either a Polygon, " +
                               "a MultiPolygon or a polygonal PreparedGeometry"},
                     
-                    {"arg5Desc", paramNames[5] + " (CoordType, default = CENTER) " +
+                    {"arg5Desc", paramNames[5] + " (PixelCoordType, default = CENTER) " +
                               "the type of pixel coordinates to use"}
                 },
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes

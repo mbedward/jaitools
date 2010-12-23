@@ -40,6 +40,8 @@ import java.awt.image.renderable.ParameterBlock;
 import java.awt.image.renderable.RenderedImageFactory;
 import java.util.LinkedList;
 import javax.media.jai.Interpolation;
+import javax.media.jai.JAI;
+import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.PlanarImage;
 import javax.media.jai.ROI;
 
@@ -67,8 +69,32 @@ public class ROIGeometry extends ROI {
     private final CoordinateSequence2D testRectCS;
     private final Polygon testRect;
     
+    private final PixelCoordType coordType;
+    private final double delta;
     
 
+    /**
+     * Constructor which takes a {@code Geometry} object to be used
+     * as the reference against which to test inclusion of image coordinates.
+     * The argument {@code geom} must be either a {@code Polygon} or
+     * {@code MultiPolygon}.
+     * <p>
+     * Using this constructor will result in pixel inclusion being tested
+     * with corner coordinates (equivalent to standard JAI pixel indexing).
+     * <p>
+     * Note: {@code geom} will be copied so subsequent changes to it will
+     * not be reflected in the {@code ROIGeometry} object.
+     * 
+     * @param geom either a {@code Polygon} or {@code MultiPolygon} object
+     *        defining the area(s) of inclusion.
+     * 
+     * @throws IllegalArgumentException if {@code theGeom} is {@code null} or
+     *         not an instance of either {@code Polygon} or {@code MultiPolygon}
+     */
+    public ROIGeometry(Geometry geom) {
+        this(geom, PixelCoordType.CORNER);
+    }
+    
     /**
      * Constructor which takes a {@code Geometry} object to be used
      * as the reference against which to test inclusion of image coordinates.
@@ -81,10 +107,12 @@ public class ROIGeometry extends ROI {
      * @param geom either a {@code Polygon} or {@code MultiPolygon} object
      *        defining the area(s) of inclusion.
      * 
+     * @param coordType type of pixel coordinates to use when testing for inclusion
+     * 
      * @throws IllegalArgumentException if {@code theGeom} is {@code null} or
      *         not an instance of either {@code Polygon} or {@code MultiPolygon}
      */
-    public ROIGeometry(Geometry geom) {
+    public ROIGeometry(Geometry geom, PixelCoordType coordType) {
         if (geom == null) {
             throw new IllegalArgumentException("geom must not be null");
         }
@@ -102,13 +130,24 @@ public class ROIGeometry extends ROI {
 
         testRectCS = new CoordinateSequence2D(5);
         testRect = geomFactory.createPolygon(geomFactory.createLinearRing(testRectCS), null);
+        
+        this.coordType = coordType;
+        delta = coordType == PixelCoordType.CENTER ? 0.5 : 0.0;
     }
 
+    /**
+     * Not yet implemented.
+     */
     @Override
     public ROI add(ROI roi) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    /**
+     * Test if 
+     * @param p
+     * @return 
+     */
     @Override
     public boolean contains(Point p) {
         return contains(p.getX(), p.getY());
@@ -126,8 +165,8 @@ public class ROIGeometry extends ROI {
 
     @Override
     public boolean contains(double x, double y) {
-        testPointCS.setOrdinate(0, 0, x);
-        testPointCS.setOrdinate(0, 1, y);
+        testPointCS.setX(0, x + delta);
+        testPointCS.setY(0, y + delta);
         testPoint.geometryChanged();
         return theGeom.contains(testPoint);
     }
@@ -165,7 +204,21 @@ public class ROIGeometry extends ROI {
 
     @Override
     public PlanarImage getAsImage() {
-        throw new UnsupportedOperationException("Not implemented");
+        Envelope env = theGeom.getGeometry().getEnvelopeInternal();
+        int x = (int) Math.floor(env.getMinX());
+        int y = (int) Math.floor(env.getMinY());
+        int w = (int) Math.ceil(env.getWidth());
+        int h = (int) Math.ceil(env.getHeight());
+        
+        ParameterBlockJAI pb = new ParameterBlockJAI("VectorBinarize");
+        pb.setParameter("minx", x);
+        pb.setParameter("miny", y);
+        pb.setParameter("width", w);
+        pb.setParameter("height", h);
+        pb.setParameter("geometry", theGeom);
+        pb.setParameter("coordtype", coordType);
+        
+        return JAI.create("VectorBinarize", pb);
     }
 
     @Override
@@ -260,11 +313,11 @@ public class ROIGeometry extends ROI {
     }
 
     private void setTestRect(double x, double y, double w, double h) {
-        testRectCS.setXY(0, x, y);
-        testRectCS.setXY(1, x, y + h);
-        testRectCS.setXY(2, x + w, y + h);
-        testRectCS.setXY(3, x + w, y);
-        testRectCS.setXY(4, x, y);
+        testRectCS.setXY(0, x + delta, y + delta);
+        testRectCS.setXY(1, x + delta, y + h - delta);
+        testRectCS.setXY(2, x + w - delta, y + h - delta);
+        testRectCS.setXY(3, x + w - delta, y + delta);
+        testRectCS.setXY(4, x + delta, y + delta);
         testRect.geometryChanged();
     }
 

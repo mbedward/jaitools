@@ -24,7 +24,9 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Polygonal;
 import com.vividsolutions.jts.geom.prep.PreparedGeometry;
 import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory;
-import jaitools.media.jai.vectorbinarize.VectorBinarizeDescriptor.CoordType;
+
+import jaitools.imageutils.PixelCoordType;
+
 import java.awt.Dimension;
 import java.awt.RenderingHints;
 import java.awt.image.DataBuffer;
@@ -80,7 +82,7 @@ public class VectorBinarizeRIF implements RenderedImageFactory {
             pg = (PreparedGeometry) obj;
         }
         
-        VectorBinarizeDescriptor.CoordType coordType = (CoordType) paramBlock.getObjectParameter(VectorBinarizeDescriptor.COORD_TYPE_ARG);
+        PixelCoordType coordType = (PixelCoordType) paramBlock.getObjectParameter(VectorBinarizeDescriptor.COORD_TYPE_ARG);
         
         SampleModel sm = null;
         
