@@ -36,7 +36,6 @@ public class CoordinateSequence2D implements CoordinateSequence {
 
     private final double[] x;
     private final double[] y;
-    private double minx, miny, maxx, maxy;
 
     /**
      * Creates a new {@code CoordinateSequence2D} object with the given 
@@ -74,24 +73,10 @@ public class CoordinateSequence2D implements CoordinateSequence {
 
             x = new double[xy.length / 2];
             y = new double[xy.length / 2];
-            minx = maxx = xy[0];
-            miny = maxy = xy[1];
             
             for (int i = 0, k = 0; k < xy.length; i++, k += 2) {
                 x[i] = xy[k];
                 y[i] = xy[k + 1];
-                
-                if (x[i] < minx) {
-                    minx = x[i];
-                } else if (x[i] > maxx) {
-                    maxx = x[i];
-                }
-                
-                if (y[i] < miny) {
-                    miny = y[i];
-                } else if (y[i] > maxy) {
-                    maxy = y[i];
-                }
             }
         }
     }
@@ -211,20 +196,10 @@ public class CoordinateSequence2D implements CoordinateSequence {
         switch (ordinateIndex) {
             case 0:
                 x[index] = value;
-                if (value < minx) {
-                    minx = value;
-                } else if (value > maxx) {
-                    maxx = value;
-                }
                 break;
 
             case 1:
                 y[index] = value;
-                if (value < miny) {
-                    miny = value;
-                } else if (value > maxy) {
-                    maxy = value;
-                }
                 break;
 
             default:
@@ -287,28 +262,22 @@ public class CoordinateSequence2D implements CoordinateSequence {
     /**
      * Returns an envelope which contains {@code env} and all points
      * in this sequence. If {@code env} contains all points it is 
-     * returned; otherwise a new {@code Envelope} is created based on
-     * {@code env} and then expanded as necessary before being returned.
+     * returned unchanged.
      * 
-     * @param env the test envelope
+     * @param env the test envelope; if {@code null} a new {@code Envelope} 
+     *        is created
      * 
-     * @return an envelope that includes both {@code env} and all points
+     * @return an envelope that includes {@code env} plus all points
      *         in this sequence
      */
     public Envelope expandEnvelope(Envelope env) {
-        Envelope exp = null;
+        if (env == null) env = new Envelope();
         
-        if (!env.contains(minx, miny)) {
-            if (exp == null) exp = new Envelope(env);
-            exp.expandToInclude(minx, miny);
+        for (int i = 0; i < x.length; i++) {
+            env.expandToInclude(x[i], y[i]);
         }
-
-        if (!env.contains(maxx, maxy)) {
-            if (exp == null) exp = new Envelope(env);
-            exp.expandToInclude(maxx, maxy);
-        }
-
-        return (exp == null ? env : exp);
+        
+        return env;
     }
 
     /**
@@ -323,10 +292,6 @@ public class CoordinateSequence2D implements CoordinateSequence {
             copy.x[i] = x[i];
             copy.y[i] = y[i];
         }
-        copy.minx = minx;
-        copy.miny = miny;
-        copy.maxx = maxx;
-        copy.maxy = maxy;
         
         return copy;
     }
