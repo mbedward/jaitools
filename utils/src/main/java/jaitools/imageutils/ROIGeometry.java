@@ -60,6 +60,8 @@ public class ROIGeometry extends ROI {
 
     /** The {@code Geometry} that defines the area of inclusion */
     private final PreparedGeometry theGeom;
+    /** Caches the roi image */
+    private PlanarImage roiImage;
     
     private final GeometryFactory geomFactory;
 
@@ -204,21 +206,24 @@ public class ROIGeometry extends ROI {
 
     @Override
     public PlanarImage getAsImage() {
-        Envelope env = theGeom.getGeometry().getEnvelopeInternal();
-        int x = (int) Math.floor(env.getMinX());
-        int y = (int) Math.floor(env.getMinY());
-        int w = (int) Math.ceil(env.getWidth());
-        int h = (int) Math.ceil(env.getHeight());
+        if(roiImage == null) {
+            Envelope env = theGeom.getGeometry().getEnvelopeInternal();
+            int x = (int) Math.floor(env.getMinX());
+            int y = (int) Math.floor(env.getMinY());
+            int w = (int) Math.ceil(env.getWidth());
+            int h = (int) Math.ceil(env.getHeight());
+            
+            ParameterBlockJAI pb = new ParameterBlockJAI("VectorBinarize");
+            pb.setParameter("minx", x);
+            pb.setParameter("miny", y);
+            pb.setParameter("width", w);
+            pb.setParameter("height", h);
+            pb.setParameter("geometry", theGeom);
+            pb.setParameter("coordtype", coordType);
+            roiImage = JAI.create("VectorBinarize", pb);
+        }
         
-        ParameterBlockJAI pb = new ParameterBlockJAI("VectorBinarize");
-        pb.setParameter("minx", x);
-        pb.setParameter("miny", y);
-        pb.setParameter("width", w);
-        pb.setParameter("height", h);
-        pb.setParameter("geometry", theGeom);
-        pb.setParameter("coordtype", coordType);
-        
-        return JAI.create("VectorBinarize", pb);
+        return roiImage;
     }
 
     @Override
