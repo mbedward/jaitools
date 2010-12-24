@@ -71,6 +71,19 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
     
     private Raster blankTile;
 
+    /**
+     * Constructor.
+     * 
+     * @param sm the {@code SampleModel} used to create tiles
+     * @param configuration rendering hints
+     * @param minX origin X ordinate
+     * @param minY origin Y ordinate
+     * @param width image width
+     * @param height image height
+     * @param geom reference polygonal geometry
+     * @param coordType type of coordinates to use when testing pixel inclusion
+     *        (corner or center)
+     */
     public VectorBinarizeOpImage(SampleModel sm, Map configuration, int minX, int minY, int width,
             int height, PreparedGeometry geom, PixelCoordType coordType) {
         super(buildLayout(minX, minY, width, height, sm), configuration, sm, minX, minY, width,
@@ -87,6 +100,20 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
         testRect = gf.createPolygon(gf.createLinearRing(testRectCS), null);
     }
 
+    /**
+     * Builds an {@code ImageLayout} for this image. The {@code width} and
+     * {@code height} arguments are requested tile dimensions which will 
+     * only be used if they are smaller than this operator's default
+     * tile dimension.
+     * 
+     * @param minX origin X ordinate
+     * @param minY origin Y ordinate
+     * @param width requested tile width
+     * @param height requested tile height
+     * @param sm sample model
+     * 
+     * @return the {@code ImageLayout} object
+     */
     static ImageLayout buildLayout(int minX, int minY, int width, int height, SampleModel sm) {
         // build a sample model for the single tile
         int tileWidth = Math.min(DEFAULT_TILESIZE, width);
@@ -108,6 +135,15 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
         return il;
     }
 
+    /**
+     * Returns the specified tile.
+     * 
+     * @param tileX tile X index
+     * @param tileY tile Y index
+     * 
+     * @return the requested tile
+     */
+    @Override
     public Raster computeTile(int tileX, int tileY) {
         final int x = tileXToX(tileX);
         final int y = tileYToY(tileY);
@@ -120,6 +156,17 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
         return result;
     }
 
+    /**
+     * Gets the data for the requested tile. If the tile is either completely
+     * within or outside of the reference {@code PreparedGeometry} a cached
+     * constant {@code Raster} with 1 or 0 values is returned. Otherwise
+     * tile pixels are checked for inclusion and set individually.
+     * 
+     * @param minX origin X ordinate
+     * @param minY origin Y ordinate
+     * 
+     * @return the requested tile
+     */
     protected Raster getTileRaster(int minX, int minY) {
         // check relationship between geometry and the tile we're computing
         updateTestRect(minX, minY);
@@ -147,8 +194,9 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
     }
 
     /**
-     * Returns (and caches) the tile with all 1
-     * @return
+     * Returns (creating and caching if the first call) a constant tile with 1 values
+     * 
+     * @return the constant tile
      */
     private Raster getSolidTile() {
         if (solidTile == null) {
@@ -158,8 +206,9 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
     }
     
     /**
-     * Returns (and caches) the tile with all 0
-     * @return
+     * Returns (creating and caching if the first call) a constant tile with 0 values
+     * 
+     * @return the constant tile
      */
     private Raster getBlankTile() {
         if (blankTile == null) {
@@ -169,9 +218,11 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
     }
 
     /**
-     * Builds a tile with contast value
-     * @param value
-     * @return
+     * Builds a tile with constant value
+     * 
+     * @param value the constant value
+     * 
+     * @return the new tile
      */
     private Raster constantTile(int value) {
         // build the raster
@@ -189,15 +240,22 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
         }
         
         // flood fill
-        int width = sampleModel.getWidth();
-        int height = sampleModel.getHeight();
-        int[] data = new int[width * height];
+        int w = sampleModel.getWidth();
+        int h = sampleModel.getHeight();
+        int[] data = new int[w * h];
         Arrays.fill(data, value);
-        raster.setSamples(0, 0, width, height, 0, data);
+        raster.setSamples(0, 0, w, h, 0, data);
         
         return raster;
     }
 
+    /**
+     * Updates the bounds of the rectangle used to test inclusion in the 
+     * reference {@code PreparedGeometry}.
+     * 
+     * @param x origin X ordinate
+     * @param y origin Y ordinate
+     */
     private void updateTestRect(int x, int y) {
         final double delta = (coordType == PixelCoordType.CENTER ? 0.5 : 0.0);
         testRectCS.setXY(0, x + delta, y + delta);
