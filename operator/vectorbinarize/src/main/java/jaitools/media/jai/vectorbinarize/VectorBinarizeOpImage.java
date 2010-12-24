@@ -49,7 +49,7 @@ import com.vividsolutions.jts.geom.prep.PreparedGeometry;
  * @source $URL:
  *         https://jai-tools.googlecode.com/svn/trunk/operator/contour/src/main/java/jaitools/media
  *         /jai/contour/ContourDescriptor.java $
- * @version $Id: VectorBinarizeDescriptor.java 1256 2010-12-13 11:53:07Z michael.bedward $
+ * @version $Id$
  */
 public class VectorBinarizeOpImage extends SourcelessOpImage {
     
