@@ -7,7 +7,7 @@
         <groupId>com.googlecode.jaitools</groupId>
         <version>1.1-SNAPSHOT</version>
     </parent>
-    <artifactId>VectorBinarize</artifactId>
+    <artifactId>vectorbinarize</artifactId>
     <name>VectorBinarize operator</name>
     <description>Creates a binary image from an input JTS Polygon or MultiPolygon</description>
     <properties>
