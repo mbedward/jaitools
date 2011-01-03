@@ -6,6 +6,7 @@ import java.util.List;
 import com.vividsolutions.jts.algorithm.CGAlgorithms;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.LinearRing;
@@ -110,6 +111,12 @@ public class Utils {
 	
 	/**
 	 * Removes collinear vertices from the provided {@link Geometry}.
+	 * 
+	 * <p>
+	 * For the moment this implementation only accepts, {@link Polygon}, {@link LinearRing} and {@link LineString}.
+	 * It return <code>null</code> in case the geometry is not of these types. 
+	 * 
+	 * @todo implement submethods for {@link GeometryCollection} sublcaases.
 	 * @param g the instance of a {@link Geometry} to remove collinear vertices from.
 	 * @return a new instance of the provided  {@link Geometry} without collinear vertices.
 	 */
