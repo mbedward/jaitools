@@ -68,8 +68,9 @@ public class VectorizeRIF implements RenderedImageFactory {
         }
         
         Boolean insideEdges = (Boolean) paramBlock.getObjectParameter(VectorizeDescriptor.INSIDE_EDGES_ARG);
+        Boolean removeCollinear = (Boolean) paramBlock.getObjectParameter(VectorizeDescriptor.REMOVE_COLLINEAR_ARG);
 
-        return new VectorizeOpImage(paramBlock.getRenderedSource(0), roi, band, outsideValues, insideEdges);
+        return new VectorizeOpImage(paramBlock.getRenderedSource(0), roi, band, outsideValues, insideEdges,removeCollinear);
     }
 }
 

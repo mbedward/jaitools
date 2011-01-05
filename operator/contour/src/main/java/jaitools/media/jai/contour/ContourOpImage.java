@@ -19,17 +19,11 @@
  */
 package jaitools.media.jai.contour;
 
-import com.vividsolutions.jts.algorithm.CGAlgorithms;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineSegment;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.PrecisionModel;
-import com.vividsolutions.jts.operation.linemerge.LineMerger;
-
+import static jaitools.numeric.DoubleComparison.dcomp;
+import static jaitools.numeric.DoubleComparison.dequal;
 import jaitools.jts.LineSmoother;
 import jaitools.jts.SmootherControl;
-import static jaitools.numeric.DoubleComparison.*;
+import jaitools.jts.Utils;
 import jaitools.media.jai.AttributeOpImage;
 
 import java.awt.Rectangle;
@@ -42,8 +36,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.media.jai.PlanarImage;
 import javax.media.jai.ROI;
+
+import com.vividsolutions.jts.geom.LineSegment;
+import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.operation.linemerge.LineMerger;
 
 /**
  * Generates contours for user-specified levels of values in the source image.
@@ -64,8 +63,6 @@ import javax.media.jai.ROI;
  * @version $Id$
  */
 public class ContourOpImage extends AttributeOpImage {
-
-    private static final double EPS = 1.0e-8d;
     
     private static final int TL = 0;
     private static final int TR = 1;
@@ -87,9 +84,6 @@ public class ContourOpImage extends AttributeOpImage {
     
     /** Output contour lines */
     private SoftReference<List<LineString>> cachedContours;
-    
-    /** Geometry factory used to create LineStrings */
-    private GeometryFactory geomFactory;
     
     /** Whether to simplify contour lines by removing coincident vertices */
     private final boolean simplify;
@@ -184,8 +178,9 @@ public class ContourOpImage extends AttributeOpImage {
         this.mergeTiles = mergeTiles;
         this.smooth = smooth;
         
-        PrecisionModel pm = new PrecisionModel(100);
-        this.geomFactory = new GeometryFactory(pm);
+        // SG made static
+//        PrecisionModel pm = new PrecisionModel(100);
+//        this.geomFactory = new GeometryFactory(pm);
     }
 
     /**
@@ -236,8 +231,16 @@ public class ContourOpImage extends AttributeOpImage {
 
         RenderedImage src = getSourceImage(0);
         int tileIndex = 0;
-        for (int tileY = src.getMinTileY(), ny = 0; ny < src.getNumYTiles(); tileY++, ny++) {
-            for (int tileX = src.getMinTileX(), nx = 0; nx < src.getNumXTiles(); tileX++, nx++, tileIndex++) {
+        
+        final int minTileX= src.getMinTileX();
+        final int minTileY= src.getMinTileY();
+        final int numTileY= src.getNumYTiles();
+        final int numTileX= src.getNumXTiles();
+        final int maxTileX= minTileX+ numTileX;
+        final int maxTileY= minTileY+numTileY;
+        
+        for (int tileY =minTileY, ny = 0; ny <maxTileY; tileY++, ny++) {
+            for (int tileX = minTileX, nx = 0; nx < maxTileX; tileX++, nx++, tileIndex++) {
                 
                 Map<Integer, List<LineSegment>> segments = getContourSegments(tileX, tileY);
 
@@ -253,7 +256,7 @@ public class ContourOpImage extends AttributeOpImage {
                             // Skip over any degenerate segments which can be produced by
                             // the traceContours algorithm
                             if (!seg.p0.equals2D(seg.p1)) {
-                                tempLines.add(seg.toGeometry(geomFactory));
+                                tempLines.add(seg.toGeometry(Utils.GEOMETRY_FACTORY));
                             }
                         }
 
@@ -261,10 +264,13 @@ public class ContourOpImage extends AttributeOpImage {
                         merger.add(tempLines);
                         Collection<LineString> tileContours = merger.getMergedLineStrings();
                         
+                        //
+                        // SIMPLIFY
+                        //
                         if (simplify) {
                             List<LineString> simplifiedContours = new ArrayList<LineString>();
                             for (LineString tc : tileContours) {
-                                simplifiedContours.add( removeColinearVertices(tc) );
+                                simplifiedContours.add( Utils.removeCollinearVertices(tc) );
                             }
                             tileContours = simplifiedContours;
                         }
@@ -276,6 +282,9 @@ public class ContourOpImage extends AttributeOpImage {
                             contours.put(levelIndex, levelContours);
                         }
                         
+                        //
+                        // MERGE
+                        //
                         if (levelContours.isEmpty() || !mergeTiles) {
                             levelContours.addAll(tileContours);
                         } else {
@@ -313,7 +322,7 @@ public class ContourOpImage extends AttributeOpImage {
          * Bezier smoothing of contours
          */
         if (smooth) {
-            LineSmoother smoother = new LineSmoother(geomFactory);
+            LineSmoother smoother = new LineSmoother(Utils.GEOMETRY_FACTORY);
             smoother.setControl(smootherControl);
             
             final int N = mergedContourLines.size();
@@ -424,7 +433,8 @@ public class ContourOpImage extends AttributeOpImage {
                 temp2 = Math.max(sample[BR], sample[TR]);
                 double dmax = Math.max(temp1, temp2);
 
-                for (int levelIndex = 0; levelIndex < contourLevels.size(); levelIndex++) {
+                final int size=contourLevels.size();
+                for (int levelIndex = 0; levelIndex < size; levelIndex++) {
                     double levelValue = contourLevels.get(levelIndex);
                     if (levelValue < dmin || levelValue > dmax) {
                         continue;
@@ -581,38 +591,10 @@ public class ContourOpImage extends AttributeOpImage {
      * 
      * @return the calculated X or Y ordinate
      */
-    private double sect(int p1, int p2, double[] h, double[] coord) {
+    private static double sect(int p1, int p2, double[] h, double[] coord) {
         return (h[p2] * coord[p1] - h[p1] * coord[p2]) / (h[p2] - h[p1]);
     }
     
-    private LineString removeColinearVertices(LineString ls) {
-        Coordinate[] coords = ls.getCoordinates();
-        final int N = coords.length;
-        
-        List<Integer> retain = new ArrayList<Integer>();
-        retain.add(0);
-        
-        int i0 = 0, i1 = 1, i2 = 2;
-        while (i2 < N) {
-            int orientation = CGAlgorithms.computeOrientation(
-                    coords[i0], coords[i1], coords[i2]);
-            if (orientation != 0) {
-                retain.add(i1);
-                i0++;
-            }
-            i1++; i2++;
-        }
-        retain.add(N - 1);
-        
-        Coordinate[] newCoords = new Coordinate[retain.size()];
-        int k = 0;
-        for (Integer i : retain) {
-            newCoords[k++] = coords[i];
-        }
-        
-        return geomFactory.createLineString(newCoords);
-    }
-
     /**
      * Scans the image tile and checks that required contour values are in the
      * {@code contourLevels} list. 

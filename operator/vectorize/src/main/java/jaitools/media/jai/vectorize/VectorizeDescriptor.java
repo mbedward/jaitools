@@ -52,19 +52,22 @@ public class VectorizeDescriptor extends OperationDescriptorImpl {
     static final int BAND_ARG = 1;
     static final int OUTSIDE_VALUES_ARG = 2;
     static final int INSIDE_EDGES_ARG = 3;
+    static final int REMOVE_COLLINEAR_ARG = 4;
 
     private static final String[] paramNames = {
         "roi",
         "band",
         "outsideValues",
-        "insideEdges"
+        "insideEdges",
+        "removeCollinear"
     };
 
     private static final Class[] paramClasses = {
          javax.media.jai.ROI.class,
          Integer.class,
          Collection.class,
-         Boolean.class
+         Boolean.class,
+         Boolean.class,
     };
 
     private static final Object[] paramDefaults = {
@@ -72,6 +75,7 @@ public class VectorizeDescriptor extends OperationDescriptorImpl {
          Integer.valueOf(0),
          Collections.EMPTY_LIST,
          Boolean.TRUE,
+         Boolean.TRUE
     };
 
     /** Constructor. */
@@ -90,11 +94,13 @@ public class VectorizeDescriptor extends OperationDescriptorImpl {
                               "the source image band to process"},
                     
                     {"arg2Desc", paramNames[2] + " (Collection, default=null) " +
-                              "optionsl set of values to treat as outside"},
+                              "optional set of values to treat as outside"},
                     
                     {"arg3Desc", paramNames[3] + " (Boolean, default=true) " +
                               "whether to vectorize boundaries between adjacent" +
-                              "regions with non-outside values"}
+                              "regions with non-outside values"},
+	                {"arg4Desc", paramNames[4] + " (Boolean, default=false) " +
+	                          "whether to reduce collinear points in the resulting polygons"}
                 },
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
                 
@@ -125,6 +131,9 @@ public class VectorizeDescriptor extends OperationDescriptorImpl {
      * 
      * @param insideEdges whether to vectorize boundaries between adjacent
      *        data (ie. non-outside) regions
+     *  
+     *  @param removeCollinear indicates whether or not we should remove collinear points
+     *         from the resulting geometries
      *
      * @param hints rendering hints (ignored)
      *
@@ -138,6 +147,7 @@ public class VectorizeDescriptor extends OperationDescriptorImpl {
             int band,
             Collection<Number> outsideValues,
             Boolean insideEdges,
+            Boolean removeCollinear,
             RenderingHints hints) {
                 
         ParameterBlockJAI pb =
@@ -149,6 +159,7 @@ public class VectorizeDescriptor extends OperationDescriptorImpl {
         pb.setParameter(paramNames[BAND_ARG], band);
         pb.setParameter(paramNames[OUTSIDE_VALUES_ARG], outsideValues);
         pb.setParameter(paramNames[INSIDE_EDGES_ARG], insideEdges);
+        pb.setParameter(paramNames[REMOVE_COLLINEAR_ARG], removeCollinear);
 
         return JAI.create("Vectorize", pb, hints);
     }

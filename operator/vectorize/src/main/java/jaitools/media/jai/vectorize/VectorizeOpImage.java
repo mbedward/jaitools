@@ -20,16 +20,9 @@
 
 package jaitools.media.jai.vectorize;
 
-import com.vividsolutions.jts.algorithm.InteriorPointArea;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LineSegment;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.operation.polygonize.Polygonizer;
+import jaitools.jts.Utils;
 import jaitools.media.jai.AttributeOpImage;
+
 import java.awt.image.RenderedImage;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
@@ -41,14 +34,29 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+
 import javax.media.jai.ROI;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
+
+import com.vividsolutions.jts.algorithm.InteriorPointArea;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LineSegment;
+import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.PrecisionModel;
+import com.vividsolutions.jts.operation.polygonize.Polygonizer;
+import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
+import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
 
 /**
  * Vectorize regions of uniform value in an image
  *
  * @author Michael Bedward
+ * @author Simone Giannecchini, GeoSolutions
  * @since 1.1
  * @source $URL$
  * @version $Id$
@@ -126,33 +134,38 @@ public class VectorizeOpImage extends AttributeOpImage {
     
     // Flag indicating whether the boundaries between adjacent inside regions
     // should be vectorized
-    private boolean insideEdges;
+    private final boolean insideEdges;
 
     // Proxy value used when inside edges are not being vectorized
     // (ie. insideEdges == false)
     private Double inside = null;
 
-    /*
-     * array of Coor objects that store end-points of vertical lines under construction
+    /**
+     * Array of Coor objects that store end-points of vertical lines under construction
      */
     private Map<Integer, LineSegment> vertLines;
 
-    /*
-     * end-points of horizontal line under construction
+    /**
+     * End-points of horizontal line under construction
      */
     private LineSegment horizLine;
 
-    /*
-     * collection of line strings on the boundary of raster regions
+    /**
+     * Collection of line strings on the boundary of raster regions
      */
     private List<LineString> lines;
     
-    /*
+    /**
      * Factory for construction of JTS Geometry objects
      */
-    private GeometryFactory geomFactory;
+    private final static GeometryFactory GEOMETRY_FACTORY= new GeometryFactory(new PrecisionModel(10));
 
     SoftReference<List<Geometry>> cachedVectors;
+    
+    /**
+     * Tells us whether or not we should remove collinear points in the final polygons.
+     */
+	private final  boolean removeCollinear;
     
 
     /**
@@ -169,12 +182,16 @@ public class VectorizeOpImage extends AttributeOpImage {
      * 
      * @param insideEdges flag controlling whether boundaries between adjacent
      *        "inside" regions should be vectorized
+     *
+     *  @param removeCollinear indicates whether or not we should remove collinear points
+     *         from the resulting geometries
      */
     public VectorizeOpImage(RenderedImage source,
             ROI roi,
             int band,
             List<Double> outsideValues,
-            boolean insideEdges) {
+            boolean insideEdges,
+            boolean removeCollinear) {
             
         super(source, roi);
                 
@@ -188,6 +205,7 @@ public class VectorizeOpImage extends AttributeOpImage {
         }
         
         this.insideEdges = insideEdges;
+        this.removeCollinear=removeCollinear;
     }
 
     /**
@@ -214,7 +232,6 @@ public class VectorizeOpImage extends AttributeOpImage {
     
 
     private List<Geometry> doVectorize() {
-        geomFactory = new GeometryFactory();
         lines = new ArrayList<LineString>();
         vertLines = new HashMap<Integer, LineSegment>();
         
@@ -234,47 +251,117 @@ public class VectorizeOpImage extends AttributeOpImage {
         RandomIter imgIter = RandomIterFactory.create(getSourceImage(0), null);
 
         Polygonizer polygonizer = new Polygonizer();
-        polygonizer.add(lines);
-        Collection<Geometry> rawPolys = polygonizer.getPolygons();
-
-        int index = 0;
-        for (Geometry geom : rawPolys) {
-            Polygon poly = (Polygon) geom;
-            InteriorPointArea ipa = new InteriorPointArea(poly);
-            Coordinate c = ipa.getInteriorPoint();
-            Point pt = geomFactory.createPoint(c);
-
-            if (!poly.contains(pt)) {
-                // try another method to generate an interior point
-                boolean found = false;
-                for (Coordinate ringC : poly.getExteriorRing().getCoordinates()) {
-                    c.x = ringC.x + 0.5;
-                    c.y = ringC.y;
-                    pt = geomFactory.createPoint(c);
-                    if (poly.contains(pt)) {
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found) {
-                    throw new IllegalStateException("Can't locate interior point for polygon");
-                }
-            }
-
-            double val = imgIter.getSampleDouble((int) c.x, (int) c.y, band);
-
-            if (roi.contains(c.x, c.y) && !isOutside(val)) {
-                if (insideEdges) {
-                    poly.setUserData(val);
-                } else {
-                    poly.setUserData(inside);
-                }
-                polygons.add(poly);
-            }
+        try{
+	        polygonizer.add(lines);
+	        Collection<Geometry> rawPolys = polygonizer.getPolygons();
+	        
+	       
+	        for (Geometry geom : rawPolys) {
+	        	
+	            Polygon poly = (Polygon) geom;
+	            
+	            if(removeCollinear){
+//	           	 final int pointsBefore= poly.getBoundary().getNumPoints();
+	            	// simplify by 1 to reduce the number of collinear points
+	            	//TODO can we use a filter or something like that? working in raster coords 
+	            	// means that we can make this simplification very simple by using integer coords
+	            	poly=Utils.removeCollinearVertices(poly);
+//	            	final int pointsAfter= poly.getBoundary().getNumPoints();
+//	            	System.out.println("Points before:"+pointsBefore+" pointsafter:"+pointsAfter);
+	            }
+	            InteriorPointArea ipa = new InteriorPointArea(poly);
+	            Coordinate c = ipa.getInteriorPoint();
+	            Point pt = GEOMETRY_FACTORY.createPoint(c);
+	
+	            if (!poly.contains(pt)) {
+	            	//
+	                // try another method to generate an interior point, by
+	            	// looking in every direction
+	            	//
+	            	
+	                boolean found = false;
+	                for (Coordinate ringC : poly.getExteriorRing().getCoordinates()) {
+	                	
+	                    c.x = ringC.x + 0.5;
+	                    c.y = ringC.y;
+	                    pt = GEOMETRY_FACTORY.createPoint(c);
+	                    if (poly.contains(pt)) {
+	                        found = true;
+	                        break;
+	                    }
+	                    
+	                    c.x = ringC.x + 0.5;
+	                    c.y = ringC.y + 0.5;
+	                    pt = GEOMETRY_FACTORY.createPoint(c);
+	                    if (poly.contains(pt)) {
+	                        found = true;
+	                        break;
+	                    }
+	                    
+	                    c.x = ringC.x;
+	                    c.y = ringC.y + 0.5;
+	                    pt = GEOMETRY_FACTORY.createPoint(c);
+	                    if (poly.contains(pt)) {
+	                        found = true;
+	                        break;
+	                    }
+	                    
+	                    c.x = ringC.x - 0.5;
+	                    c.y = ringC.y + 0.5;
+	                    pt = GEOMETRY_FACTORY.createPoint(c);
+	                    if (poly.contains(pt)) {
+	                        found = true;
+	                        break;
+	                    }
+	                    
+	                    c.x = ringC.x - 0.5;
+	                    c.y = ringC.y;
+	                    pt = GEOMETRY_FACTORY.createPoint(c);
+	                    if (poly.contains(pt)) {
+	                        found = true;
+	                        break;
+	                    }
+	                    
+	                    c.x = ringC.x;
+	                    c.y = ringC.y - 0.5;
+	                    pt = GEOMETRY_FACTORY.createPoint(c);
+	                    if (poly.contains(pt)) {
+	                        found = true;
+	                        break;
+	                    }
+	                    
+	                    c.x = ringC.x + 0.5;
+	                    c.y = ringC.y - 0.5;
+	                    pt = GEOMETRY_FACTORY.createPoint(c);
+	                    if (poly.contains(pt)) {
+	                        found = true;
+	                        break;
+	                    }	                    
+	                }
+	
+	                if (!found) {
+	                    throw new IllegalStateException("Can't locate interior point for polygon");
+	                }
+	            }
+	
+	            //
+	            // now get the value and save it for future usage
+	            //
+	            double val = imgIter.getSampleDouble((int) c.x, (int) c.y, band);
+	            if (roi.contains(c.x, c.y) && !isOutside(val)) {
+	                if (insideEdges) {
+	                    poly.setUserData(val);
+	                } else {
+	                    poly.setUserData(inside);
+	                }
+	                polygons.add(poly);
+	            }
+	        }
+	        return polygons;
+        }finally{
+        	// release resources
+        	imgIter.done();
         }
-        
-        return polygons;
     }
 
 
@@ -292,13 +379,12 @@ public class VectorizeOpImage extends AttributeOpImage {
         boolean[] flag = new boolean[4];
         
         RandomIter imageIter = RandomIterFactory.create(getSourceImage(0), null);
-
         if (!insideEdges) {
             setInsideValue();
-        }
-        
+        }	
         final Double OUT = outsideValues.first();
         
+        try{
         // NOTE: the for-loop indices are set to emulate a one pixel width border
         // around the source image area
         for (int y = srcBounds.y - 1; y < srcBounds.y + srcBounds.height; y++) {
@@ -334,6 +420,11 @@ public class VectorizeOpImage extends AttributeOpImage {
                 updateCoordList(x, y, sample);
             }
         }
+        }finally {
+        	// close random iterator
+            imageIter.done();
+		}
+        
     }
     
 
@@ -611,7 +702,7 @@ public class VectorizeOpImage extends AttributeOpImage {
      * @param sample sample window values
      * @return configuration id
      */
-    private int nbrConfig(double[] sample) {
+    private static int nbrConfig(double[] sample) {
         int flag = 0;
         
         flag |= (isDifferent(sample[TR], sample[TL]) << 5);
@@ -636,7 +727,7 @@ public class VectorizeOpImage extends AttributeOpImage {
             new Coordinate(horizLine.p1.x, y) 
         };
 
-        lines.add(geomFactory.createLineString(coords));
+        lines.add(GEOMETRY_FACTORY.createLineString(coords));
     }
 
     /**
@@ -650,7 +741,7 @@ public class VectorizeOpImage extends AttributeOpImage {
             new Coordinate(x, vertLines.get(x).p1.y)
         };
         
-        lines.add(geomFactory.createLineString(coords));
+        lines.add(GEOMETRY_FACTORY.createLineString(coords));
     }
 
     private boolean isOutside(double value) {
@@ -670,7 +761,7 @@ public class VectorizeOpImage extends AttributeOpImage {
      * @param b second value
      * @return 1 if the values are different; 0 otherwise
      */
-    private int isDifferent(double a, double b) {
+    private static int isDifferent(double a, double b) {
         if (Double.isNaN(a) ^ Double.isNaN(b)) {
             return 1;
         } else if (Double.isNaN(a) && Double.isNaN(b)) {

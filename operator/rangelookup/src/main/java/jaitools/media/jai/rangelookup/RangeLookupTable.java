@@ -29,17 +29,19 @@ import java.util.List;
  * destination image values for the RangeLookup operation.
  * 
  * @author Michael Bedward
+ * @author Simone Giannecchini, GeoSolutions
  * @since 1.0
  * @source $URL$
  * @version $Id$
  */
-public class RangeLookupTable<T extends Number & Comparable> {
+public class RangeLookupTable<T extends Number & Comparable<? super T>,U extends Number & Comparable<? super U>> {
 
-    T defaultValue = null;
+	U defaultValue = null;
 
-    private static class Item<T extends Number & Comparable> {
-        Range<T> srcRange;
-        T destValue;
+    static class Item<T extends Number & Comparable<? super T>,U extends Number & Comparable<? super U>> {
+
+		Range<T> srcRange;
+        U destValue;
 
         /**
          * Constructor
@@ -49,13 +51,52 @@ public class RangeLookupTable<T extends Number & Comparable> {
          *
          * @param destValue the destination image value
          */
-        public Item(Range<T> srcRange, T destValue) {
+        public Item(Range<T> srcRange, U destValue) {
             this.srcRange = srcRange;
             this.destValue = destValue;
         }
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result
+					+ ((destValue == null) ? 0 : destValue.hashCode());
+			result = prime * result
+					+ ((srcRange == null) ? 0 : srcRange.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			Item other = (Item) obj;
+			if (destValue == null) {
+				if (other.destValue != null)
+					return false;
+			} else if (!destValue.equals(other.destValue))
+				return false;
+			if (srcRange == null) {
+				if (other.srcRange != null)
+					return false;
+			} else if (!srcRange.equals(other.srcRange))
+				return false;
+			return true;
+		}
+		
+        @Override
+		public String toString() {
+			return "Item [srcRange=" + srcRange + ", destValue=" + destValue
+					+ "]";
+		}
     }
 
-    List<Item<T>> items;
+    List<Item<T,U>> items;
 
     /**
      * Constructor that provides for a default value which will be written
@@ -66,8 +107,8 @@ public class RangeLookupTable<T extends Number & Comparable> {
      *
      * @param defaultValue the default destination value
      */
-    public RangeLookupTable(T defaultValue) {
-        items = new ArrayList<Item<T>>();
+    public RangeLookupTable(U defaultValue) {
+        items = new ArrayList<Item<T,U>>();
         this.defaultValue = defaultValue;
     }
 
@@ -78,7 +119,7 @@ public class RangeLookupTable<T extends Number & Comparable> {
      * within any of the ranges that it holds.
      */
     public RangeLookupTable() {
-        items = new ArrayList<Item<T>>();
+        items = new ArrayList<Item<T,U>>();
     }
 
     /**
@@ -88,12 +129,12 @@ public class RangeLookupTable<T extends Number & Comparable> {
      * @param range the source image value range
      * @param destValue the destination image value
      */
-    public void add(Range<T> range, T destValue) {
+    public void add(Range<T> range, U destValue) {
         if (range == null || destValue == null) {
             throw new IllegalArgumentException("arguments must not be null");
         }
 
-        items.add(new Item(range, destValue));
+        items.add(new Item<T,U>(range, destValue));
     }
 
     /**
@@ -106,8 +147,8 @@ public class RangeLookupTable<T extends Number & Comparable> {
      * of the ranges held by this table and the table was created without a default
      * destination image value
      */
-    public T getDestValue(T srcValue) {
-        for (Item<T> item : items) {
+    public U getDestValue(T srcValue) {
+        for (Item<T,U> item : items) {
             if (item.srcRange.contains(srcValue)) {
                 return item.destValue;
             }
@@ -119,4 +160,15 @@ public class RangeLookupTable<T extends Number & Comparable> {
             throw new IllegalStateException("value outside all ranges: " + srcValue);
         }
     }
+    
+    @SuppressWarnings("rawtypes")
+	@Override
+	public String toString() {
+    	final StringBuilder buff= new StringBuilder("RangeLookupTable [defaultValue=" + defaultValue + ", items=");
+    	for(Item item:items)
+    		buff.append("{").append(item.toString()).append("},");
+    	buff.subSequence(0, buff.length()-1);
+    	buff.append( "]");
+    	return buff.toString();
+	}
 }
