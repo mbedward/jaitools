@@ -46,15 +46,11 @@ import com.vividsolutions.jts.geom.prep.PreparedGeometry;
  * @author Michael Bedward
  * @author Andrea Aime
  * @since 1.1
- * @source $URL:
- *         https://jai-tools.googlecode.com/svn/trunk/operator/contour/src/main/java/jaitools/media
- *         /jai/contour/ContourDescriptor.java $
+ * @source $URL$
  * @version $Id$
  */
 public class VectorBinarizeOpImage extends SourcelessOpImage {
     
-    private static final int DEFAULT_TILESIZE = 256;
-
     private final PreparedGeometry geom;
 
     private final PixelCoordType coordType;
@@ -116,13 +112,11 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
      */
     static ImageLayout buildLayout(int minX, int minY, int width, int height, SampleModel sm) {
         // build a sample model for the single tile
-        int tileWidth = Math.min(DEFAULT_TILESIZE, width);
-        int tileHeight = Math.min(DEFAULT_TILESIZE, height);
         ImageLayout il = new ImageLayout();
         il.setMinX(minX);
         il.setMinY(minY);
-        il.setWidth(tileWidth);
-        il.setHeight(tileHeight);
+        il.setWidth(width);
+        il.setHeight(height);
         il.setSampleModel(sm);
 
         if (!il.isValid(ImageLayout.TILE_GRID_X_OFFSET_MASK)) {
