@@ -315,6 +315,7 @@ expr returns [boolean isLocal, boolean isPositional]
                   }
                   
                 | ^(PREFIX unary_op expr)
+                | ^(BRACKETED_EXPR expr)
                 | INT_LITERAL 
                 | FLOAT_LITERAL 
                 | constant

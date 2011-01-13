@@ -1,0 +1,459 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package jaitools.jiffle.runtime;
+
+import java.util.Random;
+import jaitools.numeric.SampleStats;
+import static jaitools.numeric.DoubleComparison.dcomp;
+import static jaitools.numeric.DoubleComparison.dzero;
+
+/**
+ *
+ * @author michael
+ */
+public class JiffleFunctions {
+    
+    private static Random rr;
+
+    /**
+     * Converts an angle in degrees to radians.
+     * 
+     * @param x input angle in degrees
+     * @return angle in radians
+     */
+    public static double degToRad(double x) {
+        return Math.PI * x / 180d;
+    }
+
+    /**
+     * Tests if x is non-zero.
+     * <p>
+     * Jiffle does not have a boolean type but treats zero values
+     * as {@code false} and non-zero values as {@code true}.
+     * 
+     * @param x test value
+     * @return 1 if x is non-zero; 0 if x is zero; 
+     *         or {@code Double.NaN} if x is {@code Double.NaN}
+     */
+    public static double if1Arg(double x) {
+        if (!Double.isNaN(x)) {
+            return !dzero(x) ? 1d : 0d;
+        }
+
+        return Double.NaN;
+    }
+    
+    /**
+     * Tests if x is non-zero.
+     * <p>
+     * Jiffle does not have a boolean type but treats zero values
+     * as {@code false} and non-zero values as {@code true}.
+     * 
+     * @param x test value
+     * @param valTrue value to return if x is non-zero
+     * 
+     * @return {@code valTrue} if x is non-zero; 0 if x is zero; 
+     *         or {@code Double.NaN} if x is {@code Double.NaN}
+     */
+    public static double if2Arg(double x, double valTrue) {
+
+        if (!Double.isNaN(x)) {
+            return !dzero(x) ? valTrue : 0d;
+        }
+
+        return Double.NaN;
+    }
+    
+    /**
+     * Tests if x is non-zero.
+     * <p>
+     * Jiffle does not have a boolean type but treats zero values
+     * as {@code false} and non-zero values as {@code true}.
+     * 
+     * @param x test value
+     * @param valTrue value to return if x is non-zero
+     * @param valFalse value to return if x is zero
+     * 
+     * @return {@code val} if x is non-zero; {@code valFalse} if x is zero; 
+     *         or {@code Double.NaN} if x is {@code Double.NaN}
+     */
+    public static double if3Arg(double x, double valTrue, double valFalse) {
+
+        if (!Double.isNaN(x)) {
+            return !dzero(x) ? valTrue : valFalse;
+        }
+
+        return Double.NaN;
+    }
+    
+    /**
+     * Tests if x is negative, positive or zero.
+     * <p>
+     * Jiffle does not have a boolean type but treats zero values
+     * as {@code false} and non-zero values as {@code true}. However
+     * this version of {@code if} treats negative and positive values
+     * separately. It is included for compatibility with the GRASS
+     * MapCalc language.
+     * 
+     * @param x test value
+     * @param valTrue value to return if x is non-zero
+     * @param valFalse value to return if x is zero
+     * 
+     * @return {@code val} if x is non-zero; {@code valFalse} if x is zero; 
+     *         or {@code Double.NaN} if x is {@code Double.NaN}
+     */
+    public static double if4Arg(double x, double valPos, double valZero, double valNeg) {
+        if (!Double.isNaN(x)) {
+            return dzero(x) ? valZero : (x > 0 ? valPos : valNeg);
+        }
+
+        return Double.NaN;
+    }
+    
+    /**
+     * Tests if x is infinite (equal to Double.POSITIVE_INFINITY or 
+     * Double.NEGATIVE_INFINITY).
+     * 
+     * @param x test value
+     * @return 1 if x is infinite; 0 if finite; or {@code Double.Nan}
+     *         if x is {@code Double.Nan}
+     */
+    public static double isinf(double x) {
+        return (Double.isNaN(x) ? Double.NaN : (Double.isInfinite(x) ? 1d : 0d));
+    }
+    
+    /**
+     * Tests if x is equal to Double.NaN.
+     * 
+     * @param x test value
+     * @return 1 if x is NaN; 0 otherwise
+     */
+    public static double isnan(double x) {
+        return Double.isNaN(x) ? 1d : 0d;
+    }
+    
+    /**
+     * Tests if x is null. This is the same as {@link #isnan(double)}.
+     * 
+     * @param x the test value
+     * @return 1 if x is null; 0 otherwise
+     */
+    public static double isnull(double x) {
+        return Double.isNaN(x) ? 1d : 0d;
+    }
+
+    /**
+     * Gets the log of x to base b.
+     * 
+     * @param x the value
+     * @param b the base
+     * @return log to base b
+     */
+    public static double log2Arg(double x, double b) {
+        return Math.log(x) / Math.log(b);
+    }
+    
+    /**
+     * Gets the maximum of the input values. Double.Nan (null)
+     * values are ignored.
+     * 
+     * @param values the input values
+     * @return the maximum value
+     */
+    public static double max(Double ...values) {
+        return SampleStats.max(values, true);
+    }
+    
+    /**
+     * Gets the mean of the input values. Double.Nan (null)
+     * values are ignored.
+     * 
+     * @param values the input values
+     * @return the mean value
+     */
+    public static double mean(Double ...values) {
+        return SampleStats.mean(values, true);
+    }
+    
+    /**
+     * Gets the median of the input values. Double.Nan (null)
+     * values are ignored.
+     * 
+     * @param values the input values
+     * @return the median value
+     */
+    public static double median(Double ...values) {
+        return SampleStats.median(values, true);
+    }
+    
+    /**
+     * Gets the minimum of the input values. Double.Nan (null)
+     * values are ignored.
+     * 
+     * @param values the input values
+     * @return the minimum value
+     */
+    public static double min(Double ...values) {
+        return SampleStats.min(values, true);
+    }
+    
+    /**
+     * Gets the mode of the input values. Double.Nan (null)
+     * values are ignored.
+     * 
+     * @param values the input values
+     * @return the modal value
+     */
+    public static double mode(Double ...values) {
+        return SampleStats.mode(values, true);
+    }
+    
+    /**
+     * Returns Double.NaN.
+     * 
+     * @return Double.NaN
+     */
+    public static double nullValue() {
+        return Double.NaN;
+    }
+
+    /**
+     * Converts an angle in radians to degrees.
+     * 
+     * @param x input angle in radians
+     * @return angle in degrees
+     */
+    public static double radToDeg(double x) {
+        return x / Math.PI * 180d;
+    }
+    
+    /**
+     * Gets a random value between 0 (inclusive) and x (exclusive).
+     * 
+     * @param x upper limit
+     * @return the random value
+     */
+    public static double rand(double x) {
+        return rr.nextDouble() * x;
+    }
+    
+    /**
+     * Gets a random integer value (actually a truncated double) between 
+     * 0 (inclusive) and {@code floor(x)} (exclusive).
+     * 
+     * @param x upper limit
+     * @return the random value
+     */
+    public static double randInt(double x) {
+        return rr.nextInt((int) x);
+    }
+    
+    /**
+     * Gets the range of the input values. Double.Nan (null)
+     * values are ignored.
+     * 
+     * @param values the input values
+     * @return the range of the input values
+     */
+    public static double range(Double ...values) {
+        return SampleStats.range(values, true);
+    }
+    
+    /**
+     * Rounds the input value to the given precision.
+     * 
+     * @param x the input value
+     * @param prec the desired precision
+     * @return the rounded value
+     */
+    public static double round2Arg(double x, double prec) {
+        int ifac = (int) (prec + 0.5);
+        return Math.round(x / ifac) * ifac;
+    }
+    
+    /**
+     * Gets the sample standard deviation of the input values. Double.Nan (null)
+     * values are ignored.
+     * 
+     * @param values the input values
+     * @return the standard deviation of the input values
+     */
+    public static double sdev(Double ...values) {
+        return SampleStats.range(values, true);
+    }
+
+    /**
+     * Gets the sample variance of the input values. Double.Nan (null)
+     * values are ignored.
+     * 
+     * @param values the input values
+     * @return the variance of the input values
+     */
+    public static double variance(Double ...values) {
+        return SampleStats.variance(values, true);
+    }
+    
+    /**
+     * Tests if either x or y is non-zero.
+     * 
+     * @param x x value
+     * @param y y value
+     * @return 1 if either x or y is non-zero; 0 if this is not the case;
+     *         or {@code Double.Nan} if either x or y is {@code Double.Nan}
+     */
+    public static double OR(double x, double y) {
+        if (Double.isNaN(x) || Double.isNaN(y)) {
+            return Double.NaN;
+        }
+
+        return (!dzero(x) || !dzero(y) ? 1d : 0d);
+    }
+
+    /**
+     * Tests if both x and y are non-zero.
+     * 
+     * @param x x value
+     * @param y y value
+     * @return 1 if both x and y are non-zero; 0 if this is not the case;
+     *         or {@code Double.Nan} if either x or y is {@code Double.Nan}
+     */
+    public static double AND(double x, double y) {
+        if (Double.isNaN(x) || Double.isNaN(y)) {
+            return Double.NaN;
+        }
+
+        return (!dzero(x) && !dzero(y) ? 1d : 0d);
+    }
+
+    /**
+     * Tests if just one of x or y is non-zero.
+     * 
+     * @param x x value
+     * @param y y value
+     * @return 1 if just one of x or y is non-zero; 0 if this is not the case;
+     *         or {@code Double.Nan} if either x or y is {@code Double.Nan}
+     */
+    public static double XOR(double x, double y) {
+        if (Double.isNaN(x) || Double.isNaN(y)) {
+            return Double.NaN;
+        }
+
+        return (!dzero(x) ^ !dzero(y) ? 1d : 0d);
+    }
+
+    /**
+     * Tests if x is greater than y.
+     * 
+     * @param x x value
+     * @param y y value
+     * @return 1 if x is greater than y; 0 if this is not the case;
+     *         or {@code Double.Nan} if either x or y is {@code Double.Nan}
+     */
+    public static double GT(double x, double y) {
+        if (Double.isNaN(x) || Double.isNaN(y)) {
+            return Double.NaN;
+        }
+
+        return (dcomp(x, y) > 0 ? 1d : 0d);
+    }
+
+    /**
+     * Tests if x is greater than or equal to y.
+     * 
+     * @param x x value
+     * @param y y value
+     * @return 1 if x is greater than or equal to y; 0 if this is not the case;
+     *         or {@code Double.Nan} if either x or y is {@code Double.Nan}
+     */
+    public static double GE(double x, double y) {
+        if (Double.isNaN(x) || Double.isNaN(y)) {
+            return Double.NaN;
+        }
+
+        return (dcomp(x, y) >= 0 ? 1d : 0d);
+    }
+
+    /**
+     * Tests if x is less than y.
+     * 
+     * @param x x value
+     * @param y y value
+     * @return 1 if x is less than y; 0 if this is not the case;
+     *         or {@code Double.Nan} if either x or y is {@code Double.Nan}
+     */
+    public static double LT(double x, double y) {
+        if (Double.isNaN(x) || Double.isNaN(y)) {
+            return Double.NaN;
+        }
+
+        return (dcomp(x, y) < 0 ? 1d : 0d);
+    }
+
+    /**
+     * Tests if x is less than or equal to y.
+     * 
+     * @param x x value
+     * @param y y value
+     * @return 1 if x is less than or equal to y; 0 if this is not the case;
+     *         or {@code Double.Nan} if either x or y is {@code Double.Nan}
+     */
+    public static double LE(double x, double y) {
+        if (Double.isNaN(x) || Double.isNaN(y)) {
+            return Double.NaN;
+        }
+
+        return (dcomp(x, y) <= 0 ? 1d : 0d);
+    }
+
+    /**
+     * Tests if x is equal to y.
+     * 
+     * @param x x value
+     * @param y y value
+     * @return 1 if x is equal to y; 0 if this is not the case;
+     *         or {@code Double.Nan} if either x or y is {@code Double.Nan}
+     */
+    public static double EQ(double x, double y) {
+        if (Double.isNaN(x) || Double.isNaN(y)) {
+            return Double.NaN;
+        }
+
+        return (dcomp(x, y) == 0 ? 1d : 0d);
+    }
+
+    /**
+     * Tests if x is not equal to y.
+     * 
+     * @param x x value
+     * @param y y value
+     * @return 1 if x is not equal to y; 0 if this is not the case;
+     *         or {@code Double.Nan} if either x or y is {@code Double.Nan}
+     */
+    public static double NE(double x, double y) {
+        if (Double.isNaN(x) || Double.isNaN(y)) {
+            return Double.NaN;
+        }
+
+        return (dcomp(x, y) != 0 ? 1d : 0d);
+    }
+
+    /**
+     * Treats x as true if non-zero, or false if zero and then
+     * returns the logical complement.
+     * 
+     * @param x the test value
+     * @return 1 if x is zero; 0 if x is non-zero; 
+     * or {@code Double.Nan} if x is {@code Double.Nan}
+     */
+    public static double NOT(double x) {
+        if (Double.isNaN(x)) {
+            return Double.NaN;
+        }
+
+        return (dzero(x) ? 1d : 0d);
+    }
+}
+

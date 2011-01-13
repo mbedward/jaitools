@@ -130,6 +130,7 @@ expr            : ^(ASSIGN assign_op var expr)
                 | ^(QUESTION expr expr expr)
                 | ^(PREFIX unary_op expr)
                 | ^(expr_op expr expr)
+                | ^(BRACKETED_EXPR expr)
                 | var
                 | constant
                 | INT_LITERAL 

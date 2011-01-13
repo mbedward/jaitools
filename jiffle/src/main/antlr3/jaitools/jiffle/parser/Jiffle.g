@@ -29,6 +29,7 @@ tokens {
     ASSIGN;
     CAST;
     EXPR_LIST;
+    BRACKETED_EXPR;
     FUNC_CALL;
     NBR_REF;
     POSTFIX;
@@ -124,10 +125,13 @@ postfix_expr	: a=atom_expr (incdec_op^)?
 		
 atom_expr	: ID
 		| constant
-		| LPAR! expr RPAR!
+		| bracketed_expr
                 | func_call
                 | nbr_ref
 		;
+
+bracketed_expr  : LPAR expr RPAR -> ^(BRACKETED_EXPR expr)
+                ;
                 
 constant	: INT_LITERAL
 		| FLOAT_LITERAL

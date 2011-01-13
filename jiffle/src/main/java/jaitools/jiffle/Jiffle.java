@@ -23,29 +23,37 @@ import jaitools.CollectionFactory;
 import jaitools.jiffle.parser.FunctionValidator;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
-import jaitools.jiffle.parser.MakeRuntime;
 import jaitools.jiffle.parser.Morph1;
+import jaitools.jiffle.parser.Morph2;
+import jaitools.jiffle.parser.Morph3;
 import jaitools.jiffle.parser.Morph4;
 import jaitools.jiffle.parser.Morph5;
-import jaitools.jiffle.parser.Morph6;
+import jaitools.jiffle.parser.RuntimeSourceCreator;
 import jaitools.jiffle.parser.VarClassifier;
-import jaitools.jiffle.runtime.JiffleInterpreter;
-import jaitools.jiffle.runtime.JiffleRunner;
+import jaitools.jiffle.runtime.JiffleRuntime;
 import jaitools.jiffle.runtime.VarTable;
+
 import java.awt.image.RenderedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.tree.BufferedTreeNodeStream;
 import org.antlr.runtime.tree.CommonTree;
 import org.antlr.runtime.tree.CommonTreeNodeStream;
+
+import org.codehaus.janino.SimpleCompiler;
+
 
 /**
  * This class is the starting point for compiling and running a Jiffle script.
@@ -54,7 +62,7 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
  * The script is then compiled in a series of error checking and optimizing
  * steps.  If compilation is successful the Jiffle object will now contain
  * an executable form of the script which can be run directly by passing the object
- * to a new instance of {@link JiffleRunner} as in this example:
+ * to a new instance of {@link jaitools.jiffle.runtime.JiffleRunner} as in this example:
  * <pre><code>
  * RenderedImage inImg = ...  // get an input image
  * 
@@ -87,7 +95,7 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
  * </code></pre>
  * 
  * Alternatively, the compiled Jiffle can be run indirectly by submitting the
- * script to a {@link JiffleInterpreter} object which runs each submitted script 
+ * script to a {@link jaitools.jiffle.runtime.JiffleInterpreter} object which runs each submitted script 
  * in a separate thread.
  * <pre><code>
  *  public class Foo
@@ -149,11 +157,18 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
  * @version $Id$
  */
 public class Jiffle {
+    
+    private static final String RUNTIME_CLASS_NAME = "JiffleRuntimeImpl";
+    private static final String PACKAGE_NAME = Jiffle.class.getPackage().getName();
 
     private String script;
+    
     private CommonTree primaryAST;
+    private CommonTree optimizedAST;
     private CommonTokenStream tokens;
-    private CommonTree runtimeAST;
+    
+    private JiffleRuntime runtimeInstance;
+    private String runtimeSource;
     
     private Map<String, RenderedImage> imageParams;
     private Set<String> vars;
@@ -204,6 +219,30 @@ public class Jiffle {
         
         init(prog, params);
     }
+    
+    public JiffleRuntime getRuntimeInstance() {
+        if (runtimeInstance == null) {
+            try {
+                createRuntimeInstance();
+            } catch (Exception ex) {
+                throw new IllegalStateException(ex);
+            }
+        }
+        
+        return runtimeInstance;
+    }
+    
+    public String getRuntimeSource() {
+        if (runtimeSource == null) {
+            try {
+                createRuntimeInstance();
+            } catch (Exception ex) {
+                throw new IllegalStateException(ex);
+            }
+        }
+        
+        return runtimeSource;
+    }
 
     /**
      * Helper function for constructors
@@ -217,7 +256,7 @@ public class Jiffle {
         this.imageParams.putAll(params);
 
         // add extra new line just in case last statement hits EOF
-        this.script = new String(script + "\n");
+        this.script = script + "\n";
         compile();
     }
 
@@ -237,7 +276,7 @@ public class Jiffle {
      * errors result in exceptions ?
      */
     public boolean isCompiled() {
-        return (runtimeAST != null);
+        return (optimizedAST != null);
     }
 
     /**
@@ -260,11 +299,12 @@ public class Jiffle {
     }
 
     /**
-     * Returns the executable form of the Jiffle program as a stram of Abstract
-     * Syntax Tree nodes
+     * Returns an AST to be used as input to ImageCalculator.
+     * 
+     * @deprecated This is part of the old run-time system and will be removed shortly.
      */
     public BufferedTreeNodeStream getRuntimeAST() {
-        BufferedTreeNodeStream nodes = new BufferedTreeNodeStream(runtimeAST);
+        BufferedTreeNodeStream nodes = new BufferedTreeNodeStream(optimizedAST);
         nodes.setTokenStream(tokens);
         return nodes;
     }
@@ -288,8 +328,6 @@ public class Jiffle {
      * @todo better system for error and warning reporting
      */
     private void compile() throws JiffleCompilationException {
-        primaryAST = null;
-
         if (script != null && script.length() > 0) {
             buildAST();
             
@@ -301,7 +339,7 @@ public class Jiffle {
                 throw new JiffleCompilationException(getErrorString());
             }
             
-            runtimeAST = optimizeTree();
+            optimizeTree();
         }
     }
     
@@ -411,7 +449,7 @@ public class Jiffle {
      * 
      * @return the optimized AST
      */
-    private CommonTree optimizeTree() {
+    private void optimizeTree() {
         CommonTree tree;
         
         try {
@@ -424,36 +462,93 @@ public class Jiffle {
             tree = (CommonTree) m1Ret.getTree();
 
             nodes = new CommonTreeNodeStream(tree);
-            Morph4 m4 = new Morph4(nodes);
-            Morph4.start_return m4Ret = m4.start();
-            tree = (CommonTree) m4Ret.getTree();
+            Morph2 m2 = new Morph2(nodes);
+            Morph2.start_return m2Ret = m2.start();
+            tree = (CommonTree) m2Ret.getTree();
             
-            Morph5 m5;
+            Morph3 m3;
             VarTable varTable = new VarTable();
             do {
                 nodes = new CommonTreeNodeStream(tree);
-                m5 = new Morph5(nodes);
-                m5.setVarTable(varTable);
-                Morph5.start_return m5Ret = m5.start();
-                tree = (CommonTree) m5Ret.getTree();
-            } while (m5.getCount() > 0);
+                m3 = new Morph3(nodes);
+                m3.setVarTable(varTable);
+                Morph3.start_return m3Ret = m3.start();
+                tree = (CommonTree) m3Ret.getTree();
+            } while (m3.getCount() > 0);
 
             nodes = new CommonTreeNodeStream(tree);
-            Morph6 m6 = new Morph6(nodes);
-            m6.setVarTable(varTable);
-            Morph6.start_return m6Ret = m6.start();
-            tree = (CommonTree) m6Ret.getTree();
+            Morph4 m4 = new Morph4(nodes);
+            m4.setVarTable(varTable);
+            Morph4.start_return m4Ret = m4.start();
+            tree = (CommonTree) m4Ret.getTree();
             
             nodes = new CommonTreeNodeStream(tree);
-            MakeRuntime rt = new MakeRuntime(nodes);
-            MakeRuntime.start_return rtRet = rt.start();
-            tree = (CommonTree) rtRet.getTree();
+            Morph5 m5 = new Morph5(nodes);
+            Morph5.start_return m5Ret = m5.start();
+            tree = (CommonTree) m5Ret.getTree();
 
         } catch (RecognitionException ex) {
-            throw new RuntimeException(ex);
+            throw new IllegalStateException(ex);
         }        
         
-        return tree;
+        optimizedAST = tree;
+    }
+
+    private void createRuntimeInstance() throws Exception {
+        BufferedTreeNodeStream nodes = new BufferedTreeNodeStream(optimizedAST);
+        nodes.setTokenStream(tokens);
+        RuntimeSourceCreator me = new RuntimeSourceCreator(nodes);
+        me.compile();
+        
+        createRuntimeSource(me.getSource());
+        
+        SimpleCompiler compiler = new SimpleCompiler();
+        compiler.cook(runtimeSource);
+        Class<?> clazz = compiler.getClassLoader().loadClass(PACKAGE_NAME + "." + RUNTIME_CLASS_NAME);
+        runtimeInstance = (JiffleRuntime) clazz.newInstance();
+    }
+    
+    private void createRuntimeSource(String evalSource) throws Exception {
+        InputStream in = Jiffle.class.getResourceAsStream(RUNTIME_CLASS_NAME + ".java");
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+        StringBuilder sb  = new StringBuilder();
+        String line = reader.readLine();
+        boolean isBreak = false;
+        
+        while (line != null) {
+            if (isBreak) {
+                if (line.contains("COMPILER_RESUME")) {
+                    isBreak = false;
+                }
+            } else if (line.contains("COMPILER_BREAK")) {
+                isBreak = true;
+                sb.append(formatSource(evalSource, 8));
+
+            } else {
+                sb.append(line).append("\n");
+            }
+            
+            line = reader.readLine();
+        }
+        reader.close();
+        
+        runtimeSource = sb.toString();
+    }
+    
+    private String formatSource(String source, int indent) {
+        StringBuilder sb = new StringBuilder();
+        
+        char[] c = new char[indent];
+        Arrays.fill(c, ' ');
+        String indentStr = String.valueOf(c);
+        
+        String[] lines = source.split("\n");
+        
+        for (String line : lines) {
+            sb.append(indentStr).append(line.trim()).append("\n");
+        }
+        
+        return sb.toString();
     }
 
 }

@@ -46,7 +46,7 @@ import jaitools.jiffle.runtime.JiffleRunner;
 private boolean printDebug = false;
 public void setPrint(boolean b) { printDebug = b; }
 
-private FunctionTable funcTable = new FunctionTable();
+private FunctionLookup functionLookup = new FunctionLookup();
 
 private boolean isDefinedFunction(String funcName, int numArgs) {
     boolean found = false;
@@ -57,7 +57,7 @@ private boolean isDefinedFunction(String funcName, int numArgs) {
     }
     
     if (!found) {
-        found = funcTable.isDefined(funcName, numArgs);
+        found = functionLookup.isDefined(funcName, numArgs);
     }
     
     return found;
@@ -101,7 +101,8 @@ expr            : ^(ASSIGN assign_op ID expr)
                                 $ID.text + " used for both input and output");
                       }
                   }
-                  
+
+                | ^(BRACKETED_EXPR expr)                  
                 | ^(expr_op expr expr)
                 | ^(QUESTION expr expr expr)
                 | ^(PREFIX unary_op expr)
