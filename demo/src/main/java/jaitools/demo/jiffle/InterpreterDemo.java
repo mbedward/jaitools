@@ -80,7 +80,7 @@ public class InterpreterDemo {
     public static void main(String[] args) throws Exception {
         InterpreterDemo demo = new InterpreterDemo();
 
-        URL url = demo.getClass().getResource("/scripts/ripples.jfl");
+        URL url = demo.getClass().getResource("/scripts/ripple.jfl");
 
         if (args.length == 1) {
             String arg = args[0];
