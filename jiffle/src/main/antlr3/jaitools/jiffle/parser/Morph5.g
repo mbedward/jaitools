@@ -18,17 +18,9 @@
  * 
  */
  
-/** 
-  * For each subtree which of the form LOCAL_VAR = FIXED_VALUE
-  * <ul>
-  * <li> stores the var's name and value in a VarTable object passed in
-  *      by the client code;<br> 
-  * <li> deletes the subtree from the AST
-  * </ul>
-  * This tree walker is run repeatedly so that disjoint chains of local
-  * vars are processed fully (e.g. a = 42; b = a;). After each run the
-  * number of local vars removed from the AST and stored in the VarTable
-  * can be checked with the getCount() method.
+ /** 
+  * Replaces all var qualifiers, other than IMAGE_VAR, that were used in the 
+  * optimizing steps with VAR
   *
   * @author Michael Bedward
   */
@@ -41,12 +33,12 @@ options {
     output = AST;
 }
 
+tokens {
+    VAR;
+}
+
 @header {
 package jaitools.jiffle.parser;
-
-import jaitools.jiffle.runtime.VarTable;
-
-import static jaitools.numeric.DoubleComparison.*;
 }
 
 @members {
@@ -54,24 +46,9 @@ import static jaitools.numeric.DoubleComparison.*;
 private boolean printDebug = false;
 public void setPrint(boolean b) { printDebug = b; }
 
-private VarTable varTable;
-public void setVarTable(VarTable varTable) { this.varTable = varTable; }
-
-private double getFixedValue(CommonTree t) {
-    return ((FixedValueNode)t).getValue();
 }
 
-private int count = 0;
-public int getCount() { return count; }
-}
-
-start
-@init {
-    if (varTable == null) {
-        throw new RuntimeException("Must initialize varTable first");
-    }
-}
-                : statement+ 
+start           : statement+ 
                 ;
 
 statement       : image_write
@@ -80,108 +57,47 @@ statement       : image_write
 
 image_write     : ^(IMAGE_WRITE IMAGE_VAR expr)
                 ;
+
+assignment      : 
+                ;
                 
-expr returns [Double value]
-@init {
-    $value = null;
-}
-                : ^(ASSIGN op=assign_op assignable_var e=expr)
-                  {
-                      if ($e.value != null) {
-                          varTable.assign($assignable_var.varName, $op.tree.getText(), $e.value);
-                          count++ ;
-                          $value = $e.value;
-                      }
-                  }
-                  -> {$e.value != null}?   // node discarded
-                     
-                  -> ^(ASSIGN assign_op assignable_var expr)
-                  
+expr            : ^(ASSIGN op=assign_op assignable_var expr) 
                 | ^(FUNC_CALL ID expr_list)
-                
                 | ^(QUESTION expr expr expr)
-                
-                /* we evalute prefixed expressions here to catch
-                 * prefixed fixed values
-                 */
-                | ^(PREFIX unary_op e=expr)
-                   {
-                       if ($e.value != null) {
-                           switch ($unary_op.type) {
-                               case PLUS:
-                                   $value = +$e.value;
-                                   break;
-                               
-                               case MINUS:
-                                   $value = -$e.value;
-                                   break;
-                               
-                               case NOT:
-                                   // @todo check that we are dealing with a
-                                   // pseudo logical value here
-                                   $value = (dzero($e.value) ? 1.0d : 0.0d);
-                                   break;
-                               
-                               default:
-                                   throw new RuntimeException("unknown unary_op type");
-                           }
-                       }
-                   }
-                   
-                | ^(expr_op expr expr)
-              
-                | assignable_var
-                  {if ($assignable_var.value != null) $value = $assignable_var.value;}
-              
-                | non_assignable_var
-                
+                | ^(POW expr expr) 
+                | ^(TIMES expr expr) 
+                | ^(DIV expr expr) 
+                | ^(MOD expr expr) 
+                | ^(PLUS expr expr) 
+                | ^(MINUS expr expr) 
+                | ^(OR expr expr) 
+                | ^(AND expr expr) 
+                | ^(XOR expr expr) 
+                | ^(GT expr expr) 
+                | ^(GE expr expr) 
+                | ^(LT expr expr) 
+                | ^(LE expr expr) 
+                | ^(LOGICALEQ expr expr) 
+                | ^(NE expr expr) 
+                | ^(PREFIX unary_op expr)
+                | ^(BRACKETED_EXPR expr)
                 | FIXED_VALUE 
-                  {$value = getFixedValue($FIXED_VALUE);}
-              
+                | assignable_var
+                | non_assignable_var
                 ;
                 
+expr_list       : ^(EXPR_LIST expr*) 
+                ;                
                 
-assignable_var returns [String varName, Double value]
-                : POS_VAR {$varName = $POS_VAR.text;}
-                | NON_LOCAL_VAR {$varName = $NON_LOCAL_VAR.text;}
-                | LOCAL_VAR 
-                  {
-                      $varName = $LOCAL_VAR.text;
-                      // if this is a return run we might have this local var
-                      // in variable table
-                      if (varTable.contains($LOCAL_VAR.text)) {
-                          $value = varTable.get($LOCAL_VAR.text);
-                      }
-                  }
+assignable_var  : POS_VAR -> VAR[$POS_VAR.getToken()]
+                | NON_LOCAL_VAR -> VAR[$NON_LOCAL_VAR.getToken()]
                 ;
                 
-non_assignable_var : image_input
-                | IMAGE_POS_LOOKUP
-                | IMAGE_INFO_LOOKUP
-                ;
-
-image_input     : IMAGE_VAR
+non_assignable_var 
+                : IMAGE_VAR
                 | ^(NBR_REF IMAGE_VAR expr expr)
-                ;
-
-expr_list       : ^(EXPR_LIST expr*)
-                ;
-                
-expr_op         : POW
-                | TIMES 
-                | DIV 
-                | MOD
-                | PLUS  
-                | MINUS
-                | OR 
-                | AND 
-                | XOR 
-                | GT 
-                | GE 
-                | LE 
-                | LT 
-                | LOGICALEQ 
-                | NE 
+                | IMAGE_POS_LOOKUP -> VAR[$IMAGE_POS_LOOKUP.getToken()]
+                | IMAGE_INFO_LOOKUP -> VAR[$IMAGE_INFO_LOOKUP.getToken()]
                 ;
 
 assign_op	: EQ
@@ -196,10 +112,9 @@ incdec_op       : INCR
                 | DECR
                 ;
 
-unary_op returns [int type]
-                : PLUS {$type = $PLUS.type;}
-		| MINUS {$type = $MINUS.type;}
-		| NOT {$type = $NOT.type;}
+unary_op	: PLUS
+		| MINUS
+		| NOT
 		;
 		
 type_name	: 'int'

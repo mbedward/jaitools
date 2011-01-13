@@ -19,26 +19,31 @@
  */
  
  /** 
-  * Replaces all var qualifiers, other than IMAGE_VAR, that were used in the 
-  * optimizing steps with VAR
+  * Introduces FIXED_VALUE token with FixedValueNode as the tree node.
+  * Replaces INT_LITERAL AND FLOAT_LITERAL with FIXED_VALUE.
+  * Replaces TRUE and FALSE tokens with 1.0 and 0.0 FIXED_VALUE nodes
+  * respectively.
+  * Replaces NULL tokens with Double.NaN FIXED_VALUE nodes.
   *
   * @author Michael Bedward
   */
 
-tree grammar MakeRuntime;
+tree grammar Morph2;
 
 options {
-    tokenVocab = Morph6;
+    tokenVocab = Morph1;
     ASTLabelType = CommonTree;
     output = AST;
 }
 
 tokens {
-    VAR;
+    FIXED_VALUE;
 }
 
 @header {
 package jaitools.jiffle.parser;
+
+import jaitools.jiffle.runtime.VarTable;
 }
 
 @members {
@@ -58,45 +63,55 @@ statement       : image_write
 image_write     : ^(IMAGE_WRITE IMAGE_VAR expr)
                 ;
 
-assignment      : 
-                ;
-                
-expr            : ^(ASSIGN op=assign_op assignable_var expr) 
+expr            : ^(ASSIGN assign_op assignable_var expr)
                 | ^(FUNC_CALL ID expr_list)
                 | ^(QUESTION expr expr expr)
-                | ^(POW expr expr) 
-                | ^(TIMES expr expr) 
-                | ^(DIV expr expr) 
-                | ^(MOD expr expr) 
-                | ^(PLUS expr expr) 
-                | ^(MINUS expr expr) 
-                | ^(OR expr expr) 
-                | ^(AND expr expr) 
-                | ^(XOR expr expr) 
-                | ^(GT expr expr) 
-                | ^(GE expr expr) 
-                | ^(LT expr expr) 
-                | ^(LE expr expr) 
-                | ^(LOGICALEQ expr expr) 
-                | ^(NE expr expr) 
                 | ^(PREFIX unary_op expr)
-                | FIXED_VALUE 
+                | ^(expr_op expr expr)
+                | ^(BRACKETED_EXPR expr)
                 | assignable_var
                 | non_assignable_var
+                | INT_LITERAL -> FIXED_VALUE<FixedValueNode>[$INT_LITERAL.text]
+                | FLOAT_LITERAL -> FIXED_VALUE<FixedValueNode>[$FLOAT_LITERAL.text]
+                | TRUE -> FIXED_VALUE<FixedValueNode>[1.0d]
+                | FALSE -> FIXED_VALUE<FixedValueNode>[0.0d]
+                | NULL -> FIXED_VALUE<FixedValueNode>[Double.NaN]
+                | CONSTANT -> FIXED_VALUE<FixedValueNode>[VarTable.getConstant($CONSTANT.text)]
                 ;
                 
-expr_list       : ^(EXPR_LIST expr*) 
-                ;                
-                
-assignable_var  : POS_VAR -> VAR[$POS_VAR.getToken()]
-                | NON_LOCAL_VAR -> VAR[$NON_LOCAL_VAR.getToken()]
+assignable_var  : POS_VAR
+                | LOCAL_VAR
+                | NON_LOCAL_VAR
                 ;
                 
-non_assignable_var 
-                : IMAGE_VAR
+non_assignable_var :
+                  image_input
+                | IMAGE_POS_LOOKUP
+                | IMAGE_INFO_LOOKUP
+                ;
+                
+image_input     : IMAGE_VAR
                 | ^(NBR_REF IMAGE_VAR expr expr)
-                | IMAGE_POS_LOOKUP -> VAR[$IMAGE_POS_LOOKUP.getToken()]
-                | IMAGE_INFO_LOOKUP -> VAR[$IMAGE_INFO_LOOKUP.getToken()]
+                ;
+
+expr_list       : ^(EXPR_LIST expr*)
+                ;
+                
+expr_op         : POW
+                | TIMES 
+                | DIV 
+                | MOD
+                | PLUS  
+                | MINUS
+                | OR 
+                | AND 
+                | XOR 
+                | GT 
+                | GE 
+                | LE 
+                | LT 
+                | LOGICALEQ 
+                | NE 
                 ;
 
 assign_op	: EQ

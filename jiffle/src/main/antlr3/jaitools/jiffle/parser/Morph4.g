@@ -19,11 +19,8 @@
  */
  
  /** 
-  * Introduces FIXED_VALUE token with FixedValueNode as the tree node.
-  * Replaces INT_LITERAL AND FLOAT_LITERAL with FIXED_VALUE.
-  * Replaces TRUE and FALSE tokens with 1.0 and 0.0 FIXED_VALUE nodes
-  * respectively.
-  * Replaces NULL tokens with Double.NaN FIXED_VALUE nodes.
+  * Takes a VarTable provided by client code that contains var names and values
+  * for fixed values. Replaces all instances such vars in the AST by their value.
   *
   * @author Michael Bedward
   */
@@ -31,19 +28,19 @@
 tree grammar Morph4;
 
 options {
-    tokenVocab = Morph1;
+    tokenVocab = Morph3;
     ASTLabelType = CommonTree;
     output = AST;
-}
-
-tokens {
-    FIXED_VALUE;
 }
 
 @header {
 package jaitools.jiffle.parser;
 
+import jaitools.CollectionFactory;
+import jaitools.jiffle.runtime.FunctionTable;
 import jaitools.jiffle.runtime.VarTable;
+
+import static jaitools.numeric.DoubleComparison.*;
 }
 
 @members {
@@ -51,9 +48,20 @@ import jaitools.jiffle.runtime.VarTable;
 private boolean printDebug = false;
 public void setPrint(boolean b) { printDebug = b; }
 
+private VarTable varTable;
+public void setVarTable(VarTable varTable) { this.varTable = varTable; }
+
+private FunctionTable funcTable = new FunctionTable();
+
 }
 
-start           : statement+ 
+start
+@init {
+    if (varTable == null) {
+        throw new RuntimeException("Must initialize varTable first");
+    }
+}
+                : statement+ 
                 ;
 
 statement       : image_write
@@ -63,54 +71,245 @@ statement       : image_write
 image_write     : ^(IMAGE_WRITE IMAGE_VAR expr)
                 ;
 
-expr            : ^(ASSIGN assign_op assignable_var expr)
-                | ^(FUNC_CALL ID expr_list)
-                | ^(QUESTION expr expr expr)
-                | ^(PREFIX unary_op expr)
-                | ^(expr_op expr expr)
-                | assignable_var
-                | non_assignable_var
-                | INT_LITERAL -> FIXED_VALUE<FixedValueNode>[$INT_LITERAL.text]
-                | FLOAT_LITERAL -> FIXED_VALUE<FixedValueNode>[$FLOAT_LITERAL.text]
-                | TRUE -> FIXED_VALUE<FixedValueNode>[1.0d]
-                | FALSE -> FIXED_VALUE<FixedValueNode>[0.0d]
-                | NULL -> FIXED_VALUE<FixedValueNode>[Double.NaN]
-                | CONSTANT -> FIXED_VALUE<FixedValueNode>[VarTable.getConstant($CONSTANT.text)]
+expr returns [boolean hasValue, Double value]
+                : sub_expr
+                  {$hasValue = $sub_expr.hasValue; $value = $sub_expr.value;}
+              
+                  -> {$sub_expr.hasValue}? FIXED_VALUE<FixedValueNode>[$sub_expr.value]
+                  
+                  -> sub_expr
                 ;
+                
+sub_expr returns [boolean hasValue, Double value]
+@init {
+    $hasValue = false;
+    $value = null;
+}
+                : ^(ASSIGN op=assign_op assignable_var expr)
+                
+                | ^(FUNC_CALL ID expr_list)
+                  {
+                      if (!funcTable.isVolatile($ID.text) && $expr_list.values != null) {
+                          $value = funcTable.invoke($ID.text, $expr_list.values);
+                          $hasValue = true;
+                      }
+                  }
+
+                | ^(QUESTION econd=expr e1=expr e2=expr)
+                  {
+                      if (econd.hasValue && e1.hasValue && e2.hasValue) {
+                          if (!dzero(econd.value)) {
+                              $value = e1.value;
+                          } else {
+                              $value = e2.value;
+                          }
+                      }
+                  }
+                  
+                | ^(POW e1=expr e2=expr) 
+                  {
+                      if (e1.hasValue && e2.hasValue) {
+                          $value = Math.pow(e1.value, e2.value);
+                          $hasValue = true;
+                      }
+                  }
+              
+                | ^(TIMES e1=expr e2=expr) 
+                  {
+                      if (e1.hasValue && e2.hasValue) {
+                          $value = e1.value * e2.value;
+                          $hasValue = true;
+                      }
+                  }
+              
+                | ^(DIV e1=expr e2=expr) 
+                  {
+                      if (e1.hasValue && e2.hasValue) {
+                          $value = e1.value / e2.value;
+                          $hasValue = true;
+                      }
+                  }
+              
+                | ^(MOD e1=expr e2=expr) 
+                  {
+                      if (e1.hasValue && e2.hasValue) {
+                          $value = e1.value \% e2.value;
+                          $hasValue = true;
+                      }
+                  }
+                  
+                | ^(PLUS e1=expr e2=expr) 
+                  {
+                      if (e1.hasValue && e2.hasValue) {
+                          $value = e1.value + e2.value;
+                          $hasValue = true;
+                      }
+                  }
+              
+                | ^(MINUS e1=expr e2=expr) 
+                  {
+                      if (e1.hasValue && e2.hasValue) {
+                          $value = e1.value - e2.value;
+                          $hasValue = true;
+                      }
+                  }
+              
+                | ^(OR e1=expr e2=expr) 
+                  {
+                      if (e1.hasValue && e2.hasValue) {
+                          $value = (!dzero(e1.value) || !dzero(e2.value)) ? 1d : 0d;
+                          $hasValue = true;
+                      }
+                  }
+              
+                | ^(AND e1=expr e2=expr) 
+                  {
+                      if (e1.hasValue && e2.hasValue) {
+                          $value = (!dzero(e1.value) && !dzero(e2.value)) ? 1d : 0d;
+                          $hasValue = true;
+                      }
+                  }
+              
+                | ^(XOR e1=expr e2=expr) 
+                  {
+                      if (e1.hasValue && e2.hasValue) {
+                          $value = (!dzero(e1.value) ^ !dzero(e2.value)) ? 1d : 0d;
+                          $hasValue = true;
+                      }
+                  }
+              
+                | ^(GT e1=expr e2=expr) 
+                  {
+                      if (e1.hasValue && e2.hasValue) {
+                          $value = (dcomp(e1.value, e2.value) > 0) ? 1d : 0d;
+                          $hasValue = true;
+                      }
+                  }
+              
+                | ^(GE e1=expr e2=expr) 
+                  {
+                      if (e1.hasValue && e2.hasValue) {
+                          $value = (dcomp(e1.value, e2.value) >= 0) ? 1d : 0d;
+                          $hasValue = true;
+                      }
+                  }
+              
+                | ^(LT e1=expr e2=expr) 
+                  {
+                      if (e1.hasValue && e2.hasValue) {
+                          $value = (dcomp(e1.value, e2.value) < 0) ? 1d : 0d;
+                          $hasValue = true;
+                      }
+                  }
+              
+                | ^(LE e1=expr e2=expr) 
+                  {
+                      if (e1.hasValue && e2.hasValue) {
+                          $value = (dcomp(e1.value, e2.value) <= 0) ? 1d : 0d;
+                          $hasValue = true;
+                      }
+                  }
+              
+                | ^(LOGICALEQ e1=expr e2=expr) 
+                  {
+                      if (e1.hasValue && e2.hasValue) {
+                          $value = (dcomp(e1.value, e2.value) == 0) ? 1d : 0d;
+                          $hasValue = true;
+                      }
+                  }
+              
+                | ^(NE e1=expr e2=expr) 
+                  {
+                      if (e1.hasValue && e2.hasValue) {
+                          $value = (dcomp(e1.value, e2.value) != 0) ? 1d : 0d;
+                          $hasValue = true;
+                      }
+                  }
+                  
+                | ^(PREFIX PLUS e1=expr)
+                  {
+                      if (e1.hasValue) {
+                          $value = +e1.value;
+                          $hasValue = true;
+                      }
+                  }
+
+                | ^(PREFIX MINUS e1=expr)
+                  {
+                      if (e1.hasValue) {
+                          $value = -e1.value;
+                          $hasValue = true;
+                      }
+                  }
+                               
+                | ^(PREFIX NOT e1=expr)
+                  {
+                      // @todo check that we are dealing with a
+                      // pseudo logical value here
+                      if (e1.hasValue) {
+                          $value = dzero(e1.value) ? 1d : 0d;
+                          $hasValue = true;
+                      }
+                  }
+
+                | ^(BRACKETED_EXPR e1=expr)
+                  {
+                      if (e1.hasValue) {
+                          $value = -e1.value;
+                          $hasValue = true;
+                      }
+                  }
+                               
+                | POS_VAR
+                | IMAGE_VAR
+                | ^(NBR_REF IMAGE_VAR expr expr)
+                | NON_LOCAL_VAR
+                | IMAGE_POS_LOOKUP
+                | IMAGE_INFO_LOOKUP
+                
+                | LOCAL_VAR
+                  {
+                      $value = varTable.get($LOCAL_VAR.text);
+                      $hasValue = true;
+                  }
+                  
+                | FIXED_VALUE 
+                  {
+                      $value = ((FixedValueNode)$FIXED_VALUE).getValue();
+                      $hasValue = true;
+                  }
+                  
+                | CONSTANT
+                  {
+                      $value = varTable.get($CONSTANT.text);
+                      $hasValue = true;
+                  }
+                ;
+                
+                
+expr_list returns [ List<Double> values ]
+@init { 
+    $values = CollectionFactory.list();
+}
+                : ^(EXPR_LIST ( sub_expr 
+                                {
+                                    if ($values != null && $sub_expr.value != null) {
+                                        $values.add($sub_expr.value);
+                                    } else {
+                                        $values = null;
+                                    }
+                                } 
+                              )* )
+                ;                
                 
 assignable_var  : POS_VAR
                 | LOCAL_VAR
                 | NON_LOCAL_VAR
                 ;
                 
-non_assignable_var :
-                  image_input
+non_assignable_var : IMAGE_VAR
                 | IMAGE_POS_LOOKUP
                 | IMAGE_INFO_LOOKUP
-                ;
-                
-image_input     : IMAGE_VAR
-                | ^(NBR_REF IMAGE_VAR expr expr)
-                ;
-
-expr_list       : ^(EXPR_LIST expr*)
-                ;
-                
-expr_op         : POW
-                | TIMES 
-                | DIV 
-                | MOD
-                | PLUS  
-                | MINUS
-                | OR 
-                | AND 
-                | XOR 
-                | GT 
-                | GE 
-                | LE 
-                | LT 
-                | LOGICALEQ 
-                | NE 
                 ;
 
 assign_op	: EQ
@@ -125,11 +324,6 @@ incdec_op       : INCR
                 | DECR
                 ;
 
-unary_op	: PLUS
-		| MINUS
-		| NOT
-		;
-		
 type_name	: 'int'
 		| 'float'
 		| 'double'
