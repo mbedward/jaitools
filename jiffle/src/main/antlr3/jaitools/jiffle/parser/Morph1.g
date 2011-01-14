@@ -40,10 +40,8 @@ options {
 }
 
 tokens {
-    POS_VAR;
     IMAGE_VAR;
-    LOCAL_VAR;
-    NON_LOCAL_VAR;
+    VAR;
     CONSTANT;
 
     IMAGE_POS_LOOKUP;
@@ -78,16 +76,8 @@ private boolean isPosFunc(String funcName) {
     return JiffleRunner.isPositionalFunction(funcName);
 }
 
-private boolean isPosVar(String varName) {
-    return metadata.getPositionalVars().contains(varName);
-}
-
 private boolean isImageVar(String varName) {
     return metadata.getImageVars().contains(varName);
-}
-
-private boolean isLocalVar(String varName) {
-    return metadata.getLocalVars().contains(varName);
 }
 
 private boolean isJiffleConstant(String varName) {
@@ -138,11 +128,9 @@ expr            : ^(ASSIGN assign_op var expr)
                 ;
                 
 var             :ID
-                  -> {isPosVar($ID.text)}? POS_VAR[$ID.text]
                   -> {isImageVar($ID.text)}? IMAGE_VAR[$ID.text]
-                  -> {isLocalVar($ID.text)}? LOCAL_VAR[$ID.text]
                   -> {isJiffleConstant($ID.text)}? CONSTANT[$ID.text]
-                  -> NON_LOCAL_VAR[$ID.text]
+                  -> VAR[$ID.text]
                 ;
                 
 constant        : TRUE

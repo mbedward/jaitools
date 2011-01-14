@@ -19,8 +19,7 @@
  */
  
  /** 
-  * Replaces all var qualifiers, other than IMAGE_VAR, that were used in the 
-  * optimizing steps with VAR
+  * Converts all var nodes, other than IMAGE_VAR, to VAR.
   *
   * @author Michael Bedward
   */
@@ -28,25 +27,16 @@
 tree grammar Morph5;
 
 options {
-    tokenVocab = Morph4;
+    tokenVocab = Morph2;
     ASTLabelType = CommonTree;
     output = AST;
-}
-
-tokens {
-    VAR;
 }
 
 @header {
 package jaitools.jiffle.parser;
 }
 
-@members {
-    
-private boolean printDebug = false;
-public void setPrint(boolean b) { printDebug = b; }
-
-}
+@members { /* Empty */ }
 
 start           : statement+ 
                 ;
@@ -89,8 +79,7 @@ expr            : ^(ASSIGN op=assign_op assignable_var expr)
 expr_list       : ^(EXPR_LIST expr*) 
                 ;                
                 
-assignable_var  : POS_VAR -> VAR[$POS_VAR.getToken()]
-                | NON_LOCAL_VAR -> VAR[$NON_LOCAL_VAR.getToken()]
+assignable_var  : VAR
                 ;
                 
 non_assignable_var 

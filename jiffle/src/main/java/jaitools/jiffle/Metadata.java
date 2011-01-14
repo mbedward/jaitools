@@ -42,8 +42,6 @@ public class Metadata {
     private Map<String, RenderedImage> imageParams;
     private Rectangle outImgBounds;
     private Set<String> outImgVars;
-    private Set<String> localVars;
-    private Set<String> positionalVars;
     private Set<String> userVars;
 
     /**
@@ -63,8 +61,6 @@ public class Metadata {
      */
     public void setVarData(VarClassifier classifier) {
         outImgVars = classifier.getOutputImageVars();
-        localVars = classifier.getLocalVars();
-        positionalVars = classifier.getPositionalVars();
         userVars = classifier.getUserVars();
     }
     
@@ -83,25 +79,10 @@ public class Metadata {
     }
     
     /**
-     * Returns the names of local variables as an unmodifiable Set
-     */
-    public Set<String> getLocalVars() {
-        return Collections.unmodifiableSet(localVars);
-    }
-
-    /**
      * Returns the names of output image variables as an unmodifiable Set
      */
     public Set<String> getOutputImageVars() {
         return Collections.unmodifiableSet(outImgVars);
-    }
-
-    /**
-     * Returns the names of variables that depend on image position
-     * as an unmodifiable Set
-     */
-    public Set<String> getPositionalVars() {
-        return Collections.unmodifiableSet(positionalVars);
     }
 
 }

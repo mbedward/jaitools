@@ -47,10 +47,6 @@ import jaitools.jiffle.runtime.VarTable;
 }
 
 @members {
-    
-private boolean printDebug = false;
-public void setPrint(boolean b) { printDebug = b; }
-
 }
 
 start           : statement+ 
@@ -79,9 +75,7 @@ expr            : ^(ASSIGN assign_op assignable_var expr)
                 | CONSTANT -> FIXED_VALUE<FixedValueNode>[VarTable.getConstant($CONSTANT.text)]
                 ;
                 
-assignable_var  : POS_VAR
-                | LOCAL_VAR
-                | NON_LOCAL_VAR
+assignable_var  : VAR
                 ;
                 
 non_assignable_var :

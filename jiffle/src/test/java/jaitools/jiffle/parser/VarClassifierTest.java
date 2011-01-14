@@ -38,34 +38,6 @@ import static org.junit.Assert.*;
 public class VarClassifierTest extends TreeWalkerTestBase {
 
     /**
-     * Test identification of positional variables
-     * @throws java.lang.Exception
-     */
-    @Test
-    public void testClassification() throws Exception {
-        System.out.println("   testClassification");
-        String input =
-                "x = x();" +
-                "y = 2.0;" +
-                "pos1 = 1 + x;" +
-                "pos2 = y + x;" +
-                "yadd1 = 1 + y;" +
-                "pos3 = gen1 + pos1;" ;
-
-        VarClassifier classifier = new VarClassifier(getAST(input));
-        // classifier.setPrint(true);
-
-        // set a dummy image var to avoid the classifier complaining
-        classifier.setImageVars(Arrays.asList(new String[]{"foo"}));
-        classifier.start();
-        
-        Set<String> posVars = classifier.getPositionalVars();
-        assertFalse(posVars.contains("y"));
-        assertFalse(posVars.contains("yadd1"));
-        assertTrue(posVars.containsAll(Arrays.asList(new String[]{"x", "pos1", "pos2", "pos3"})));
-    }
-    
-    /**
      * Test check for using variables before assigning a value to them
      * @throws java.lang.Exception
      */

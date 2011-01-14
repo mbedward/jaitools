@@ -23,7 +23,6 @@ package jaitools.jiffle.runtime;
 import jaitools.CollectionFactory;
 import jaitools.jiffle.Jiffle;
 import jaitools.jiffle.Metadata;
-import jaitools.jiffle.parser.ImageCalculator;
 import static jaitools.numeric.DoubleComparison.*;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
@@ -37,7 +36,6 @@ import javax.media.jai.PlanarImage;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 import javax.media.jai.iterator.WritableRandomIter;
-import org.antlr.runtime.RecognitionException;
 
 /**
  * Executes a compiled script contained within a Jiffle object.
@@ -353,6 +351,9 @@ public class JiffleRunner {
      * @return success (true) or failure (false)
      */
     public boolean run() throws JiffleInterpreterException {
+        
+        /*
+        
         if (finished) {
             throw new JiffleInterpreterException("JiffleRunner.run() can only be called once");
         }
@@ -363,6 +364,8 @@ public class JiffleRunner {
         /* 
          * Evalute the AST at each pixel position
          */
+        
+        /*
         while (!finished) {
             try {
                 calc.start();
@@ -372,7 +375,7 @@ public class JiffleRunner {
             calc.reset();
             nextPixel();
         }
-        
+        */
         return true;
     }
 

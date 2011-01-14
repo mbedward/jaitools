@@ -19,15 +19,10 @@
  */
  
  /** 
-  * Grammar for VarClassifier. Reads the AST produced by the token
-  * parser and does the following; 
-  * <ol type="1">
-  * <li> performs an check for any user-defined variables that are 
-  *      used before being assigned a value (either an error or
-  *      an image var)
-  * <li> identifies positional variables (those that depend directly
-  *      or indirectly on image position)
-  * </ol>
+  * Grammar for VarClassifier. 
+  * 
+  * Takes the AST produced by the Jiffle parser and checks for errors
+  * with variables (e.g. use before initial assignment).
   *
   * @author Michael Bedward
   */
@@ -52,39 +47,6 @@ import jaitools.jiffle.runtime.VarTable;
 }
 
 @members {
-private boolean printDebug = false;
-public void setPrint(boolean b) { printDebug = b; }
-
-private boolean isInfoFunc(String funcName) {
-    return JiffleRunner.isInfoFunction(funcName);
-}
-
-private boolean isPositionalFunc(String funcName) {
-    return JiffleRunner.isPositionalFunction(funcName);
-}
-
-/*
- * Positional variables - those that depend directly or indirectly
- * on image position when the jiffle is being run
- */
-private Set<String> positionalVars = CollectionFactory.set();
-
-public Set<String> getPositionalVars() {
-    return positionalVars;
-}
-
-
-/*
- * Purely local variables - those that depend only on
- * local numeric values and/or named constants
- */
-private Set<String> localVars = CollectionFactory.set();
-private Set<String> nonLocalVars = CollectionFactory.set();
-
-public Set<String> getLocalVars() {
-    return localVars;
-}
-
 
 /*
  * Recording of user variables and checking that they are
@@ -206,66 +168,22 @@ start
 statement       : expr
                 ;
 
-expr_list returns [boolean isLocal]
-@init{
-    $isLocal = true;
-}
-                : ^(EXPR_LIST (expr {if (!$expr.isLocal) $isLocal = false;} )*)
+expr_list       : ^(EXPR_LIST (expr)*)
                 ;
 
-expr returns [boolean isLocal, boolean isPositional]
-@init {
-    $isLocal = true; 
-    $isPositional = false;
-}
-                : ^(ASSIGN assign_op ID e1=expr)
+expr            : ^(ASSIGN assign_op ID e1=expr)
                   {
                       if (imageVars.contains($ID.text)) {
                           outImageVars.add($ID.text);
-                      
-                          if (printDebug) {
-                              System.out.println("Output image var: " + $ID.text);
-                          }
-                          
                       } else {
                           userVars.add($ID.text);
-                      
-                          if ($e1.isPositional) {
-                              positionalVars.add($ID.text);
-                              if (printDebug) {
-                                  System.out.println($ID.text + " is positional");
-                              }
-                          } else if ($e1.isLocal) {
-                              localVars.add($ID.text);
-                              if (printDebug) {
-                                  System.out.println($ID.text + " is local");
-                              }
-                          } else {
-                              nonLocalVars.add($ID.text);
-                          }
                       }
                   }
-
 
                 | ^(FUNC_CALL ID expr_list)
-                  { 
-                      if (isPositionalFunc($ID.text)) {
-                          $isPositional = true;
-                          $isLocal = false;
-
-                      } else if (isInfoFunc($ID.text)) {
-                          $isLocal = false;
-                      } else {
-                          $isLocal = $expr_list.isLocal;
-                      }
-                  }
-                  
                 | ^(NBR_REF ID expr expr)
                   {
                       nbrRefVars.add($ID.text);
-                  
-                      // input image var so non-local expression
-                      $isLocal = false;
                   }
 
                 | ID
@@ -274,16 +192,8 @@ expr returns [boolean isLocal, boolean isPositional]
                           if (outImageVars.contains($ID.text)) {
                               // error - using image for input and output
                               errorTable.put($ID.text, ErrorCode.IMAGE_IO);
-                          
-                              if (printDebug) {
-                                  System.out.println("Image var error: " +
-                                    $ID.text + " used for both input and output");
-                              }
                           } else {
                               inImageVars.add($ID.text);
-                          
-                              // input image var so non-local expression
-                              $isLocal = false;
                           }
                           
                       } else if (!userVars.contains($ID.text) &&     // not assigned yet
@@ -292,28 +202,10 @@ expr returns [boolean isLocal, boolean isPositional]
                       {
                           unassignedVars.add($ID.text);
                       }
-                      
-                      // var dependency tracking
-                      if (positionalVars.contains($ID.text)) {
-                          $isPositional = true;
-                          $isLocal = false;
-                      } else if (nonLocalVars.contains($ID.text)) {
-                          $isLocal = false;
-                      }
                   }
                   
-                | ^(expr_op e1=expr e2=expr)
-                  {
-                      $isLocal = ($e1.isLocal && $e2.isLocal);
-                      $isPositional = ($e1.isPositional || $e2.isPositional);
-                  }
-     
-                | ^(QUESTION etest=expr e1=expr e2=expr)
-                  {
-                      $isLocal = ($etest.isLocal && $e1.isLocal && $e2.isLocal);
-                      $isPositional = ($etest.isPositional || $e1.isPositional || $e2.isPositional);
-                  }
-                  
+                | ^(expr_op expr expr)
+                | ^(QUESTION expr expr expr)
                 | ^(PREFIX unary_op expr)
                 | ^(BRACKETED_EXPR expr)
                 | INT_LITERAL 

@@ -20,6 +20,7 @@
 
 package jaitools.jiffle.runtime;
 
+import org.junit.Ignore;
 import jaitools.CollectionFactory;
 import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
@@ -38,6 +39,7 @@ import static jaitools.numeric.DoubleComparison.*;
  * Unit tests for the JiffleRunner class
  * @author Michael Bedward
  */
+@Ignore
 public class JiffleRunnerTest {
 
     public JiffleRunnerTest() {

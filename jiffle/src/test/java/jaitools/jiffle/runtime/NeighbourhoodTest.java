@@ -20,6 +20,7 @@
 
 package jaitools.jiffle.runtime;
 
+import org.junit.Ignore;
 import jaitools.CollectionFactory;
 import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
@@ -34,6 +35,7 @@ import static org.junit.Assert.*;
  * Test the neighbourhood accessor: imgVar[xOffset, yOffset]
  * @author Michael Bedward
  */
+@Ignore
 public class NeighbourhoodTest {
 
     @Test

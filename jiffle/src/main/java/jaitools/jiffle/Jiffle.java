@@ -25,13 +25,10 @@ import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
 import jaitools.jiffle.parser.Morph1;
 import jaitools.jiffle.parser.Morph2;
-import jaitools.jiffle.parser.Morph3;
-import jaitools.jiffle.parser.Morph4;
 import jaitools.jiffle.parser.Morph5;
 import jaitools.jiffle.parser.RuntimeSourceCreator;
 import jaitools.jiffle.parser.VarClassifier;
 import jaitools.jiffle.runtime.JiffleRuntime;
-import jaitools.jiffle.runtime.VarTable;
 
 import java.awt.image.RenderedImage;
 import java.io.BufferedReader;
@@ -465,22 +462,6 @@ public class Jiffle {
             Morph2 m2 = new Morph2(nodes);
             Morph2.start_return m2Ret = m2.start();
             tree = (CommonTree) m2Ret.getTree();
-            
-            Morph3 m3;
-            VarTable varTable = new VarTable();
-            do {
-                nodes = new CommonTreeNodeStream(tree);
-                m3 = new Morph3(nodes);
-                m3.setVarTable(varTable);
-                Morph3.start_return m3Ret = m3.start();
-                tree = (CommonTree) m3Ret.getTree();
-            } while (m3.getCount() > 0);
-
-            nodes = new CommonTreeNodeStream(tree);
-            Morph4 m4 = new Morph4(nodes);
-            m4.setVarTable(varTable);
-            Morph4.start_return m4Ret = m4.start();
-            tree = (CommonTree) m4Ret.getTree();
             
             nodes = new CommonTreeNodeStream(tree);
             Morph5 m5 = new Morph5(nodes);

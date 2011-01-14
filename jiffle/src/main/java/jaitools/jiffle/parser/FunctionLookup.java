@@ -5,9 +5,8 @@
 
 package jaitools.jiffle.parser;
 
-import jaitools.jiffle.runtime.JiffleFunctions;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -15,79 +14,151 @@ import java.util.Map;
  */
 public class FunctionLookup {
     
-    Map<String, String> lookup = new HashMap<String, String>();
+    private static final String EVALUATOR_CLASS_NAME = "TempEval";
     
-    public FunctionLookup() {
-        lookup.put("abs_1", "Math.abs");
-        lookup.put("acos_1", "Math.acos");
-        lookup.put("asin_1", "Math.asin");
-        lookup.put("atan_1", "Math.atan");
-        lookup.put("cos_1", "Math.cos");
-        lookup.put("degToRad_1", "JiffleFunctions.degToRad");
-        lookup.put("floor_1", "Math.floor");
-        lookup.put("if_1", "JiffleFunctions.if1Arg");
-        lookup.put("if_2", "JiffleFunctions.if2Arg");
-        lookup.put("if_3", "JiffleFunctions.if3Arg");
-        lookup.put("if_4", "JiffleFunctions.if4Arg");
-        lookup.put("isinf_1", "JiffleFunctions.isinf");
-        lookup.put("isnan_1", "JiffleFunctions.isnan");
-        lookup.put("isnull_1", "JiffleFunctions.isnull");
-        lookup.put("log_1", "Math.log");
-        lookup.put("log_2", "JiffleFunctions.log2Arg");
-        lookup.put("max_v", "JiffleFunctions.max");
-        lookup.put("mean_v", "JiffleFunctions.mean");
-        lookup.put("median_v", "JiffleFunctions.median");
-        lookup.put("min_v", "JiffleFunctions.min");
-        lookup.put("mode_v", "JiffleFunctions.mode");
-        lookup.put("null_0", "JiffleFunctions.nullValue");
-        lookup.put("radToDeg_1", "JiffleFunctions.radToDeg");
-        lookup.put("rand_1", "JiffleFunctions.rand");
-        lookup.put("randInt_1", "JiffleFunctions.randInt");
-        lookup.put("range_1", "JiffleFunctions.range");
-        lookup.put("round_1", "Math.round");
-        lookup.put("round_2", "JiffleFunctions.range");
-        lookup.put("sdev_v", "JiffleFunctions.sdev");
-        lookup.put("sin_1", "Math.sin");
-        lookup.put("sqrt_1", "Math.sqrt");
-        lookup.put("tan_1", "Math.tan");
-        lookup.put("variance_v", "JiffleFunctions.variance");
-        
-        lookup.put("OR_2", "JiffleFunctions.OR");
-        lookup.put("AND_2", "JiffleFunctions.AND");
-        lookup.put("XOR_2", "JiffleFunctions.XOR");
-        lookup.put("GT_2", "JiffleFunctions.GT");
-        lookup.put("GE_2", "JiffleFunctions.GE");
-        lookup.put("LT_2", "JiffleFunctions.LT");
-        lookup.put("LE_2", "JiffleFunctions.LE");
-        lookup.put("EQ_2", "JiffleFunctions.EQ");
-        lookup.put("NE_2", "JiffleFunctions.NE");
-        lookup.put("NOT_1", "JiffleFunctions.NOT");
-    }
+    private static final String EVALUATOR_CLASS_BODY =
+            "package jaitools.jiffle.parser; \n"
+            + "public class " + EVALUATOR_CLASS_NAME + " implements CompileTimeEvaluator { \n"
+            + "    public Double evaluate(CompileTimeVariables vars) { \n";
+    
+    
+    private static final int MATH = 1; // function provided by java.lang.Math
+    private static final int JIFFLE = 2; // function provided by JiffleFunctions class
+    
+    private static final int VARARG = -1;
+    
+    private static class FunctionInfo {
+        final String jiffleName;
+        final String runtimeName;
+        final int numArgs;  // value of -1 indicates var args
+        final int provider;
+        final boolean isVolatile;
 
-    public String getRuntimeName(String jiffleName, int numArgs) {
-        // Look for a match with vararg functions
-        String runtimeName = lookup.get(jiffleName + "_v");
-        if (runtimeName != null) {
-            return runtimeName;
+        public FunctionInfo(String jiffleName, String runtimeName, 
+                int numArgs, int provider, boolean isVolatile) {
+            this.jiffleName = jiffleName;
+            this.runtimeName = runtimeName;
+            this.numArgs = numArgs;
+            this.provider = provider;
+            this.isVolatile = isVolatile;
         }
         
-        // Look for a match with functions having the specified number
-        // of arguments
-        runtimeName = lookup.get(jiffleName + "_" + numArgs);
-        if (runtimeName == null) {
-            throw new IllegalArgumentException("Unrecognized function name: " + jiffleName);
+        public String getRuntimeExpr() {
+            switch (provider) {
+                case MATH:
+                    return "Math." + runtimeName;
+                    
+                case JIFFLE:
+                    return "jaitools.jiffle.runtime.JiffleFunctions." + runtimeName;
+                    
+                default:
+                    throw new IllegalStateException("Internal compiler error: getRuntimeExpr");
+            }
         }
+    }
+    
+    private List<FunctionInfo> lookup = new ArrayList<FunctionInfo>();
+    
+
+    public FunctionLookup() {
+        lookup.add( new FunctionInfo("abs", "abs", 1, MATH, false) );
+        lookup.add( new FunctionInfo( "acos", "acos", 1, MATH, false));
+        lookup.add( new FunctionInfo( "asin", "asin", 1, MATH, false));
+        lookup.add( new FunctionInfo( "atan", "atan", 1, MATH, false));
+        lookup.add( new FunctionInfo( "cos", "cos", 1, MATH, false));
+        lookup.add( new FunctionInfo( "degToRad", "degToRad", 1, JIFFLE, false));
+        lookup.add( new FunctionInfo( "floor", "floor", 1, MATH, false));
+        lookup.add( new FunctionInfo( "if", "if1Arg", 1, JIFFLE, false));
+        lookup.add( new FunctionInfo( "if", "if2Arg", 2, JIFFLE, false));
+        lookup.add( new FunctionInfo( "if", "if3Arg", 3, JIFFLE, false));
+        lookup.add( new FunctionInfo( "if", "if4Arg", 4, JIFFLE, false));
+        lookup.add( new FunctionInfo( "isinf", "isinf", 1, JIFFLE, false));
+        lookup.add( new FunctionInfo( "isnan", "isnan", 1, JIFFLE, false));
+        lookup.add( new FunctionInfo( "isnull", "isnull", 1, JIFFLE, false));
+        lookup.add( new FunctionInfo( "log", "log", 1, MATH, false));
+        lookup.add( new FunctionInfo( "log", "log2Arg", 2, JIFFLE, false));
+        lookup.add( new FunctionInfo( "max", "max", VARARG, JIFFLE, false));
+        lookup.add( new FunctionInfo( "mean", "mean", VARARG, JIFFLE, false));
+        lookup.add( new FunctionInfo( "median", "median", VARARG, JIFFLE, false));
+        lookup.add( new FunctionInfo( "min", "min", VARARG, JIFFLE, false));
+        lookup.add( new FunctionInfo( "mode", "mode", VARARG, JIFFLE, false));
+        lookup.add( new FunctionInfo( "null", "nullValue", 0, JIFFLE, false));
+        lookup.add( new FunctionInfo( "radToDeg", "radToDeg", 1, JIFFLE, false));
+        lookup.add( new FunctionInfo( "rand", "rand", 1, JIFFLE, true));
+        lookup.add( new FunctionInfo( "randInt", "randInt", 1, JIFFLE, true));
+        lookup.add( new FunctionInfo( "range", "range", 1, JIFFLE, false));
+        lookup.add( new FunctionInfo( "round", "round", 1, MATH, false));
+        lookup.add( new FunctionInfo( "round", "round2Arg", 2, JIFFLE, false));
+        lookup.add( new FunctionInfo( "sdev", "sdev", VARARG, JIFFLE, false));
+        lookup.add( new FunctionInfo( "sin", "sin", 1, MATH, false));
+        lookup.add( new FunctionInfo( "sqrt", "sqrt", 1, MATH, false));
+        lookup.add( new FunctionInfo( "tan", "tan", 1, MATH, false));
+        lookup.add( new FunctionInfo( "variance", "variance", VARARG, JIFFLE, false));
         
-        return runtimeName;
+        lookup.add( new FunctionInfo( "OR", "OR", 2, JIFFLE, false));
+        lookup.add( new FunctionInfo( "AND", "AND", 2, JIFFLE, false));
+        lookup.add( new FunctionInfo( "XOR", "XOR", 2, JIFFLE, false));
+        lookup.add( new FunctionInfo( "GT", "GT", 2, JIFFLE, false));
+        lookup.add( new FunctionInfo( "GE", "GE", 2, JIFFLE, false));
+        lookup.add( new FunctionInfo( "LT", "LT", 2, JIFFLE, false));
+        lookup.add( new FunctionInfo( "LE", "LE", 2, JIFFLE, false));
+        lookup.add( new FunctionInfo( "EQ", "EQ", 2, JIFFLE, false));
+        lookup.add( new FunctionInfo( "NE", "NE", 2, JIFFLE, false));
+        lookup.add( new FunctionInfo( "NOT", "NOT", 1, JIFFLE, false));
+    }
+    
+    public String getRuntimeExpr(String jiffleName, int numArgs) {
+        try {
+            return getByNameAndArgs(jiffleName, numArgs).getRuntimeExpr();
+            
+        } catch(UndefinedFunctionException ex) {
+            throw new IllegalArgumentException(ex);
+        }
     }
     
     public boolean isDefined(String jiffleName, int numArgs) {
         try {
-            getRuntimeName(jiffleName, numArgs);
-        } catch (IllegalArgumentException ex) {
+            getByNameAndArgs(jiffleName, numArgs);
+        } catch (UndefinedFunctionException ex) {
             return false;
         }
         
         return true;
     }
+    
+    public boolean isVolatile(String jiffleName) {
+        try {
+            List<FunctionInfo> list = getByName(jiffleName);
+            return list.get(0).isVolatile;
+            
+        } catch (UndefinedFunctionException ex) {
+            throw new IllegalArgumentException(ex);
+        }
+    }
+    
+    private FunctionInfo getByNameAndArgs(String jiffleName, int numArgs) throws UndefinedFunctionException {
+        List<FunctionInfo> list = getByName(jiffleName);
+        for (FunctionInfo info : list) {
+            if (info.jiffleName.equals(jiffleName)
+                    && (info.numArgs == numArgs || info.numArgs == VARARG)) {
+                return info;
+            }
+        }
+
+        throw new IllegalArgumentException("Unrecognized function name: " + jiffleName);
+    }
+    
+    private List<FunctionInfo> getByName(String jiffleName) throws UndefinedFunctionException {
+        List<FunctionInfo> list = new ArrayList<FunctionInfo>();
+        for (FunctionInfo info : lookup) {
+            list.add(info);
+        }
+
+        if (list.isEmpty()) {
+            throw new UndefinedFunctionException(jiffleName);
+        }
+        
+        return list;
+    }
+
 }
