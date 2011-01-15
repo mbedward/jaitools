@@ -19,19 +19,18 @@
  */
  
  /** 
-  * Grammar for step 1 in tree morphing: 
+  * Transforms variables in the AST from the parser.
   * <ul>
-  * <li> Converts ASSIGN with image var on rhs to IMAGE_WRITE
-  * <li> Converts FUNC_CALL of image pos function to IMAGE_POS_LOOKUP 
-  *      and image info function to IMAGE_INFO_LOOKUP
-  * <li> Converts ID tokens for variables into POS_VAR, IMAGE_VAR, LOCAL_VAR
-  *      or NON_LOCAL_VAR
-  * </ul>
+  * <li>Names constants (e.g. PI) are replaced by FIXED_VALUE nodes.</li>
+  * <li>TRUE, FALSE and NULL are replaced by 1.0, 0.0 and Double.NaN 
+  *     FIXED_VALUE nodes.</li>
+  * <li>Proxy functions (e.g. width(), x()) are replaced by VAR nodes 
+  *     with runtime variable names.</li>
   *
   * @author Michael Bedward
   */
 
-tree grammar Morph1;
+tree grammar VarTransformer;
 
 options {
     tokenVocab = Jiffle;
@@ -40,14 +39,10 @@ options {
 }
 
 tokens {
+    FIXED_VALUE;
     IMAGE_VAR;
-    VAR;
-    CONSTANT;
-
-    IMAGE_POS_LOOKUP;
-    IMAGE_INFO_LOOKUP;
-
     IMAGE_WRITE;
+    VAR;
 }
 
 @header {
@@ -55,37 +50,19 @@ package jaitools.jiffle.parser;
 
 import jaitools.jiffle.runtime.JiffleRunner;
 import jaitools.jiffle.Metadata;
-import jaitools.jiffle.runtime.VarTable;
 }
 
 @members {
-private boolean printDebug = false;
-public void setPrint(boolean b) { printDebug = b; }
-
 private Metadata metadata = null;
 
 public void setMetadata(Metadata metadata) {
     this.metadata = metadata;
 }
 
-private boolean isInfoFunc(String funcName) {
-    return JiffleRunner.isInfoFunction(funcName);
-}
-
-private boolean isPosFunc(String funcName) {
-    return JiffleRunner.isPositionalFunction(funcName);
-}
+private FunctionLookup functionLookup = new FunctionLookup();
 
 private boolean isImageVar(String varName) {
     return metadata.getImageVars().contains(varName);
-}
-
-private boolean isJiffleConstant(String varName) {
-    return VarTable.isConstant(varName);
-}
-
-private String getProxyVar(String funcName) {
-    return JiffleRunner.getImageFunctionProxyVar(funcName);
 }
 
 }
@@ -102,16 +79,26 @@ start
 statement       : expr
                 ;
 
-expr_list       : ^(EXPR_LIST expr*)
+expr_list returns [int size]
+@init { $size = 0; }
+                : ^(EXPR_LIST (expr {$size++;})*)
                 ;
 
 expr            : ^(ASSIGN assign_op var expr)
                   -> {isImageVar($var.text)}? ^(IMAGE_WRITE var expr)
                   -> ^(ASSIGN assign_op var expr)
                   
-                | ^(FUNC_CALL id=ID expr_list)
-                  -> {isPosFunc($id.text)}? IMAGE_POS_LOOKUP[getProxyVar($id.text)]
-                  -> {isInfoFunc($id.text)}? IMAGE_INFO_LOOKUP[getProxyVar($id.text)]
+                | ^(FUNC_CALL ID expr_list)
+                  { 
+                      FunctionInfo info = null;
+                      try {
+                          info = functionLookup.getInfo($ID.text, $expr_list.size);
+                      } catch (UndefinedFunctionException ex) {
+                          throw new IllegalStateException("Internal compiler error", ex);
+                      }
+                  }
+
+                  -> {info.isProxy()}? VAR[info.getRuntimeExpr()]
                   -> ^(FUNC_CALL ID expr_list)
                   
                 | ^(NBR_REF ID expr expr) 
@@ -123,19 +110,19 @@ expr            : ^(ASSIGN assign_op var expr)
                 | ^(BRACKETED_EXPR expr)
                 | var
                 | constant
-                | INT_LITERAL 
-                | FLOAT_LITERAL 
+                | INT_LITERAL -> FIXED_VALUE<FixedValueNode>[$INT_LITERAL.text]
+                | FLOAT_LITERAL -> FIXED_VALUE<FixedValueNode>[$FLOAT_LITERAL.text] 
                 ;
                 
 var             :ID
                   -> {isImageVar($ID.text)}? IMAGE_VAR[$ID.text]
-                  -> {isJiffleConstant($ID.text)}? CONSTANT[$ID.text]
+                  -> {ConstantLookup.isDefined($ID.text)}? FIXED_VALUE<FixedValueNode>[ConstantLookup.getValue($ID.text)]
                   -> VAR[$ID.text]
                 ;
                 
-constant        : TRUE
-                | FALSE
-                | NULL
+constant        : TRUE -> FIXED_VALUE<FixedValueNode>[1.0d]
+                | FALSE -> FIXED_VALUE<FixedValueNode>[0.0d]
+                | NULL -> FIXED_VALUE<FixedValueNode>[Double.NaN]
                 ;
 
 expr_op         : POW

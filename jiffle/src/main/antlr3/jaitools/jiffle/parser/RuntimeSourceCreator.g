@@ -28,7 +28,7 @@
 tree grammar RuntimeSourceCreator;
 
 options {
-    tokenVocab = Morph5;
+    tokenVocab = VarTransformer;
     ASTLabelType = CommonTree;
 }
 

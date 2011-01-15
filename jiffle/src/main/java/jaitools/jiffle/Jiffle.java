@@ -23,11 +23,9 @@ import jaitools.CollectionFactory;
 import jaitools.jiffle.parser.FunctionValidator;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
-import jaitools.jiffle.parser.Morph1;
-import jaitools.jiffle.parser.Morph2;
-import jaitools.jiffle.parser.Morph5;
 import jaitools.jiffle.parser.RuntimeSourceCreator;
 import jaitools.jiffle.parser.VarClassifier;
+import jaitools.jiffle.parser.VarTransformer;
 import jaitools.jiffle.runtime.JiffleRuntime;
 
 import java.awt.image.RenderedImage;
@@ -161,7 +159,7 @@ public class Jiffle {
     private String script;
     
     private CommonTree primaryAST;
-    private CommonTree optimizedAST;
+    private CommonTree transformedAST;
     private CommonTokenStream tokens;
     
     private JiffleRuntime runtimeInstance;
@@ -273,7 +271,7 @@ public class Jiffle {
      * errors result in exceptions ?
      */
     public boolean isCompiled() {
-        return (optimizedAST != null);
+        return (transformedAST != null);
     }
 
     /**
@@ -301,7 +299,7 @@ public class Jiffle {
      * @deprecated This is part of the old run-time system and will be removed shortly.
      */
     public BufferedTreeNodeStream getRuntimeAST() {
-        BufferedTreeNodeStream nodes = new BufferedTreeNodeStream(optimizedAST);
+        BufferedTreeNodeStream nodes = new BufferedTreeNodeStream(transformedAST);
         nodes.setTokenStream(tokens);
         return nodes;
     }
@@ -336,7 +334,7 @@ public class Jiffle {
                 throw new JiffleCompilationException(getErrorString());
             }
             
-            optimizeTree();
+            transformVars();
         }
     }
     
@@ -446,37 +444,23 @@ public class Jiffle {
      * 
      * @return the optimized AST
      */
-    private void optimizeTree() {
-        CommonTree tree;
-        
+    private void transformVars() {
         try {
             CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
             nodes.setTokenStream(tokens);
             
-            Morph1 m1 = new Morph1(nodes);
-            m1.setMetadata(metadata);
-            Morph1.start_return m1Ret = m1.start();
-            tree = (CommonTree) m1Ret.getTree();
-
-            nodes = new CommonTreeNodeStream(tree);
-            Morph2 m2 = new Morph2(nodes);
-            Morph2.start_return m2Ret = m2.start();
-            tree = (CommonTree) m2Ret.getTree();
-            
-            nodes = new CommonTreeNodeStream(tree);
-            Morph5 m5 = new Morph5(nodes);
-            Morph5.start_return m5Ret = m5.start();
-            tree = (CommonTree) m5Ret.getTree();
+            VarTransformer vt = new VarTransformer(nodes);
+            vt.setMetadata(metadata);
+            VarTransformer.start_return result = vt.start();
+            transformedAST = (CommonTree) result.getTree();
 
         } catch (RecognitionException ex) {
             throw new IllegalStateException(ex);
         }        
-        
-        optimizedAST = tree;
     }
 
     private void createRuntimeInstance() throws Exception {
-        BufferedTreeNodeStream nodes = new BufferedTreeNodeStream(optimizedAST);
+        BufferedTreeNodeStream nodes = new BufferedTreeNodeStream(transformedAST);
         nodes.setTokenStream(tokens);
         RuntimeSourceCreator me = new RuntimeSourceCreator(nodes);
         me.compile();

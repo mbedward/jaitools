@@ -5,8 +5,10 @@
 
 package jaitools.jiffle.parser;
 
+import jaitools.CollectionFactory;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -21,9 +23,8 @@ public class FunctionLookup {
             + "public class " + FunctionLookup.EVALUATOR_CLASS_NAME + " implements CompileTimeEvaluator { \n"
             + "    public Double evaluate(CompileTimeVariables vars) { \n";
     
-    private List<FunctionInfo> lookup = new ArrayList<FunctionInfo>();
+    private List<FunctionInfo> lookup = CollectionFactory.list();
     
-
     public FunctionLookup() {
         lookup.add( new FunctionInfo("abs", "abs", 1, FunctionInfo.MATH, false) );
         lookup.add( new FunctionInfo( "acos", "acos", 1, FunctionInfo.MATH, false));
@@ -59,6 +60,9 @@ public class FunctionLookup {
         lookup.add( new FunctionInfo( "tan", "tan", 1, FunctionInfo.MATH, false));
         lookup.add( new FunctionInfo( "variance", "variance", FunctionInfo.VARARG, FunctionInfo.JIFFLE, false));
         
+        /*
+         * Logical operators
+         */
         lookup.add( new FunctionInfo( "OR", "OR", 2, FunctionInfo.JIFFLE, false));
         lookup.add( new FunctionInfo( "AND", "AND", 2, FunctionInfo.JIFFLE, false));
         lookup.add( new FunctionInfo( "XOR", "XOR", 2, FunctionInfo.JIFFLE, false));
@@ -69,6 +73,17 @@ public class FunctionLookup {
         lookup.add( new FunctionInfo( "EQ", "EQ", 2, FunctionInfo.JIFFLE, false));
         lookup.add( new FunctionInfo( "NE", "NE", 2, FunctionInfo.JIFFLE, false));
         lookup.add( new FunctionInfo( "NOT", "NOT", 1, FunctionInfo.JIFFLE, false));
+        
+        /*
+         * Image functions which are proxies for runtime variables
+         */
+        lookup.add( new FunctionInfo( "width", "_width", 0, FunctionInfo.PROXY, false));
+        lookup.add( new FunctionInfo( "height", "_height", 0, FunctionInfo.PROXY, false));
+        lookup.add( new FunctionInfo( "size", "_size", 0, FunctionInfo.PROXY, false));
+        lookup.add( new FunctionInfo( "x", "_x", 0, FunctionInfo.PROXY, false));
+        lookup.add( new FunctionInfo( "y", "_y", 0, FunctionInfo.PROXY, false));
+        lookup.add( new FunctionInfo( "row", "_row", 0, FunctionInfo.PROXY, false));
+        lookup.add( new FunctionInfo( "col", "_col", 0, FunctionInfo.PROXY, false));
     }
     
     

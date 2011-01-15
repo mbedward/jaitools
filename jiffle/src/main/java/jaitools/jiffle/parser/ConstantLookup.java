@@ -18,33 +18,37 @@
  * 
  */
 
-package jaitools.jiffle.runtime;
+package jaitools.jiffle.parser;
 
+import jaitools.CollectionFactory;
+import java.util.Map;
 
 /**
- * Class used by {@code FunctionTable} to invoke no-argument functions
- * called from a running script
- *
- * @see FunctionTable
- *
+ * A symbol table for user-defined variables and some pre-defined, named constants
+ * (PI, E, NaN).
+ * 
  * @author Michael Bedward
  * @since 1.0
  * @source $URL$
  * @version $Id$
  */
-public abstract class OpNoArg implements OpBase {
+public class ConstantLookup {
 
-    /**
-     * Invokes the function
-     * @return result as double
-     */
-    public abstract double call();
-
-    /**
-     * Get the number of arguments
-     */
-    public int getNumArgs() {
-        return 0;
+    private static final Map<String, Double> constants;
+    static {
+        constants = CollectionFactory.map();
+        constants.put("PI", Math.PI);
+        constants.put("E", Math.E);
+        constants.put("NaN", Double.NaN);
     }
-}
+    
+    public static boolean isDefined(String name) {
+        return constants.containsKey(name);
+    }
 
+    public static double getValue(String name) {
+        Double value = constants.get(name);
+        return value == null ? Double.NaN : value.doubleValue();
+    }
+ 
+}

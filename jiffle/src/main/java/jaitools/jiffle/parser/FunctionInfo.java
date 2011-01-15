@@ -10,8 +10,15 @@ package jaitools.jiffle.parser;
  * @author michael
  */
 public class FunctionInfo {
-    public static final int MATH = 1; // function provided by java.lang.Math
-    public static final int JIFFLE = 2; // function provided by JiffleFunctions class
+    // function provided by java.lang.Math
+    public static final int MATH = 1; 
+    
+    // function provided by JiffleFunctions class
+    public static final int JIFFLE = 2; 
+    
+    // function that is a proxy for a runtime variable
+    public static final int PROXY = 3;
+    
     public static final int VARARG = -1;
     
     private final String jiffleName;
@@ -38,6 +45,8 @@ public class FunctionInfo {
                 return "Math." + runtimeName;
             case JIFFLE:
                 return "jaitools.jiffle.runtime.JiffleFunctions." + runtimeName;
+            case PROXY:
+                return runtimeName;
             default:
                 throw new IllegalStateException("Internal compiler error: getRuntimeExpr");
         }
@@ -51,8 +60,12 @@ public class FunctionInfo {
         return numArgs;
     }
 
-    boolean isVarArg() {
+    public boolean isVarArg() {
         return numArgs == VARARG;
+    }
+    
+    public boolean isProxy() {
+        return provider == PROXY;
     }
 
 }

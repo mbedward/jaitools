@@ -43,7 +43,6 @@ import java.util.Set;
 import jaitools.CollectionFactory;
 import jaitools.jiffle.ErrorCode;
 import jaitools.jiffle.runtime.JiffleRunner;
-import jaitools.jiffle.runtime.VarTable;
 }
 
 @members {
@@ -196,9 +195,9 @@ expr            : ^(ASSIGN assign_op ID e1=expr)
                               inImageVars.add($ID.text);
                           }
                           
-                      } else if (!userVars.contains($ID.text) &&     // not assigned yet
-                                 !VarTable.isConstant($ID.text) &&  // not a named constant
-                                 !unassignedVars.contains($ID.text))  // not already reported
+                      } else if (!userVars.contains($ID.text) &&
+                                 !ConstantLookup.isDefined($ID.text) &&
+                                 !unassignedVars.contains($ID.text))
                       {
                           unassignedVars.add($ID.text);
                       }

@@ -20,6 +20,7 @@
 
 package jaitools.jiffle.runtime;
 
+import jaitools.jiffle.parser.ConstantLookup;
 import jaitools.CollectionFactory;
 import jaitools.jiffle.Jiffle;
 import jaitools.jiffle.Metadata;
@@ -104,8 +105,8 @@ public class JiffleRunner {
     
     private Jiffle jiffle;
     private Metadata metadata;
-    private VarTable vars;
-    private FunctionTable funcs;
+    private ConstantLookup vars;
+    //private FunctionTable funcs;
 
     private static class ImageHandler {
         int x;
@@ -207,8 +208,8 @@ public class JiffleRunner {
         this.jiffle = jiffle;
         this.metadata = jiffle.getMetadata();
         
-        vars = new VarTable();
-        funcs = new FunctionTable();
+        vars = new ConstantLookup();
+        //funcs = new FunctionTable();
 
         setSpecialVars();
         setHandlers();
@@ -260,89 +261,6 @@ public class JiffleRunner {
         return h.iter.getSampleDouble(x, y, h.band);
     }    
 
-    /**
-     * Get the current value of a variable
-     * @param varName the variable name
-     * @return value as a double
-     * @throws a RuntimeException if the variable has not been assigned
-     */
-    public double getVar(String varName) {
-        return vars.get(varName);
-    }
-
-    /**
-     * Invoke a general function
-     * @param name the function name
-     * @param args list of argument values (may be empty but not null)
-     * @return the result of the function call as a double
-     */
-    public double invokeFunction(String name, List<Double> args) {
-        return funcs.invoke(name, args);
-    }
-
-
-    /**
-     * Invoke an operator with a single argument
-     * @param op the identifying {@code LogicalOp} constant
-     * @param arg the argument
-     * @return the result of the operator as a double
-     */
-    public double invokeLogicalOp(LogicalOp op, Double arg) {
-        return funcs.invoke(op.toString(), arg);
-    }
-
-    /**
-     * Invoke an operator with two arguments
-     * @param op the identifying {@code LogicalOp} constant
-     * @param arg1 first argument
-     * @param arg2 second argument
-     * @return the result of the operator as a double
-     */
-    public double invokeLogicalOp(LogicalOp op, Double arg1, Double arg2) {
-        return funcs.invoke(op.toString(), arg1, arg2);
-    }
-
-    /**
-     * Check if a variable has been assigned
-     * @param varName the variable name
-     */
-    public boolean isVarDefined(String varName) {
-        return vars.contains(varName);
-    }
-
-    /**
-     * Set the value of a variable
-     * @param varName variable name
-     * @param value the value to assign
-     */
-    public void setVar(String varName, double value) {
-        vars.set(varName, value);
-    }
-    
-    /**
-     * Set the value of a variable
-     * @param varName variable name
-     * @param op assignment operator symbol (e.g. "=", "*=")
-     * @param value the value to assign
-     */
-    public void setVar(String varName, String op, double value) {
-        vars.assign(varName, op, value);
-    }
-
-    /**
-     * Write a value to the current image pixel location
-     * @param imgName image variable name
-     * @param value value to write
-     */
-    public void writeToImage(String imgName, double value) {
-        ImageHandler h = handlerTable.get(imgName);
-        if (h == null) {
-            throw new RuntimeException("unknown image var name: " + imgName);
-        }
-
-        ((WritableRandomIter) h.iter).setSample(h.x, h.y, h.band, value);
-    }
-    
     /**
      * Executes the script. This method can only be called once. If the
      * script is to be re-run a new JiffleRunner instance should be
@@ -459,11 +377,6 @@ public class JiffleRunner {
 
         refImgSize = bounds.width * bounds.height;
         
-        vars.set(proxyTable.get("x").varName, bounds.x);
-        vars.set(proxyTable.get("y").varName, bounds.y);
-        vars.set(proxyTable.get("width").varName, bounds.width);
-        vars.set(proxyTable.get("height").varName, bounds.height);
-        vars.set(proxyTable.get("size").varName, refImgSize);
     }
 
     /**
@@ -487,10 +400,13 @@ public class JiffleRunner {
 
                 // @todo remove this hack
                 if (firstImg) {
+                    /*
                     vars.set("_x", h.x - h.xmin);
                     vars.set("_y", h.y - h.ymin);
                     vars.set("_col", h.x - h.xmin + 1);
                     vars.set("_row", h.y - h.ymin + 1);
+                     * 
+                     */
                     firstImg = false;
 
                     numPixelsProcessed++ ;
