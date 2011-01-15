@@ -5,6 +5,7 @@
 
 package jaitools.jiffle.runtime;
 
+import java.util.List;
 import java.util.Random;
 import jaitools.numeric.SampleStats;
 import static jaitools.numeric.DoubleComparison.dcomp;
@@ -163,7 +164,7 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the maximum value
      */
-    public static double max(Double ...values) {
+    public static double max(Double[] values) {
         return SampleStats.max(values, true);
     }
     
@@ -174,7 +175,7 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the mean value
      */
-    public static double mean(Double ...values) {
+    public static double mean(Double[] values) {
         return SampleStats.mean(values, true);
     }
     
@@ -185,7 +186,7 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the median value
      */
-    public static double median(Double ...values) {
+    public static double median(Double[] values) {
         return SampleStats.median(values, true);
     }
     
@@ -196,7 +197,7 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the minimum value
      */
-    public static double min(Double ...values) {
+    public static double min(Double[] values) {
         return SampleStats.min(values, true);
     }
     
@@ -207,7 +208,7 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the modal value
      */
-    public static double mode(Double ...values) {
+    public static double mode(Double[] values) {
         return SampleStats.mode(values, true);
     }
     
@@ -258,7 +259,7 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the range of the input values
      */
-    public static double range(Double ...values) {
+    public static double range(Double[] values) {
         return SampleStats.range(values, true);
     }
     
@@ -281,7 +282,7 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the standard deviation of the input values
      */
-    public static double sdev(Double ...values) {
+    public static double sdev(Double[] values) {
         return SampleStats.range(values, true);
     }
 
@@ -292,7 +293,7 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the variance of the input values
      */
-    public static double variance(Double ...values) {
+    public static double variance(Double[] values) {
         return SampleStats.variance(values, true);
     }
     

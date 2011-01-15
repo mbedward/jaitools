@@ -29,7 +29,7 @@ public class NewRuntimeDemo {
         
         // script from the ripple demo
         String src = 
-                  "xc = width() / 2; \n"
+                  "xc = max(0, width() / 2); \n"
                 + "yc = height() / 2; \n"
                 + "dx = (x()-xc)/xc; \n"
                 + "dy = (y()-yc)/yc; \n"

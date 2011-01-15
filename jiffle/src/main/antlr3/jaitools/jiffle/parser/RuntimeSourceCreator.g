@@ -47,6 +47,17 @@ private StringBuilder srcSB;
 private FunctionLookup functionLookup = new FunctionLookup();
 
 public String getSource() { return srcSB.toString(); }
+
+// Hide expression handling from grammar statements
+private String getRuntimeExpr(String name, int numArgs) {
+    try {
+        return functionLookup.getRuntimeExpr(name, numArgs);
+    } catch (UndefinedFunctionException ex) {
+        throw new IllegalArgumentException(ex);
+    }
+}
+
+private int COUNTER = 0;
 }
 
 compile
@@ -78,15 +89,30 @@ expr returns [String src]
                   {
                       final int n = $expr_list.list.size();
                       StringBuilder sb = new StringBuilder();
-                      String fn = functionLookup.getRuntimeExpr($ID.text, n);
-                      sb.append(fn).append("(");
-                      int k = 0;
-                      for (String e : $expr_list.list) {
-                          sb.append(e);
-                          if (++k < n) sb.append(", ");
+                      try {
+                          FunctionInfo info = functionLookup.getInfo($ID.text, n);
+                          sb.append(info.getRuntimeExpr()).append("(");
+
+                          // Work around Janino not handling vararg methods
+                          // or generic collections
+                          if (info.isVarArg()) {
+                              sb.append("new Double[]{");
+                          }
+
+                          int k = 0;
+                          for (String e : $expr_list.list) {
+                              sb.append(e);
+                              if (++k < n) sb.append(", ");
+                          }
+                          if (info.isVarArg()) {
+                              sb.append("}");
+                          }
+                          sb.append(")");
+                          $src = sb.toString();
+
+                      } catch (UndefinedFunctionException ex) {
+                          throw new IllegalStateException(ex);
                       }
-                      sb.append(")");
-                      $src = sb.toString();
                   }
                   
                 | ^(QUESTION cond=expr e1=expr e2=expr)
@@ -109,61 +135,61 @@ expr returns [String src]
 
                 | ^(OR e1=expr e2=expr) 
                   {                       
-                    String fn = functionLookup.getRuntimeExpr("OR", 2);
+                    String fn = getRuntimeExpr("OR", 2);
                     $src = fn + "(" + e1 + ", " + e2 + ")"; 
                   }
 
                 | ^(AND e1=expr e2=expr)
                   {                       
-                    String fn = functionLookup.getRuntimeExpr("AND", 2);
+                    String fn = getRuntimeExpr("AND", 2);
                     $src = fn + "(" + e1 + ", " + e2 + ")"; 
                   }
 
                 | ^(XOR e1=expr e2=expr)
                   {                       
-                    String fn = functionLookup.getRuntimeExpr("XOR", 2);
+                    String fn = getRuntimeExpr("XOR", 2);
                     $src = fn + "(" + e1 + ", " + e2 + ")"; 
                   }
 
                 | ^(GT e1=expr e2=expr)
                   {                       
-                    String fn = functionLookup.getRuntimeExpr("GT", 2);
+                    String fn = getRuntimeExpr("GT", 2);
                     $src = fn + "(" + e1 + ", " + e2 + ")"; 
                   }
 
                 | ^(GE e1=expr e2=expr)
                   {                       
-                    String fn = functionLookup.getRuntimeExpr("GE", 2);
+                    String fn = getRuntimeExpr("GE", 2);
                     $src = fn + "(" + e1 + ", " + e2 + ")"; 
                   }
 
                 | ^(LT e1=expr e2=expr)
                   {                       
-                    String fn = functionLookup.getRuntimeExpr("LT", 2);
+                    String fn = getRuntimeExpr("LT", 2);
                     $src = fn + "(" + e1 + ", " + e2 + ")"; 
                   }
 
                 | ^(LE e1=expr e2=expr)
                   {                       
-                    String fn = functionLookup.getRuntimeExpr("LE", 2);
+                    String fn = getRuntimeExpr("LE", 2);
                     $src = fn + "(" + e1 + ", " + e2 + ")"; 
                   }
 
                 | ^(LOGICALEQ e1=expr e2=expr)
                   {                       
-                    String fn = functionLookup.getRuntimeExpr("EQ", 2);
+                    String fn = getRuntimeExpr("EQ", 2);
                     $src = fn + "(" + e1 + ", " + e2 + ")"; 
                   }
 
                 | ^(NE e1=expr e2=expr)
                   {                       
-                    String fn = functionLookup.getRuntimeExpr("NE", 2);
+                    String fn = getRuntimeExpr("NE", 2);
                     $src = fn + "(" + e1 + ", " + e2 + ")"; 
                   }
 
                 | ^(PREFIX NOT e1=expr)
                   {                       
-                    String fn = functionLookup.getRuntimeExpr("NOT", 1);
+                    String fn = getRuntimeExpr("NOT", 1);
                     $src = fn + "(" + e1 + ")"; 
                   }
 
