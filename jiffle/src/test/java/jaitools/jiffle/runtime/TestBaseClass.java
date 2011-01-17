@@ -22,6 +22,7 @@ package jaitools.jiffle.runtime;
 
 import java.awt.image.RenderedImage;
 import java.awt.image.WritableRenderedImage;
+import javax.media.jai.TiledImage;
 
 
 /**
@@ -35,21 +36,30 @@ import java.awt.image.WritableRenderedImage;
 public abstract class TestBaseClass implements JiffleRuntime {
     
     protected int _band = 0;
+    protected TiledImage img;
 
     public void setDestinationImage(String imageName, WritableRenderedImage image) {
+        img = (TiledImage) image;
     }
 
     public void setSourceImage(String imageName, RenderedImage image) {
+        throw new UnsupportedOperationException("This method should not be called");
     }
 
     public void evaluateAll() {
+        for (int y = 0; y < img.getHeight(); y++) {
+            for (int x = 0; x < img.getWidth(); x++) {
+                evaluate(x, y);
+            }
+        }
     }
 
     public double readFromImage(String srcImageName, int x, int y, int band) {
-        return 0d;
+        throw new UnsupportedOperationException("This method should not be called");
     }
 
     public void writeToImage(String destImageName, int x, int y, int band, double value) {
+        img.setSample(x, y, band, value);
     }
 
 }

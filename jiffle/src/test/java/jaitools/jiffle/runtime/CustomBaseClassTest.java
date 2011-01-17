@@ -20,9 +20,11 @@
 
 package jaitools.jiffle.runtime;
 
+import jaitools.imageutils.ImageUtils;
 import jaitools.CollectionFactory;
 import jaitools.jiffle.Jiffle;
 import java.util.Map;
+import javax.media.jai.TiledImage;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -37,14 +39,26 @@ import static org.junit.Assert.*;
  */
 public class CustomBaseClassTest {
     
+    private final int WIDTH = 10;
+    
     @Test
     public void customBaseClass() throws Exception {
         Map<String, Jiffle.ImageRole> imageParams = CollectionFactory.map();
         imageParams.put("out", Jiffle.ImageRole.DEST);
         
-        Jiffle jiffle = new Jiffle("out = 1", imageParams);
+        Jiffle jiffle = new Jiffle("out = x() + y()", imageParams);
         JiffleRuntime jr = jiffle.getRuntimeInstance(true, TestBaseClass.class);
         
         assertTrue(jr instanceof TestBaseClass);
+        
+        TiledImage img = ImageUtils.createConstantImage(WIDTH, WIDTH, 0d);
+        jr.setDestinationImage("out", img);
+        jr.evaluateAll();
+        
+        for (int y = 0; y < WIDTH; y++) {
+            for (int x = 0; x < WIDTH; x++) {
+                assertEquals(x + y, img.getSample(x, y, 0));
+            }
+        }
     }
 }
