@@ -3,6 +3,8 @@ package jaitools.jts;
 import java.util.ArrayList;
 import java.util.List;
 
+import static jaitools.numeric.DoubleComparison.dzero;
+
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryCollection;
@@ -20,11 +22,6 @@ public class Utils {
 
 	/** Geometry factory used to create LineStrings */
 	public final static GeometryFactory GEOMETRY_FACTORY= new GeometryFactory(new PrecisionModel(100));
-
-	/**
-	 * Constant used for 0 comparisons in double
-	 */
-	public static final double EPS = 1e-15;
 	
 	private Utils() {
 	}
@@ -60,12 +57,12 @@ public class Utils {
 	        double dy2 = lastCoord.y - midCoord.y;
 	        
 	        boolean redundant = false;
-	        if(Math.abs(dx1) < EPS) {
-	        	if(Math.abs(dx2) < EPS && Math.signum(dy1) == Math.signum(dy2)) {
+	        if(dzero(dx1)) {
+	        	if(dzero(dx2) && Math.signum(dy1) == Math.signum(dy2)) {
 	        		redundant = true;
 	        	}
 	        } else {
-	        	if(Math.abs(dx2) >= EPS) {
+	        	if(!dzero(dx2)) {
 	        		if(dy1 / dx1 == dy2 / dx2 && Math.signum(dx1) == Math.signum(dx2)) {
 	        			redundant = true;
 	        		}
