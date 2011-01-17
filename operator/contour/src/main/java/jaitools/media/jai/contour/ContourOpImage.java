@@ -239,8 +239,8 @@ public class ContourOpImage extends AttributeOpImage {
         final int maxTileX= minTileX+ numTileX;
         final int maxTileY= minTileY+numTileY;
         
-        for (int tileY =minTileY, ny = 0; ny <maxTileY; tileY++, ny++) {
-            for (int tileX = minTileX, nx = 0; nx < maxTileX; tileX++, nx++, tileIndex++) {
+        for (int tileY =minTileY, ny = 0; tileY <maxTileY; tileY++, ny++) {
+            for (int tileX = minTileX, nx = 0; tileX < maxTileX; tileX++, nx++, tileIndex++) {
                 
                 Map<Integer, List<LineSegment>> segments = getContourSegments(tileX, tileY);
 
