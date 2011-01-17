@@ -3,7 +3,6 @@ package jaitools.jts;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.vividsolutions.jts.algorithm.CGAlgorithms;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryCollection;
@@ -22,6 +21,11 @@ public class Utils {
 	/** Geometry factory used to create LineStrings */
 	public final static GeometryFactory GEOMETRY_FACTORY= new GeometryFactory(new PrecisionModel(100));
 
+	/**
+	 * Constant used for 0 comparisons in double
+	 */
+	public static final double EPS = 1e-15;
+	
 	private Utils() {
 	}
 	
@@ -48,10 +52,29 @@ public class Utils {
 
 	    	midCoord=ls.getCoordinateN(i1);
 	    	lastCoord=ls.getCoordinateN(i2);
-	        final int orientation = CGAlgorithms.computeOrientation(
-	        		firstCoord,midCoord, lastCoord);
-	        // Colllinearity test
-	        if (orientation != CGAlgorithms.COLLINEAR) {
+	    	
+	    	// perform a redundancy check based on 
+	        double dx1 = midCoord.x - firstCoord.x;
+	        double dy1 = midCoord.y - firstCoord.y;
+	        double dx2 = lastCoord.x - midCoord.x;
+	        double dy2 = lastCoord.y - midCoord.y;
+	        
+	        boolean redundant = false;
+	        if(Math.abs(dx1) < EPS) {
+	        	if(Math.abs(dx2) < EPS && Math.signum(dy1) == Math.signum(dy2)) {
+	        		redundant = true;
+	        	}
+	        } else {
+	        	if(Math.abs(dx2) >= EPS) {
+	        		if(dy1 / dx1 == dy2 / dx2 && Math.signum(dx1) == Math.signum(dx2)) {
+	        			redundant = true;
+	        		}
+	        	}
+	        }
+
+	    	
+	        // Add only if not redundant
+	        if (!redundant) {
 	        	// add midcoord and change head
 	            retain.add(midCoord);
 	            i0=i1;
@@ -60,7 +83,6 @@ public class Utils {
 	        i1++; i2++;	    	
 	    }
 	    retain.add(ls.getCoordinateN(N-1));
-	    
 
 	    //
 	    // Return value

@@ -30,6 +30,8 @@ public class UtilsTest extends Assert {
 	private final static String RING="LINEARRING(1 1, 2 1, 3 1, 4 1, 5 1, 5 2, 5 3, 5 4, 5 5, 4 5, 3 5, 2 5, 1 5, 1 4, 1 3, 1 2, 1 1)";
 	private final static String EXPECTED_RING="LINEARRING(1 1,5 1,5 5,1 5,1 1)";
 	
+	private final static String DEGENARATE_LS = "LINESTRING(1 1, 2 2, 1 1)";
+	
 	@Test
 	public void testLineString() throws ParseException {
 		final LineString ls= (LineString) new WKTReader().read(LINESTRING);
@@ -62,6 +64,18 @@ public class UtilsTest extends Assert {
 		// check expected
 		assertTrue(((LinearRing) new WKTReader().read(EXPECTED_RING)).equalsExact(simplifiedring));
 	}
+	
+	@Test
+	public void testDegenerate() throws ParseException {
+		final LineString original = (LineString) new WKTReader().read(DEGENARATE_LS);
+		
+		// simplify
+		final LineString simplified = (LineString) Utils.removeCollinearVertices(original);
+		
+		// check expected
+		assertTrue(simplified.equalsExact(original));
+	}
+
 	
 	@Test
 	public void testGeometry() throws ParseException {
