@@ -1,18 +1,18 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-11 Michael Bedward
  * 
  * This file is part of jai-tools.
-
+ *
  * jai-tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the 
  * License, or (at your option) any later version.
-
+ *
  * jai-tools is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
-
+ *
  * You should have received a copy of the GNU Lesser General Public 
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  * 
@@ -28,7 +28,6 @@ import jaitools.jiffle.parser.VarClassifier;
 import jaitools.jiffle.parser.VarTransformer;
 import jaitools.jiffle.runtime.JiffleRuntime;
 
-import java.awt.image.RenderedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -155,6 +154,20 @@ public class Jiffle {
     
     private static final String RUNTIME_CLASS_NAME = "JiffleRuntimeImpl";
     private static final String PACKAGE_NAME = Jiffle.class.getPackage().getName();
+    
+    /**
+     * Used to specify the roles of images referenced in
+     * a Jiffle script. An image may be either read-only
+     * ({@link Jiffle.ImageRole#SOURCE}) or write-only
+     * ({@link Jiffle.ImageRole#DEST}) but not both.
+     */
+    public static enum ImageRole {
+        /** Indicates an image is used for input (read-only) */
+        SOURCE,
+        
+        /** Indicates an image is used for output (write-only) */
+        DEST;
+    }
 
     private String script;
     
@@ -165,7 +178,7 @@ public class Jiffle {
     private JiffleRuntime runtimeInstance;
     private String runtimeSource;
     
-    private Map<String, RenderedImage> imageParams;
+    private Map<String, ImageRole> imageParams;
     private Set<String> vars;
     private Set<String> unassignedVars;
     private Set<String> outputImageVars;
@@ -173,16 +186,18 @@ public class Jiffle {
     private Metadata metadata;
     private Map<String, ErrorCode> errors;
     
+
     /**
-     * Constructor: takes an input script as a String, together with
-     * a Map relating image variable names to image objects, and compiles
-     * the script.
+     * Creates a new instance by compiling the provided script. The image
+     * names forming keys in the {@code params} argument are used by the
+     * compiler to distinguish between image variables and other user-defined
+     * variables in the script.
      * 
-     * @param script input jiffle statement(s)
+     * @param script Jiffle source code to compile
      * @param params variable names and their corresponding images
      * @throws JiffleCompilationException on error compiling the script
      */
-    public Jiffle(String script, Map<String, RenderedImage> params)
+    public Jiffle(String script, Map<String, ImageRole> params)
             throws JiffleCompilationException {
 
         init(script, params);
@@ -197,7 +212,7 @@ public class Jiffle {
      * @throws IOException on error reading the script file
      * @throws JiffleCompilationException on error compiling the script
      */
-    public Jiffle(File scriptFile, Map<String, RenderedImage> params)
+    public Jiffle(File scriptFile, Map<String, ImageRole> params)
             throws JiffleCompilationException, IOException {
 
         BufferedReader reader = new BufferedReader(new FileReader(scriptFile));
@@ -244,7 +259,7 @@ public class Jiffle {
      * @param script input jiffle statements
      * @param params variable names and their corresponding images
      */
-    private void init(String script, Map<String, RenderedImage> params)
+    private void init(String script, Map<String, ImageRole> params)
             throws JiffleCompilationException {
 
         this.imageParams = CollectionFactory.map();
@@ -253,15 +268,6 @@ public class Jiffle {
         // add extra new line just in case last statement hits EOF
         this.script = script + "\n";
         compile();
-    }
-
-    /**
-     * Get the image object associated with the given image variable
-     * @param varName image variable name
-     * @return image object
-     */
-    public RenderedImage getImage(String varName) {
-        return imageParams.get(varName);
     }
 
     /**
@@ -275,33 +281,10 @@ public class Jiffle {
     }
 
     /**
-     * Set the image parameters to the given Map. Previous
-     * parameters are replaced. This can be used when re-running
-     * a compiled script to work with new input and/or output images.
-     * 
-     * @param params variable names and their corresponding images
-     */
-    public void setImageParams(Map<String, RenderedImage> params) {
-        imageParams = CollectionFactory.map();
-        imageParams.putAll(params);
-    }
-
-    /**
      * Returns the metadata for variables used in the Jiffle program
      */
     public Metadata getMetadata() {
         return metadata;
-    }
-
-    /**
-     * Returns an AST to be used as input to ImageCalculator.
-     * 
-     * @deprecated This is part of the old run-time system and will be removed shortly.
-     */
-    public BufferedTreeNodeStream getRuntimeAST() {
-        BufferedTreeNodeStream nodes = new BufferedTreeNodeStream(transformedAST);
-        nodes.setTokenStream(tokens);
-        return nodes;
     }
 
     /**

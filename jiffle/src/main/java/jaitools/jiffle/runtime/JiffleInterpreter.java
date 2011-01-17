@@ -29,12 +29,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
- * This class runs compiled scripts in Jiffle objects (referred to as jiffles).
- * <p>
- * When a jiffle is submitted to the interpreter it is allocated a 
- * job ID (an integer, unique across all interpreter instances). A thread
- * is then created for running the jiffle.  The status of the executing
- * jiffle is communicated via {@link JiffleEvent} objects.
+ * Executes Jiffle scripts on separate threads.
  * <p>
  * Example of use:
  * <pre><code>

@@ -22,7 +22,6 @@ package jaitools.jiffle;
 
 import jaitools.jiffle.parser.VarClassifier;
 import java.awt.Rectangle;
-import java.awt.image.RenderedImage;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -39,7 +38,7 @@ import java.util.Set;
  */
 public class Metadata {
     
-    private Map<String, RenderedImage> imageParams;
+    private Map<String, Jiffle.ImageRole> imageParams;
     private Rectangle outImgBounds;
     private Set<String> outImgVars;
     private Set<String> userVars;
@@ -50,7 +49,7 @@ public class Metadata {
      * @param imageParams Map of variable : image object supplied by the user
      * with the script
      */
-    Metadata(Map<String, RenderedImage> imageParams) {
+    Metadata(Map<String, Jiffle.ImageRole> imageParams) {
         this.imageParams = imageParams;
     }
 
@@ -67,7 +66,7 @@ public class Metadata {
     /**
      * Returns an unmodifiable view of the image parameters
      */
-    public Map<String, RenderedImage> getImageParams() {
+    public Map<String, Jiffle.ImageRole> getImageParams() {
         return Collections.unmodifiableMap(imageParams);
     }
     

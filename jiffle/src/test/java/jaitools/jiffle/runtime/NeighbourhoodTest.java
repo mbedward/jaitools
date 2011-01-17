@@ -25,7 +25,6 @@ import jaitools.CollectionFactory;
 import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
 import jaitools.numeric.DoubleComparison;
-import java.awt.image.RenderedImage;
 import java.util.Map;
 import javax.media.jai.TiledImage;
 import org.junit.Test;
@@ -35,7 +34,6 @@ import static org.junit.Assert.*;
  * Test the neighbourhood accessor: imgVar[xOffset, yOffset]
  * @author Michael Bedward
  */
-@Ignore
 public class NeighbourhoodTest {
 
     @Test
@@ -44,10 +42,10 @@ public class NeighbourhoodTest {
         
         TiledImage testImg = createTestImage(width, height);
         
-        TiledImage tImg = ImageUtils.createDoubleImage(width, height);
-        Map<String, RenderedImage> imgParams = CollectionFactory.map();
-        imgParams.put("testImg", testImg);
-        imgParams.put("result", tImg);
+        TiledImage tImg = ImageUtils.createConstantImage(width, height, 0d);
+        Map<String, Jiffle.ImageRole> imgParams = CollectionFactory.map();
+        imgParams.put("testImg", Jiffle.ImageRole.SOURCE);
+        imgParams.put("result", Jiffle.ImageRole.DEST);
         
         String prog = "result = testImg[0,-1] + " +
                       "testImg[0, 1] + testImg[-1,0] + testImg[1,0]";
@@ -56,12 +54,12 @@ public class NeighbourhoodTest {
         if (!jiffle.isCompiled()) {
             throw new RuntimeException("couldn't compile script for neighbourhood test");
         }
+        
+        JiffleRuntime jr = jiffle.getRuntimeInstance();
+        jr.setSourceImage("testImg", testImg);
+        jr.setDestinationImage("result", tImg);
+        jr.evaluateAll();
        
-        JiffleRunner runner = new JiffleRunner(jiffle);
-        boolean completed = runner.run();
-        
-        assertTrue(completed);
-        
         for (int y = 0; y < height; y++) {
             double above = (y == 0 ? Double.NaN : y-1);
             double below = (y == height-1 ? Double.NaN : y+1);
@@ -80,17 +78,13 @@ public class NeighbourhoodTest {
      * Create a test image where pixel value == row index (from 0)
      */
     private TiledImage createTestImage(int width, int height) throws Exception {
-        TiledImage tImg = ImageUtils.createDoubleImage(width, height);
-        Map<String, RenderedImage> imgParams = CollectionFactory.map();
-        imgParams.put("result", tImg);
+        TiledImage tImg = ImageUtils.createConstantImage(width, height, 0d);
         
-        Jiffle jiffle = new Jiffle("result = y()", imgParams);
-        if (!jiffle.isCompiled()) {
-            throw new RuntimeException("couldn't compile script to create test image");
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                tImg.setSample(x, y, 0, y);
+            }
         }
-        
-        JiffleRunner runner = new JiffleRunner(jiffle);
-        runner.run();
         
         return tImg;
     }

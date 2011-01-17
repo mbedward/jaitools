@@ -200,12 +200,18 @@ expr returns [String src]
                   { $src = $VAR.text; }
               
                 | IMAGE_VAR 
-                  { $src = "getImageValue(" + $IMAGE_VAR.text + ")"; }
+                  { $src = "readFromImage(\"" + $IMAGE_VAR.text + "\", _x, _y, _band)"; }
               
                 | ^(NBR_REF IMAGE_VAR e1=expr e2=expr) 
                   {
-                      // e1 is x offset, e2 is y offset
-                      $src = "getImageValue(" + $IMAGE_VAR.text + ", " + e1 + ", " + e2 + ")";
+                    // e1 is x offset, e2 is y offset
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("readFromImage(");
+                    sb.append("\"").append($IMAGE_VAR.text).append("\", ");
+                    sb.append("_x + (int)").append(e1).append(", ");
+                    sb.append("_y + (int)").append(e2).append(", ");
+                    sb.append("_band)");
+                    $src = sb.toString();
                   }
                   
                 | FIXED_VALUE 

@@ -5,12 +5,11 @@
 
 package jaitools.jiffle;
 
+import jaitools.CollectionFactory;
 import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.runtime.JiffleRuntime;
 import jaitools.swing.ImageFrame;
 
-import java.awt.image.RenderedImage;
-import java.util.HashMap;
 import java.util.Map;
 import javax.media.jai.TiledImage;
 import javax.swing.SwingUtilities;
@@ -24,8 +23,8 @@ public class NewRuntimeDemo {
     public static void main(String[] args) throws Exception {
         final TiledImage img = ImageUtils.createConstantImage(500, 500, Double.valueOf(0));
         
-        Map<String, RenderedImage> params = new HashMap<String, RenderedImage>();
-        params.put("out", img);
+        Map<String, Jiffle.ImageRole> params = CollectionFactory.map();
+        params.put("out", Jiffle.ImageRole.DEST);
         
         // script from the ripple demo
         String src = 
@@ -40,12 +39,7 @@ public class NewRuntimeDemo {
         
         JiffleRuntime jr = jiffle.getRuntimeInstance();
         jr.setDestinationImage("out", img);
-
-        for (int y = 0; y < img.getHeight(); y++) {
-            for (int x = 0; x < img.getWidth(); x++) {
-                jr.evaluate(x, y, 0);
-            }
-        }
+        jr.evaluateAll();
         
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {

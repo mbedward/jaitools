@@ -25,18 +25,10 @@ import jaitools.CollectionFactory;
 import jaitools.jiffle.Jiffle;
 import jaitools.jiffle.Metadata;
 import static jaitools.numeric.DoubleComparison.*;
-import java.awt.Rectangle;
-import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
-import java.awt.image.WritableRenderedImage;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
-import javax.media.jai.PlanarImage;
 import javax.media.jai.iterator.RandomIter;
-import javax.media.jai.iterator.RandomIterFactory;
-import javax.media.jai.iterator.WritableRandomIter;
 
 /**
  * Executes a compiled script contained within a Jiffle object.
@@ -313,6 +305,10 @@ public class JiffleRunner {
      * values
      */
     private void setHandlers() {
+        
+        /*
+         * 
+         *
         handlerTable = CollectionFactory.map();
 
         for (Entry<String, RenderedImage> e : metadata.getImageParams().entrySet()) {
@@ -349,6 +345,8 @@ public class JiffleRunner {
 
             handlerTable.put(e.getKey(), h);
         }
+         * 
+         */
     }
     
     /**
@@ -360,6 +358,7 @@ public class JiffleRunner {
         // image var as a reference - change this later when
         // allowing images with different bounds
         
+        /*
         List<String> outVars = CollectionFactory.list();
         outVars.addAll(metadata.getOutputImageVars());
         refImg = metadata.getImageParams().get(outVars.get(0));
@@ -376,7 +375,7 @@ public class JiffleRunner {
         }
 
         refImgSize = bounds.width * bounds.height;
-        
+        */
     }
 
     /**

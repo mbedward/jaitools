@@ -9,8 +9,9 @@ import java.awt.image.RenderedImage;
 import java.awt.image.WritableRenderedImage;
 
 /**
+ * Defines the methods in Jiffle runtime classes.
  *
- * @author michael
+ * @author Michael Bedward
  */
 public interface JiffleRuntime {
     
@@ -33,15 +34,19 @@ public interface JiffleRuntime {
     void setSourceImage(String imageName, RenderedImage image);
     
     /**
-     * Evaluates the script for the given image location and write
+     * Evaluates the script for the given image location and writes
      * the result to the destination image(s).
      * 
      * @param x destination X ordinate
      * @param y destination Y ordinate
-     * @param band destination band
      */
-    void evaluate(int x, int y, int band);
+    void evaluate(int x, int y);
 
+    /**
+     * Evaluates the script for all locations in the destination image(s).
+     */
+    void evaluateAll();
+    
     /**
      * Gets a value from a source image as a double.
      * 
@@ -63,5 +68,5 @@ public interface JiffleRuntime {
      * @param value the value to write
      */
     void writeToImage(String destImageName, int x, int y, int band, double value);
-    
+
 }
