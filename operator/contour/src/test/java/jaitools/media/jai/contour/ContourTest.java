@@ -20,29 +20,42 @@
 
 package jaitools.media.jai.contour;
 
-import java.util.Arrays;
-import java.util.List;
-import javax.media.jai.ROI;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.LineString;
-
+import static jaitools.numeric.DoubleComparison.dequal;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import jaitools.imageutils.ImageUtils;
-import java.util.ArrayList;
-import static jaitools.numeric.DoubleComparison.*;
 
-import java.util.Map;
-import javax.media.jai.PlanarImage;
+import java.awt.Point;
+import java.awt.Transparency;
+import java.awt.color.ColorSpace;
+import java.awt.image.BandedSampleModel;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBuffer;
+import java.awt.image.Raster;
+import java.awt.image.WritableRaster;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.media.jai.DataBufferDouble;
+import javax.media.jai.FloatDoubleColorModel;
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
+import javax.media.jai.PlanarImage;
+import javax.media.jai.ROI;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.TiledImage;
 
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.LineString;
 
 /**
  * Unit tests for the "Contour" operation.
@@ -164,6 +177,25 @@ public class ContourTest {
         }
     }
     
+    @Test
+    public void demTest() {
+    	double[] matrix = new double[] { //
+    			1493.0, 1496.0, 1500.0,  //
+    			1487.0, 1493.0, 1500.0,  //
+    			1494.0, 1500.0, 1506.0};
+    	DataBuffer data = new DataBufferDouble(matrix, 3);
+    	BandedSampleModel sm = new BandedSampleModel(DataBuffer.TYPE_DOUBLE, 3, 3, 1);
+		WritableRaster raster = Raster.createWritableRaster(sm, data, new Point(0,0));
+    	FloatDoubleColorModel colorModel = new FloatDoubleColorModel(ColorSpace.getInstance(ColorSpace.CS_GRAY), false, false, Transparency.OPAQUE, DataBuffer.TYPE_DOUBLE);
+		BufferedImage buffered = new BufferedImage(colorModel, raster, false, null);
+    	PlanarImage src = PlanarImage.wrapRenderedImage(buffered);
+    
+    	final double value = 1500d;
+        args.put("levels", Collections.singleton(value));
+        Collection<LineString> contours = doOp(src);
+        
+        assertEquals(1, contours.size());
+    }
     
     /**
      * Generate contours at values determined by the interval parameter.

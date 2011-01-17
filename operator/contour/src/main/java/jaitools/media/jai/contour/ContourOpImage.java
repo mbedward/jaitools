@@ -31,6 +31,7 @@ import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -539,8 +540,8 @@ public class ContourOpImage extends AttributeOpImage {
                             case 6: 
                                 x0 = xh[m3];
                                 y0 = yh[m3];
-                                x1 = sect(m3, m2, h, xh);
-                                y1 = sect(m3, m2, h, yh);
+                                x1 = sect(m1, m2, h, xh);
+                                y1 = sect(m1, m2, h, yh);
                                 break;
 
                             /* Line between sides 1-2 and 2-3 */
