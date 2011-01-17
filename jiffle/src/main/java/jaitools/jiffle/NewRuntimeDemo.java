@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package jaitools.jiffle;
 
 import jaitools.CollectionFactory;
@@ -14,10 +9,6 @@ import java.util.Map;
 import javax.media.jai.TiledImage;
 import javax.swing.SwingUtilities;
 
-/**
- *
- * @author michael
- */
 public class NewRuntimeDemo {
     
     public static void main(String[] args) throws Exception {

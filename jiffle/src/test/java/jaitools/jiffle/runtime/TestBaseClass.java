@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 Michael Bedward
+ * Copyright 2011 Michael Bedward
  * 
  * This file is part of jai-tools.
  *
@@ -18,24 +18,38 @@
  * 
  */
 
-package jaitools.jiffle;
+package jaitools.jiffle.runtime;
+
+import java.awt.image.RenderedImage;
+import java.awt.image.WritableRenderedImage;
+
 
 /**
- * Exception class for errors encountered while compiling a script
+ * Used by CustomBaseClassTest.
  * 
  * @author Michael Bedward
- * @since 1.0
+ * @since 1.1
  * @source $URL$
  * @version $Id$
  */
-public class JiffleCompilationException extends Exception {
+public abstract class TestBaseClass implements JiffleRuntime {
+    
+    protected int _band = 0;
 
-    /**
-     * Constructor
-     * @param msg error message
-     */
-    JiffleCompilationException(String msg) {
-        super(msg);
+    public void setDestinationImage(String imageName, WritableRenderedImage image) {
+    }
+
+    public void setSourceImage(String imageName, RenderedImage image) {
+    }
+
+    public void evaluateAll() {
+    }
+
+    public double readFromImage(String srcImageName, int x, int y, int band) {
+        return 0d;
+    }
+
+    public void writeToImage(String destImageName, int x, int y, int band, double value) {
     }
 
 }

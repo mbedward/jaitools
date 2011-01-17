@@ -1,6 +1,21 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright 2011 Michael Bedward
+ * 
+ * This file is part of jai-tools.
+ *
+ * jai-tools is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the 
+ * License, or (at your option) any later version.
+ *
+ * jai-tools is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public 
+ * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
+ * 
  */
 
 package jaitools.jiffle.runtime;
@@ -14,13 +29,16 @@ import javax.media.jai.iterator.RandomIterFactory;
 import javax.media.jai.iterator.WritableRandomIter;
 
 /**
- * An abstract base class for Jiffle runtime classes.
+ * The default abstract base class for Jiffle runtime classes.
  * <p>
  * Runtime classes are generated dynamically by the Jiffle compiler. They
  * extend this class and provide the {@code evaluate} method defined by 
  * the {@link JiffleRuntime} interface.
  * 
  * @author Michael Bedward
+ * @since 1.1
+ * @source $URL$
+ * @version $Id$
  */
 public abstract class AbstractJiffleRuntime implements JiffleRuntime {
 

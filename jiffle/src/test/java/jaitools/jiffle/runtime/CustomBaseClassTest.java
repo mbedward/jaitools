@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 Michael Bedward
+ * Copyright 2011 Michael Bedward
  * 
  * This file is part of jai-tools.
  *
@@ -18,24 +18,33 @@
  * 
  */
 
-package jaitools.jiffle;
+package jaitools.jiffle.runtime;
+
+import jaitools.CollectionFactory;
+import jaitools.jiffle.Jiffle;
+import java.util.Map;
+
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
- * Exception class for errors encountered while compiling a script
+ * Tests using a non-default base class for the Jiffle runtime class.
  * 
  * @author Michael Bedward
- * @since 1.0
+ * @since 1.1
  * @source $URL$
  * @version $Id$
  */
-public class JiffleCompilationException extends Exception {
-
-    /**
-     * Constructor
-     * @param msg error message
-     */
-    JiffleCompilationException(String msg) {
-        super(msg);
+public class CustomBaseClassTest {
+    
+    @Test
+    public void customBaseClass() throws Exception {
+        Map<String, Jiffle.ImageRole> imageParams = CollectionFactory.map();
+        imageParams.put("out", Jiffle.ImageRole.DEST);
+        
+        Jiffle jiffle = new Jiffle("out = 1", imageParams);
+        JiffleRuntime jr = jiffle.getRuntimeInstance(true, TestBaseClass.class);
+        
+        assertTrue(jr instanceof TestBaseClass);
     }
-
 }
