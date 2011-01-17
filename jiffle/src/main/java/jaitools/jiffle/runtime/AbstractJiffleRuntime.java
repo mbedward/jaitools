@@ -28,12 +28,12 @@ public abstract class AbstractJiffleRuntime implements JiffleRuntime {
      * Note: not using generics here because they are not
      * supported by the Janino compiler.
      */
-    private Map images = new HashMap();
-    private Map readers = new HashMap();
-    private Map writers = new HashMap();
+    protected Map images = new HashMap();
+    protected Map readers = new HashMap();
+    protected Map writers = new HashMap();
     
     /* TODO: add band support to scripts */
-    private int _band = 0;
+    protected int _band = 0;
     
     protected int _width;
     protected int _height;
