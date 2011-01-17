@@ -26,6 +26,7 @@ import jaitools.jiffle.parser.JiffleParser;
 import jaitools.jiffle.parser.RuntimeSourceCreator;
 import jaitools.jiffle.parser.VarClassifier;
 import jaitools.jiffle.parser.VarTransformer;
+import jaitools.jiffle.runtime.AbstractJiffleRuntime;
 import jaitools.jiffle.runtime.JiffleRuntime;
 
 import java.io.BufferedReader;
@@ -33,10 +34,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.Set;
 
 import org.antlr.runtime.ANTLRStringStream;
@@ -152,8 +153,39 @@ import org.codehaus.janino.SimpleCompiler;
  */
 public class Jiffle {
     
-    private static final String RUNTIME_CLASS_NAME = "JiffleRuntimeImpl";
-    private static final String PACKAGE_NAME = Jiffle.class.getPackage().getName();
+    private static final String PROPERTIES_FILE = "META-INF/compiler.properties";
+
+    private static final Properties defaults = new Properties();
+    
+    private static final String RUNTIME_PACKAGE_KEY = "runtime.package";
+    private static final String RUNTIME_CLASS_KEY = "runtime.class";
+    private static final String RUNTIME_BASE_CLASS_KEY = "runtime.base.class";
+    
+    private static final Class<? extends JiffleRuntime> DEFAULT_BASE_CLASS;
+    
+    static {
+        InputStream in = null;
+        try {
+            in = Jiffle.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE);
+            defaults.load(in);
+            
+            String baseClassName = defaults.getProperty(RUNTIME_PACKAGE_KEY) + "." +
+                    defaults.getProperty(RUNTIME_BASE_CLASS_KEY);
+            
+            DEFAULT_BASE_CLASS = (Class<? extends JiffleRuntime>) Class.forName(baseClassName);
+            
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Internal compiler error", ex);
+            
+        } finally {
+            try {
+                if (in != null) in.close();
+            } catch (Exception ex) {
+                // ignore
+            }
+        }
+
+    }
     
     /**
      * Used to specify the roles of images referenced in
@@ -172,9 +204,10 @@ public class Jiffle {
     private String script;
     
     private CommonTree primaryAST;
-    private CommonTree transformedAST;
+    private CommonTree finalAST;
     private CommonTokenStream tokens;
     
+    private Class<? extends JiffleRuntime> runtimeBaseClass;
     private JiffleRuntime runtimeInstance;
     private String runtimeSource;
     
@@ -194,7 +227,10 @@ public class Jiffle {
      * variables in the script.
      * 
      * @param script Jiffle source code to compile
-     * @param params variable names and their corresponding images
+     * 
+     * @param params defines the names and roles of image variables
+     *        referred to in the script.
+     * 
      * @throws JiffleCompilationException on error compiling the script
      */
     public Jiffle(String script, Map<String, ImageRole> params)
@@ -204,11 +240,16 @@ public class Jiffle {
     }
 
     /**
-     * Constructor: reads a script from a text file and compiles it.
+     * Creates a new instance by compiling a script read from file. The image
+     * names forming keys in the {@code params} argument are used by the
+     * compiler to distinguish between image variables and other user-defined
+     * variables in the script.
      * 
-     * @param scriptFile text file containing the Jiffle script
-     * @param params variable names and their corresponding images
-     *
+     * @param scriptFile file containing Jiffle source code to compile
+     * 
+     * @param params defines the names and roles of image variables
+     *        referred to in the script.
+     * 
      * @throws IOException on error reading the script file
      * @throws JiffleCompilationException on error compiling the script
      */
@@ -230,8 +271,88 @@ public class Jiffle {
         init(prog, params);
     }
     
+    /**
+     * Tests whether the script was compiled successfully.
+     */
+    public boolean isCompiled() {
+        return (finalAST != null);
+    }
+    
+    /**
+     * Gets the runtime object for this script. 
+     * <p>
+     * The runtime object is an instance of {@link JiffleRuntime}.
+     * It is created on the first call to any one of the {@code getRuntimeInstance}
+     * methods. Subsequent calls to this function will return
+     * the same instance.
+     * 
+     * @return the runtime object
+     * 
+     * @see JiffleRuntime
+     * @see jaitools.jiffle.runtime.AbstractJiffleRuntime
+     */
     public JiffleRuntime getRuntimeInstance() {
-        if (runtimeInstance == null) {
+        return getRuntimeInstance(false);
+    }
+
+    /**
+     * Gets the runtime object for this script. 
+     * <p>
+     * The runtime object is an instance of {@link JiffleRuntime}.
+     * It is created on the first call to any one of the {@code getRuntimeInstance}
+     * methods. Subsequent calls to this function will return
+     * the same instance unless {@code recreate} is {@code true}.
+     * 
+     * @param recreate when {@code true} a new runtime object will be
+     *        created and returned; when {@code false} a previously
+     *        created object will be returned if one exists
+     * 
+     * @return the runtime object
+     * 
+     * @see JiffleRuntime
+     * @see jaitools.jiffle.runtime.AbstractJiffleRuntime
+     */
+    public JiffleRuntime getRuntimeInstance(boolean recreate) {
+        if (runtimeInstance == null || recreate) {
+            try {
+                createRuntimeInstance();
+            } catch (Exception ex) {
+                throw new IllegalStateException(ex);
+            }
+        }
+        
+        return runtimeInstance;
+    }
+    
+    /**
+     * Gets the runtime object for this script. 
+     * <p>
+     * The runtime object is an instance of {@link JiffleRuntime}. By default
+     * it extends an abstract base class included with JAI-tools that implements
+     * all methods other than {@link JiffleRuntime#evaluate(int, int)}. 
+     * <p>
+     * An alternative base class can be specified with this method. 
+     * 
+     * @param recreate when {@code true} a new runtime object will be
+     *        created and returned; when {@code false} a previously
+     *        created object will be returned if one exists
+     * 
+     * @param baseClass an abstract base class that implements all {@link JiffleRuntime}
+     *        methods other than {@link JiffleRuntime#evaluate(int, int)}; 
+     *        or {@code null} to use the default base class
+     * 
+     * @return the runtime object
+     * 
+     * @see JiffleRuntime
+     * @see jaitools.jiffle.runtime.AbstractJiffleRuntime
+     */
+    public JiffleRuntime getRuntimeInstance(boolean recreate, Class<? extends JiffleRuntime> baseClass) {
+        runtimeBaseClass = baseClass == null ? DEFAULT_BASE_CLASS : baseClass;
+        
+        // delete any existing runtime source to be safe
+        runtimeSource = null;
+        
+        if (runtimeInstance == null || recreate) {
             try {
                 createRuntimeInstance();
             } catch (Exception ex) {
@@ -262,22 +383,14 @@ public class Jiffle {
     private void init(String script, Map<String, ImageRole> params)
             throws JiffleCompilationException {
 
+        this.runtimeBaseClass = DEFAULT_BASE_CLASS;
+        
         this.imageParams = CollectionFactory.map();
         this.imageParams.putAll(params);
 
         // add extra new line just in case last statement hits EOF
         this.script = script + "\n";
         compile();
-    }
-
-    /**
-     * Query if the input script has been compiled successfully
-     * 
-     * @todo is this necessary since at the moment compilation
-     * errors result in exceptions ?
-     */
-    public boolean isCompiled() {
-        return (transformedAST != null);
     }
 
     /**
@@ -435,7 +548,7 @@ public class Jiffle {
             VarTransformer vt = new VarTransformer(nodes);
             vt.setMetadata(metadata);
             VarTransformer.start_return result = vt.start();
-            transformedAST = (CommonTree) result.getTree();
+            finalAST = (CommonTree) result.getTree();
 
         } catch (RecognitionException ex) {
             throw new IllegalStateException(ex);
@@ -443,7 +556,7 @@ public class Jiffle {
     }
 
     private void createRuntimeInstance() throws Exception {
-        BufferedTreeNodeStream nodes = new BufferedTreeNodeStream(transformedAST);
+        BufferedTreeNodeStream nodes = new BufferedTreeNodeStream(finalAST);
         nodes.setTokenStream(tokens);
         RuntimeSourceCreator me = new RuntimeSourceCreator(nodes);
         me.compile();
@@ -452,48 +565,42 @@ public class Jiffle {
         
         SimpleCompiler compiler = new SimpleCompiler();
         compiler.cook(runtimeSource);
-        Class<?> clazz = compiler.getClassLoader().loadClass(PACKAGE_NAME + "." + RUNTIME_CLASS_NAME);
+        Class<?> clazz = compiler.getClassLoader().loadClass(
+                defaults.getProperty(RUNTIME_PACKAGE_KEY) + "." +
+                defaults.getProperty(RUNTIME_CLASS_KEY));
+        
         runtimeInstance = (JiffleRuntime) clazz.newInstance();
     }
     
     private void createRuntimeSource(String evalSource) throws Exception {
-        InputStream in = Jiffle.class.getResourceAsStream(RUNTIME_CLASS_NAME + ".java");
-        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
         StringBuilder sb  = new StringBuilder();
-        String line = reader.readLine();
-        boolean isBreak = false;
-        
-        while (line != null) {
-            if (isBreak) {
-                if (line.contains("COMPILER_RESUME")) {
-                    isBreak = false;
-                }
-            } else if (line.contains("COMPILER_BREAK")) {
-                isBreak = true;
-                sb.append(formatSource(evalSource, 8));
 
-            } else {
-                sb.append(line).append("\n");
-            }
-            
-            line = reader.readLine();
-        }
-        reader.close();
+        sb.append("package ").append(defaults.getProperty(RUNTIME_PACKAGE_KEY)).append("; \n\n");
+        sb.append("public class ").append(defaults.getProperty(RUNTIME_CLASS_KEY));
+        sb.append(" extends ").append(runtimeBaseClass.getName()).append(" { \n");
+        sb.append(formatSource(evalSource, 4));
+        sb.append("} \n");
         
         runtimeSource = sb.toString();
     }
     
-    private String formatSource(String source, int indent) {
+    private String formatSource(String source, int baseIndent) {
         StringBuilder sb = new StringBuilder();
+        int indent = baseIndent;
         
-        char[] c = new char[indent];
-        Arrays.fill(c, ' ');
-        String indentStr = String.valueOf(c);
+        char[] spaces = new char[100];
+        Arrays.fill(spaces, ' ');
         
         String[] lines = source.split("\n");
         
         for (String line : lines) {
-            sb.append(indentStr).append(line.trim()).append("\n");
+            line = line.trim();
+            if (line.endsWith("}")) indent -= 4;
+            
+            sb.append(spaces, 0, indent);
+            sb.append(line.trim()).append("\n");
+            
+            if (line.endsWith("{")) indent += 4;
         }
         
         return sb.toString();

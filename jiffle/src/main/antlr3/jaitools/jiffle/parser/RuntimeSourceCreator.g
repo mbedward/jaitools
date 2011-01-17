@@ -63,6 +63,10 @@ private int COUNTER = 0;
 compile
 @init {
     srcSB = new StringBuilder();
+    srcSB.append("public void evaluate(int _x, int _y) { \n");
+}
+@after {
+    srcSB.append("} \n");
 }
                 : (statement { srcSB.append($statement.src).append(";\n"); } )+
                 ;
