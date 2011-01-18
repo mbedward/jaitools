@@ -31,7 +31,6 @@ import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -44,6 +43,7 @@ import javax.media.jai.ROI;
 import com.vividsolutions.jts.geom.LineSegment;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.operation.linemerge.LineMerger;
+import jaitools.CollectionFactory;
 
 /**
  * Generates contours for user-specified levels of values in the source image.
@@ -82,6 +82,9 @@ public class ContourOpImage extends AttributeOpImage {
      * the value of each is an integer multiple of this value.
      */
     private Double contourInterval;
+    
+    /** Values to treat as NO_DATA */
+    private List<Double> noDataValues;
     
     /** Output contour lines */
     private SoftReference<List<LineString>> cachedContours;
@@ -151,6 +154,7 @@ public class ContourOpImage extends AttributeOpImage {
             int band,
             Collection<? extends Number> levels,
             Double interval,
+            Collection<? extends Number> noDataValues,
             boolean simplify,
             boolean mergeTiles,
             boolean smooth) {
@@ -160,7 +164,7 @@ public class ContourOpImage extends AttributeOpImage {
         this.band = band;
         
         this.contourLevels = new ArrayList<Double>();
-        if (levels != null && !levels.isEmpty()) {
+        if (levels != null) {
             // Use specific levels
             for (Number z : levels) {
                 this.contourLevels.add(z.doubleValue());
@@ -175,13 +179,19 @@ public class ContourOpImage extends AttributeOpImage {
             throw new IllegalArgumentException("At least one of levels or interval must be supplied");
         }
         
+        this.noDataValues = CollectionFactory.list();
+        if (noDataValues != null) {
+            for (Number z : noDataValues) {
+                this.noDataValues.add(z.doubleValue());
+            }
+        }
+        
         this.simplify = simplify;
         this.mergeTiles = mergeTiles;
         this.smooth = smooth;
-        
-        // SG made static
-//        PrecisionModel pm = new PrecisionModel(100);
-//        this.geomFactory = new GeometryFactory(pm);
+
+        // Set the precision to use for Geometry operations
+        Utils.setPrecision(100.0);
     }
 
     /**
@@ -257,7 +267,7 @@ public class ContourOpImage extends AttributeOpImage {
                             // Skip over any degenerate segments which can be produced by
                             // the traceContours algorithm
                             if (!seg.p0.equals2D(seg.p1)) {
-                                tempLines.add(seg.toGeometry(Utils.GEOMETRY_FACTORY));
+                                tempLines.add(seg.toGeometry(Utils.getGeometryFactory()));
                             }
                         }
 
@@ -323,7 +333,7 @@ public class ContourOpImage extends AttributeOpImage {
          * Bezier smoothing of contours
          */
         if (smooth) {
-            LineSmoother smoother = new LineSmoother(Utils.GEOMETRY_FACTORY);
+            LineSmoother smoother = new LineSmoother(Utils.getGeometryFactory());
             smoother.setControl(smootherControl);
             
             final int N = mergedContourLines.size();

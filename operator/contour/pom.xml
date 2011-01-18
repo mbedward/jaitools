@@ -10,7 +10,6 @@
     </parent>
   
     <artifactId>contour</artifactId>
-    <version>1.1-SNAPSHOT</version>
 
     <name>Contour operator</name>
     <description>Generates smooth contours at specified intervals</description>

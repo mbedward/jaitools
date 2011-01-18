@@ -21,6 +21,7 @@
 package jaitools.media.jai.contour;
 
 import java.awt.image.renderable.ParameterBlock;
+import java.util.Arrays;
 import java.util.Collection;
 import javax.media.jai.OperationDescriptorImpl;
 import javax.media.jai.ROI;
@@ -103,15 +104,17 @@ public class ContourDescriptor extends OperationDescriptorImpl {
     static final int BAND_ARG = 1;
     static final int LEVELS_ARG = 2;
     static final int INTERVAL_ARG = 3;
-    static final int SIMPLIFY_ARG = 4;
-    static final int MERGE_TILES_ARG = 5;
-    static final int SMOOTH_ARG = 6;
+    static final int NO_DATA_ARG = 4;
+    static final int SIMPLIFY_ARG = 5;
+    static final int MERGE_TILES_ARG = 6;
+    static final int SMOOTH_ARG = 7;
 
     private static final String[] paramNames = {
         "roi",
         "band",
         "levels",
         "interval",
+        "nodata",
         "simplify",
         "mergeTiles",
         "smooth"
@@ -122,6 +125,7 @@ public class ContourDescriptor extends OperationDescriptorImpl {
          Integer.class,
          Collection.class,
          Number.class,
+         Collection.class,
          Boolean.class,
          Boolean.class,
          Boolean.class
@@ -132,6 +136,8 @@ public class ContourDescriptor extends OperationDescriptorImpl {
          Integer.valueOf(0),
          (Collection) null,
          (Number) null,
+         Arrays.asList(Double.NaN, Double.POSITIVE_INFINITY, 
+            Double.NEGATIVE_INFINITY, Double.MAX_VALUE),
          Boolean.TRUE,
          Boolean.TRUE,
          Boolean.FALSE,
@@ -156,16 +162,19 @@ public class ContourDescriptor extends OperationDescriptorImpl {
                     {"arg2Desc", paramNames[2] + " (Collection<? extends Number>) " +
                               "values for which to generate contours"},
                     
-                    {"arg2Desc", paramNames[3] + " (Number) " +
+                    {"arg3Desc", paramNames[3] + " (Number) " +
                               "interval between contour values (ignored if levels arg is supplied)"},
                     
-                    {"arg3Desc", paramNames[4] + " (Boolean, default=true) " +
+                    {"arg4Desc", paramNames[4] + " (Collection<? extends Number>) " +
+                              "values to treat as NO_DATA"},
+                    
+                    {"arg5Desc", paramNames[5] + " (Boolean, default=true) " +
                               "whether to merge contour lines across source image tile boundaries"},
                     
-                    {"arg4Desc", paramNames[5] + " (Boolean, default=true) " +
+                    {"arg6Desc", paramNames[6] + " (Boolean, default=true) " +
                               "whether to simplify contour lines by removing colinear vertices"},
                     
-                    {"arg5Desc", paramNames[6] + " (Boolean, default=false) " +
+                    {"arg7Desc", paramNames[7] + " (Boolean, default=false) " +
                               "whether to smooth contour lines with Bezier interpolation"}
                 },
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
