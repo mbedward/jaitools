@@ -1,18 +1,18 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  * 
  * This file is part of jai-tools.
-
+ *
  * jai-tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the 
  * License, or (at your option) any later version.
-
+ *
  * jai-tools is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
-
+ *
  * You should have received a copy of the GNU Lesser General Public 
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  * 
@@ -36,7 +36,6 @@ class JiffleTask implements Runnable {
     private final JiffleInterpreter interpreter;
     private int id;
     private Jiffle jiffle;
-    private JiffleRunner runner;
     private boolean completed;
     
     /**
@@ -49,12 +48,17 @@ class JiffleTask implements Runnable {
         this.id = id;
         this.interpreter = interpreter;
         this.jiffle = jiffle;
-        runner = new JiffleRunner(jiffle);
+        
+        /*
+         * TODO: get progress listeners working for the new runtime system
+         *
         runner.addProgressListener(new RunProgressListener() {
             public void onProgress(float progress) {
                 JiffleTask.this.interpreter.onTaskProgressEvent(JiffleTask.this, progress);
             }
         });
+         * 
+         */
         
         completed = false;
     }
@@ -63,23 +67,9 @@ class JiffleTask implements Runnable {
      * Run this task
      */
     public void run() {
-        
         boolean ok = true;
-        
-        try {
-            runner.run();
-        
-        } catch (JiffleInterpreterException iex) {
-            // @todo error reporting
-            ok = false;
-            
-        } catch (RuntimeException rex) {
-            ok = false;
-            
-        } finally {
-            completed = ok;
-            interpreter.onTaskStatusEvent(this);
-        }
+        JiffleRuntime jr = jiffle.getRuntimeInstance();
+        jr.evaluateAll();
     }
     
     /**

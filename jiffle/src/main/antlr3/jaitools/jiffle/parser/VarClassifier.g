@@ -42,7 +42,6 @@ import java.util.Set;
 
 import jaitools.CollectionFactory;
 import jaitools.jiffle.ErrorCode;
-import jaitools.jiffle.runtime.JiffleRunner;
 }
 
 @members {

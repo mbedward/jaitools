@@ -48,7 +48,6 @@ tokens {
 @header {
 package jaitools.jiffle.parser;
 
-import jaitools.jiffle.runtime.JiffleRunner;
 import jaitools.jiffle.Metadata;
 }
 

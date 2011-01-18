@@ -38,29 +38,10 @@ package jaitools.jiffle.parser;
 import java.util.Map;
 import jaitools.CollectionFactory;
 import jaitools.jiffle.ErrorCode;
-import jaitools.jiffle.runtime.JiffleRunner;
 }
 
 @members {
-private boolean printDebug = false;
-public void setPrint(boolean b) { printDebug = b; }
-
 private FunctionLookup functionLookup = new FunctionLookup();
-
-private boolean isDefinedFunction(String funcName, int numArgs) {
-    boolean found = false;
-    
-    if (numArgs == 0) {
-        found = (JiffleRunner.isInfoFunction(funcName) ||
-                 JiffleRunner.isPositionalFunction(funcName));
-    }
-    
-    if (!found) {
-        found = functionLookup.isDefined(funcName, numArgs);
-    }
-    
-    return found;
-}
 
 /* Table of function name : error code */
 private Map<String, ErrorCode> errorTable = CollectionFactory.orderedMap();
@@ -92,12 +73,8 @@ expr            : ^(ASSIGN assign_op ID expr)
 
                 | ^(FUNC_CALL ID expr_list)
                   { 
-                      if (!isDefinedFunction($ID.text, $expr_list.size)) {
+                      if (!functionLookup.isDefined($ID.text, $expr_list.size)) {
                           errorTable.put($ID.text, ErrorCode.FUNC_UNDEFINED);
-                      }
-                      if (printDebug) {
-                          System.out.println("Image var error: " +
-                                $ID.text + " used for both input and output");
                       }
                   }
 
