@@ -46,26 +46,23 @@ import jaitools.jiffle.Jiffle;
 
 @members {
 
-/*
- * Recording of user variables and checking that they are
- * assigned a value before being used in an expression.
- * Use of an unsassigned variable is not necessarily an error
- * as it might (should) be an input image variable.
- */
-private Set<String> userVars = CollectionFactory.set();
+private ErrorReporter errorReporter = null;
 
-public Set<String> getUserVars() {
-    return userVars;
+public void setErrorReporter( ErrorReporter er ) {
+    errorReporter = er;
 }
 
-private Set<String> unassignedVars = CollectionFactory.set();
-
-public Set<String> getUnassignedVars() {
-    return unassignedVars;
+public ErrorReporter getErrorReporter() {
+    return errorReporter;
 }
 
-public boolean hasUnassignedVar() {
-    return !unassignedVars.isEmpty();
+@Override 
+public void emitErrorMessage(String msg) {
+    if (errorReporter != null) {
+        errorReporter.addError(msg);
+    } else {
+        super.emitErrorMessage(msg);
+    }
 }
 
 private Map<String, Jiffle.ImageRole> imageParams;
@@ -93,6 +90,24 @@ private void postCheck() {
         } 
     }
 }
+
+/*
+ * The following Exception class and overridden method are to
+ * exit parsing early.
+ */
+
+private static class NbrRefException extends RecognitionException {
+}
+
+@Override
+public void reportError(RecognitionException e) {
+    if (e instanceof NbrRefException) {
+        throw new CompilerExitException();
+    }
+
+    super.reportError(e);
+}
+    
 
 }
 
@@ -135,6 +150,9 @@ expr            : ^(NBR_REF ID expr expr)
                           errors.put($ID.text, ErrorCode.NBR_REF_ON_NON_IMAGE_VAR);
                       } else if (role == Jiffle.ImageRole.DEST) {
                           errors.put($ID.text, ErrorCode.NBR_REF_ON_DEST_IMAGE_VAR);
+
+                          // give up at this point
+                          throw new NbrRefException();
                       }
                   }
 

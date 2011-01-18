@@ -21,9 +21,11 @@ package jaitools.jiffle;
 
 import jaitools.jiffle.parser.ErrorCode;
 import jaitools.CollectionFactory;
+import jaitools.jiffle.parser.CompilerExitException;
 import jaitools.jiffle.parser.FunctionValidator;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
+import jaitools.jiffle.parser.ErrorReporter;
 import jaitools.jiffle.parser.RuntimeSourceCreator;
 import jaitools.jiffle.parser.VarClassifier;
 import jaitools.jiffle.parser.VarTransformer;
@@ -207,6 +209,7 @@ public class Jiffle {
     private CommonTree primaryAST;
     private CommonTree finalAST;
     private CommonTokenStream tokens;
+    private ErrorReporter errorReporter;
     
     private Class<? extends JiffleRuntime> runtimeBaseClass;
     private JiffleRuntime runtimeInstance;
@@ -506,18 +509,28 @@ public class Jiffle {
             nodes.setTokenStream(tokens);
             classifier = new VarClassifier(nodes);
             classifier.setImageParams(imageParams);
+            
+            /*
+             * TODO: actually do something with the ANTLR error messages in the reporter
+             */
+            classifier.setErrorReporter(errorReporter);
+            
             classifier.start();
             
-            errors = classifier.getErrors();
-            for (ErrorCode error : errors.values()) {
-                if (error.isError()) return false;
-            }
-
+            
+        } catch (CompilerExitException ex) {
+            // no action required
+            
         } catch (RecognitionException ex) {
-            // anything at this stage is probably programmer error
-            throw new RuntimeException(ex);
+            throw new JiffleCompilationException("Compilation failed: error not recognized");
+            
+        } finally {
+            errors = classifier.getErrors();
         }
 
+        for (ErrorCode error : errors.values()) {
+            if (error.isError()) return false;
+        }
         return true;
     }
 

@@ -20,8 +20,6 @@
 
 package jaitools.jiffle.parser;
 
-import jaitools.jiffle.parser.ErrorLevel;
-
 /**
  * Constants used by the Jiffle compiler to report errors and warnings.
  * 
@@ -67,11 +65,17 @@ public enum ErrorCode {
     }
     
     /**
-     * Query whether an error code is an error or a warning
-     * @return true for error; false for warning
+     * Tests if this is an error
      */
     public boolean isError() {
         return level == ErrorLevel.ERROR;
+    }
+    
+    /*
+     * Tests if this is a warning.
+     */
+    public boolean isWarning() {
+        return level == ErrorLevel.WARNING;
     }
 
     /**
