@@ -24,7 +24,7 @@ public class NewRuntimeDemo {
                 + "dx = (x()-xc)/xc; \n"
                 + "dy = (y()-yc)/yc; \n"
                 + "d = sqrt(dx^2 + dy^2); \n"
-                + "out = sin(8 * PI * d); \n";
+                + "out = sin(8 * M_PI * d); \n";
 
         Jiffle jiffle = new Jiffle(src, params);
         
