@@ -48,28 +48,26 @@ tokens {
 @header {
 package jaitools.jiffle.parser;
 
-import jaitools.jiffle.Metadata;
+import java.util.Map;
+import jaitools.jiffle.Jiffle;
 }
 
 @members {
-private Metadata metadata = null;
-
-public void setMetadata(Metadata metadata) {
-    this.metadata = metadata;
-}
 
 private FunctionLookup functionLookup = new FunctionLookup();
 
-private boolean isImageVar(String varName) {
-    return metadata.getImageVars().contains(varName);
+private Map<String, Jiffle.ImageRole> imageParams;
+
+public void setImageParams( Map<String, Jiffle.ImageRole> params ) {
+    imageParams = params;
 }
 
 }
 
 start
-@init{
-    if (metadata == null) {
-        throw new RuntimeException("failed to set metadata for TreeRebuilder");
+@init {
+    if (imageParams == null) {
+        throw new IllegalStateException("Internal compiler error: image params not set");
     }
 }
                 : statement+ 
@@ -84,7 +82,7 @@ expr_list returns [int size]
                 ;
 
 expr            : ^(ASSIGN assign_op var expr)
-                  -> {isImageVar($var.text)}? ^(IMAGE_WRITE var expr)
+                  -> {imageParams.containsKey($var.text)}? ^(IMAGE_WRITE var expr)
                   -> ^(ASSIGN assign_op var expr)
                   
                 | ^(FUNC_CALL ID expr_list)
@@ -114,7 +112,7 @@ expr            : ^(ASSIGN assign_op var expr)
                 ;
                 
 var             :ID
-                  -> {isImageVar($ID.text)}? IMAGE_VAR[$ID.text]
+                  -> {imageParams.containsKey($ID.text)}? IMAGE_VAR[$ID.text]
                   -> {ConstantLookup.isDefined($ID.text)}? FIXED_VALUE<FixedValueNode>[ConstantLookup.getValue($ID.text)]
                   -> VAR[$ID.text]
                 ;

@@ -18,11 +18,14 @@
  * 
  */
 
-package jaitools.jiffle;
+package jaitools.jiffle.parser;
+
+import jaitools.jiffle.parser.ErrorLevel;
 
 /**
- * Enum constants for compilation errors and warnings. Each constant has a description
- * and an error level (presently just ErrorLevel.ERROR or ErrorLevel.WARNING).
+ * Constants used by the Jiffle compiler to report errors and warnings.
+ * 
+ * @see ErrorLevel
  * 
  * @author Michael Bedward
  * @since 1.0
@@ -34,33 +37,26 @@ public enum ErrorCode {
     /**
      * Error: Invalid use of an image variable for both input and output
      */
-    IMAGE_IO(ErrorLevel.ERROR, "Image being used for both input and output"),
+    ASSIGNMENT_TO_SRC_IMAGE(ErrorLevel.ERROR, 
+            "Cannot assign a value to a non-destination image"),
     
-    /**
-     * Error: No output image specified
-     */
-    IMAGE_NO_OUT(ErrorLevel.ERROR, "No output image (?)"),
+    IMAGE_NOT_USED(ErrorLevel.WARNING,
+            "Image variable is defined but not used"),
     
-    /**
-     * Error: neighbourhood reference used with a variable that is not
-     * an input image
-     */
-    INVALID_NBR_REF(ErrorLevel.ERROR, "Neighbourhood reference but not an input image"),
+    NBR_REF_ON_DEST_IMAGE_VAR(ErrorLevel.ERROR, 
+            "Neighbourhood reference cannot be used with a destination image"),
     
-    /**
-     * Error: a local variable is used before being assigned a value
-     */
-    VAR_UNDEFINED(ErrorLevel.ERROR, "Variable used before being assigned a value"),
+    NBR_REF_ON_NON_IMAGE_VAR(ErrorLevel.ERROR, 
+            "Neighbourhood reference cannot be used with a non-image variable"),
     
-    /**
-     * Error: call to an unrecognized function
-     */
-    FUNC_UNDEFINED(ErrorLevel.ERROR, "Calling an unrecognized function"),
+    READING_FROM_DEST_IMAGE(ErrorLevel.ERROR, 
+            "Cannot read a value from a destination image"),
     
-    /**
-     * Warning: Image variable defined but not used in the script
-     */
-    IMAGE_UNUSED(ErrorLevel.WARNING, "Image var defined but missing from script");
+    UNDEFINED_FUNCTION(ErrorLevel.ERROR,
+            "Call to undefined function"),
+    
+    UNINIT_VAR(ErrorLevel.ERROR, 
+            "Variable used before being assigned a value");
     
     private ErrorLevel level;
     private String desc;
@@ -91,11 +87,4 @@ public enum ErrorCode {
     }
 }
 
-/**
- * Error levels used by {@link ErrorCode}
- */
-enum ErrorLevel {
-    WARNING,
-    ERROR;
-}
 

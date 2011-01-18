@@ -37,21 +37,21 @@ package jaitools.jiffle.parser;
 
 import java.util.Map;
 import jaitools.CollectionFactory;
-import jaitools.jiffle.ErrorCode;
+import jaitools.jiffle.parser.ErrorCode;
 }
 
 @members {
 private FunctionLookup functionLookup = new FunctionLookup();
 
 /* Table of function name : error code */
-private Map<String, ErrorCode> errorTable = CollectionFactory.orderedMap();
+private Map<String, ErrorCode> errors = CollectionFactory.orderedMap();
 
 public Map<String, ErrorCode> getErrors() {
-    return errorTable;
+    return errors;
 }
 
 public boolean hasError() {
-    return !errorTable.isEmpty();
+    return !errors.isEmpty();
 }
 
 }
@@ -74,7 +74,7 @@ expr            : ^(ASSIGN assign_op ID expr)
                 | ^(FUNC_CALL ID expr_list)
                   { 
                       if (!functionLookup.isDefined($ID.text, $expr_list.size)) {
-                          errorTable.put($ID.text, ErrorCode.FUNC_UNDEFINED);
+                          errors.put($ID.text, ErrorCode.UNDEFINED_FUNCTION);
                       }
                   }
 

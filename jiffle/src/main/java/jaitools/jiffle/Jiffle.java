@@ -19,6 +19,7 @@
  */
 package jaitools.jiffle;
 
+import jaitools.jiffle.parser.ErrorCode;
 import jaitools.CollectionFactory;
 import jaitools.jiffle.parser.FunctionValidator;
 import jaitools.jiffle.parser.JiffleLexer;
@@ -216,7 +217,7 @@ public class Jiffle {
     private Set<String> unassignedVars;
     private Set<String> outputImageVars;
     
-    private Metadata metadata;
+//    private Metadata metadata;
     private Map<String, ErrorCode> errors;
     
 
@@ -394,13 +395,6 @@ public class Jiffle {
     }
 
     /**
-     * Returns the metadata for variables used in the Jiffle program
-     */
-    public Metadata getMetadata() {
-        return metadata;
-    }
-
-    /**
      * Called on object construction to compile the script into an optimized 
      * Abstract Syntax Tree (AST) suitable for execution. 
      * The compilation process includes:
@@ -511,12 +505,12 @@ public class Jiffle {
             CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
             nodes.setTokenStream(tokens);
             classifier = new VarClassifier(nodes);
-            classifier.setImageVars(imageParams.keySet());
+            classifier.setImageParams(imageParams);
             classifier.start();
             
-            if (classifier.hasError()) {
-                errors = classifier.getErrors();
-                return false;
+            errors = classifier.getErrors();
+            for (ErrorCode error : errors.values()) {
+                if (error.isError()) return false;
             }
 
         } catch (RecognitionException ex) {
@@ -524,12 +518,6 @@ public class Jiffle {
             throw new RuntimeException(ex);
         }
 
-        /*
-         * Create a metadata object for later stages of compilation and execution
-         */
-        metadata = new Metadata(imageParams);
-        metadata.setVarData(classifier);
-        
         return true;
     }
 
@@ -546,7 +534,7 @@ public class Jiffle {
             nodes.setTokenStream(tokens);
             
             VarTransformer vt = new VarTransformer(nodes);
-            vt.setMetadata(metadata);
+            vt.setImageParams(imageParams);
             VarTransformer.start_return result = vt.start();
             finalAST = (CommonTree) result.getTree();
 

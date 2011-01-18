@@ -41,7 +41,7 @@ import java.util.Map;
 import java.util.Set;
 
 import jaitools.CollectionFactory;
-import jaitools.jiffle.ErrorCode;
+import jaitools.jiffle.Jiffle;
 }
 
 @members {
@@ -68,140 +68,93 @@ public boolean hasUnassignedVar() {
     return !unassignedVars.isEmpty();
 }
 
-/**
- * Image var validation - there should be at least one output image
- * and no image should be used for both input and output
- */
-private Set<String> imageVars;
+private Map<String, Jiffle.ImageRole> imageParams;
 
-public void setImageVars(Collection<String> varNames) {
-    imageVars = CollectionFactory.set();
-    imageVars.addAll(varNames);
+public void setImageParams( Map<String, Jiffle.ImageRole> imageParams ) {
+    this.imageParams = imageParams;
 }
 
-private Set<String> inImageVars = CollectionFactory.set();
-private Set<String> outImageVars = CollectionFactory.set();
+private Set<String> varsAll = CollectionFactory.set();
+private Set<String> varsAssignedTo = CollectionFactory.set();
 
-public Set<String> getOutputImageVars() {
-    return outImageVars;
-}
-
-private Set<String> nbrRefVars = CollectionFactory.set();
-
-
-/* Table of var name : error code */
-private Map<String, ErrorCode> errorTable = CollectionFactory.orderedMap();
+private Map<String, ErrorCode> errors = CollectionFactory.orderedMap();
 
 public Map<String, ErrorCode> getErrors() {
-    return errorTable;
-}
-
-/* Check for errors */
-public boolean hasError() {
-    for (ErrorCode code : errorTable.values()) {
-        if (code.isError()) return true;
-    }
-    
-    return false;
-}
-
-/* Check for warnings */
-public boolean hasWarning() {
-    for (ErrorCode code : errorTable.values()) {
-        if (!code.isError()) return true;
-    }
-    
-    return false;
+    return errors;
 }
 
 /*
- * This method is run after the tree has been processed to 
- * check that the image var params and the AST are in sync
+ * This method is run after variables have been collected from the AST
  */
-private void postValidation() {
-    for (String varName : unassignedVars) {
-        errorTable.put(varName, ErrorCode.VAR_UNDEFINED);
-    }
-
-    if (outImageVars.isEmpty()) {
-        errorTable.put("n/a", ErrorCode.IMAGE_NO_OUT);
-    }
-
-    // check all image vars are accounted for
-    for (String varName : imageVars) {
-        if (!inImageVars.contains(varName) && !outImageVars.contains(varName)) {
-            errorTable.put(varName, ErrorCode.IMAGE_UNUSED);
-        }
-    }
-    
-    // check that any vars used in neighbour ref expressions are input
-    // image vars
-    for (String varName : nbrRefVars) {
-        boolean ok = (
-            inImageVars.contains(varName) ||
-            (imageVars.contains(varName) && !outImageVars.contains(varName))
-        );
-            
-        if (!ok) {
-            errorTable.put(varName, ErrorCode.INVALID_NBR_REF);
-        }
+private void postCheck() {
+    for (String varName : imageParams.keySet()) {
+        if (!varsAll.contains(varName)) {
+            errors.put(varName, ErrorCode.IMAGE_NOT_USED);
+        } 
     }
 }
 
-    
 }
 
 start
 @init {
-    if (imageVars == null || imageVars.isEmpty()) {
-        throw new RuntimeException("failed to set image vars before using VarClassifier");
+    if (imageParams == null) {
+        throw new IllegalStateException("Internal compiler error: image params not set");
     }
 }
 @after {
-    postValidation();
+    postCheck();
 }
                 : statement+ 
                 ;
 
-statement       : expr
+statement       : assignment
+                | expr
                 ;
 
-expr_list       : ^(EXPR_LIST (expr)*)
-                ;
+assignment      : ^(ASSIGN assign_op ID expr) 
+                  { 
+                      varsAll.add($ID.text);
 
-expr            : ^(ASSIGN assign_op ID e1=expr)
-                  {
-                      if (imageVars.contains($ID.text)) {
-                          outImageVars.add($ID.text);
+                      Jiffle.ImageRole role = imageParams.get($ID.text);
+                      if (role != null) {
+                          if (role != Jiffle.ImageRole.DEST) {
+                              errors.put($ID.text, ErrorCode.ASSIGNMENT_TO_SRC_IMAGE);
+                          }
                       } else {
-                          userVars.add($ID.text);
+                          varsAssignedTo.add($ID.text);
+                      }
+
+                  }
+                ;
+
+expr            : ^(NBR_REF ID expr expr)
+                  { 
+                      Jiffle.ImageRole role = imageParams.get($ID.text);
+                      if (role == null) {
+                          errors.put($ID.text, ErrorCode.NBR_REF_ON_NON_IMAGE_VAR);
+                      } else if (role == Jiffle.ImageRole.DEST) {
+                          errors.put($ID.text, ErrorCode.NBR_REF_ON_DEST_IMAGE_VAR);
+                      }
+                  }
+
+                | ID
+                  { 
+                      varsAll.add($ID.text);
+
+                      if (!(varsAssignedTo.contains($ID.text)  ||
+                            ConstantLookup.isDefined($ID.text))) {
+                          if (imageParams.containsKey($ID.text)) {
+                              if (imageParams.get($ID.text) == Jiffle.ImageRole.DEST) {
+                                  errors.put($ID.text, ErrorCode.READING_FROM_DEST_IMAGE);
+                              }
+                          } else {
+                              errors.put($ID.text, ErrorCode.UNINIT_VAR);
+                          }
                       }
                   }
 
                 | ^(FUNC_CALL ID expr_list)
-                | ^(NBR_REF ID expr expr)
-                  {
-                      nbrRefVars.add($ID.text);
-                  }
-
-                | ID
-                  {
-                      if (imageVars.contains($ID.text)) {
-                          if (outImageVars.contains($ID.text)) {
-                              // error - using image for input and output
-                              errorTable.put($ID.text, ErrorCode.IMAGE_IO);
-                          } else {
-                              inImageVars.add($ID.text);
-                          }
-                          
-                      } else if (!userVars.contains($ID.text) &&
-                                 !ConstantLookup.isDefined($ID.text) &&
-                                 !unassignedVars.contains($ID.text))
-                      {
-                          unassignedVars.add($ID.text);
-                      }
-                  }
-                  
                 | ^(expr_op expr expr)
                 | ^(QUESTION expr expr expr)
                 | ^(PREFIX unary_op expr)
@@ -209,6 +162,9 @@ expr            : ^(ASSIGN assign_op ID e1=expr)
                 | INT_LITERAL 
                 | FLOAT_LITERAL 
                 | constant
+                ;
+
+expr_list       : ^(EXPR_LIST (expr)*)
                 ;
 
 constant        : TRUE

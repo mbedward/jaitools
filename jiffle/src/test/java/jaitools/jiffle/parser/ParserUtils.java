@@ -29,7 +29,7 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
  *
  * @author Michael Bedward
  */
-public abstract class TreeWalkerTestBase {
+public abstract class ParserUtils {
     
     /**
      * Helper function to scan and parse an input script and
