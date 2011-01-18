@@ -64,16 +64,14 @@ public class Utils {
     
     /**
      * Sets the precision to be used by the cached {@code GeometryFactory}.
+     * For an explanation of the scale factor see {@link PrecisionModel}.
      * 
-     * @param pm a precision model or {@code null} for default precision
+     * @param scale the desired precision expressed as a scale factor
      * 
      * @return the (possibly new) cached {@code GeometryFactory} instance
-     * 
-     * @see PrecisionModel
      */
-    public static GeometryFactory setPrecision(PrecisionModel pm) {
-        PrecisionModel model = pm == null ? new PrecisionModel() : pm;
-        geomFactory = new GeometryFactory(model);
+    public static GeometryFactory setPrecision(double scale) {
+        geomFactory = new GeometryFactory(new PrecisionModel(scale));
         return geomFactory;
     }
 

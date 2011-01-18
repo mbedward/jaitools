@@ -61,12 +61,12 @@ public class UtilsTest {
     public void setPrecision() {
         GeometryFactory gf1 = Utils.getGeometryFactory();
 
-        PrecisionModel pm = new PrecisionModel(100.0);
-        Utils.setPrecision(pm);
+        Utils.setPrecision(100.0);
         GeometryFactory gf2 = Utils.getGeometryFactory();
 
-        assertNotSame(pm, gf1.getPrecisionModel());
-        assertSame(pm, gf2.getPrecisionModel());
+        PrecisionModel pm = new PrecisionModel(100.0);
+        assertFalse(pm.equals(gf1.getPrecisionModel()));
+        assertTrue(pm.equals(gf2.getPrecisionModel()));
     }
 
     @Test
