@@ -28,8 +28,8 @@ import java.util.List;
  * 
  * @author Michael Bedward
  * @since 1.1
- * @source $URL: https://jai-tools.googlecode.com/svn/trunk/jiffle/src/main/java/jaitools/jiffle/parser/ConstantLookup.java $
- * @version $Id: ConstantLookup.java 1299 2011-01-18 03:26:15Z michael.bedward $
+ * @source $URL$
+ * @version $Id$
  */
 public interface ErrorReporter {
 
