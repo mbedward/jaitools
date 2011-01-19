@@ -139,14 +139,6 @@ expr returns [String src]
                       }
                   }
                   
-                | ^(QUESTION cond=expr e1=expr e2=expr)
-                  {
-                      $src = "if (dzero(" + $cond.src + ") {\n" 
-                          + e1 + "; \n"
-                          + "} else { \n"
-                          + e2 + "; \n }";
-                  }
-                  
                 | ^(POW e1=expr e2=expr) { $src = "Math.pow(" + e1 + ", " + e2 + ")"; }
 
                 | ^(TIMES e1=expr e2=expr) { $src = e1 + " * " + e2; }
@@ -157,6 +149,13 @@ expr returns [String src]
                 | ^(PREFIX PLUS e1=expr) { $src = "+" + e1; }
                 | ^(PREFIX MINUS e1=expr) { $src = "-" + e1; }
 
+                | ^(QUESTION cond=expr e1=expr e2=expr)
+                  {
+                    // ternary expression is equivalent to Jiffle's if(a, b, c)
+                    String fn = getRuntimeExpr("if", 3);
+                    $src = fn + "(" + cond + ", " + e1 + ", " + e2 + ")";
+                  }
+                  
                 | ^(OR e1=expr e2=expr) 
                   {                       
                     String fn = getRuntimeExpr("OR", 2);
