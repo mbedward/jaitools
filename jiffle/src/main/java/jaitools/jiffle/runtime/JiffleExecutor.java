@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  * 
  * This file is part of jai-tools.
 
@@ -36,8 +36,8 @@ import java.util.concurrent.Future;
  * class Foo {
  * 
  *     public Foo() {
- *         private JiffleInterpreter interp = new JiffleInterpreter();
- *         interp.addEventListener(new JiffleEventAdapter() {
+ *         private JiffleExecutor jiffleExec = new JiffleExecutor();
+ *         jiffleExec.addEventListener(new JiffleEventAdapter() {
  *             public void onCompletionEvent(JiffleCompletionEvent ev) {
  *                 onCompletion(ev);
  *             }
@@ -54,7 +54,7 @@ import java.util.concurrent.Future;
  *         Jiffle j = new Jiffle(script);
  *         if (j.isCompiled()) {
  *             // set input and output images etc., then...
- *             interp.submit(j);
+ *             jiffleExec.submit(j);
  *         }
  *     }
  * 
@@ -76,7 +76,7 @@ import java.util.concurrent.Future;
  * @source $URL$
  * @version $Id$
  */
-public class JiffleInterpreter {
+public class JiffleExecutor {
     
     private static ExecutorService threadPool;
     private static int jobID = 0;
@@ -85,16 +85,38 @@ public class JiffleInterpreter {
     private List<JiffleEventListener> listeners;
     
     /**
-     * Constructor
+     * Creates an executor with default settings. A default executor sets 
+     * no upper limit to the number of {@code Jiffle} runtime objects that
+     * can execute concurrently. It uses a cached thread pool, creating new
+     * threads when required but recycling existing threads when earlier
+     * jobs have completed.
      */
-    public JiffleInterpreter() {
+    public JiffleExecutor() {
+        threadPool = Executors.newCachedThreadPool();
+        jobs = CollectionFactory.orderedMap();
+        listeners = CollectionFactory.list();
+    }
+    
+    
+    /**
+     * Creates an executor that can have, at most, {@code maxJobs} 
+     * {@code Jiffle} objects running concurrently. If a larger number of
+     * jobs is submitted, some will be placed in a queue to wait for 
+     * executor threads to become available.
+     * 
+     * @param maxJobs the maximum number of 
+     */
+    public JiffleExecutor(int maxJobs) {
+        threadPool = Executors.newFixedThreadPool(maxJobs);
         jobs = CollectionFactory.orderedMap();
         listeners = CollectionFactory.list();
     }
 
     /**
-     * Add a listener for interpreter events
-     * @param listener the listening object
+     * Adds an event listener.
+     * 
+     * @param listener the listener
+     * 
      * @see {@link JiffleEvent}
      */
     public void addEventListener(JiffleEventListener listener) {
@@ -102,24 +124,32 @@ public class JiffleInterpreter {
     }
 
     /**
-     * Submit a compiled Jiffle to the interpreter
-     * @param j the compiled jiffle
-     * @return the job ID that can be used to query this job's status
+     * Submits an {@code Jiffle} object for immediate execution. 
+     * <p>
+     * This method first checks that the {@code Jiffle} object is properly
+     * compiled. It then retrieves a {@link JiffleRuntime} instance from
+     * the object and executes it.
+     * 
+     * @param jiffle a properly compiled {@code Jiffle} object
+     * 
+     * @return the job ID that can be used to query progress
+     * 
+     * @throws JiffleExecutorException if the {@code Jiffle} object was not
+     *         compiled correctly
      */
-    public int submit(final Jiffle j) throws JiffleInterpreterException {
-        if (threadPool == null) {
-            threadPool = Executors.newCachedThreadPool();
+    public int submit(final Jiffle jiffle) throws JiffleExecutorException {
+        if (!jiffle.isCompiled()) {
+            throw new JiffleExecutorException("Jiffle object not compiled" + jiffle.getName());
         }
-
+        
+        JiffleRuntime runtime = jiffle.getRuntimeInstance();
         int id = ++jobID;
-        jobs.put(id, threadPool.submit(new JiffleTask(id, this, j)));
+        jobs.put(id, threadPool.submit(new JiffleTask(id, this, runtime)));
         return id;
     }
+    
 
-    /**
-     * Package private method to receive events from running tasks
-     * @param task the task sending the event
-     */
+    /*
     void onTaskStatusEvent(JiffleTask task) {
         if (task.isCompleted()) {
             fireCompletionEvent(task);
@@ -152,4 +182,6 @@ public class JiffleInterpreter {
             el.onProgressEvent(ev);
         }
     }
+     * 
+     */
 }

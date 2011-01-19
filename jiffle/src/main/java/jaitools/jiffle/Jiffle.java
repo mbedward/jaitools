@@ -22,6 +22,7 @@ package jaitools.jiffle;
 import jaitools.jiffle.parser.ErrorCode;
 import jaitools.CollectionFactory;
 import jaitools.jiffle.parser.CompilerExitException;
+import jaitools.jiffle.parser.DeferredErrorReporter;
 import jaitools.jiffle.parser.FunctionValidator;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
@@ -156,10 +157,13 @@ import org.codehaus.janino.SimpleCompiler;
  */
 public class Jiffle {
     
-    private static final String PROPERTIES_FILE = "META-INF/compiler.properties";
-
-    private static final Properties defaults = new Properties();
+    private static int refCount = 0;
     
+    private static final String PROPERTIES_FILE = "META-INF/jiffle.properties";
+
+    private static final Properties properties = new Properties();
+    
+    private static final String NAME_KEY = "root.name";
     private static final String RUNTIME_PACKAGE_KEY = "runtime.package";
     private static final String RUNTIME_CLASS_KEY = "runtime.class";
     private static final String RUNTIME_BASE_CLASS_KEY = "runtime.base.class";
@@ -170,10 +174,10 @@ public class Jiffle {
         InputStream in = null;
         try {
             in = Jiffle.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE);
-            defaults.load(in);
+            properties.load(in);
             
-            String baseClassName = defaults.getProperty(RUNTIME_PACKAGE_KEY) + "." +
-                    defaults.getProperty(RUNTIME_BASE_CLASS_KEY);
+            String baseClassName = properties.getProperty(RUNTIME_PACKAGE_KEY) + "." +
+                    properties.getProperty(RUNTIME_BASE_CLASS_KEY);
             
             DEFAULT_BASE_CLASS = (Class<? extends JiffleRuntime>) Class.forName(baseClassName);
             
@@ -189,7 +193,7 @@ public class Jiffle {
         }
 
     }
-    
+
     /**
      * Used to specify the roles of images referenced in
      * a Jiffle script. An image may be either read-only
@@ -204,6 +208,9 @@ public class Jiffle {
         DEST;
     }
 
+    /** A name: either a default or one set by the client */
+    private String name;
+
     private String script;
     
     private CommonTree primaryAST;
@@ -214,6 +221,7 @@ public class Jiffle {
     private Class<? extends JiffleRuntime> runtimeBaseClass;
     private JiffleRuntime runtimeInstance;
     private String runtimeSource;
+    private boolean sourceIncludesScript;
     
     private Map<String, ImageRole> imageParams;
     private Set<String> vars;
@@ -273,6 +281,25 @@ public class Jiffle {
         String prog = sb.toString();
         
         init(prog, params);
+    }
+    
+    /**
+     * Replaces the default name set for this object with a user-supplied name.
+     * The name is solely for use by client code. No checks are made for 
+     * duplication between current instances.
+     * 
+     * @param name the name to assign
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * Gets the name assigned to this object. This will either be the
+     * default name or one assigned by the user via {@link #setName(String)}
+     */
+    public String getName() {
+        return name;
     }
     
     /**
@@ -367,10 +394,18 @@ public class Jiffle {
         return runtimeInstance;
     }
     
-    public String getRuntimeSource() {
-        if (runtimeSource == null) {
+    /**
+     * Gets a copy of the Java source for the runtime class.
+     * 
+     * @param scriptInDocs whether to include the original Jiffle script
+     *        in the class javadocs
+     * 
+     * @return source for the runtime class
+     */
+    public String getRuntimeSource(boolean scriptInDocs) {
+        if (runtimeSource == null || scriptInDocs != sourceIncludesScript) {
             try {
-                createRuntimeInstance();
+                createRuntimeSource(scriptInDocs);
             } catch (Exception ex) {
                 throw new IllegalStateException(ex);
             }
@@ -386,6 +421,9 @@ public class Jiffle {
      */
     private void init(String script, Map<String, ImageRole> params)
             throws JiffleCompilationException {
+        
+        Jiffle.refCount++ ;
+        this.name = properties.getProperty(NAME_KEY) + refCount;
 
         this.runtimeBaseClass = DEFAULT_BASE_CLASS;
         
@@ -556,35 +594,109 @@ public class Jiffle {
         }        
     }
 
-    private void createRuntimeInstance() throws Exception {
-        BufferedTreeNodeStream nodes = new BufferedTreeNodeStream(finalAST);
-        nodes.setTokenStream(tokens);
-        RuntimeSourceCreator me = new RuntimeSourceCreator(nodes);
-        me.compile();
+    /**
+     * Creates an instance of the runtime class. The Java source for the
+     * class is created if not already cached and then compiled using
+     * Janino's {@link SimpleCompiler}.
+     * 
+     * @throws Exception 
+     */
+    private void createRuntimeInstance() throws JiffleCompilationException {
+        if (runtimeSource == null) {
+            createRuntimeSource(false);
+        }
         
-        createRuntimeSource(me.getSource());
-        
+        try {
         SimpleCompiler compiler = new SimpleCompiler();
         compiler.cook(runtimeSource);
         Class<?> clazz = compiler.getClassLoader().loadClass(
-                defaults.getProperty(RUNTIME_PACKAGE_KEY) + "." +
-                defaults.getProperty(RUNTIME_CLASS_KEY));
+                properties.getProperty(RUNTIME_PACKAGE_KEY) + "." +
+                properties.getProperty(RUNTIME_CLASS_KEY));
         
         runtimeInstance = (JiffleRuntime) clazz.newInstance();
+        } catch (Exception ex) {
+            throw new JiffleCompilationException("Janino compiler failed", ex);
+        }
     }
     
-    private void createRuntimeSource(String evalSource) throws Exception {
+    /**
+     * Creates the Java source code for the runtime class.
+     * 
+     * @param scriptInDocs whether to include the Jiffle script in the class
+     *        javadocs
+     * 
+     * @throws JiffleCompilationException if an error occurs generating the source 
+     */
+    private void createRuntimeSource(boolean scriptInDocs) throws JiffleCompilationException {
         StringBuilder sb  = new StringBuilder();
 
-        sb.append("package ").append(defaults.getProperty(RUNTIME_PACKAGE_KEY)).append("; \n\n");
-        sb.append("public class ").append(defaults.getProperty(RUNTIME_CLASS_KEY));
+        sb.append("package ").append(properties.getProperty(RUNTIME_PACKAGE_KEY)).append("; \n\n");
+        
+        if (scriptInDocs) {
+            sb.append(formatAsJavadoc(script));
+        }
+        
+        sb.append("public class ").append(properties.getProperty(RUNTIME_CLASS_KEY));
         sb.append(" extends ").append(runtimeBaseClass.getName()).append(" { \n");
-        sb.append(formatSource(evalSource, 4));
+        sb.append(formatSource(astToJava(), 4));
         sb.append("} \n");
         
         runtimeSource = sb.toString();
+        sourceIncludesScript = scriptInDocs;
     }
     
+    /**
+     * Converts the AST to Java statements.
+     * 
+     * @return Java souce code
+     * 
+     * @throws JiffleCompilationException if an error occurs parsing the AST
+     */
+    private String astToJava() throws JiffleCompilationException {
+        ErrorReporter er = new DeferredErrorReporter();
+        try {
+            BufferedTreeNodeStream nodes = new BufferedTreeNodeStream(finalAST);
+            nodes.setTokenStream(tokens);
+            RuntimeSourceCreator rsc = new RuntimeSourceCreator(nodes);
+            rsc.setErrorReporter(er);
+
+            rsc.compile();
+            return rsc.getSource();
+            
+        } catch (RecognitionException ex) {
+            throw new JiffleCompilationException(er.getErrors());
+        }
+    }
+    
+    /**
+     * Formats the input text as a javadoc block.
+     * 
+     * @param text the text to format
+     * 
+     * @return the javadoc block
+     */
+    private String formatAsJavadoc(String text) {
+        StringBuilder sb = new StringBuilder();
+        
+        sb.append("/** \n");
+        for (String line : text.split("\n")) {
+            line = line.trim();
+            if (line.length() > 0) {
+                sb.append(" * ").append(line).append("\n");
+            }
+        }
+        sb.append(" */ \n");
+        return sb.toString();
+    }
+    
+    /**
+     * A mind-numbingly dumb code formatter.
+     * 
+     * @param source source code to format
+     * @param baseIndent initial indentation level (number of spaces)
+     * 
+     * @return formatted code
+     */
     private String formatSource(String source, int baseIndent) {
         StringBuilder sb = new StringBuilder();
         int indent = baseIndent;

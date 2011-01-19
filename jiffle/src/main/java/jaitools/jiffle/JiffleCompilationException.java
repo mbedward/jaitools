@@ -20,6 +20,8 @@
 
 package jaitools.jiffle;
 
+import java.util.List;
+
 /**
  * Exception class for errors encountered while compiling a script
  * 
@@ -31,11 +33,51 @@ package jaitools.jiffle;
 public class JiffleCompilationException extends Exception {
 
     /**
-     * Constructor
+     * Creates a new instance with the given message.
+     * 
      * @param msg error message
      */
-    JiffleCompilationException(String msg) {
+    public JiffleCompilationException(String msg) {
         super(msg);
+    }
+
+    /**
+     * Creates a new instance with the given list of messages.
+     * This is used by Jiffle to take parsing error messages from 
+     * {@link jaitools.jiffle.parser.ErrorReporter} objects.
+     * 
+     * @param errors list of error messages
+     */
+    public JiffleCompilationException(List<String> errors) {
+        super(listToString(errors));
+    }
+
+    /**
+     * Creates a new instance from the given message and base object.
+     * This is used by Jiffle to wrap Janino exceptions.
+     * 
+     * @param string error message
+     * @param thrwbl base {@code Throwable} object
+     */
+    public JiffleCompilationException(String string, Throwable thrwbl) {
+        super(string, thrwbl);
+    }
+    
+    
+    /**
+     * Concatenates a list of messages, separating them with newline
+     * characters.
+     * 
+     * @param msgList list of messages
+     * 
+     * @return the concatenated messages
+     */
+    private static String listToString(List<String> msgList) {
+        StringBuilder sb = new StringBuilder();
+        for (String msg : msgList) {
+            sb.append(msg).append("\n");
+        }
+        return sb.toString();
     }
 
 }

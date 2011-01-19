@@ -31,9 +31,9 @@ package jaitools.jiffle.runtime;
  * @source $URL$
  * @version $Id$
  */
-public class JiffleInterpreterException extends Exception {
+public class JiffleExecutorException extends Exception {
 
-    public JiffleInterpreterException(String msg) {
+    public JiffleExecutorException(String msg) {
         super(msg);
     }
     

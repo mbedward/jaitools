@@ -20,34 +20,32 @@
 
 package jaitools.jiffle.runtime;
 
-import jaitools.jiffle.Jiffle;
+import java.util.concurrent.Callable;
 
 /**
- * A dumb wrapper for a {@link JiffleRunner} object and its
- * associated {@link Jiffle} being run by the interpreter
  * 
  * @author Michael Bedward
  * @since 1.0
  * @source $URL$
  * @version $Id$
  */
-class JiffleTask implements Runnable {
+class JiffleTask implements Callable<JiffleTaskResult> {
     
-    private final JiffleInterpreter interpreter;
+    private final JiffleExecutor executor;
     private int id;
-    private Jiffle jiffle;
+    private JiffleRuntime runtime;
     private boolean completed;
     
     /**
      * Constructor
      * @param jiffle a compiled Jiffle object
      */
-    public JiffleTask(int id, JiffleInterpreter interpreter, Jiffle jiffle) 
-            throws JiffleInterpreterException {
+    public JiffleTask(int id, JiffleExecutor executor, JiffleRuntime jr) 
+            throws JiffleExecutorException {
         
         this.id = id;
-        this.interpreter = interpreter;
-        this.jiffle = jiffle;
+        this.executor = executor;
+        this.runtime = jr;
         
         /*
          * TODO: get progress listeners working for the new runtime system
@@ -63,34 +61,9 @@ class JiffleTask implements Runnable {
         completed = false;
     }
 
-    /**
-     * Run this task
-     */
-    public void run() {
-        boolean ok = true;
-        JiffleRuntime jr = jiffle.getRuntimeInstance();
-        jr.evaluateAll();
-    }
-    
-    /**
-     * Check if the run as successfully completed
-     */
-    public boolean isCompleted() {
-        return completed;
+    public JiffleTaskResult call() throws Exception {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    /**
-     * Package private method used by {@link JiffleInterpreter}
-     */
-    Jiffle getJiffle() {
-        return jiffle;
-    }
-    
-    /**
-     * Package private method used by {@link JiffleInterpreter}
-     */
-    int getId() {
-        return id;
-    }
 }
 

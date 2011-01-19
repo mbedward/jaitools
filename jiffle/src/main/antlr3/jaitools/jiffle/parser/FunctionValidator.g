@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  * 
  * This file is part of jai-tools.
 
@@ -19,8 +19,7 @@
  */
  
  /** 
-  * Reads the AST produced by the token parser and checks for calls to
-  * unrecognised functions
+  * Checks function calls.
   *
   * @author Michael Bedward
   */

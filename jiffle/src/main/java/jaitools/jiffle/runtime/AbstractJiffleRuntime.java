@@ -61,7 +61,7 @@ public abstract class AbstractJiffleRuntime implements JiffleRuntime {
     public void setDestinationImage(String imageName, WritableRenderedImage image) {
         images.put(imageName, image);
         
-        if (images.size() == 1) {
+        if (writers.isEmpty()) {
             _refImage = image;
             _width = image.getWidth();
             _height = image.getHeight();

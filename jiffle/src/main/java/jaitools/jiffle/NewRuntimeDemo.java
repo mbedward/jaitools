@@ -41,12 +41,7 @@ public class NewRuntimeDemo {
             }
         });
         
-        System.out.println("Input Jiffle script:");
-        System.out.println(src);
-        System.out.println();
-        
-        System.out.println("Translated into Java source:");
-        System.out.println( jiffle.getRuntimeSource() );
+        System.out.println( jiffle.getRuntimeSource(true) );
     }
 
 }

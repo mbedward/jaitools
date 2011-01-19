@@ -42,6 +42,26 @@ import jaitools.CollectionFactory;
 }
 
 @members {
+private ErrorReporter errorReporter = null;
+
+public void setErrorReporter( ErrorReporter er ) {
+    errorReporter = er;
+}
+
+public ErrorReporter getErrorReporter() {
+    return errorReporter;
+}
+
+@Override 
+public void emitErrorMessage(String msg) {
+    if (errorReporter != null) {
+        errorReporter.addError(msg);
+    } else {
+        super.emitErrorMessage(msg);
+    }
+}
+
+
 private StringBuilder srcSB;
 
 private FunctionLookup functionLookup = new FunctionLookup();
@@ -131,7 +151,7 @@ expr returns [String src]
 
                 | ^(TIMES e1=expr e2=expr) { $src = e1 + " * " + e2; }
                 | ^(DIV e1=expr e2=expr) { $src = e1 + " / " + e2; }
-                | ^(MOD e1=expr e2=expr) { $src = e1 + " & " + e2; }
+                | ^(MOD e1=expr e2=expr) { $src = e1 + " \% " + e2; }
                 | ^(PLUS e1=expr e2=expr) { $src = e1 + " + " + e2; }
                 | ^(MINUS e1=expr e2=expr) { $src = e1 + " - " + e2; }
                 | ^(PREFIX PLUS e1=expr) { $src = "+" + e1; }
