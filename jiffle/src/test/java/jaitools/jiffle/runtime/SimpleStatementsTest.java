@@ -19,43 +19,19 @@
  */
 package jaitools.jiffle.runtime;
 
-import java.util.Map;
-import javax.media.jai.TiledImage;
 
-import jaitools.CollectionFactory;
-import jaitools.imageutils.ImageUtils;
-import jaitools.jiffle.Jiffle;
-
-import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
- * Unit tests for the evaluation of simple statements with a single source
- * and destination image.
+ * Unit tests for the evaluation of simple arithmetic statements with a 
+ * single source and destination image.
  * 
  * @author Michael Bedward
  * @since 1.1
  * @source $URL$
  * @version $Id$
  */
-public class SimpleStatementsTest {
-    
-    private static final int WIDTH = 10;
-    private static final double TOL = 1.0e-8;
-    
-    private Map<String, Jiffle.ImageRole> imageParams;
-
-    interface Evaluator {
-        double eval(double val);
-    }
-    
-    @Before
-    public void setup() {
-        imageParams = CollectionFactory.map();
-        imageParams.put("dest", Jiffle.ImageRole.DEST);
-        imageParams.put("src", Jiffle.ImageRole.SOURCE);
-    }
+public class SimpleStatementsTest extends StatementBaseClass {
     
     @Test
     public void srcValue() throws Exception {
@@ -270,35 +246,4 @@ public class SimpleStatementsTest {
                 });
     }
     
-
-    private void testScript(String script, Evaluator evaluator) throws Exception {
-        Jiffle jiffle = new Jiffle(script, imageParams);
-        JiffleRuntime jr = jiffle.getRuntimeInstance();
-        
-        TiledImage srcImg = createSequenceImage();
-        TiledImage destImg = ImageUtils.createConstantImage(WIDTH, WIDTH, 0d);
-        
-        jr.setSourceImage("src", srcImg);
-        jr.setDestinationImage("dest", destImg);
-        jr.evaluateAll();
-        
-        for (int y = 0; y < WIDTH; y++) {
-            for (int x = 0; x < WIDTH; x++) {
-                assertEquals(evaluator.eval(srcImg.getSampleDouble(x, y, 0)), 
-                        destImg.getSampleDouble(x, y, 0), TOL);
-            }
-        }
-    }
-    
-        
-    private TiledImage createSequenceImage() {
-        TiledImage img = ImageUtils.createConstantImage(WIDTH, WIDTH, 0d);
-        int k = 0;
-        for (int y = 0; y < WIDTH; y++) {
-            for (int x = 0; x < WIDTH; x++) {
-                img.setSample(x, y, 0, k++);
-            }
-        }
-        return img;
-    }
 }
