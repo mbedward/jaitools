@@ -35,13 +35,6 @@ import java.util.List;
  */
 public class FunctionLookup {
     
-    private static final String EVALUATOR_CLASS_NAME = "TempEval";
-    
-    private static final String EVALUATOR_CLASS_BODY =
-            "package jaitools.jiffle.parser; \n"
-            + "public class " + FunctionLookup.EVALUATOR_CLASS_NAME + " implements CompileTimeEvaluator { \n"
-            + "    public Double evaluate(CompileTimeVariables vars) { \n";
-    
     private List<FunctionInfo> lookup = CollectionFactory.list();
     
     public FunctionLookup() {
