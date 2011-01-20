@@ -33,7 +33,7 @@ import javax.media.jai.TiledImage;
  * @source $URL$
  * @version $Id$
  */
-public abstract class TestBaseClass implements JiffleRuntime {
+public abstract class MockBaseClass implements JiffleRuntime {
     
     protected int _band = 0;
     protected TiledImage img;

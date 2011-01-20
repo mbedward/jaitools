@@ -37,7 +37,7 @@ import static org.junit.Assert.*;
  * @source $URL$
  * @version $Id$
  */
-public abstract class StatementBaseClass {
+public abstract class StatementsTestBase {
 
     static final int WIDTH = 10;
     static final int NUM_PIXELS = WIDTH * WIDTH;

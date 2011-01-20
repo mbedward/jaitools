@@ -23,15 +23,16 @@ package jaitools.jiffle.parser;
 import java.util.List;
 
 /**
- * Defines methods for classes used by the compiler to intercept parsing
- * errors that would otherwise be sent to standard err.
+ * Defines methods to intercept parsing error messages. This is used by the
+ * Jiffle compiler to capture ANTLR error messages as distinct from errors
+ * defined by Jiffle.
  * 
  * @author Michael Bedward
  * @since 1.1
  * @source $URL$
  * @version $Id$
  */
-public interface ErrorReporter {
+public interface ParsingErrorReporter {
 
     /**
      * Handles an error message.

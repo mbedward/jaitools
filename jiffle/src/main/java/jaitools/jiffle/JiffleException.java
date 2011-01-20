@@ -30,14 +30,14 @@ import java.util.List;
  * @source $URL$
  * @version $Id$
  */
-public class JiffleCompilationException extends Exception {
+public class JiffleException extends Exception {
 
     /**
      * Creates a new instance with the given message.
      * 
      * @param msg error message
      */
-    public JiffleCompilationException(String msg) {
+    public JiffleException(String msg) {
         super(msg);
     }
 
@@ -48,7 +48,7 @@ public class JiffleCompilationException extends Exception {
      * 
      * @param errors list of error messages
      */
-    public JiffleCompilationException(List<String> errors) {
+    public JiffleException(List<String> errors) {
         super(listToString(errors));
     }
 
@@ -59,7 +59,7 @@ public class JiffleCompilationException extends Exception {
      * @param string error message
      * @param thrwbl base {@code Throwable} object
      */
-    public JiffleCompilationException(String string, Throwable thrwbl) {
+    public JiffleException(String string, Throwable thrwbl) {
         super(string, thrwbl);
     }
     
