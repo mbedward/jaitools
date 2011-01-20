@@ -25,15 +25,14 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Used by the Jiffle compiler to accumulate error messages emitted by a
- * parser.
+ * Used by the Jiffle compiler to accumulate ANTLR parsing error messages.
  * 
  * @author Michael Bedward
  * @since 1.1
  * @source $URL$
  * @version $Id$
  */
-public class DeferredErrorReporter implements ErrorReporter {
+public class DeferredErrorReporter implements ParsingErrorReporter {
     
     private List<String> errors = CollectionFactory.list();
     

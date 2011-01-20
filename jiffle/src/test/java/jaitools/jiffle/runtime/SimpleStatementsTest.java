@@ -31,7 +31,7 @@ import org.junit.Test;
  * @source $URL$
  * @version $Id$
  */
-public class SimpleStatementsTest extends StatementBaseClass {
+public class SimpleStatementsTest extends StatementsTestBase {
     
     @Test
     public void srcValue() throws Exception {

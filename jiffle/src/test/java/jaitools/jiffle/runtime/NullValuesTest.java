@@ -33,7 +33,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
- * Unit tests for dealing with null values (NODATA) in images.
+ * Unit tests for dealing with null values (NODATA) in arithmetic statements.
  * 
  * @author Michael Bedward
  */

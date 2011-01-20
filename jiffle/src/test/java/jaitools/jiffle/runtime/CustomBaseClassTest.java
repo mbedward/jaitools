@@ -47,9 +47,9 @@ public class CustomBaseClassTest {
         imageParams.put("out", Jiffle.ImageRole.DEST);
         
         Jiffle jiffle = new Jiffle("out = x() + y()", imageParams);
-        JiffleRuntime jr = jiffle.getRuntimeInstance(true, TestBaseClass.class);
+        JiffleRuntime jr = jiffle.getRuntimeInstance(true, MockBaseClass.class);
         
-        assertTrue(jr instanceof TestBaseClass);
+        assertTrue(jr instanceof MockBaseClass);
         
         TiledImage img = ImageUtils.createConstantImage(WIDTH, WIDTH, 0d);
         jr.setDestinationImage("out", img);

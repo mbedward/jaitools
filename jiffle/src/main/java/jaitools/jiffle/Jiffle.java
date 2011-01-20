@@ -26,7 +26,7 @@ import jaitools.jiffle.parser.DeferredErrorReporter;
 import jaitools.jiffle.parser.FunctionValidator;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
-import jaitools.jiffle.parser.ErrorReporter;
+import jaitools.jiffle.parser.ParsingErrorReporter;
 import jaitools.jiffle.parser.RuntimeSourceCreator;
 import jaitools.jiffle.parser.VarClassifier;
 import jaitools.jiffle.parser.VarTransformer;
@@ -42,7 +42,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.Set;
 
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
@@ -55,100 +54,7 @@ import org.codehaus.janino.SimpleCompiler;
 
 
 /**
- * This class is the starting point for compiling and running a Jiffle script.
- * It takes the script and a corresponding Map of image parameters which define
- * the relationship between image variables in the script and image objects.
- * The script is then compiled in a series of error checking and optimizing
- * steps.  If compilation is successful the Jiffle object will now contain
- * an executable form of the script which can be run directly by passing the object
- * to a new instance of {@link jaitools.jiffle.runtime.JiffleRunner} as in this example:
- * <pre><code>
- * RenderedImage inImg = ...  // get an input image
- * 
- *  // create an image to write output values to
- *  TiledImage outImg = JiffleUtilities.createDoubleImage(100, 100);
- *       
- *  // relate variable names in script to image objects
- *  Map<String, RenderedImage> imgParams = CollectionFactory.newMap();
- *  imgParams.put("result", outImg);
- *  imgParams.put("img1", inImg);
- *
- *  // get the script as a string and create a Jiffle object
- *  String script = ... 
- *  boolean success = false;
- *  try {
- *      Jiffle jif = new Jiffle(script, imgParams);
- *      if (jif.isCompiled()) {
- *         JiffleRunner runner = new JiffleRunner(jif);
- *         success = runner.run();
- *      }
- *  } catch (JiffleCompilationException cex) {
- *      cex.printStackTrace();
- *  } catch (JiffleInterpeterException iex) {
- *      iex.printStackTrace();
- *  }
- * 
- *  if (success) {
- *     // display result ...
- *  }
- * </code></pre>
- * 
- * Alternatively, the compiled Jiffle can be run indirectly by submitting the
- * script to a {@link jaitools.jiffle.runtime.JiffleInterpreter} object which runs each submitted script 
- * in a separate thread.
- * <pre><code>
- *  public class Foo
- *      private JiffleInterpreter interp;
- * 
- *      public Foo() {
- *          interp = new JiffleInterpreter();
- * 
- *          // set up methods to listen for interpreter events
- *          interp.addEventListener(new JiffleEventListener() {
- *              public void onCompletionEvent(JiffleCompletionEvent ev) {
- *                  onCompletion(ev);
- *              }
- *
- *              public void onFailureEvent(JiffleFailureEvent ev) {
- *                  onFailure(ev);
- *              }
- *          });
- *      }
- *
- *      public void runScript(String script, int imgWidth, int imgHeight) {
- *          // create an image to write output data to
- *          TiledImage tImg = JiffleUtilities.createDoubleImage(imgWidth, imgHeight);
- *
- *          Map<String, RenderedImage> imgParams = CollectionFactory.newMap();
- *          imgParams.put("result", tImg);
- *          // ...plus other entries if there are input images
- *
- *          // compile the script and submit it to the interpreter
- *          try {
- *              Jiffle j = new Jiffle(prog, imgParams);
- *              if (j.isCompiled()) {
- *                  interp.submit(j);
- *              }
- *          } catch (JiffleCompilationException cex) {
- *              cex.printStackTrace();
- *          } catch (JiffleInterpreterException iex) {
- *              iex.printStackTrace();
- *          }
- *      }
- *
- *      // Respond to completion events
- *      private void onCompletion(JiffleCompletionEvent ev) {
- *          RenderedImage img = ev.getJiffle().getImage("result");
- * 
- *          // display or write image ...
- *      }
- * 
- *      // Respond to failure events
- *      private void onFailure(JiffleFailureEvent ev) {
- *          System.out.println("Bummer...");
- *      }
- *  }
- * </code></pre>
+ * Compiles scripts into runtime objects.
  * 
  * @author Michael Bedward
  * @since 1.0
@@ -211,12 +117,11 @@ public class Jiffle {
     /** A name: either a default or one set by the client */
     private String name;
 
-    private String script;
-    
+    private String theScript;
     private CommonTree primaryAST;
     private CommonTree finalAST;
     private CommonTokenStream tokens;
-    private ErrorReporter errorReporter;
+    private ParsingErrorReporter errorReporter;
     
     private Class<? extends JiffleRuntime> runtimeBaseClass;
     private JiffleRuntime runtimeInstance;
@@ -224,65 +129,162 @@ public class Jiffle {
     private boolean sourceIncludesScript;
     
     private Map<String, ImageRole> imageParams;
-    private Set<String> vars;
-    private Set<String> unassignedVars;
-    private Set<String> outputImageVars;
-    
-//    private Metadata metadata;
     private Map<String, ErrorCode> errors;
     
-
+    
     /**
-     * Creates a new instance by compiling the provided script. The image
-     * names forming keys in the {@code params} argument are used by the
-     * compiler to distinguish between image variables and other user-defined
-     * variables in the script.
+     * Creates a new instance.
+     */
+    public Jiffle() {
+        init();
+    }
+    
+    /**
+     * Creates a new instance by compiling the provided script. Using this
+     * constructor is equivalent to:
+     * <pre><code>
+     * Jiffle jiffle = new Jiffle();
+     * jiffle.setScript(script);
+     * jiffle.setImageParams(params);
+     * jiffle.compile();
+     * </code></pre>
      * 
      * @param script Jiffle source code to compile
      * 
      * @param params defines the names and roles of image variables
      *        referred to in the script.
      * 
-     * @throws JiffleCompilationException on error compiling the script
+     * @throws JiffleException if there are any errors compiling the script
      */
     public Jiffle(String script, Map<String, ImageRole> params)
-            throws JiffleCompilationException {
+            throws JiffleException {
 
-        init(script, params);
+        init();
+        setScript(script);
+        setImageParams(params);
+        compile();
     }
 
     /**
-     * Creates a new instance by compiling a script read from file. The image
-     * names forming keys in the {@code params} argument are used by the
-     * compiler to distinguish between image variables and other user-defined
-     * variables in the script.
+     * Creates a new instance by compiling the script read from {@code scriptFile}. 
+     * Using this constructor is equivalent to:
+     * <pre><code>
+     * Jiffle jiffle = new Jiffle();
+     * jiffle.setScript(scriptFile);
+     * jiffle.setImageParams(params);
+     * jiffle.compile();
+     * </code></pre>
      * 
-     * @param scriptFile file containing Jiffle source code to compile
+     * @param scriptFile file containing the Jiffle script
      * 
      * @param params defines the names and roles of image variables
      *        referred to in the script.
      * 
-     * @throws IOException on error reading the script file
-     * @throws JiffleCompilationException on error compiling the script
+     * @throws JiffleException if the file cannot be read or if there are 
+     *         any errors compiling the script
      */
     public Jiffle(File scriptFile, Map<String, ImageRole> params)
-            throws JiffleCompilationException, IOException {
+            throws JiffleException, IOException {
 
-        BufferedReader reader = new BufferedReader(new FileReader(scriptFile));
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            line = line.trim();
-            if (line.length() > 0) {
-                sb.append(line);
-                sb.append('\n');  // put the newline back on for the parser
-            }
-        }
-        String prog = sb.toString();
-        
-        init(prog, params);
+        init();
+        setScript(scriptFile);
+        setImageParams(params);
+        compile();
     }
     
+    
+    /**
+     * Sets the script. Calling this method will clear any previous script
+     * and runtime objects.
+     * 
+     * @param script a Jiffle script
+     */
+    public final void setScript(String script) throws JiffleException {
+        if (script == null || script.trim().isEmpty()) {
+            throw new JiffleException("script is empty !");
+        }
+        
+        if (theScript != null) {
+            clearCompiledObjects();
+        }
+        
+        // add extra new line just in case last statement hits EOF
+        theScript = script + "\n";
+    }
+    
+    /**
+     * Sets the script. Calling this method will clear any previous script
+     * and runtime objects.
+     * 
+     * @param scriptFile a file containing a Jiffle script
+     */
+    public final void setScript(File scriptFile) throws JiffleException {
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader(scriptFile));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.length() > 0) {
+                    sb.append(line);
+                    sb.append('\n');  // put the newline back on for the parser
+                }
+            }
+            
+            setScript(sb.toString());
+            
+        } catch (IOException ex) {
+            throw new JiffleException("Could not read the script file", ex);
+
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException ignored) {
+                }
+            }
+        }
+    }
+    
+    /**
+     * Gets the Jiffle script.
+     * 
+     * @return the script or an empty {@code String} if none
+     *         has been set
+     */
+    public String getScript() {
+        return theScript == null ? "" : theScript;
+    }
+    
+    /**
+     * Sets the image parameters. These define which variables in
+     * the script refer to images and their types (source or destination).
+     * <p>
+     * This may be called before or after setting the script. No check is
+     * made between script and parameters until the script is compiled.
+     * 
+     * @param params the image parameters
+     */
+    public final void setImageParams(Map<String, ImageRole> params) {
+        imageParams.clear();
+        imageParams.putAll(params);
+    }
+    
+    /**
+     * Gets a copy of the current image parameters.
+     * 
+     * @return image parameters or an empty {@code Map} if none
+     *         are set
+     */
+    public Map<String, ImageRole> getImageParams() {
+        Map<String, ImageRole> copy = CollectionFactory.map();
+        if (imageParams != null) {
+            copy.putAll(imageParams);
+        }
+        return copy;
+    }
+
     /**
      * Replaces the default name set for this object with a user-supplied name.
      * The name is solely for use by client code. No checks are made for 
@@ -303,7 +305,37 @@ public class Jiffle {
     }
     
     /**
-     * Tests whether the script was compiled successfully.
+     * Compiles the script into a form from which a runtime object can
+     * be created.
+     * 
+     * @throws JiffleException if no script has been set or if any errors
+     *         occur during compilation
+     */
+    public final void compile() throws JiffleException {
+        if (theScript == null) {
+            throw new JiffleException("No script has been set");
+        }
+        
+        if (imageParams.isEmpty()) {
+            throw new JiffleException("No image parameters set");
+        }
+        
+        clearCompiledObjects();
+        buildAST();
+
+        if (!checkFunctionCalls()) {
+            throw new JiffleException(getErrorString());
+        }
+
+        if (!classifyVars()) {
+            throw new JiffleException(getErrorString());
+        }
+
+        transformVars();
+    }
+    
+    /**
+     * Tests whether the script has been compiled successfully.
      */
     public boolean isCompiled() {
         return (finalAST != null);
@@ -415,58 +447,36 @@ public class Jiffle {
     }
 
     /**
-     * Helper function for constructors
-     * @param script input jiffle statements
-     * @param params variable names and their corresponding images
+     * Initializes this object's name and runtime base class.
      */
-    private void init(String script, Map<String, ImageRole> params)
-            throws JiffleCompilationException {
-        
+    private void init() {
         Jiffle.refCount++ ;
         this.name = properties.getProperty(NAME_KEY) + refCount;
 
         this.runtimeBaseClass = DEFAULT_BASE_CLASS;
-        
-        this.imageParams = CollectionFactory.map();
-        this.imageParams.putAll(params);
-
-        // add extra new line just in case last statement hits EOF
-        this.script = script + "\n";
-        compile();
+        imageParams = CollectionFactory.map();
     }
-
+    
     /**
-     * Called on object construction to compile the script into an optimized 
-     * Abstract Syntax Tree (AST) suitable for execution. 
-     * The compilation process includes:
-     * <ul>
-     * <li> Check for recognized function names in function calls.
-     * <li> Check for errors with variable use (e.g. use of a local 
-     *      variable in an expression before it has been assigned
-     *      a value.
-     * <li> Categorizing variables and expressions to identify elements
-     *      of the script that can be pre-calculated prior to
-     *      execution.
-     * <li> Pre-calculation and optimizing expressions.
-     * </ul>
-     * @throws JiffleCompilationExceptions if errors occur while compiling
-     * 
-     * @todo better system for error and warning reporting
+     * Clears all compiler and runtime objects
      */
-    private void compile() throws JiffleCompilationException {
-        if (script != null && script.length() > 0) {
-            buildAST();
-            
-            if (!checkFunctionCalls()) {
-                throw new JiffleCompilationException(getErrorString());
-            }
-            
-            if (!classifyVars()) {
-                throw new JiffleCompilationException(getErrorString());
-            }
-            
-            transformVars();
-        }
+    private void clearCompiledObjects() {
+        primaryAST = null;
+        finalAST = null;
+        tokens = null;
+        clearRuntimeObjects();
+    }
+    
+    /**
+     * Clears all runtime objects
+     */
+    private void clearRuntimeObjects() {
+        errorReporter = null;
+        errors = null;
+        runtimeBaseClass = DEFAULT_BASE_CLASS;
+        runtimeSource = null;
+        sourceIncludesScript = false;
+        runtimeInstance = null;
     }
     
     /**
@@ -487,11 +497,11 @@ public class Jiffle {
      * Build a preliminary AST from the jiffle script. Basic syntax and grammar
      * checks are done at this stage.
      * 
-     * @throws jaitools.jiffle.interpreter.JiffleCompilationException
+     * @throws jaitools.jiffle.interpreter.JiffleException
      */
-    private void buildAST() throws JiffleCompilationException {
+    private void buildAST() throws JiffleException {
         try {
-            ANTLRStringStream input = new ANTLRStringStream(script);
+            ANTLRStringStream input = new ANTLRStringStream(theScript);
             JiffleLexer lexer = new JiffleLexer(input);
             tokens = new CommonTokenStream(lexer);
 
@@ -500,7 +510,7 @@ public class Jiffle {
             primaryAST = (CommonTree) r.getTree();
 
         } catch (RecognitionException re) {
-            throw new JiffleCompilationException(
+            throw new JiffleException(
                     "error in script at or around line:" +
                     re.line + " col:" + re.charPositionInLine);
         }
@@ -510,7 +520,7 @@ public class Jiffle {
      * Examine function calls in the AST built by {@link #buildAST()} and
      * check that we recognize them all
      */
-    private boolean checkFunctionCalls() throws JiffleCompilationException {
+    private boolean checkFunctionCalls() throws JiffleException {
         FunctionValidator validator = null;
         try {
             CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
@@ -540,7 +550,7 @@ public class Jiffle {
      * (all being well, these will later be tagged as input image vars
      * by {@link #validateImageVars() })
      */
-    private boolean classifyVars() throws JiffleCompilationException {
+    private boolean classifyVars() throws JiffleException {
         VarClassifier classifier = null;
         try {
             CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
@@ -560,7 +570,7 @@ public class Jiffle {
             // no action required
             
         } catch (RecognitionException ex) {
-            throw new JiffleCompilationException("Compilation failed: error not recognized");
+            throw new JiffleException("Compilation failed: error not recognized");
             
         } finally {
             errors = classifier.getErrors();
@@ -601,7 +611,7 @@ public class Jiffle {
      * 
      * @throws Exception 
      */
-    private void createRuntimeInstance() throws JiffleCompilationException {
+    private void createRuntimeInstance() throws JiffleException {
         if (runtimeSource == null) {
             createRuntimeSource(false);
         }
@@ -615,7 +625,7 @@ public class Jiffle {
         
         runtimeInstance = (JiffleRuntime) clazz.newInstance();
         } catch (Exception ex) {
-            throw new JiffleCompilationException("Janino compiler failed", ex);
+            throw new JiffleException("Janino compiler failed", ex);
         }
     }
     
@@ -625,15 +635,15 @@ public class Jiffle {
      * @param scriptInDocs whether to include the Jiffle script in the class
      *        javadocs
      * 
-     * @throws JiffleCompilationException if an error occurs generating the source 
+     * @throws JiffleException if an error occurs generating the source 
      */
-    private void createRuntimeSource(boolean scriptInDocs) throws JiffleCompilationException {
+    private void createRuntimeSource(boolean scriptInDocs) throws JiffleException {
         StringBuilder sb  = new StringBuilder();
 
         sb.append("package ").append(properties.getProperty(RUNTIME_PACKAGE_KEY)).append("; \n\n");
         
         if (scriptInDocs) {
-            sb.append(formatAsJavadoc(script));
+            sb.append(formatAsJavadoc(theScript));
         }
         
         sb.append("public class ").append(properties.getProperty(RUNTIME_CLASS_KEY));
@@ -650,10 +660,10 @@ public class Jiffle {
      * 
      * @return Java souce code
      * 
-     * @throws JiffleCompilationException if an error occurs parsing the AST
+     * @throws JiffleException if an error occurs parsing the AST
      */
-    private String astToJava() throws JiffleCompilationException {
-        ErrorReporter er = new DeferredErrorReporter();
+    private String astToJava() throws JiffleException {
+        ParsingErrorReporter er = new DeferredErrorReporter();
         try {
             BufferedTreeNodeStream nodes = new BufferedTreeNodeStream(finalAST);
             nodes.setTokenStream(tokens);
@@ -664,7 +674,7 @@ public class Jiffle {
             return rsc.getSource();
             
         } catch (RecognitionException ex) {
-            throw new JiffleCompilationException(er.getErrors());
+            throw new JiffleException(er.getErrors());
         }
     }
     

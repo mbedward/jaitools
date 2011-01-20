@@ -33,7 +33,7 @@ import org.junit.Test;
  * @source $URL$
  * @version $Id$
  */
-public class LogicalStatementsTest extends StatementBaseClass {
+public class LogicalStatementsTest extends StatementsTestBase {
     
     @Test
     public void logical1() throws Exception {

@@ -62,7 +62,8 @@ class JiffleTask implements Callable<JiffleTaskResult> {
     }
 
     public JiffleTaskResult call() throws Exception {
-        throw new UnsupportedOperationException("Not supported yet.");
+        runtime.evaluateAll();
+        return JiffleTaskResult.COMPLETED;
     }
 
 }

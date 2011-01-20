@@ -42,13 +42,13 @@ import jaitools.CollectionFactory;
 }
 
 @members {
-private ErrorReporter errorReporter = null;
+private ParsingErrorReporter errorReporter = null;
 
-public void setErrorReporter( ErrorReporter er ) {
+public void setErrorReporter( ParsingErrorReporter er ) {
     errorReporter = er;
 }
 
-public ErrorReporter getErrorReporter() {
+public ParsingErrorReporter getErrorReporter() {
     return errorReporter;
 }
 

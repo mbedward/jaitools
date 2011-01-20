@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 Michael Bedward
+ * Copyright 2011 Michael Bedward
  * 
  * This file is part of jai-tools.
  *
@@ -18,41 +18,34 @@
  * 
  */
 
-package jaitools.jiffle.parser;
+package jaitools.jiffle.runtime;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.Map;
+
+import jaitools.CollectionFactory;
+import jaitools.jiffle.Jiffle;
+
+import org.junit.Test;
 
 /**
- * Used by the Jiffle compiler to intercept and discard ANTLR parsing error 
- * messages.
+ * Unit tests for JiffleExecutor.
  * 
  * @author Michael Bedward
  * @since 1.1
  * @source $URL$
  * @version $Id$
  */
-public class NullErrorReporter implements ParsingErrorReporter {
-    
-    public NullErrorReporter() {}
+public class JiffleExecutorTest {
+    private Map<String, Jiffle.ImageRole> imageParams;
 
-    @Override
-    public void addError(String errorText) {
-        // does nothing
+    @Test
+    public void simpleJob() throws Exception {
+        imageParams = CollectionFactory.map();
+        imageParams.put("dest", Jiffle.ImageRole.DEST);
+        Jiffle jiffle = new Jiffle("dest = 42;", imageParams);
+        
+        JiffleExecutor executor = new JiffleExecutor();
+        executor.submit(jiffle);
     }
-    
-    @Override
-    public int getNumErrors() {
-        return 0;
-    }
-    
-    @Override
-    public List<String> getErrors() {
-        return Collections.emptyList();
-    }
-    
-    @Override
-    public void clear() {
-        // does nothing
-    }
+            
 }

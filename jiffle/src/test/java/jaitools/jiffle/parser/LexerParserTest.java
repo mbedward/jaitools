@@ -45,7 +45,7 @@ public class LexerParserTest {
      */
     @Test
     public void testBlockComment() {
-        System.out.println("block comments");
+        System.out.println("   block comment");
         
         String input = 
                 "/* a block comment \n " +
@@ -56,9 +56,7 @@ public class LexerParserTest {
 
         JiffleLexer lexer = lex(input);
 
-        Token tok;
-        
-        System.out.println("   block comment");
+        Token tok = null;
         tok = lexer.nextToken();
         assertTrue(tok.getChannel() == Token.HIDDEN_CHANNEL);
         assertTrue(tok.getType() == JiffleLexer.BLOCK_COMMENT);
@@ -77,7 +75,7 @@ public class LexerParserTest {
      */
     @Test
     public void testInlineComment() {
-        System.out.println("inline comments");
+        System.out.println("   inline comments");
         
         String input = "/* pre-comment */ x = sin(/* inside comment */ PI / 6) /* post-comment */ ";
         
@@ -96,7 +94,7 @@ public class LexerParserTest {
         okVisibleTypes.add(JiffleLexer.LPAR);
         okVisibleTypes.add(JiffleLexer.RPAR);
         
-        Token tok;
+        Token tok = null;
         while ((tok = lexer.nextToken()) != Token.EOF_TOKEN) {
             if (tok.getChannel() == Token.HIDDEN_CHANNEL) {
                 assertTrue(okHiddenTypes.contains(tok.getType()));
