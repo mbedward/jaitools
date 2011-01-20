@@ -44,9 +44,9 @@ public class JiffleProgressEvent extends JiffleEvent {
      * @param jiffle the Jiffle object that the event pertains to
      * @param progress proportion of task completed (0 -> 1)
      */
-    public JiffleProgressEvent(int jobId, Jiffle jiffle, float progress) {
-        super(jobId, jiffle);
-        this.progress = progress;
+    public JiffleProgressEvent() {
+        super(null);
+        throw new UnsupportedOperationException("not implemented yet");
     }
     
     /**

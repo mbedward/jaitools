@@ -21,7 +21,6 @@
 package jaitools.jiffle;
 
 import java.io.File;
-import jaitools.jiffle.Jiffle.ImageRole;
 import java.net.URL;
 import java.util.Map;
 
@@ -80,11 +79,24 @@ public class JiffleBasicTest {
         imageParams.put("dest2", Jiffle.ImageRole.DEST);
         jiffle.setImageParams(imageParams);
         
-        Map<String, ImageRole> result = jiffle.getImageParams();
+        Map<String, Jiffle.ImageRole> result = jiffle.getImageParams();
         assertEquals(imageParams.size(), result.size());
         for (String name : imageParams.keySet()) {
             assertTrue(imageParams.get(name).equals(result.get(name)));
         }
+    }
+    
+    @Test(expected=UnsupportedOperationException.class)
+    public void tryToModifyImageParams() {
+        System.out.println("   trying to modify map returned by getImageParams");
+        
+        imageParams.put("dest", Jiffle.ImageRole.DEST);
+        jiffle.setImageParams(imageParams);
+        
+        Map<String, Jiffle.ImageRole> unmodifiableMap = jiffle.getImageParams();
+        
+        // this should provoke an exception
+        unmodifiableMap.clear();
     }
 
     @Test
@@ -107,7 +119,7 @@ public class JiffleBasicTest {
         System.out.println("   compile valid script");
         
         String script = "dest = 42;";
-        imageParams.put("dest", ImageRole.DEST);
+        imageParams.put("dest", Jiffle.ImageRole.DEST);
         
         jiffle.setScript(script);
         jiffle.setImageParams(imageParams);
@@ -122,7 +134,7 @@ public class JiffleBasicTest {
         
         // script with an uninitialized variable
         String script = "dest = x;";
-        imageParams.put("dest", ImageRole.DEST);
+        imageParams.put("dest", Jiffle.ImageRole.DEST);
         
         jiffle.setScript(script);
         jiffle.setImageParams(imageParams);
@@ -135,7 +147,7 @@ public class JiffleBasicTest {
         
         // script with an uninitialized variable
         String script = "dest = x;";
-        imageParams.put("dest", ImageRole.DEST);
+        imageParams.put("dest", Jiffle.ImageRole.DEST);
         
         jiffle.setScript(script);
         jiffle.setImageParams(imageParams);
@@ -151,7 +163,7 @@ public class JiffleBasicTest {
     public void compileWithNoScript() throws Exception {
         System.out.println("   compile with no script set");
         
-        imageParams.put("dest", ImageRole.DEST);
+        imageParams.put("dest", Jiffle.ImageRole.DEST);
         jiffle.setImageParams(imageParams);
         jiffle.compile();
     }
@@ -180,7 +192,7 @@ public class JiffleBasicTest {
         System.out.println("   Jiffle(script, imageParams)");
         
         String script = "dest = 42;";
-        imageParams.put("dest", ImageRole.DEST);
+        imageParams.put("dest", Jiffle.ImageRole.DEST);
         jiffle = new Jiffle(script, imageParams);
         
         assertTrue(jiffle.isCompiled());
@@ -191,7 +203,7 @@ public class JiffleBasicTest {
         System.out.println("   Jiffle(script, imageParams) with empty script");
         
         String script = "";
-        imageParams.put("dest", ImageRole.DEST);
+        imageParams.put("dest", Jiffle.ImageRole.DEST);
         jiffle = new Jiffle(script, imageParams);
     }
     
@@ -203,7 +215,7 @@ public class JiffleBasicTest {
         URL url = JiffleBasicTest.class.getResource("script1.txt");
         File file = new File(url.toURI());
         
-        imageParams.put("dest", ImageRole.DEST);
+        imageParams.put("dest", Jiffle.ImageRole.DEST);
         jiffle = new Jiffle(file, imageParams);
         
         assertTrue(jiffle.isCompiled());

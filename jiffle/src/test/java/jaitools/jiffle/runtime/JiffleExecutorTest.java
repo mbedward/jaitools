@@ -20,11 +20,15 @@
 
 package jaitools.jiffle.runtime;
 
+import java.awt.image.RenderedImage;
 import java.util.Map;
+import javax.media.jai.TiledImage;
 
 import jaitools.CollectionFactory;
+import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
 
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -36,16 +40,44 @@ import org.junit.Test;
  * @version $Id$
  */
 public class JiffleExecutorTest {
+    private static final int WIDTH = 1000;
+            ;
     private Map<String, Jiffle.ImageRole> imageParams;
+    
+    private JiffleEventListener listener;
+    
+    @Before
+    public void setup() {
+        listener = new JiffleEventListener() {
+
+            public void onCompletionEvent(JiffleCompletionEvent ev) {
+                System.out.println("job completed");
+            }
+
+            public void onFailureEvent(JiffleFailureEvent ev) {
+                System.out.println("job failed");
+            }
+
+            public void onProgressEvent(JiffleProgressEvent ev) {
+                System.out.println("progress");
+            }
+        };
+    }
 
     @Test
     public void simpleJob() throws Exception {
         imageParams = CollectionFactory.map();
         imageParams.put("dest", Jiffle.ImageRole.DEST);
-        Jiffle jiffle = new Jiffle("dest = 42;", imageParams);
+        
+        Jiffle jiffle = new Jiffle("dest = log(2) + sin(M_PI * x() % 4);", imageParams);
+        
+        TiledImage destImg = ImageUtils.createConstantImage(WIDTH, WIDTH, 0d);
+        Map<String, RenderedImage> images = CollectionFactory.map();
+        images.put("dest", destImg);
         
         JiffleExecutor executor = new JiffleExecutor();
-        executor.submit(jiffle);
+        executor.addEventListener(listener);
+        executor.submit(jiffle, images);
     }
             
 }

@@ -39,6 +39,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -272,17 +273,14 @@ public class Jiffle {
     }
     
     /**
-     * Gets a copy of the current image parameters.
+     * Gets the current image parameters. The parameters are returned
+     * as an unmodifiable map.
      * 
      * @return image parameters or an empty {@code Map} if none
      *         are set
      */
     public Map<String, ImageRole> getImageParams() {
-        Map<String, ImageRole> copy = CollectionFactory.map();
-        if (imageParams != null) {
-            copy.putAll(imageParams);
-        }
-        return copy;
+        return Collections.unmodifiableMap(imageParams);
     }
 
     /**
