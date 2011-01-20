@@ -56,6 +56,8 @@ import org.codehaus.janino.SimpleCompiler;
 
 /**
  * Compiles scripts into runtime objects.
+ * <p>
+ * DOCUMENT ME PROPERLY !
  * 
  * @author Michael Bedward
  * @since 1.0

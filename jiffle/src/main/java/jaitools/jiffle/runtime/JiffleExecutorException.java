@@ -20,6 +20,8 @@
 
 package jaitools.jiffle.runtime;
 
+import jaitools.jiffle.JiffleException;
+
 /**
  * Exception thrown by {@code JiffleRunner} objects when runtime
  * problems occur
@@ -35,6 +37,10 @@ public class JiffleExecutorException extends Exception {
 
     public JiffleExecutorException(String msg) {
         super(msg);
+    }
+
+    public JiffleExecutorException(Throwable thrwbl) {
+        super(thrwbl);
     }
     
 }

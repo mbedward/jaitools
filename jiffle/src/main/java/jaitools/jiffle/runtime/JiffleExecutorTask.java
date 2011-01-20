@@ -28,6 +28,7 @@ import java.util.concurrent.Callable;
 import jaitools.jiffle.Jiffle;
 
 /**
+ * Executes a runtime object in a thread provided by a {@link JiffleExecutor}.
  * 
  * @author Michael Bedward
  * @since 1.0
@@ -36,44 +37,44 @@ import jaitools.jiffle.Jiffle;
  */
 class JiffleExecutorTask implements Callable<JiffleExecutorResult> {
     
-    private final JiffleExecutor executor;
     private final int id;
     private final Jiffle jiffle;
     private final Map<String, RenderedImage> images;
     
     private boolean completed;
+
     
     /**
-     * Constructor
-     * @param jiffle a compiled Jiffle object
+     * Creates a new task. The {@code Jiffle} object must be 
+     * properly initialized with a script and image parameters 
+     * although it need not be compiled. The image variable names
+     * in {@code images} must match those used in the {@code Jiffle}
+     * objects image parameters.
+     * 
+     * @param id job ID allocated by the {@link JiffleExecutor}.
+     * @param jiffle the {@link Jiffle} object
+     * @param images a {@code Map} with image variable name as key and the
+     *        corresponding source or destination image as value 
      */
     public JiffleExecutorTask(int id, 
-            JiffleExecutor executor, 
             Jiffle jiffle, 
-            Map<String, RenderedImage> images) 
-            throws JiffleExecutorException {
+            Map<String, RenderedImage> images) {
         
         this.id = id;
-        this.executor = executor;
         this.jiffle = jiffle;
         this.images = images;
         
         completed = false;
-        
-        /*
-         * TODO: get progress listeners working for the new runtime system
-         *
-        runner.addProgressListener(new RunProgressListener() {
-            public void onProgress(float progress) {
-                JiffleExecutorTask.this.interpreter.onTaskProgressEvent(JiffleExecutorTask.this, progress);
-            }
-        });
-         * 
-         */
-        
     }
 
-    public JiffleExecutorResult call() throws Exception {
+    /**
+     * Called by the system to execute this task on a thread provided by the
+     * {@link JiffleExecutor}.
+     * 
+     * @return a result object with references to the {@code Jiffle} object,
+     *         the images, and the job completion status
+     */
+    public JiffleExecutorResult call() {
         JiffleRuntime runtime = jiffle.getRuntimeInstance(true);
         
         Map<String, Jiffle.ImageRole> imageParams = jiffle.getImageParams();

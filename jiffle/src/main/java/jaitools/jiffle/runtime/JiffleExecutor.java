@@ -2,17 +2,17 @@
  * Copyright 2009-2011 Michael Bedward
  * 
  * This file is part of jai-tools.
-
+ *
  * jai-tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the 
  * License, or (at your option) any later version.
-
+ *
  * jai-tools is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
-
+ *
  * You should have received a copy of the GNU Lesser General Public 
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  * 
@@ -20,8 +20,6 @@
 
 package jaitools.jiffle.runtime;
 
-import jaitools.CollectionFactory;
-import jaitools.jiffle.Jiffle;
 import java.awt.image.RenderedImage;
 import java.util.List;
 import java.util.Map;
@@ -31,48 +29,14 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import jaitools.CollectionFactory;
+import jaitools.jiffle.Jiffle;
+import jaitools.jiffle.JiffleException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledFuture;
+
 /**
  * Executes Jiffle scripts on separate threads.
- * <p>
- * Example of use:
- * <pre><code>
- * class Foo {
- * 
- *     public Foo() {
- *         private JiffleExecutor jiffleExec = new JiffleExecutor();
- *         jiffleExec.addEventListener(new JiffleEventAdapter() {
- *             public void onCompletionEvent(JiffleCompletionEvent ev) {
- *                 onCompletion(ev);
- *             }
- * 
- *             public void onFailureEvent(JiffleFailureEvent ev) {
- *                 onFailure(ev);
- *             }
- *         });
- *     }
- * 
- *     public doFoo() {
- *         // get script and create compiled jiffle
- *         String script = ....
- *         Jiffle j = new Jiffle(script);
- *         if (j.isCompiled()) {
- *             // set input and output images etc., then...
- *             jiffleExec.submit(j);
- *         }
- *     }
- * 
- *     private void onCompletion(JiffleCompletionEvent ev) {
- *         RenderedImage img = ev.getJiffle().getImage("anImageName");
- * 
- *         // do something with your beautiful image...
- *     }
- * 
- *     private void onFailure(JiffleFailureEvent ev) {
- *         System.err.println("Bummer: script failed to run");
- *     }
- * }
- * 
- * </code></pre>
  * 
  * @author Michael Bedward
  * @since 1.0
@@ -93,13 +57,14 @@ public class JiffleExecutor {
     public static final long DEFAULT_POLLING_INTERVAL = 20L;
 
     private long pollingInterval;
-    private List<Integer> jobsDone;
+    private final List<Integer> jobsDone;
     
     /** Thread pool used to execute Jiffle runtime objects */
     private final ExecutorService threadPool;
     
     /** Scheduled executor to run job polling */
-    private final ScheduledExecutorService watchExecutor;
+    private final ScheduledExecutorService pollingExecutor;
+    private ScheduledFuture<?> poll;
 
     private static int jobID = 0;
     private Map<Integer, Future<JiffleExecutorResult>> jobs; 
@@ -151,9 +116,9 @@ public class JiffleExecutor {
             default:
                 throw new IllegalArgumentException("Bad arg to private JiffleExecutor constructor");
         }
-        watchExecutor = Executors.newSingleThreadScheduledExecutor();
+        pollingExecutor = Executors.newSingleThreadScheduledExecutor();
         pollingInterval = DEFAULT_POLLING_INTERVAL;
-        jobs = CollectionFactory.orderedMap();
+        jobs = new ConcurrentHashMap<Integer, Future<JiffleExecutorResult>>();
         listeners = CollectionFactory.list();
         jobsDone = CollectionFactory.list();
     }
@@ -208,87 +173,75 @@ public class JiffleExecutor {
     public int submit(final Jiffle jiffle, Map<String, RenderedImage> images)
             throws JiffleExecutorException {
 
-        if (!jiffle.isCompiled()) {
-            throw new JiffleExecutorException("Jiffle object not compiled" + jiffle.getName());
+        try {
+            if (!jiffle.isCompiled()) {
+                jiffle.compile();
+            }
+        } catch (JiffleException ex) {
+            throw new JiffleExecutorException(ex);
         }
         
         int id = ++jobID;
         startPolling();
-        jobs.put(id, threadPool.submit(new JiffleExecutorTask(id, this, jiffle, images)));
+        jobs.put(id, threadPool.submit(new JiffleExecutorTask(id, jiffle, images)));
         return id;
     }
     
     private void startPolling() {
-        watchExecutor.scheduleAtFixedRate( new Runnable() {
+        poll = pollingExecutor.scheduleAtFixedRate( new Runnable() {
                     public void run() {
                         pollJobs();
                     }
         }, pollingInterval, pollingInterval, TimeUnit.MILLISECONDS);
     }
-    
-    private void pollJobs() {
-        jobsDone.clear();
-        
-        for (Integer id : jobs.keySet()) {
-            if (jobs.get(id).isDone()) {
-                jobsDone.add(id);
-            }
-        }
 
-        for (Integer id : jobsDone) {
-            Future<JiffleExecutorResult> future = jobs.remove(id);
-            try {
-                JiffleExecutorResult result = future.get();
-                switch (result.getStatus()) {
-                    case COMPLETED:
-                        fireCompletionEvent(result);
-                        break;
-                        
-                    case FAILED:
-                        fireFailureEvent(result);
-                        break;
+    private void pollJobs() {
+        synchronized (jobsDone) {
+            jobsDone.clear();
+
+            for (Integer id : jobs.keySet()) {
+                if (jobs.get(id).isDone()) {
+                    jobsDone.add(id);
                 }
-                
-            } catch (Exception ex) {
-                throw new IllegalStateException("When getting job result", ex);
+            }
+
+            for (Integer id : jobsDone) {
+                Future<JiffleExecutorResult> future = jobs.remove(id);
+                try {
+                    JiffleExecutorResult result = future.get();
+                    switch (result.getStatus()) {
+                        case COMPLETED:
+                            fireCompletionEvent(result);
+                            break;
+
+                        case FAILED:
+                            fireFailureEvent(result);
+                            break;
+                    }
+
+                } catch (Exception ex) {
+                    throw new IllegalStateException("When getting job result", ex);
+                }
+            }
+
+            if (jobs.isEmpty()) {
+                poll.cancel(true);
             }
         }
     }
 
     private void fireCompletionEvent(JiffleExecutorResult result) {
-        JiffleCompletionEvent ev = new JiffleCompletionEvent(result);
+        JiffleEvent ev = new JiffleEvent(result);
         for (JiffleEventListener el : listeners) {
             el.onCompletionEvent(ev);
         }
     }
 
     private void fireFailureEvent(JiffleExecutorResult result) {
-        JiffleFailureEvent ev = new JiffleFailureEvent(result);
+        JiffleEvent ev = new JiffleEvent(result);
         for (JiffleEventListener el : listeners) {
             el.onFailureEvent(ev);
         }
     }
     
-    /*
-    void onTaskStatusEvent(JiffleExecutorTask task) {
-        if (task.isCompleted()) {
-            fireCompletionEvent(task);
-        } else {
-            fireFailureEvent(task);
-        }
-    }
-    
-    void onTaskProgressEvent(JiffleExecutorTask task, float progress) {
-        fireProgressEvent(task, progress);
-    }
-    */
-    /*
-    private void fireProgressEvent(JiffleExecutorTask task, float progress) {
-        JiffleProgressEvent ev = new JiffleProgressEvent(task.getId(), task.getJiffle(), progress);
-        for (JiffleEventListener el : listeners) {
-            el.onProgressEvent(ev);
-        }
-    }
-     * 
-     */
 }

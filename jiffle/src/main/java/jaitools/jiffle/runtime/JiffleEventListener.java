@@ -1,18 +1,18 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  * 
  * This file is part of jai-tools.
-
+ *
  * jai-tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the 
  * License, or (at your option) any later version.
-
+ *
  * jai-tools is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
-
+ *
  * You should have received a copy of the GNU Lesser General Public 
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  * 
@@ -21,8 +21,8 @@
 package jaitools.jiffle.runtime;
 
 /**
- * Implemented by classes that wish to receive events from a
- * {@link JiffleInterpreter}
+ * Interface implemented by classes wishing to receive job status and progress
+ * events from {@link JiffleExecutor}.
  * 
  * @author Michael Bedward
  * @since 1.0
@@ -32,18 +32,24 @@ package jaitools.jiffle.runtime;
 public interface JiffleEventListener {
    
     /**
-     * Method called by the interpreter when a {@link JiffleCompletionEvent} is published
+     * Called when a {@link JiffleExecutor} job has completed successfully.
+     * 
+     * @param ev the event
      */
-    public void onCompletionEvent(JiffleCompletionEvent ev);
+    public void onCompletionEvent(JiffleEvent ev);
 
     /**
-     * Method called by the interpreter when a {@link JiffleFailureEvent} is published
+     * Called when a {@link JiffleExecutor} job fails to complete successfully.
+     * 
+     * @param ev the event
      */
-    public void onFailureEvent(JiffleFailureEvent ev);
+    public void onFailureEvent(JiffleEvent ev);
     
     /**
-     * Method called by the interpreter when a {@link JiffleProgressEvent} is published
+     * Called to communicate the progress of a {@link JiffleExecutor}.
+     * 
+     * @param progress progress (between 0 and 1 inclusive)
      */
-    public void onProgressEvent(JiffleProgressEvent ev);
+    public void onProgressEvent(float progress);
 }
 

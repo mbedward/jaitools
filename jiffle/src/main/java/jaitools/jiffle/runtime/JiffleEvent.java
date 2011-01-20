@@ -30,7 +30,7 @@ package jaitools.jiffle.runtime;
  * @source $URL$
  * @version $Id$
  */
-public abstract class JiffleEvent {
+public class JiffleEvent {
     protected final JiffleExecutorResult result;
     
     /**

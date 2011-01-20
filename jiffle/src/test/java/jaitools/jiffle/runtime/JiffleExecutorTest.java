@@ -20,16 +20,17 @@
 
 package jaitools.jiffle.runtime;
 
+import javax.media.jai.iterator.RectIter;
 import java.awt.image.RenderedImage;
 import java.util.Map;
-import javax.media.jai.TiledImage;
 
 import jaitools.CollectionFactory;
 import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
+import javax.media.jai.iterator.RectIterFactory;
 
-import org.junit.Before;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  * Unit tests for JiffleExecutor.
@@ -40,44 +41,44 @@ import org.junit.Test;
  * @version $Id$
  */
 public class JiffleExecutorTest {
-    private static final int WIDTH = 1000;
-            ;
-    private Map<String, Jiffle.ImageRole> imageParams;
+    private static final int WIDTH = 100;
+    private static final double TOL = 1.0e-8;
     
-    private JiffleEventListener listener;
-    
-    @Before
-    public void setup() {
-        listener = new JiffleEventListener() {
-
-            public void onCompletionEvent(JiffleCompletionEvent ev) {
-                System.out.println("job completed");
-            }
-
-            public void onFailureEvent(JiffleFailureEvent ev) {
-                System.out.println("job failed");
-            }
-
-            public void onProgressEvent(JiffleProgressEvent ev) {
-                System.out.println("progress");
-            }
-        };
-    }
-
     @Test
     public void simpleJob() throws Exception {
+        Map<String, Jiffle.ImageRole> imageParams;
         imageParams = CollectionFactory.map();
         imageParams.put("dest", Jiffle.ImageRole.DEST);
         
-        Jiffle jiffle = new Jiffle("dest = log(2) + sin(M_PI * x() % 4);", imageParams);
+        Jiffle jiffle = new Jiffle("dest = x() + y();", imageParams);
         
-        TiledImage destImg = ImageUtils.createConstantImage(WIDTH, WIDTH, 0d);
         Map<String, RenderedImage> images = CollectionFactory.map();
-        images.put("dest", destImg);
+        images.put("dest", ImageUtils.createConstantImage(WIDTH, WIDTH, 0d));
         
         JiffleExecutor executor = new JiffleExecutor();
+        
+        WaitingListener listener = new WaitingListener();
         executor.addEventListener(listener);
-        executor.submit(jiffle, images);
+        
+        listener.setNumJobs(1);
+        int jobID = executor.submit(jiffle, images);
+        listener.await();
+        
+        JiffleExecutorResult result = listener.getResult(jobID);
+        assertNotNull(result);
+        
+        RenderedImage dest = result.getImages().get("dest");
+        assertNotNull(dest);
+        
+        RectIter iter = RectIterFactory.create(dest, null);
+        for (int y = 0; y < WIDTH; y++) {
+            for (int x = 0; x < WIDTH; x++) {
+                assertEquals((double)x + y, iter.getSampleDouble(), TOL);
+                iter.nextPixel();
+            }
+            iter.startPixels();
+            iter.nextLine();
+        }
     }
-            
+    
 }
