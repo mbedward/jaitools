@@ -28,6 +28,7 @@ import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -48,9 +49,8 @@ import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.PrecisionModel;
+import com.vividsolutions.jts.geom.impl.PackedCoordinateSequenceFactory;
 import com.vividsolutions.jts.operation.polygonize.Polygonizer;
-import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
-import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
 
 /**
  * Vectorize regions of uniform value in an image
@@ -68,6 +68,8 @@ public class VectorizeOpImage extends AttributeOpImage {
     private static final int TR = 1;
     private static final int BL = 2;
     private static final int BR = 3;
+    
+    private static final GeometryFactory PACKED_FACTORY = new GeometryFactory(new PackedCoordinateSequenceFactory());
 
     /*
      * Possible configurations of values in the 2x2 sample window: 
@@ -165,7 +167,7 @@ public class VectorizeOpImage extends AttributeOpImage {
     /**
      * Tells us whether or not we should remove collinear points in the final polygons.
      */
-	private final  boolean removeCollinear;
+    private final  boolean removeCollinear;
     
 
     /**
@@ -249,118 +251,118 @@ public class VectorizeOpImage extends AttributeOpImage {
 
         List<Geometry> polygons = new ArrayList<Geometry>();
         RandomIter imgIter = RandomIterFactory.create(getSourceImage(0), null);
-
         Polygonizer polygonizer = new Polygonizer();
-        try{
-	        polygonizer.add(lines);
-	        Collection<Geometry> rawPolys = polygonizer.getPolygons();
-	        
-	       
-	        for (Geometry geom : rawPolys) {
-	        	
-	            Polygon poly = (Polygon) geom;
-	            
-	            if(removeCollinear){
-//	           	 final int pointsBefore= poly.getBoundary().getNumPoints();
-	            	// simplify by 1 to reduce the number of collinear points
-	            	//TODO can we use a filter or something like that? working in raster coords 
-	            	// means that we can make this simplification very simple by using integer coords
-	            	poly=Utils.removeCollinearVertices(poly);
-//	            	final int pointsAfter= poly.getBoundary().getNumPoints();
-//	            	System.out.println("Points before:"+pointsBefore+" pointsafter:"+pointsAfter);
-	            }
-	            InteriorPointArea ipa = new InteriorPointArea(poly);
-	            Coordinate c = ipa.getInteriorPoint();
-	            Point pt = GEOMETRY_FACTORY.createPoint(c);
-	
-	            if (!poly.contains(pt)) {
-	            	//
-	                // try another method to generate an interior point, by
-	            	// looking in every direction
-	            	//
-	            	
-	                boolean found = false;
-	                for (Coordinate ringC : poly.getExteriorRing().getCoordinates()) {
-	                	
-	                    c.x = ringC.x + 0.5;
-	                    c.y = ringC.y;
-	                    pt = GEOMETRY_FACTORY.createPoint(c);
-	                    if (poly.contains(pt)) {
-	                        found = true;
-	                        break;
-	                    }
-	                    
-	                    c.x = ringC.x + 0.5;
-	                    c.y = ringC.y + 0.5;
-	                    pt = GEOMETRY_FACTORY.createPoint(c);
-	                    if (poly.contains(pt)) {
-	                        found = true;
-	                        break;
-	                    }
-	                    
-	                    c.x = ringC.x;
-	                    c.y = ringC.y + 0.5;
-	                    pt = GEOMETRY_FACTORY.createPoint(c);
-	                    if (poly.contains(pt)) {
-	                        found = true;
-	                        break;
-	                    }
-	                    
-	                    c.x = ringC.x - 0.5;
-	                    c.y = ringC.y + 0.5;
-	                    pt = GEOMETRY_FACTORY.createPoint(c);
-	                    if (poly.contains(pt)) {
-	                        found = true;
-	                        break;
-	                    }
-	                    
-	                    c.x = ringC.x - 0.5;
-	                    c.y = ringC.y;
-	                    pt = GEOMETRY_FACTORY.createPoint(c);
-	                    if (poly.contains(pt)) {
-	                        found = true;
-	                        break;
-	                    }
-	                    
-	                    c.x = ringC.x;
-	                    c.y = ringC.y - 0.5;
-	                    pt = GEOMETRY_FACTORY.createPoint(c);
-	                    if (poly.contains(pt)) {
-	                        found = true;
-	                        break;
-	                    }
-	                    
-	                    c.x = ringC.x + 0.5;
-	                    c.y = ringC.y - 0.5;
-	                    pt = GEOMETRY_FACTORY.createPoint(c);
-	                    if (poly.contains(pt)) {
-	                        found = true;
-	                        break;
-	                    }	                    
-	                }
-	
-	                if (!found) {
-	                    throw new IllegalStateException("Can't locate interior point for polygon");
-	                }
-	            }
-	
-	            //
-	            // now get the value and save it for future usage
-	            //
-	            double val = imgIter.getSampleDouble((int) c.x, (int) c.y, band);
-	            if (roi.contains(c.x, c.y) && !isOutside(val)) {
-	                if (insideEdges) {
-	                    poly.setUserData(val);
-	                } else {
-	                    poly.setUserData(inside);
-	                }
-	                polygons.add(poly);
-	            }
-	        }
-	        return polygons;
-        }finally{
-        	// release resources
-        	imgIter.done();
+        
+        try {
+            polygonizer.add(lines);
+            Collection<Geometry> rawPolys = polygonizer.getPolygons();
+
+            for (Iterator it = rawPolys.iterator(); it.hasNext();) {
+                Polygon poly = (Polygon) it.next();
+                
+                // Remove the geometry and free some memory
+                it.remove();
+
+                if (removeCollinear) {
+                    poly = Utils.removeCollinearVertices(poly);
+                }
+                
+                InteriorPointArea ipa = new InteriorPointArea(poly);
+                Coordinate c = ipa.getInteriorPoint();
+                Point pt = GEOMETRY_FACTORY.createPoint(c);
+
+                if (!poly.contains(pt)) {
+                    //
+                    // try another method to generate an interior point, by
+                    // looking in every direction
+                    //
+
+                    boolean found = false;
+                    for (Coordinate ringC : poly.getExteriorRing().getCoordinates()) {
+
+                        c.x = ringC.x + 0.5;
+                        c.y = ringC.y;
+                        pt = GEOMETRY_FACTORY.createPoint(c);
+                        if (poly.contains(pt)) {
+                            found = true;
+                            break;
+                        }
+
+                        c.x = ringC.x + 0.5;
+                        c.y = ringC.y + 0.5;
+                        pt = GEOMETRY_FACTORY.createPoint(c);
+                        if (poly.contains(pt)) {
+                            found = true;
+                            break;
+                        }
+
+                        c.x = ringC.x;
+                        c.y = ringC.y + 0.5;
+                        pt = GEOMETRY_FACTORY.createPoint(c);
+                        if (poly.contains(pt)) {
+                            found = true;
+                            break;
+                        }
+
+                        c.x = ringC.x - 0.5;
+                        c.y = ringC.y + 0.5;
+                        pt = GEOMETRY_FACTORY.createPoint(c);
+                        if (poly.contains(pt)) {
+                            found = true;
+                            break;
+                        }
+
+                        c.x = ringC.x - 0.5;
+                        c.y = ringC.y;
+                        pt = GEOMETRY_FACTORY.createPoint(c);
+                        if (poly.contains(pt)) {
+                            found = true;
+                            break;
+                        }
+
+                        c.x = ringC.x;
+                        c.y = ringC.y - 0.5;
+                        pt = GEOMETRY_FACTORY.createPoint(c);
+                        if (poly.contains(pt)) {
+                            found = true;
+                            break;
+                        }
+
+                        c.x = ringC.x + 0.5;
+                        c.y = ringC.y - 0.5;
+                        pt = GEOMETRY_FACTORY.createPoint(c);
+                        if (poly.contains(pt)) {
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    if (!found) {
+                        throw new IllegalStateException("Can't locate interior point for polygon");
+                    }
+                }
+
+                //
+                // now get the value and save it for future usage
+                //
+                double val = imgIter.getSampleDouble((int) c.x, (int) c.y, band);
+                if (roi.contains(c.x, c.y) && !isOutside(val)) {
+                    // if we don't clone the polygon the results will share coordinate objects
+                    // which will backfire if any c.s. visitor is used later
+                    // since all geometries end up in the heap also better use packed c.s.
+                    poly = (Polygon) PACKED_FACTORY.createGeometry(poly);
+                    if (insideEdges) {
+                        poly.setUserData(val);
+                    } else {
+                        poly.setUserData(inside);
+                    }
+                    polygons.add(poly);
+                }
+            }
+            return polygons;
+        } finally {
+            // release resources
+            imgIter.done();
         }
     }
 
@@ -373,58 +375,56 @@ public class VectorizeOpImage extends AttributeOpImage {
 
         // array treated as a 2x2 matrix of double values used as a moving window
         double[] sample = new double[4];
-        
+
         // array treated as a 2x2 matrix of boolean flags used to indicate which
         // sampling window pixels are within the source image and ROI
         boolean[] flag = new boolean[4];
-        
+
         RandomIter imageIter = RandomIterFactory.create(getSourceImage(0), null);
         if (!insideEdges) {
             setInsideValue();
-        }	
-        final Double OUT = outsideValues.first();
-        
-        try{
-        // NOTE: the for-loop indices are set to emulate a one pixel width border
-        // around the source image area
-        for (int y = srcBounds.y - 1; y < srcBounds.y + srcBounds.height; y++) {
-            sample[TR] = sample[BR] = OUT;
-            flag[TR] = flag[BR] = false;
-            
-            boolean yFlag = srcBounds.contains(srcBounds.x, y);
-            boolean yNextFlag = srcBounds.contains(srcBounds.x, y+1);
-
-            for (int x = srcBounds.x - 1; x < srcBounds.x + srcBounds.width; x++) {
-                sample[TL] = sample[TR];
-                flag[TL] = flag[TR];
-                sample[BL] = sample[BR];
-                flag[BL] = flag[BR];
-                
-                flag[TR] = yFlag && srcBounds.contains(x+1, y) && roi.contains(x+1, y);
-                flag[BR] = yNextFlag && srcBounds.contains(x+1, y+1) && roi.contains(x+1, y+1);
-
-                sample[TR] = (flag[TR] ? imageIter.getSampleDouble(x + 1, y, band) : OUT);
-                if (isOutside(sample[TR])) {
-                    sample[TR] = OUT;
-                } else if (!insideEdges) {
-                    sample[TR] = inside;
-                }
-
-                sample[BR] = (flag[BR] ? imageIter.getSampleDouble(x + 1, y + 1, band) : OUT);
-                if (isOutside(sample[BR])) {
-                    sample[BR] = OUT;
-                } else if (!insideEdges) {
-                    sample[BR] = inside;
-                }
-
-                updateCoordList(x, y, sample);
-            }
         }
-        }finally {
-        	// close random iterator
+        final Double OUT = outsideValues.first();
+
+        try {
+            // NOTE: the for-loop indices are set to emulate a one pixel width border
+            // around the source image area
+            for (int y = srcBounds.y - 1; y < srcBounds.y + srcBounds.height; y++) {
+                sample[TR] = sample[BR] = OUT;
+                flag[TR] = flag[BR] = false;
+
+                boolean yFlag = srcBounds.contains(srcBounds.x, y);
+                boolean yNextFlag = srcBounds.contains(srcBounds.x, y + 1);
+
+                for (int x = srcBounds.x - 1; x < srcBounds.x + srcBounds.width; x++) {
+                    sample[TL] = sample[TR];
+                    flag[TL] = flag[TR];
+                    sample[BL] = sample[BR];
+                    flag[BL] = flag[BR];
+
+                    flag[TR] = yFlag && srcBounds.contains(x + 1, y) && roi.contains(x + 1, y);
+                    flag[BR] = yNextFlag && srcBounds.contains(x + 1, y + 1) && roi.contains(x + 1, y + 1);
+
+                    sample[TR] = (flag[TR] ? imageIter.getSampleDouble(x + 1, y, band) : OUT);
+                    if (isOutside(sample[TR])) {
+                        sample[TR] = OUT;
+                    } else if (!insideEdges) {
+                        sample[TR] = inside;
+                    }
+
+                    sample[BR] = (flag[BR] ? imageIter.getSampleDouble(x + 1, y + 1, band) : OUT);
+                    if (isOutside(sample[BR])) {
+                        sample[BR] = OUT;
+                    } else if (!insideEdges) {
+                        sample[BR] = inside;
+                    }
+                    updateCoordList(x, y, sample);
+                }
+            }
+        } finally {
             imageIter.done();
-		}
-        
+        }
+
     }
     
 
