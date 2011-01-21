@@ -59,7 +59,7 @@ public class NeighbourhoodTest {
         JiffleRuntime jr = jiffle.getRuntimeInstance();
         jr.setSourceImage("testImg", testImg);
         jr.setDestinationImage("result", tImg);
-        jr.evaluateAll();
+        jr.evaluateAll(null);
        
         for (int y = 0; y < height; y++) {
             double above = (y == 0 ? Double.NaN : y-1);

@@ -40,6 +40,7 @@ class JiffleExecutorTask implements Callable<JiffleExecutorResult> {
     private final int id;
     private final Jiffle jiffle;
     private final Map<String, RenderedImage> images;
+    private final JiffleProgressListener progressListener;
     
     private boolean completed;
 
@@ -58,11 +59,13 @@ class JiffleExecutorTask implements Callable<JiffleExecutorResult> {
      */
     public JiffleExecutorTask(int id, 
             Jiffle jiffle, 
-            Map<String, RenderedImage> images) {
+            Map<String, RenderedImage> images,
+            JiffleProgressListener progressListener) {
         
         this.id = id;
         this.jiffle = jiffle;
         this.images = images;
+        this.progressListener = progressListener;
         
         completed = false;
     }
@@ -94,7 +97,7 @@ class JiffleExecutorTask implements Callable<JiffleExecutorResult> {
         
         boolean gotEx = false;
         try {
-            runtime.evaluateAll();
+            runtime.evaluateAll(progressListener);
             
         } catch (Exception ex) {
             gotEx = true;

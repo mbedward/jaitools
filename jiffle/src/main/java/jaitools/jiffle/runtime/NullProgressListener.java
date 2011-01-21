@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 Michael Bedward
+ * Copyright 2011 Michael Bedward
  * 
  * This file is part of jai-tools.
  *
@@ -21,20 +21,21 @@
 package jaitools.jiffle.runtime;
 
 /**
- * Convenience class that can be sub-classed when not all methods
- * declared in the JiffleEventListener interface are required
+ * A progress listener that ignores all inputs. All methods of this class are empty.
  * 
  * @author Michael Bedward
- * @since 1.0
+ * @since 1.1
  * @source $URL$
  * @version $Id$
  */
-public class JiffleEventAdapter implements JiffleEventListener {
+public class NullProgressListener implements JiffleProgressListener {
 
-    public void onCompletionEvent(JiffleEvent ev) {}
+    public void setTaskSize(long n) {}
 
-    public void onFailureEvent(JiffleEvent ev) {}
+    public void start() {}
 
-    public void onProgressEvent(float progrdss) {}
+    public void update(long done) {}
+
+    public void finish() {}
 
 }

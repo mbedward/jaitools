@@ -43,6 +43,8 @@ public abstract class StatementsTestBase {
     static final int NUM_PIXELS = WIDTH * WIDTH;
     static final double TOL = 1.0e-8;
     
+    private final JiffleProgressListener nullListener = new NullProgressListener();
+    
     Map<String, Jiffle.ImageRole> imageParams;
 
     interface Evaluator {
@@ -73,7 +75,7 @@ public abstract class StatementsTestBase {
         
         jr.setSourceImage("src", srcImg);
         jr.setDestinationImage("dest", destImg);
-        jr.evaluateAll();
+        jr.evaluateAll(nullListener);
         
         for (int y = 0; y < WIDTH; y++) {
             for (int x = 0; x < WIDTH; x++) {

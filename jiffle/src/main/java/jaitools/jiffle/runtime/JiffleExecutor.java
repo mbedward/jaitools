@@ -44,7 +44,7 @@ import java.util.concurrent.ScheduledFuture;
  * @version $Id$
  */
 public class JiffleExecutor {
-    
+
     private static enum ThreadPoolType {
         CACHED,
         FIXED;
@@ -155,7 +155,31 @@ public class JiffleExecutor {
     public void addEventListener(JiffleEventListener listener) {
         listeners.add(listener);
     }
-
+    
+    /**
+     * Removes an event listener.
+     * 
+     * @param listener the listener
+     * 
+     * @return {@code true} if the listener was removed;
+     *         {@code false} if it was not registered with this executor
+     */
+    public boolean removeEventListener(JiffleEventListener listener) {
+        return listeners.remove(listener);
+    }
+    
+    /**
+     * Checks if a particular listener is registered with this executor.
+     * 
+     * @param listener the listener
+     * 
+     * @return {@code true} if the listener has already been added;
+     *         {@code false} otherwise
+     */
+    public boolean isListening(JiffleEventListener listener) {
+        return listeners.contains(listener);
+    }
+    
     /**
      * Submits an {@code Jiffle} object for immediate execution. 
      * <p>
@@ -165,12 +189,20 @@ public class JiffleExecutor {
      * 
      * @param jiffle a properly compiled {@code Jiffle} object
      * 
+     * @param images source and destination images as a {@code Map} with
+     *        keys being image variable names as used in the Jiffle script
+     *        and image parameters
+     * 
+     * @param progressListener an optional progress listener (may be {@code null})
+     * 
      * @return the job ID that can be used to query progress
      * 
      * @throws JiffleExecutorException if the {@code Jiffle} object was not
      *         compiled correctly
      */
-    public int submit(final Jiffle jiffle, Map<String, RenderedImage> images)
+    public int submit(Jiffle jiffle, 
+            Map<String, RenderedImage> images,
+            JiffleProgressListener progressListener)
             throws JiffleExecutorException {
 
         try {
@@ -183,7 +215,9 @@ public class JiffleExecutor {
         
         int id = ++jobID;
         startPolling();
-        jobs.put(id, threadPool.submit(new JiffleExecutorTask(id, jiffle, images)));
+        jobs.put(id, threadPool.submit(
+                new JiffleExecutorTask(id, jiffle, images, progressListener)));
+        
         return id;
     }
     

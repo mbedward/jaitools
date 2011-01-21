@@ -45,11 +45,5 @@ public interface JiffleEventListener {
      */
     public void onFailureEvent(JiffleEvent ev);
     
-    /**
-     * Called to communicate the progress of a {@link JiffleExecutor}.
-     * 
-     * @param progress progress (between 0 and 1 inclusive)
-     */
-    public void onProgressEvent(float progress);
 }
 

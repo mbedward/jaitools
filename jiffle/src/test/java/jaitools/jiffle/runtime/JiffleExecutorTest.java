@@ -44,6 +44,8 @@ public class JiffleExecutorTest {
     private static final int WIDTH = 100;
     private static final double TOL = 1.0e-8;
     
+    private final JiffleProgressListener nullListener = new NullProgressListener();
+    
     @Test
     public void simpleJob() throws Exception {
         Map<String, Jiffle.ImageRole> imageParams;
@@ -61,7 +63,7 @@ public class JiffleExecutorTest {
         executor.addEventListener(listener);
         
         listener.setNumJobs(1);
-        int jobID = executor.submit(jiffle, images);
+        int jobID = executor.submit(jiffle, images, nullListener);
         listener.await();
         
         JiffleExecutorResult result = listener.getResult(jobID);

@@ -53,7 +53,7 @@ public class CustomBaseClassTest {
         
         TiledImage img = ImageUtils.createConstantImage(WIDTH, WIDTH, 0d);
         jr.setDestinationImage("out", img);
-        jr.evaluateAll();
+        jr.evaluateAll(null);
         
         for (int y = 0; y < WIDTH; y++) {
             for (int x = 0; x < WIDTH; x++) {

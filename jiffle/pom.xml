@@ -8,9 +8,11 @@
     </parent>
     <artifactId>jiffle</artifactId>
     <packaging>jar</packaging>
-    <name>Jiffle: JAI Image Function Language</name>
-    <description>Jiffle is a language and interpreter intended to make it easier to create
-        images from mathematical functions.
+    <name>Jiffle: a language for raster image processing</name>
+    <description>Jiffle is a raster algebra language that can be used to
+    create new images from logical and mathematical expressions involving
+    source images and user defined variables. It is intended to let users
+    concentrate on algorithms rather than tedious boiler-plate code.
     </description>
 
     <build>

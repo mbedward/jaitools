@@ -97,7 +97,7 @@ public class NullValuesTest {
         jr.setSourceImage(IN_IMAGE1, inImg1);
         jr.setSourceImage(IN_IMAGE2, inImg2);
         jr.setDestinationImage(OUT_IMAGE, outImg);
-        jr.evaluateAll();
+        jr.evaluateAll(null);
         
         boolean b = false;
         for (int i = 0; i < WIDTH; i++) {

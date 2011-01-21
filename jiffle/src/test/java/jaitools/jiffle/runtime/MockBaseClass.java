@@ -46,7 +46,7 @@ public abstract class MockBaseClass implements JiffleRuntime {
         throw new UnsupportedOperationException("This method should not be called");
     }
 
-    public void evaluateAll() {
+    public void evaluateAll(JiffleProgressListener ignored) {
         for (int y = 0; y < img.getHeight(); y++) {
             for (int x = 0; x < img.getWidth(); x++) {
                 evaluate(x, y);

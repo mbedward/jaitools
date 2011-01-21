@@ -62,8 +62,10 @@ public interface JiffleRuntime {
 
     /**
      * Evaluates the script for all locations in the destination image(s).
+     * 
+     * @param pl an optional progress listener (may be {@code null}
      */
-    void evaluateAll();
+    void evaluateAll(JiffleProgressListener pl);
     
     /**
      * Gets a value from a source image as a double.

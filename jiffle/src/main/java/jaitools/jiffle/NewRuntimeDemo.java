@@ -2,18 +2,31 @@ package jaitools.jiffle;
 
 import jaitools.CollectionFactory;
 import jaitools.imageutils.ImageUtils;
-import jaitools.jiffle.runtime.JiffleRuntime;
+import jaitools.jiffle.runtime.JiffleEvent;
+import jaitools.jiffle.runtime.JiffleEventListener;
+import jaitools.jiffle.runtime.JiffleExecutor;
+import jaitools.jiffle.runtime.JiffleExecutorResult;
+import jaitools.jiffle.runtime.NullProgressListener;
 import jaitools.swing.ImageFrame;
+import java.awt.image.RenderedImage;
 
 import java.util.Map;
-import javax.media.jai.TiledImage;
 import javax.swing.SwingUtilities;
 
-public class NewRuntimeDemo {
+public class NewRuntimeDemo implements JiffleEventListener {
+
+    private JiffleExecutor executor;
     
     public static void main(String[] args) throws Exception {
-        final TiledImage img = ImageUtils.createConstantImage(500, 500, Double.valueOf(0));
-        
+        NewRuntimeDemo me = new NewRuntimeDemo();
+        me.executorDemo();
+    }
+    
+    public NewRuntimeDemo() {
+        executor = new JiffleExecutor();
+    }
+    
+    private void executorDemo() throws Exception {
         Map<String, Jiffle.ImageRole> params = CollectionFactory.map();
         params.put("out", Jiffle.ImageRole.DEST);
         
@@ -28,9 +41,20 @@ public class NewRuntimeDemo {
 
         Jiffle jiffle = new Jiffle(src, params);
         
-        JiffleRuntime jr = jiffle.getRuntimeInstance();
-        jr.setDestinationImage("out", img);
-        jr.evaluateAll();
+        Map<String, RenderedImage> images = CollectionFactory.map();
+        images.put("out", ImageUtils.createConstantImage(500, 500, Double.valueOf(0)));
+
+        if (!executor.isListening(this)) {
+            executor.addEventListener(this);
+        }
+        executor.submit(jiffle, images, new NullProgressListener());
+    }
+
+    public void onCompletionEvent(JiffleEvent ev) {
+        JiffleExecutorResult result = ev.getResult();
+        System.out.println( result.getJiffle().getRuntimeSource(true) );
+        
+        final RenderedImage img = result.getImages().get("out");
         
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
@@ -40,8 +64,10 @@ public class NewRuntimeDemo {
                 f.setVisible(true);
             }
         });
-        
-        System.out.println( jiffle.getRuntimeSource(true) );
+    }
+
+    public void onFailureEvent(JiffleEvent ev) {
+        System.out.println("Execution failed");
     }
 
 }

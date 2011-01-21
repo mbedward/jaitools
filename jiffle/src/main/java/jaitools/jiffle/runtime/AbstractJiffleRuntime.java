@@ -75,12 +75,21 @@ public abstract class AbstractJiffleRuntime implements JiffleRuntime {
         readers.put(imageName, RandomIterFactory.create(image, null));
     }
 
-    public void evaluateAll() {
+    public void evaluateAll(JiffleProgressListener pl) {
+        JiffleProgressListener listener = pl == null ? new NullProgressListener() : pl;
+
+        final long numPixels = (long)_refImage.getWidth() * _refImage.getHeight();
+        listener.setTaskSize(numPixels);
+        long count = 0;
+        
+        listener.start();
         for (int y = _refImage.getMinY(), iy = 0; iy < _height; y++, iy++) {
             for (int x = _refImage.getMinX(), ix = 0; ix < _height; x++, ix++) {
                 evaluate(x, y);
+                listener.update( ++count );
             }
         }
+        listener.finish();
     }
     
     public double readFromImage(String imageName, int x, int y, int band) {
