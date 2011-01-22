@@ -20,73 +20,70 @@
 
 package jaitools.jiffle.runtime;
 
-import org.junit.Ignore;
-import jaitools.CollectionFactory;
-import jaitools.imageutils.ImageUtils;
-import jaitools.jiffle.Jiffle;
-import jaitools.numeric.DoubleComparison;
-import java.util.Map;
-import javax.media.jai.TiledImage;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
- * Test the neighbourhood accessor: imgVar[xOffset, yOffset]
+ * Test the neighbourhood accessor: imgVar[x, y]
+ * 
  * @author Michael Bedward
  */
-@Ignore(value="disabled until we sort out border extenders")
-public class NeighbourhoodTest {
-
+public class NeighbourhoodTest extends StatementsTestBase {
+    
     @Test
-    public void testNeighbourhood() throws Exception {
-        int width = 10, height = 10;
+    public void relativeReferences() throws Exception {
+        System.out.println("   relative neighbourhood references");
         
-        TiledImage testImg = createTestImage(width, height);
+        String src = "dest = if (x() > 0, src[-1, 0], NULL)";
         
-        TiledImage tImg = ImageUtils.createConstantImage(width, height, 0d);
-        Map<String, Jiffle.ImageRole> imgParams = CollectionFactory.map();
-        imgParams.put("testImg", Jiffle.ImageRole.SOURCE);
-        imgParams.put("result", Jiffle.ImageRole.DEST);
-        
-        String prog = "result = testImg[0,-1] + " +
-                      "testImg[0, 1] + testImg[-1,0] + testImg[1,0]";
-        
-        Jiffle jiffle = new Jiffle(prog, imgParams);
-        if (!jiffle.isCompiled()) {
-            throw new RuntimeException("couldn't compile script for neighbourhood test");
-        }
-        
-        JiffleRuntime jr = jiffle.getRuntimeInstance();
-        jr.setSourceImage("testImg", testImg);
-        jr.setDestinationImage("result", tImg);
-        jr.evaluateAll(null);
-       
-        for (int y = 0; y < height; y++) {
-            double above = (y == 0 ? Double.NaN : y-1);
-            double below = (y == height-1 ? Double.NaN : y+1);
+        testScript(src, new Evaluator() {
+            double lastVal;
+            int x;
 
-            for (int x = 0; x < width; x++) {
-                double val = tImg.getSampleDouble(x, y, 0);
-                double left = (x == 0 ? Double.NaN : y);
-                double right = (x == width-1 ? Double.NaN : y);
-                //System.out.println("" + val + " " + above + " " + below + " " + left + " " + right);
-                assertTrue(DoubleComparison.dcomp(val, above + below + left + right) == 0);
+            public double eval(double val) {
+                double outVal;
+                if (x > 0) {
+                    outVal = lastVal;
+                } else {
+                    outVal = Double.NaN;
+                }
+                
+                x = (x + 1) % WIDTH;
+                lastVal = val;
+                return outVal;
             }
-        }
+        });
     }
     
-    /**
-     * Create a test image where pixel value == row index (from 0)
-     */
-    private TiledImage createTestImage(int width, int height) throws Exception {
-        TiledImage tImg = ImageUtils.createConstantImage(width, height, 0d);
+    @Test
+    public void absoluteReferences() throws Exception {
+        System.out.println("   absolute neighbourhood references");
         
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                tImg.setSample(x, y, 0, y);
+        String src = "dest = if (x() > 5 && y() > 5, src[$5, $5], NULL);";
+        
+        testScript(src, new Evaluator() {
+            double val55;
+            int x;
+            int y;
+
+            public double eval(double val) {
+                if (x == 5 && y == 5) {
+                    val55 = val;
+                }
+                
+                double outVal = Double.NaN;
+                if (x > 5 && y > 5) {
+                    outVal = val55;
+                } 
+                
+                x++ ;
+                if (x == WIDTH) {
+                    x = 0;
+                    y++ ;
+                }
+                
+                return outVal;
             }
-        }
-        
-        return tImg;
+        });
     }
+    
 }

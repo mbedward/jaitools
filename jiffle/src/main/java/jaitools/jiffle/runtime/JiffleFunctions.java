@@ -36,6 +36,12 @@ import static jaitools.numeric.DoubleComparison.dzero;
 public class JiffleFunctions {
     
     private static Random rr;
+    
+    /** 
+     * Integer valued returned by {@link #sign(double)} if it 
+     * is passed a Double.NaN argument.
+     */
+    public static int NAN = -2;
 
     /**
      * Converts an angle in degrees to radians.
@@ -48,88 +54,20 @@ public class JiffleFunctions {
     }
 
     /**
-     * Tests if x is non-zero.
+     * Return the sign of {@code x} as an integer. This method is used 
+     * by Jiffle to implement its various {@code if} functions.
      * <p>
-     * Jiffle does not have a boolean type but treats zero values
-     * as {@code false} and non-zero values as {@code true}.
      * 
      * @param x test value
-     * @return 1 if x is non-zero; 0 if x is zero; 
-     *         or {@code Double.NaN} if x is {@code Double.NaN}
+     * 
+     * @return -1 if x is negative; 0 if x is 0; 1 if x is positive; 
+     *         or JiffleFunction.NAN if x is NaN
      */
-    public static double if1Arg(double x) {
+    public static int sign(double x) {
         if (!Double.isNaN(x)) {
-            return !dzero(x) ? 1d : 0d;
+            return dcomp(x, 0);
         }
-
-        return Double.NaN;
-    }
-    
-    /**
-     * Tests if x is non-zero.
-     * <p>
-     * Jiffle does not have a boolean type but treats zero values
-     * as {@code false} and non-zero values as {@code true}.
-     * 
-     * @param x test value
-     * @param valTrue value to return if x is non-zero
-     * 
-     * @return {@code valTrue} if x is non-zero; 0 if x is zero; 
-     *         or {@code Double.NaN} if x is {@code Double.NaN}
-     */
-    public static double if2Arg(double x, double valTrue) {
-
-        if (!Double.isNaN(x)) {
-            return !dzero(x) ? valTrue : 0d;
-        }
-
-        return Double.NaN;
-    }
-    
-    /**
-     * Tests if x is non-zero.
-     * <p>
-     * Jiffle does not have a boolean type but treats zero values
-     * as {@code false} and non-zero values as {@code true}.
-     * 
-     * @param x test value
-     * @param valTrue value to return if x is non-zero
-     * @param valFalse value to return if x is zero
-     * 
-     * @return {@code val} if x is non-zero; {@code valFalse} if x is zero; 
-     *         or {@code Double.NaN} if x is {@code Double.NaN}
-     */
-    public static double if3Arg(double x, double valTrue, double valFalse) {
-
-        if (!Double.isNaN(x)) {
-            return !dzero(x) ? valTrue : valFalse;
-        }
-
-        return Double.NaN;
-    }
-    
-    /**
-     * Tests if x is negative, positive or zero.
-     * <p>
-     * Jiffle does not have a boolean type but treats zero values
-     * as {@code false} and non-zero values as {@code true}. However
-     * this version of {@code if} treats negative and positive values
-     * separately. It is included for compatibility with the GRASS
-     * MapCalc language.
-     * 
-     * @param x test value
-     * @param valTrue value to return if x is non-zero
-     * @param valFalse value to return if x is zero
-     * 
-     * @return {@code val} if x is non-zero; {@code valFalse} if x is zero; 
-     *         or {@code Double.NaN} if x is {@code Double.NaN}
-     */
-    public static double if4Arg(double x, double valPos, double valZero, double valNeg) {
-        if (!Double.isNaN(x)) {
-            return dzero(x) ? valZero : (x > 0 ? valPos : valNeg);
-        }
-
-        return Double.NaN;
+        return NAN;
     }
     
     /**

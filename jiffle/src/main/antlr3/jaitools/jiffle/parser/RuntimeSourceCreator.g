@@ -1,25 +1,25 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2011 Michael Bedward
  * 
  * This file is part of jai-tools.
-
+ *
  * jai-tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the 
  * License, or (at your option) any later version.
-
+ *
  * jai-tools is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
-
+ *
  * You should have received a copy of the GNU Lesser General Public 
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
   
  /** 
-  * Takes the optimized Jiffle AST and writes out the corresponding source
+  * Takes the final Jiffle AST and generates Java source
   * for the evaluate method in a JiffleRuntime implementation.
   *
   * @author Michael Bedward
@@ -28,7 +28,7 @@
 tree grammar RuntimeSourceCreator;
 
 options {
-    tokenVocab = VarTransformer;
+    tokenVocab = ConvertTernaryExpr;
     ASTLabelType = CommonTree;
 }
 
@@ -77,10 +77,34 @@ private String getRuntimeExpr(String name, int numArgs) {
     }
 }
 
-private int COUNTER = 0;
+private class LocalVar {
+   String type;
+   String name;
 }
 
-compile
+private List<LocalVar> localVars = CollectionFactory.list();
+
+private String makeLocalVar(String type) { 
+    LocalVar var = new LocalVar();
+    var.type = type;
+    var.name = "_local" + localVars.size();
+    localVars.add(var);
+    return var.name;
+}
+
+private class ExprSrcPair {
+    String src;
+    String priorSrc;
+
+    ExprSrcPair(String src, String priorSrc) {
+        this.src = src;
+        this.priorSrc = priorSrc;
+    }
+}
+
+}  // end of @members
+
+start
 @init {
     srcSB = new StringBuilder();
     srcSB.append("public void evaluate(int _x, int _y) { \n");
@@ -99,16 +123,28 @@ statement returns [String src]
 image_write returns [String src]
                 : ^(IMAGE_WRITE IMAGE_VAR expr)
                    {
-                       $src = "writeToImage(\"" + $IMAGE_VAR.text + "\", _x, _y, _band, " + $expr.src + ")";
+                       if ($expr.priorSrc != null) {
+                           $src = $expr.priorSrc;
+                       } else {
+                           $src = "";
+                       }
+                       $src = $src + "writeToImage(\"" + $IMAGE_VAR.text + "\", _x, _y, _band, " + $expr.src + ")";
                    }
                 ;
 
 var_assignment returns [String src]
-                : ^(ASSIGN assign_op id=VAR expr)
-                   { $src = "double " + $id.text + $assign_op.text + $expr.src; }
+                : ^(ASSIGN assign_op VAR expr)
+                   { 
+                       if ($expr.priorSrc != null) {
+                           $src = $expr.priorSrc;
+                       } else {
+                           $src = "";
+                       }
+                       $src = $src + "double " + $VAR.text + $assign_op.text + $expr.src; 
+                   }
                 ;
                 
-expr returns [String src]
+expr returns [String src, String priorSrc ]
                 : ^(FUNC_CALL ID expr_list)
                   {
                       final int n = $expr_list.list.size();
@@ -124,8 +160,8 @@ expr returns [String src]
                           }
 
                           int k = 0;
-                          for (String e : $expr_list.list) {
-                              sb.append(e);
+                          for (ExprSrcPair esp : $expr_list.list) {
+                              sb.append(esp.src);
                               if (++k < n) sb.append(", ");
                           }
                           if (info.isVarArg()) {
@@ -138,86 +174,137 @@ expr returns [String src]
                           throw new IllegalStateException(ex);
                       }
                   }
-                  
-                | ^(POW e1=expr e2=expr) { $src = "Math.pow(" + e1 + ", " + e2 + ")"; }
 
-                | ^(TIMES e1=expr e2=expr) { $src = e1 + " * " + e2; }
-                | ^(DIV e1=expr e2=expr) { $src = e1 + " / " + e2; }
-                | ^(MOD e1=expr e2=expr) { $src = e1 + " \% " + e2; }
-                | ^(PLUS e1=expr e2=expr) { $src = e1 + " + " + e2; }
-                | ^(MINUS e1=expr e2=expr) { $src = e1 + " - " + e2; }
-                | ^(PREFIX PLUS e1=expr) { $src = "+" + e1; }
-                | ^(PREFIX MINUS e1=expr) { $src = "-" + e1; }
-
-                | ^(QUESTION cond=expr e1=expr e2=expr)
+                | ^(IF_CALL expr_list)
                   {
-                    // ternary expression is equivalent to Jiffle's if(a, b, c)
-                    String fn = getRuntimeExpr("if", 3);
-                    $src = fn + "(" + cond + ", " + e1 + ", " + e2 + ")";
+                    List<ExprSrcPair> argList = $expr_list.list;
+
+                    String signFn = getRuntimeExpr("sign", 1);
+                    StringBuilder sb = new StringBuilder();
+
+                    String condVar = makeLocalVar("int");
+                    sb.append("int ").append(condVar).append(" = ").append(signFn);
+                    sb.append("(").append(argList.get(0).src).append("); \n");
+
+                    String resultVar = makeLocalVar("double");
+                    sb.append("double ").append(resultVar).append(" = 0; \n");
+
+                    switch (argList.size()) {
+                        case 1:
+                            sb.append("if (").append(condVar).append(" != 0 ) { \n");
+                            sb.append(resultVar).append(" = 1; \n");
+                            sb.append("} else { \n");
+                            sb.append(resultVar).append(" = 0; \n");
+                            sb.append("} \n");
+                            break;
+
+                        case 2:
+                            sb.append("if (").append(condVar).append(" != 0 ) { \n");
+                            sb.append(resultVar).append(" = ").append(argList.get(1).src).append("; \n");
+                            sb.append("} else { \n");
+                            sb.append(resultVar).append(" = 0; \n");
+                            sb.append("} \n");
+                            break;
+
+                        case 3:
+                            sb.append("if (").append(condVar).append(" != 0 ) { \n");
+                            sb.append(resultVar).append(" = ").append(argList.get(1).src).append("; \n");
+                            sb.append("} else { \n");
+                            sb.append(resultVar).append(" = ").append(argList.get(2).src).append("; \n");
+                            sb.append("} \n");
+                            break;
+                    
+                        case 4:
+                            sb.append("if (").append(condVar).append(" > 0 ) { \n");
+                            sb.append(resultVar).append(" = ").append(argList.get(1).src).append("; \n");
+                            sb.append("} else if (").append(condVar).append(" == 0) { \n");
+                            sb.append(resultVar).append(" = ").append(argList.get(2).src).append("; \n");
+                            sb.append("} else { \n");
+                            sb.append(resultVar).append(" = ").append(argList.get(3).src).append("; \n");
+                            sb.append("} \n");
+                            break;
+                    
+                        default:
+                            throw new IllegalArgumentException("if function error");
+                    }
+                    $priorSrc = sb.toString();
+                    $src = resultVar;
+
                   }
+                  
+                | ^(POW e1=expr e2=expr) { $src = "Math.pow(" + e1.src + ", " + e2.src + ")"; }
+
+                | ^(TIMES e1=expr e2=expr) { $src = e1.src + " * " + e2.src; }
+                | ^(DIV e1=expr e2=expr) { $src = e1.src + " / " + e2.src; }
+                | ^(MOD e1=expr e2=expr) { $src = e1.src + " \% " + e2.src; }
+                | ^(PLUS e1=expr e2=expr) { $src = e1.src + " + " + e2.src; }
+                | ^(MINUS e1=expr e2=expr) { $src = e1.src + " - " + e2.src; }
+                | ^(PREFIX PLUS e1=expr) { $src = "+" + e1.src; }
+                | ^(PREFIX MINUS e1=expr) { $src = "-" + e1.src; }
+
                   
                 | ^(OR e1=expr e2=expr) 
                   {                       
                     String fn = getRuntimeExpr("OR", 2);
-                    $src = fn + "(" + e1 + ", " + e2 + ")"; 
+                    $src = fn + "(" + e1.src + ", " + e2.src + ")"; 
                   }
 
                 | ^(AND e1=expr e2=expr)
                   {                       
                     String fn = getRuntimeExpr("AND", 2);
-                    $src = fn + "(" + e1 + ", " + e2 + ")"; 
+                    $src = fn + "(" + e1.src + ", " + e2.src + ")"; 
                   }
 
                 | ^(XOR e1=expr e2=expr)
                   {                       
                     String fn = getRuntimeExpr("XOR", 2);
-                    $src = fn + "(" + e1 + ", " + e2 + ")"; 
+                    $src = fn + "(" + e1.src + ", " + e2.src + ")"; 
                   }
 
                 | ^(GT e1=expr e2=expr)
                   {                       
                     String fn = getRuntimeExpr("GT", 2);
-                    $src = fn + "(" + e1 + ", " + e2 + ")"; 
+                    $src = fn + "(" + e1.src + ", " + e2.src + ")"; 
                   }
 
                 | ^(GE e1=expr e2=expr)
                   {                       
                     String fn = getRuntimeExpr("GE", 2);
-                    $src = fn + "(" + e1 + ", " + e2 + ")"; 
+                    $src = fn + "(" + e1.src + ", " + e2.src + ")"; 
                   }
 
                 | ^(LT e1=expr e2=expr)
                   {                       
                     String fn = getRuntimeExpr("LT", 2);
-                    $src = fn + "(" + e1 + ", " + e2 + ")"; 
+                    $src = fn + "(" + e1.src + ", " + e2.src + ")"; 
                   }
 
                 | ^(LE e1=expr e2=expr)
                   {                       
                     String fn = getRuntimeExpr("LE", 2);
-                    $src = fn + "(" + e1 + ", " + e2 + ")"; 
+                    $src = fn + "(" + e1.src + ", " + e2.src + ")"; 
                   }
 
                 | ^(LOGICALEQ e1=expr e2=expr)
                   {                       
                     String fn = getRuntimeExpr("EQ", 2);
-                    $src = fn + "(" + e1 + ", " + e2 + ")"; 
+                    $src = fn + "(" + e1.src + ", " + e2.src + ")"; 
                   }
 
                 | ^(NE e1=expr e2=expr)
                   {                       
                     String fn = getRuntimeExpr("NE", 2);
-                    $src = fn + "(" + e1 + ", " + e2 + ")"; 
+                    $src = fn + "(" + e1.src + ", " + e2.src + ")"; 
                   }
 
                 | ^(PREFIX NOT e1=expr)
                   {                       
                     String fn = getRuntimeExpr("NOT", 1);
-                    $src = fn + "(" + e1 + ")"; 
+                    $src = fn + "(" + e1.src + ")"; 
                   }
 
                 | ^(BRACKETED_EXPR e1=expr)
-                  { $src = "(" + e1 + ")"; }
+                  { $src = "(" + e1.src + ")"; }
   
                 | VAR 
                   { $src = $VAR.text; }
@@ -225,27 +312,59 @@ expr returns [String src]
                 | IMAGE_VAR 
                   { $src = "readFromImage(\"" + $IMAGE_VAR.text + "\", _x, _y, _band)"; }
               
-                | ^(NBR_REF IMAGE_VAR e1=expr e2=expr) 
+                | ^(NBR_REF IMAGE_VAR xref=nbr_ref_expr yref=nbr_ref_expr) 
                   {
-                    // e1 is x offset, e2 is y offset
                     StringBuilder sb = new StringBuilder();
                     sb.append("readFromImage(");
                     sb.append("\"").append($IMAGE_VAR.text).append("\", ");
-                    sb.append("_x + (int)").append(e1).append(", ");
-                    sb.append("_y + (int)").append(e2).append(", ");
+
+                    if (xref.isRelative) {
+                        sb.append("(int)(_x + ");
+                    } else {
+                        sb.append("(int)(");
+                    }
+                    sb.append(xref.src).append("), ");
+
+                    if (yref.isRelative) {
+                        sb.append("(int)(_y + ");
+                    } else {
+                        sb.append("(int)(");
+                    }
+                    sb.append(yref.src).append("), ");
+
                     sb.append("_band)");
                     $src = sb.toString();
                   }
                   
                 | FIXED_VALUE 
-                  { $src = String.valueOf(((FixedValueNode)$FIXED_VALUE).getValue()); }
+                  { 
+                    double value = ((FixedValueNode)$FIXED_VALUE).getValue();
+                    if (Double.isNaN(value)) {
+                        $src = "Double.NaN";
+                    } else {
+                        $src = String.valueOf(value);
+                    }
+                  }
+                ;
+
+nbr_ref_expr returns [ String src, boolean isRelative ]
+                : ^(ABS_NBR_REF expr)
+                  { 
+                    $src = $expr.src;
+                    $isRelative = false;
+                  }
+
+                | ^(REL_NBR_REF expr)
+                  { 
+                    $src = $expr.src;
+                    $isRelative = true;
+                  }
                 ;
                 
-                
-expr_list returns [ List<String> list ] 
+expr_list returns [ List<ExprSrcPair> list ] 
                 :
                   { $list = CollectionFactory.list(); }
-                  ^(EXPR_LIST ( e=expr {$list.add($e.src);} )*)
+                  ^(EXPR_LIST ( e=expr {$list.add(new ExprSrcPair(e.src, e.priorSrc));} )*)
                 ;                
                 
 assign_op	: EQ

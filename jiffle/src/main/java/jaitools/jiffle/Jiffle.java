@@ -17,21 +17,8 @@
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-package jaitools.jiffle;
 
-import jaitools.jiffle.parser.ErrorCode;
-import jaitools.CollectionFactory;
-import jaitools.jiffle.parser.CompilerExitException;
-import jaitools.jiffle.parser.DeferredErrorReporter;
-import jaitools.jiffle.parser.FunctionValidator;
-import jaitools.jiffle.parser.JiffleLexer;
-import jaitools.jiffle.parser.JiffleParser;
-import jaitools.jiffle.parser.ParsingErrorReporter;
-import jaitools.jiffle.parser.RuntimeSourceCreator;
-import jaitools.jiffle.parser.VarClassifier;
-import jaitools.jiffle.parser.VarTransformer;
-import jaitools.jiffle.runtime.AbstractJiffleRuntime;
-import jaitools.jiffle.runtime.JiffleRuntime;
+package jaitools.jiffle;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -53,6 +40,20 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
 
 import org.codehaus.janino.SimpleCompiler;
 
+import jaitools.jiffle.parser.ErrorCode;
+import jaitools.CollectionFactory;
+import jaitools.jiffle.parser.CompilerExitException;
+import jaitools.jiffle.parser.ConvertTernaryExpr;
+import jaitools.jiffle.parser.DeferredErrorReporter;
+import jaitools.jiffle.parser.FunctionValidator;
+import jaitools.jiffle.parser.JiffleLexer;
+import jaitools.jiffle.parser.JiffleParser;
+import jaitools.jiffle.parser.ParsingErrorReporter;
+import jaitools.jiffle.parser.RuntimeSourceCreator;
+import jaitools.jiffle.parser.VarClassifier;
+import jaitools.jiffle.parser.VarTransformer;
+import jaitools.jiffle.runtime.AbstractJiffleRuntime;
+import jaitools.jiffle.runtime.JiffleRuntime;
 
 /**
  * Compiles scripts into runtime objects.
@@ -76,6 +77,10 @@ public class Jiffle {
     private static final String RUNTIME_PACKAGE_KEY = "runtime.package";
     private static final String RUNTIME_CLASS_KEY = "runtime.class";
     private static final String RUNTIME_BASE_CLASS_KEY = "runtime.base.class";
+    private static final String RUNTIME_IMPORTS_KEY = "runtime.imports";
+    
+    /** Delimiter used to separate multiple import entries */
+    private static final String RUNTIME_IMPORTS_DELIM = ";";
     
     private static final Class<? extends JiffleRuntime> DEFAULT_BASE_CLASS;
     
@@ -331,7 +336,7 @@ public class Jiffle {
             throw new JiffleException(getErrorString());
         }
 
-        transformVars();
+        transformTree();
     }
     
     /**
@@ -583,21 +588,23 @@ public class Jiffle {
     }
 
     /**
-     * Attempt to optimize the AST by identifying variables and expressions
-     * that depend only on in-built and user-defined constants and
-     * pre-calculating them.
-     * 
-     * @return the optimized AST
+     * Rewrites variable and ternary expression nodes in the AST.
      */
-    private void transformVars() {
+    private void transformTree() {
         try {
             CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
             nodes.setTokenStream(tokens);
             
             VarTransformer vt = new VarTransformer(nodes);
             vt.setImageParams(imageParams);
-            VarTransformer.start_return result = vt.start();
-            finalAST = (CommonTree) result.getTree();
+            VarTransformer.start_return vtResult = vt.start();
+            CommonTree tree = (CommonTree) vtResult.getTree();
+            
+            nodes = new CommonTreeNodeStream(tree);
+            nodes.setTokenStream(tokens);
+            ConvertTernaryExpr cte = new ConvertTernaryExpr(nodes);
+            ConvertTernaryExpr.start_return cteResult = cte.start();
+            finalAST = (CommonTree) cteResult.getTree();
 
         } catch (RecognitionException ex) {
             throw new IllegalStateException(ex);
@@ -642,6 +649,15 @@ public class Jiffle {
 
         sb.append("package ").append(properties.getProperty(RUNTIME_PACKAGE_KEY)).append("; \n\n");
         
+        String value = properties.getProperty(RUNTIME_IMPORTS_KEY);
+        if (value != null && !value.trim().isEmpty()) {
+            String[] importNames = value.split(RUNTIME_IMPORTS_DELIM);
+            for (String importName : importNames) {
+                sb.append("import ").append(importName).append("; \n");
+            }
+            sb.append("\n");
+        }
+        
         if (scriptInDocs) {
             sb.append(formatAsJavadoc(theScript));
         }
@@ -670,7 +686,7 @@ public class Jiffle {
             RuntimeSourceCreator rsc = new RuntimeSourceCreator(nodes);
             rsc.setErrorReporter(er);
 
-            rsc.compile();
+            rsc.start();
             return rsc.getSource();
             
         } catch (RecognitionException ex) {
@@ -718,7 +734,7 @@ public class Jiffle {
         
         for (String line : lines) {
             line = line.trim();
-            if (line.endsWith("}")) indent -= 4;
+            if (line.startsWith("}")) indent -= 4;
             
             sb.append(spaces, 0, indent);
             sb.append(line.trim()).append("\n");

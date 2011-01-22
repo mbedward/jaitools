@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 Michael Bedward
+ * Copyright 2011 Michael Bedward
  * 
  * This file is part of jai-tools.
  *
@@ -19,85 +19,83 @@
  */
   
  /** 
-  * Checks function calls.
+  * Converts ternary expressions (a ? b : c) to IF_CALL nodes.
   *
   * @author Michael Bedward
   */
 
-tree grammar FunctionValidator;
+tree grammar ConvertTernaryExpr;
 
 options {
-    tokenVocab = Jiffle;
+    tokenVocab = VarTransformer;
     ASTLabelType = CommonTree;
+    output = AST;
 }
 
 @header {
 package jaitools.jiffle.parser;
 
+import java.util.List;
 import java.util.Map;
 import jaitools.CollectionFactory;
-import jaitools.jiffle.parser.ErrorCode;
+
 }
 
 @members {
-private FunctionLookup functionLookup = new FunctionLookup();
+private ParsingErrorReporter errorReporter = null;
 
-/* Table of function name : error code */
-private Map<String, ErrorCode> errors = CollectionFactory.orderedMap();
-
-public Map<String, ErrorCode> getErrors() {
-    return errors;
+public void setErrorReporter( ParsingErrorReporter er ) {
+    errorReporter = er;
 }
 
-public boolean hasError() {
-    return !errors.isEmpty();
+public ParsingErrorReporter getErrorReporter() {
+    return errorReporter;
 }
 
+@Override 
+public void emitErrorMessage(String msg) {
+    if (errorReporter != null) {
+        errorReporter.addError(msg);
+    } else {
+        super.emitErrorMessage(msg);
+    }
 }
 
-start           : statement+ 
+}  // end of @members
+
+start           : statement+
                 ;
 
-statement       : expr
+statement       : image_write
+                | var_assignment
                 ;
 
-expr_list returns [int size]
-@init{
-    $size = 0;
-}
-                : ^(EXPR_LIST (expr { size++; } )*)
+image_write     : ^(IMAGE_WRITE IMAGE_VAR expr)
                 ;
 
-expr            : ^(ASSIGN assign_op ID expr)
-
+var_assignment  : ^(ASSIGN assign_op VAR expr)
+                ;
+                
+expr            : ^(QUESTION expr expr expr) -> ^(IF_CALL ^(EXPR_LIST expr*))
+                
                 | ^(FUNC_CALL ID expr_list)
-                  { 
-                      if (!functionLookup.isDefined($ID.text, $expr_list.size)) {
-                          errors.put($ID.text, ErrorCode.UNDEFINED_FUNCTION);
-                      }
-                  }
-
                 | ^(IF_CALL expr_list)
-                | ^(BRACKETED_EXPR expr)                  
-                | ^(expr_op expr expr)
-                | ^(QUESTION expr expr expr)
                 | ^(PREFIX unary_op expr)
-                | ID
-                | ^(NBR_REF ID nbr_ref_expr nbr_ref_expr)
-                | INT_LITERAL 
-                | FLOAT_LITERAL 
-                | constant
+                | ^(expr_op expr expr)
+                | ^(BRACKETED_EXPR expr)
+                | VAR 
+                | IMAGE_VAR 
+                | ^(NBR_REF IMAGE_VAR nbr_ref_expr nbr_ref_expr) 
+                | FIXED_VALUE 
                 ;
 
 nbr_ref_expr    : ^(ABS_NBR_REF expr)
                 | ^(REL_NBR_REF expr)
                 ;
-
-constant        : TRUE
-                | FALSE
-                | NULL
+                
+expr_list       : ^(EXPR_LIST (expr)*)
                 ;
-
+                
 expr_op         : POW
                 | TIMES 
                 | DIV 
@@ -137,4 +135,3 @@ type_name	: 'int'
 		| 'double'
 		| 'boolean'
 		;
-

@@ -31,7 +31,10 @@ tokens {
     EXPR_LIST;
     BRACKETED_EXPR;
     FUNC_CALL;
+    IF_CALL;
     NBR_REF;
+    ABS_NBR_REF;
+    REL_NBR_REF;
     POSTFIX;
     PREFIX;
 }
@@ -69,13 +72,20 @@ statement	: expr eos!
 expr		: assign_expr
                 | cond_expr
 		;
-                
+
+if_call         : 'if' LPAR expr_list RPAR -> ^(IF_CALL expr_list)
+                ;
+
 func_call       : ID LPAR expr_list RPAR -> ^(FUNC_CALL ID expr_list)
                 /* special case for null() */
                 | NULL LPAR expr_list RPAR -> ^(FUNC_CALL ID["null"] expr_list)
                 ;
                 
-nbr_ref         : ID LSQUARE expr ',' expr RSQUARE -> ^(NBR_REF ID expr expr)
+nbr_ref         : ID LSQUARE nbr_expr ',' nbr_expr RSQUARE -> ^(NBR_REF ID nbr_expr nbr_expr)
+                ;
+
+nbr_expr        : NBR_EXPR_PREFIX expr -> ^(ABS_NBR_REF expr)
+                | expr -> ^(REL_NBR_REF expr)
                 ;
 
 expr_list       : (expr (',' expr)* )? -> ^(EXPR_LIST expr*)
@@ -84,9 +94,9 @@ expr_list       : (expr (',' expr)* )? -> ^(EXPR_LIST expr*)
 assign_expr     : ID assign_op expr -> ^(ASSIGN assign_op ID expr)
                 ;
 
-cond_expr       : or_expr (QUESTION^ expr ':'! expr)? 
-		;
-		
+cond_expr       : or_expr (QUESTION^ expr ':'! expr)?
+                ;
+
 or_expr		: xor_expr (OR^ xor_expr)*
 		;
 
@@ -127,6 +137,7 @@ atom_expr	: ID
 		| constant
 		| bracketed_expr
                 | func_call
+                | if_call
                 | nbr_ref
 		;
 
@@ -188,6 +199,9 @@ NULL            : N U L L
                 ;
 
 /* Operators sorted and grouped by precedence order */
+
+NBR_EXPR_PREFIX : '$'  ;
+
 INCR            : '++' ;  /* pre-fix and post-fix operations */
 DECR            : '--' ;
 

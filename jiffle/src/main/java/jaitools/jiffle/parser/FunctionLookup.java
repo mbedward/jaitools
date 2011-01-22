@@ -45,10 +45,6 @@ public class FunctionLookup {
         lookup.add( new FunctionInfo( "cos", "cos", 1, FunctionInfo.MATH, false));
         lookup.add( new FunctionInfo( "degToRad", "degToRad", 1, FunctionInfo.JIFFLE, false));
         lookup.add( new FunctionInfo( "floor", "floor", 1, FunctionInfo.MATH, false));
-        lookup.add( new FunctionInfo( "if", "if1Arg", 1, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "if", "if2Arg", 2, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "if", "if3Arg", 3, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "if", "if4Arg", 4, FunctionInfo.JIFFLE, false));
         lookup.add( new FunctionInfo( "isinf", "isinf", 1, FunctionInfo.JIFFLE, false));
         lookup.add( new FunctionInfo( "isnan", "isnan", 1, FunctionInfo.JIFFLE, false));
         lookup.add( new FunctionInfo( "isnull", "isnull", 1, FunctionInfo.JIFFLE, false));
@@ -66,6 +62,7 @@ public class FunctionLookup {
         lookup.add( new FunctionInfo( "range", "range", 1, FunctionInfo.JIFFLE, false));
         lookup.add( new FunctionInfo( "round", "round", 1, FunctionInfo.MATH, false));
         lookup.add( new FunctionInfo( "round", "round2Arg", 2, FunctionInfo.JIFFLE, false));
+        lookup.add( new FunctionInfo( "sign", "sign", 1, FunctionInfo.JIFFLE, false));
         lookup.add( new FunctionInfo( "sdev", "sdev", FunctionInfo.VARARG, FunctionInfo.JIFFLE, false));
         lookup.add( new FunctionInfo( "sin", "sin", 1, FunctionInfo.MATH, false));
         lookup.add( new FunctionInfo( "sqrt", "sqrt", 1, FunctionInfo.MATH, false));

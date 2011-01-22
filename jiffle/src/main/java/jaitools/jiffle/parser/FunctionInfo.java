@@ -64,7 +64,7 @@ public class FunctionInfo {
             case MATH:
                 return "Math." + runtimeName;
             case JIFFLE:
-                return "jaitools.jiffle.runtime.JiffleFunctions." + runtimeName;
+                return "JiffleFunctions." + runtimeName;
             case PROXY:
                 return runtimeName;
             default:

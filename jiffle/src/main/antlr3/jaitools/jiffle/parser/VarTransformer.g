@@ -1,23 +1,23 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2011 Michael Bedward
  * 
  * This file is part of jai-tools.
-
+ *
  * jai-tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the 
  * License, or (at your option) any later version.
-
+ *
  * jai-tools is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
-
+ *
  * You should have received a copy of the GNU Lesser General Public 
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
- 
+  
  /** 
   * Transforms variables in the AST from the parser.
   * <ul>
@@ -26,6 +26,7 @@
   *     FIXED_VALUE nodes.</li>
   * <li>Proxy functions (e.g. width(), x()) are replaced by VAR nodes 
   *     with runtime variable names.</li>
+  * </ul>
   *
   * @author Michael Bedward
   */
@@ -98,9 +99,10 @@ expr            : ^(ASSIGN assign_op var expr)
                   -> {info.isProxy()}? VAR[info.getRuntimeExpr()]
                   -> ^(FUNC_CALL ID expr_list)
                   
-                | ^(NBR_REF ID expr expr) 
-                  -> ^(NBR_REF IMAGE_VAR[$ID.text] expr expr)
+                | ^(NBR_REF ID nbr_ref_expr nbr_ref_expr) 
+                  -> ^(NBR_REF IMAGE_VAR[$ID.text] nbr_ref_expr nbr_ref_expr)
                   
+                | ^(IF_CALL expr_list)
                 | ^(QUESTION expr expr expr)
                 | ^(PREFIX unary_op expr)
                 | ^(expr_op expr expr)
@@ -110,7 +112,11 @@ expr            : ^(ASSIGN assign_op var expr)
                 | INT_LITERAL -> FIXED_VALUE<FixedValueNode>[$INT_LITERAL.text]
                 | FLOAT_LITERAL -> FIXED_VALUE<FixedValueNode>[$FLOAT_LITERAL.text] 
                 ;
-                
+
+nbr_ref_expr    : ^(ABS_NBR_REF expr)
+                | ^(REL_NBR_REF expr)
+                ;
+
 var             :ID
                   -> {imageParams.containsKey($ID.text)}? IMAGE_VAR[$ID.text]
                   -> {ConstantLookup.isDefined($ID.text)}? FIXED_VALUE<FixedValueNode>[ConstantLookup.getValue($ID.text)]

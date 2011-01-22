@@ -162,20 +162,4 @@ public class LogicalStatementsTest extends StatementsTestBase {
                 });
     }
     
-    @Test
-    public void logical9() throws Exception {
-        
-        String src = String.format("dest = src <= %d ? -1 : 1;",
-                NUM_PIXELS / 2);
-        System.out.println("   " + src);
-        
-        testScript(src,
-                new Evaluator() {
-
-                    public double eval(double val) {
-                        return val <= NUM_PIXELS / 2 ? -1.0 : 1.0;
-                    }
-                });
-    }
-    
 }
