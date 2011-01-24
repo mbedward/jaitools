@@ -19,15 +19,13 @@
  */
 package jaitools.media.jai.contour;
 
-import static jaitools.numeric.DoubleComparison.dcomp;
-import static jaitools.numeric.DoubleComparison.dequal;
+import static jaitools.numeric.DoubleComparison.*;
+import jaitools.CollectionFactory;
 import jaitools.jts.LineSmoother;
 import jaitools.jts.SmootherControl;
 import jaitools.jts.Utils;
 import jaitools.media.jai.AttributeOpImage;
 
-import java.awt.Rectangle;
-import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
@@ -42,11 +40,7 @@ import javax.media.jai.ROI;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 
-import com.vividsolutions.jts.geom.LineSegment;
 import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.operation.linemerge.LineMerger;
-import jaitools.CollectionFactory;
-import jj2000.j2k.roi.encoder.RectROIMaskGenerator;
 
 /**
  * Generates contours for user-specified levels of values in the source image.
@@ -239,86 +233,29 @@ public class ContourOpImage extends AttributeOpImage {
      * @return generated contours
      */
     private List<LineString> createContours() {
-        Map<Integer, List<LineString>> contours = new HashMap<Integer, List<LineString>>();
-        LineMerger merger = null;
-        List<LineString> tempLines = null;
-
+        // build the contour levels if necessary
         if(contourLevels == null) {
             contourLevels = buildContourLevels();
         }
-        Map<Integer, List<LineSegment>> segments = getContourSegments();
-
-        int levelIndex = 0;
-        for (Double levelValue : contourLevels) {
-            List<LineSegment> levelSegments = segments.get(levelIndex);
-
-            if (!(levelSegments == null || levelSegments.isEmpty())) {
-                tempLines = new ArrayList<LineString>();
-
-                for (int i = levelSegments.size() - 1; i >= 0; i--) {
-                    LineSegment seg = levelSegments.remove(i);
-                    // Skip over any degenerate segments which can be produced by
-                    // the traceContours algorithm
-                    if (!seg.p0.equals2D(seg.p1)) {
-                        tempLines.add(seg.toGeometry(Utils.getGeometryFactory()));
-                    }
-                }
-
-                merger = new LineMerger();
-                merger.add(tempLines);
-                Collection<LineString> tileContours = merger.getMergedLineStrings();
-                
-                //
-                // SIMPLIFY
-                //
-                if (simplify) {
-                    List<LineString> simplifiedContours = new ArrayList<LineString>();
-                    for (LineString tc : tileContours) {
-                        simplifiedContours.add( Utils.removeCollinearVertices(tc) );
-                    }
-                    tileContours = simplifiedContours;
-                }
-
-                List<LineString> levelContours = contours.get(levelIndex);
-                
-                if (levelContours == null) {
-                    levelContours = new ArrayList<LineString>();
-                    contours.put(levelIndex, levelContours);
-                }
-                
-                //
-                // MERGE
-                //
-                if (levelContours.isEmpty() || !mergeTiles) {
-                    levelContours.addAll(tileContours);
-                } else {
-                    merger = new LineMerger();
-                    merger.add(levelContours);
-                    merger.add(tileContours);
-                    levelContours.clear();
-                    levelContours.addAll( merger.getMergedLineStrings() );
-                }
-            }
-            
-            levelIndex++ ;
-        }
-           
+        // aggregate all the segments
+        Map<Integer, Segments> segments = getContourSegments();
 
         /*
          * Assemble contours into a simple list and assign values 
          */
         List<LineString> mergedContourLines = new ArrayList<LineString>();
 
-        levelIndex = 0;
+        int levelIndex = 0;
         for (Double levelValue : contourLevels) {
-            List<LineString> levelContours = contours.remove(levelIndex);
-            if (!(levelContours == null || levelContours.isEmpty())) {
+            Segments levelSegments = segments.remove(levelIndex);
+            if (levelSegments != null) {
+                List<LineString> levelContours = levelSegments.getMergedSegments();
                 for (LineString line : levelContours) {
                     line.setUserData(levelValue);
                 }
                 mergedContourLines.addAll(levelContours);
             }
-            levelIndex++ ;
+            levelIndex++;
         }
         
         /*
@@ -383,9 +320,9 @@ public class ContourOpImage extends AttributeOpImage {
      * 
      * @return the generated contour segments
      */
-    private Map<Integer, List<LineSegment>> getContourSegments() {
+    private Map<Integer, Segments> getContourSegments() {
 
-        Map<Integer, List<LineSegment>> segments = new HashMap<Integer, List<LineSegment>>();
+        Map<Integer, Segments> segments = new HashMap<Integer, Segments>();
 
         double[] sample = new double[4];
         double[] h = new double[5];
@@ -441,9 +378,9 @@ public class ContourOpImage extends AttributeOpImage {
                         continue;
                     }
 
-                    List<LineSegment> zlist = segments.get(levelIndex);
+                    Segments zlist = segments.get(levelIndex);
                     if (zlist == null) {
-                        zlist = new ArrayList<LineSegment>();
+                        zlist = new Segments(simplify);
                         segments.put(levelIndex, zlist);
                     }
                     
@@ -570,7 +507,7 @@ public class ContourOpImage extends AttributeOpImage {
                         }
 
                         if (addSegment) {
-                            zlist.add(new LineSegment(x0, y0, x1, y1));
+                            zlist.add(x0, y0, x1, y1);
                         }
                     }
                 }
