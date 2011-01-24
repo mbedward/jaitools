@@ -48,9 +48,21 @@ package jaitools.jiffle.parser;
 }
 
 @members {
-    private boolean printParseTree = false;
 
-    public void setPrint(boolean b) { printParseTree = b; }
+private class UnexpectedInputException extends RuntimeException {
+    UnexpectedInputException(String msg) {
+        super(msg);
+    }
+}
+
+@Override
+protected Object recoverFromMismatchedToken(IntStream input, int ttype, BitSet follow) throws RecognitionException {
+    if (ttype == Token.EOF) {
+        throw new UnexpectedInputException("Invalid statement before end of file");
+    }
+    return super.recoverFromMismatchedToken(input, ttype, follow);
+}
+
 }
 
 @lexer::members {
@@ -58,15 +70,22 @@ package jaitools.jiffle.parser;
 }
 
 
-prog		: statement+
+prog		: (init_block)? statement+ EOF
+                ;
+                catch [UnexpectedInputException ex] {
+                    throw new JiffleParserException(ex);
+                }
+
+init_block      : INIT LCURLY var_init_list RCURLY (eos)?
+                ;
+
+var_init_list   : (var_init (',' var_init)* )? 
+                ;
+
+var_init        : ID (EQ expr)? eos
                 ;
                 
 statement	: expr eos!
-                { 
-                    if (printParseTree) {
-                        System.out.println($expr.tree == null ? "null" : $expr.tree.toStringTree());
-                    }
-                }
 		;
 		
 expr		: assign_expr
@@ -177,6 +196,9 @@ type_name	: 'int'
 eos             : (SEMICOLON|NEWLINE)+
                 ;
 
+INIT            : 'init'
+                ;
+
 BLOCK_COMMENT   : '/*' (~'*' | '*' ~'/')* '*/' 
                   { $channel = HIDDEN; onCommentLine = true; }
                 ;
@@ -244,6 +266,8 @@ LPAR            : '(' ;
 RPAR            : ')' ;
 LSQUARE         : '[' ;
 RSQUARE         : ']' ;
+LCURLY          : '{' ;
+RCURLY          : '}' ;
 
 ID		: (Letter) (Letter | UNDERSCORE | Digit | Dot)*
 		;
