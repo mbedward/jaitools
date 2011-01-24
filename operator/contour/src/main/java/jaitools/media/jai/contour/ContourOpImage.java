@@ -39,11 +39,14 @@ import java.util.Map;
 
 import javax.media.jai.PlanarImage;
 import javax.media.jai.ROI;
+import javax.media.jai.iterator.RectIter;
+import javax.media.jai.iterator.RectIterFactory;
 
 import com.vividsolutions.jts.geom.LineSegment;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.operation.linemerge.LineMerger;
 import jaitools.CollectionFactory;
+import jj2000.j2k.roi.encoder.RectROIMaskGenerator;
 
 /**
  * Generates contours for user-specified levels of values in the source image.
@@ -240,84 +243,73 @@ public class ContourOpImage extends AttributeOpImage {
         LineMerger merger = null;
         List<LineString> tempLines = null;
 
-        RenderedImage src = getSourceImage(0);
-        int tileIndex = 0;
-        
-        final int minTileX= src.getMinTileX();
-        final int minTileY= src.getMinTileY();
-        final int numTileY= src.getNumYTiles();
-        final int numTileX= src.getNumXTiles();
-        final int maxTileX= minTileX+ numTileX;
-        final int maxTileY= minTileY+numTileY;
-        
-        for (int tileY =minTileY, ny = 0; tileY <maxTileY; tileY++, ny++) {
-            for (int tileX = minTileX, nx = 0; tileX < maxTileX; tileX++, nx++, tileIndex++) {
-                
-                Map<Integer, List<LineSegment>> segments = getContourSegments(tileX, tileY);
+        if(contourLevels == null) {
+            contourLevels = buildContourLevels();
+        }
+        Map<Integer, List<LineSegment>> segments = getContourSegments();
 
-                int levelIndex = 0;
-                for (Double levelValue : contourLevels) {
-                    List<LineSegment> levelSegments = segments.get(levelIndex);
+        int levelIndex = 0;
+        for (Double levelValue : contourLevels) {
+            List<LineSegment> levelSegments = segments.get(levelIndex);
 
-                    if (!(levelSegments == null || levelSegments.isEmpty())) {
-                        tempLines = new ArrayList<LineString>();
+            if (!(levelSegments == null || levelSegments.isEmpty())) {
+                tempLines = new ArrayList<LineString>();
 
-                        for (int i = levelSegments.size() - 1; i >= 0; i--) {
-                            LineSegment seg = levelSegments.remove(i);
-                            // Skip over any degenerate segments which can be produced by
-                            // the traceContours algorithm
-                            if (!seg.p0.equals2D(seg.p1)) {
-                                tempLines.add(seg.toGeometry(Utils.getGeometryFactory()));
-                            }
-                        }
-
-                        merger = new LineMerger();
-                        merger.add(tempLines);
-                        Collection<LineString> tileContours = merger.getMergedLineStrings();
-                        
-                        //
-                        // SIMPLIFY
-                        //
-                        if (simplify) {
-                            List<LineString> simplifiedContours = new ArrayList<LineString>();
-                            for (LineString tc : tileContours) {
-                                simplifiedContours.add( Utils.removeCollinearVertices(tc) );
-                            }
-                            tileContours = simplifiedContours;
-                        }
-
-                        List<LineString> levelContours = contours.get(levelIndex);
-                        
-                        if (levelContours == null) {
-                            levelContours = new ArrayList<LineString>();
-                            contours.put(levelIndex, levelContours);
-                        }
-                        
-                        //
-                        // MERGE
-                        //
-                        if (levelContours.isEmpty() || !mergeTiles) {
-                            levelContours.addAll(tileContours);
-                        } else {
-                            merger = new LineMerger();
-                            merger.add(levelContours);
-                            merger.add(tileContours);
-                            levelContours.clear();
-                            levelContours.addAll( merger.getMergedLineStrings() );
-                        }
+                for (int i = levelSegments.size() - 1; i >= 0; i--) {
+                    LineSegment seg = levelSegments.remove(i);
+                    // Skip over any degenerate segments which can be produced by
+                    // the traceContours algorithm
+                    if (!seg.p0.equals2D(seg.p1)) {
+                        tempLines.add(seg.toGeometry(Utils.getGeometryFactory()));
                     }
-                    
-                    levelIndex++ ;
+                }
+
+                merger = new LineMerger();
+                merger.add(tempLines);
+                Collection<LineString> tileContours = merger.getMergedLineStrings();
+                
+                //
+                // SIMPLIFY
+                //
+                if (simplify) {
+                    List<LineString> simplifiedContours = new ArrayList<LineString>();
+                    for (LineString tc : tileContours) {
+                        simplifiedContours.add( Utils.removeCollinearVertices(tc) );
+                    }
+                    tileContours = simplifiedContours;
+                }
+
+                List<LineString> levelContours = contours.get(levelIndex);
+                
+                if (levelContours == null) {
+                    levelContours = new ArrayList<LineString>();
+                    contours.put(levelIndex, levelContours);
+                }
+                
+                //
+                // MERGE
+                //
+                if (levelContours.isEmpty() || !mergeTiles) {
+                    levelContours.addAll(tileContours);
+                } else {
+                    merger = new LineMerger();
+                    merger.add(levelContours);
+                    merger.add(tileContours);
+                    levelContours.clear();
+                    levelContours.addAll( merger.getMergedLineStrings() );
                 }
             }
+            
+            levelIndex++ ;
         }
+           
 
         /*
          * Assemble contours into a simple list and assign values 
          */
         List<LineString> mergedContourLines = new ArrayList<LineString>();
 
-        int levelIndex = 0;
+        levelIndex = 0;
         for (Double levelValue : contourLevels) {
             List<LineString> levelContours = contours.remove(levelIndex);
             if (!(levelContours == null || levelContours.isEmpty())) {
@@ -391,7 +383,7 @@ public class ContourOpImage extends AttributeOpImage {
      * 
      * @return the generated contour segments
      */
-    private Map<Integer, List<LineSegment>> getContourSegments(int tileX, int tileY) {
+    private Map<Integer, List<LineSegment>> getContourSegments() {
 
         Map<Integer, List<LineSegment>> segments = new HashMap<Integer, List<LineSegment>>();
 
@@ -409,32 +401,30 @@ public class ContourOpImage extends AttributeOpImage {
         };
         
         final PlanarImage src = getSourceImage(0);
-        Raster tile = src.getTile(tileX, tileY);
-        Rectangle bounds = tile.getBounds().intersection(srcBounds);
         
-        int maxx = bounds.x + bounds.width - 1;
-        int maxy = bounds.y + bounds.height - 1;
+        RectIter iter1 = RectIterFactory.create(src, src.getBounds());
+        RectIter iter2 = RectIterFactory.create(src, src.getBounds());
+        moveIterToBand(iter1, this.band);
+        moveIterToBand(iter2, this.band);
+        iter1.startLines();
+        iter2.startLines();
+        iter2.nextLine();
         
-        /*
-         * If we are using contour interval rather than specified levels,
-         * check that we have all required intervals for this tile.
-         */
-        if (contourInterval != null) {
-            if (!checkContourLevels(tile, bounds)) {
-                // tile had no non-missing values
-                return segments;
-            }
-        }
-
-        for (int y = bounds.y; y < maxy; y++) {
-            sample[BR] = tile.getSampleDouble(bounds.x, y, band);
-            sample[TR] = tile.getSampleDouble(bounds.x, y + 1, band);
+        int y = (int) src.getBounds().getMinY();
+        while(!iter2.finishedLines() && !iter1.finishedLines()) {
+            iter1.startPixels();
+            iter2.startPixels();
             
-            for (int x = bounds.x + 1; x <= maxx; x++) {
+            sample[BR] = iter1.getSampleDouble();
+            sample[TR] = iter2.getSampleDouble();
+            iter1.nextPixel();
+            iter2.nextPixel();
+            int x = (int) src.getBounds().getMinX() + 1;
+            while (!iter1.finishedPixels() && !iter2.finishedPixels()) {
                 sample[BL] = sample[BR];
-                sample[BR] = tile.getSampleDouble(x, y, band);
+                sample[BR] = iter1.getSampleDouble();
                 sample[TL] = sample[TR];
-                sample[TR] = tile.getSampleDouble(x, y + 1, band);
+                sample[TR] = iter2.getSampleDouble();
 
                 temp1 = Math.min(sample[BL], sample[TL]);
                 temp2 = Math.min(sample[BR], sample[TR]);
@@ -584,9 +574,17 @@ public class ContourOpImage extends AttributeOpImage {
                         }
                     }
                 }
+                
+                iter1.nextPixel();
+                iter2.nextPixel();
+                x++;
             }
+            
+            iter1.nextLine();
+            iter2.nextLine();
+            y++;
         }
-
+        
         return segments;
     }
     
@@ -607,8 +605,7 @@ public class ContourOpImage extends AttributeOpImage {
     }
     
     /**
-     * Scans the image tile and checks that required contour values are in the
-     * {@code contourLevels} list. 
+     * Scans the image builds the required contour values . 
      * <p>
      * Note: this method is only called when contour levels are being set 
      * according to a specified interval rather than user-supplied levels.
@@ -618,17 +615,21 @@ public class ContourOpImage extends AttributeOpImage {
      * 
      * @return true if the tile had non-NaN values, false otherwise.
      */
-    private boolean checkContourLevels(Raster tile, Rectangle bounds) {
+    private List<Double> buildContourLevels() {
         double minVal = 0, maxVal = 0;
         boolean first = true;
-
-        int maxy = bounds.y + bounds.height - 1;
-        int maxx = bounds.x + bounds.width - 1;
+        
+        RectIter iter = RectIterFactory.create(getSourceImage(0), getBounds());
         boolean hasNonNan = false;
         
-        for (int y = bounds.y; y < maxy; y++) {
-            for (int x = bounds.x + 1; x <= maxx; x++) {
-                double val = tile.getSampleDouble(x, y, band);
+        moveIterToBand(iter, this.band);
+        
+        // scan all the pixels
+        iter.startLines();
+        while (!iter.finishedLines()) {
+            iter.startPixels();
+            while (!iter.finishedPixels()) {
+                double val = iter.getSampleDouble();
                 if (!Double.isNaN(val)) {
                     hasNonNan = true;
                     if (first) {
@@ -640,32 +641,35 @@ public class ContourOpImage extends AttributeOpImage {
                         maxVal = val;
                     }
                 }
+                iter.nextPixel();
             }
+            iter.nextLine();
         }
-        
-        if (!hasNonNan) return false;
+
+        if (!hasNonNan) return Collections.emptyList();
         
         double z = Math.floor(minVal / contourInterval) * contourInterval;
         if (dcomp(z, minVal) < 0) z += contourInterval;
         
-        boolean found;
+        List<Double> result = new ArrayList<Double>();
         while (dcomp(z, maxVal) <= 0) {
-            found = false;
-            for (Double level : contourLevels) {
-                if (dequal(z, level)) {
-                    found = true;
-                    break;
-                }
-            }
-            
-            if (!found) {
-                contourLevels.add(z);
-            }
-            
+            result.add(z);
             z += contourInterval;
         }
         
-        return true;
+        return result;
+    }
+
+    private void moveIterToBand(RectIter iter, int targetBand) {
+        // move the the desired band
+        int band = 0;
+        while(band < targetBand && !iter.nextBandDone()) {
+            band++;
+        }
+        
+        if(band != targetBand) {
+            throw new IllegalArgumentException("Band " + targetBand + " not found, max band is " + band);
+        }
     }
 
 }
