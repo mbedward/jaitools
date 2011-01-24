@@ -36,22 +36,18 @@ public class NullErrorReporter implements ParsingErrorReporter {
     
     public NullErrorReporter() {}
 
-    @Override
     public void addError(String errorText) {
         // does nothing
     }
     
-    @Override
     public int getNumErrors() {
         return 0;
     }
     
-    @Override
     public List<String> getErrors() {
         return Collections.emptyList();
     }
     
-    @Override
     public void clear() {
         // does nothing
     }

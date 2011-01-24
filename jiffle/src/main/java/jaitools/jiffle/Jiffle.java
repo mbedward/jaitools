@@ -246,7 +246,7 @@ public class Jiffle {
      * @param script a Jiffle script
      */
     public final void setScript(String script) throws JiffleException {
-        if (script == null || script.trim().isEmpty()) {
+        if (script == null || script.trim().length() == 0) {
             throw new JiffleException("script is empty !");
         }
         
@@ -687,7 +687,7 @@ public class Jiffle {
         sb.append("package ").append(properties.getProperty(RUNTIME_PACKAGE_KEY)).append("; \n\n");
         
         String value = properties.getProperty(IMPORTS_KEY);
-        if (value != null && !value.trim().isEmpty()) {
+        if (value != null && !(value.trim().length() == 0)) {
             String[] importNames = value.split(RUNTIME_IMPORTS_DELIM);
             for (String importName : importNames) {
                 sb.append("import ").append(importName).append("; \n");

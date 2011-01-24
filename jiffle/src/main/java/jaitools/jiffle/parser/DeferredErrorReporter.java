@@ -38,22 +38,18 @@ public class DeferredErrorReporter implements ParsingErrorReporter {
     
     public DeferredErrorReporter() {}
 
-    @Override
     public void addError(String errorText) {
         errors.add(errorText);
     }
     
-    @Override
     public int getNumErrors() {
         return errors.size();
     }
     
-    @Override
     public List<String> getErrors() {
         return Collections.unmodifiableList(errors);
     }
     
-    @Override
     public void clear() {
         errors.clear();
     }
