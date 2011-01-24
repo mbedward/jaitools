@@ -18,48 +18,44 @@
  * 
  */
 
-package jaitools.jiffle.runtime;
+package jaitools.jiffle;
 
+import jaitools.jiffle.runtime.JiffleDirectRuntime;
+import jaitools.jiffle.runtime.JiffleProgressListener;
 import java.awt.image.RenderedImage;
 import java.awt.image.WritableRenderedImage;
-import javax.media.jai.TiledImage;
 
 
 /**
- * Used by CustomBaseClassTest.
+ * A mock base class for direct evaluation used for unit testing.
  * 
  * @author Michael Bedward
  * @since 1.1
  * @source $URL$
  * @version $Id$
  */
-public abstract class MockBaseClass implements JiffleDirectRuntime {
+public abstract class MockDirectBaseClass implements JiffleDirectRuntime {
     
     protected int _band = 0;
-    protected TiledImage img;
-
+    
     public void setDestinationImage(String imageName, WritableRenderedImage image) {
-        img = (TiledImage) image;
+        throw new UnsupportedOperationException("Should not be called");
     }
 
     public void setSourceImage(String imageName, RenderedImage image) {
-        throw new UnsupportedOperationException("This method should not be called");
+        throw new UnsupportedOperationException("Should not be called");
     }
 
     public void evaluateAll(JiffleProgressListener ignored) {
-        for (int y = 0; y < img.getHeight(); y++) {
-            for (int x = 0; x < img.getWidth(); x++) {
-                evaluate(x, y);
-            }
-        }
+        throw new UnsupportedOperationException("Should not be called");
     }
 
     public double readFromImage(String srcImageName, int x, int y, int band) {
-        throw new UnsupportedOperationException("This method should not be called");
+        throw new UnsupportedOperationException("Should not be called");
     }
 
     public void writeToImage(String destImageName, int x, int y, int band, double value) {
-        img.setSample(x, y, band, value);
+        throw new UnsupportedOperationException("Should not be called");
     }
 
 }

@@ -21,6 +21,7 @@
 package jaitools.jiffle;
 
 import jaitools.jiffle.runtime.JiffleDirectRuntime;
+import jaitools.jiffle.runtime.JiffleRuntime;
 import java.util.Map;
 
 import jaitools.CollectionFactory;
@@ -63,6 +64,28 @@ public class RuntimeClassTest {
         assertTrue(runtime instanceof JiffleIndirectRuntime);
     }
     
+    @Test
+    public void customDirectBaseClass() throws Exception {
+        setupSingleDestScript();
+        Object runtime = jiffle.getRuntimeInstance(MockDirectBaseClass.class);
+        assertTrue(runtime instanceof MockDirectBaseClass);
+    }    
+
+    @Test
+    public void customIndirectBaseClass() throws Exception {
+        setupSingleDestScript();
+        Object runtime = jiffle.getRuntimeInstance(MockIndirectBaseClass.class);
+        assertTrue(runtime instanceof MockIndirectBaseClass);
+    }
+    
+    @Test(expected=JiffleException.class)
+    public void invalidBaseClass() throws Exception {
+        class Foo implements JiffleRuntime { }
+        
+        setupSingleDestScript();
+        Object runtime = jiffle.getRuntimeInstance(Foo.class);
+    }
+
     private void setupSingleDestScript() throws JiffleException {
         String script = "dest = 42;";
         jiffle.setScript(script);
@@ -71,4 +94,5 @@ public class RuntimeClassTest {
         jiffle.setImageParams(imageParams);
         jiffle.compile();
     }
+    
 }

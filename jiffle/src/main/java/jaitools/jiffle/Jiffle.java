@@ -440,7 +440,7 @@ public class Jiffle {
      * 
      * @return the runtime object
      */
-    public <T extends JiffleRuntime> T getRuntimeInstance(Class<? extends JiffleRuntime> baseClass) throws JiffleException {
+    public <T extends JiffleRuntime> T getRuntimeInstance(Class<T> baseClass) throws JiffleException {
         EvaluationModel type = EvaluationModel.get(baseClass);
         if (type == null) {
             throw new JiffleException(baseClass.getName() + 
