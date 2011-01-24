@@ -20,6 +20,7 @@
 
 package jaitools.jiffle;
 
+import jaitools.jiffle.runtime.JiffleRuntime;
 import java.io.File;
 import java.net.URL;
 import java.util.Map;
@@ -220,4 +221,17 @@ public class JiffleBasicTest {
         
         assertTrue(jiffle.isCompiled());
     }
+    
+    @Test(expected=JiffleException.class)
+    public void getRuntimeBeforeCompiling() throws Exception {
+        System.out.println("   getRuntimeInstance before compiling");
+        
+        String script = "dest = 42;";
+        jiffle.setScript(script);
+        
+        imageParams.put("dest", Jiffle.ImageRole.DEST);
+        jiffle.setImageParams(imageParams);
+        
+        JiffleRuntime runtime = jiffle.getRuntimeInstance();
+    }    
 }

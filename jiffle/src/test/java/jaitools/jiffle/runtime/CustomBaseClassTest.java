@@ -47,7 +47,7 @@ public class CustomBaseClassTest {
         imageParams.put("out", Jiffle.ImageRole.DEST);
         
         Jiffle jiffle = new Jiffle("out = x() + y()", imageParams);
-        JiffleRuntime jr = jiffle.getRuntimeInstance(true, MockBaseClass.class);
+        JiffleDirectRuntime jr = (JiffleDirectRuntime) jiffle.getRuntimeInstance(MockBaseClass.class);
         
         assertTrue(jr instanceof MockBaseClass);
         

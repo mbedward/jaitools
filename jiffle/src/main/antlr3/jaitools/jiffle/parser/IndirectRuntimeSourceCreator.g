@@ -25,9 +25,10 @@
   * @author Michael Bedward
   */
 
-tree grammar RuntimeSourceCreator;
+tree grammar IndirectRuntimeSourceCreator;
 
 options {
+    superClass = RuntimeSourceCreator;
     tokenVocab = ConvertTernaryExpr;
     ASTLabelType = CommonTree;
 }
@@ -36,78 +37,13 @@ options {
 package jaitools.jiffle.parser;
 
 import java.util.List;
-import java.util.Map;
 import jaitools.CollectionFactory;
-
 }
-
-@members {
-private ParsingErrorReporter errorReporter = null;
-
-public void setErrorReporter( ParsingErrorReporter er ) {
-    errorReporter = er;
-}
-
-public ParsingErrorReporter getErrorReporter() {
-    return errorReporter;
-}
-
-@Override 
-public void emitErrorMessage(String msg) {
-    if (errorReporter != null) {
-        errorReporter.addError(msg);
-    } else {
-        super.emitErrorMessage(msg);
-    }
-}
-
-
-private StringBuilder srcSB;
-
-private FunctionLookup functionLookup = new FunctionLookup();
-
-public String getSource() { return srcSB.toString(); }
-
-// Hide expression handling from grammar statements
-private String getRuntimeExpr(String name, int numArgs) {
-    try {
-        return functionLookup.getRuntimeExpr(name, numArgs);
-    } catch (UndefinedFunctionException ex) {
-        throw new IllegalArgumentException(ex);
-    }
-}
-
-private class LocalVar {
-   String type;
-   String name;
-}
-
-private List<LocalVar> localVars = CollectionFactory.list();
-
-private String makeLocalVar(String type) { 
-    LocalVar var = new LocalVar();
-    var.type = type;
-    var.name = "_local" + localVars.size();
-    localVars.add(var);
-    return var.name;
-}
-
-private class ExprSrcPair {
-    String src;
-    String priorSrc;
-
-    ExprSrcPair(String src, String priorSrc) {
-        this.src = src;
-        this.priorSrc = priorSrc;
-    }
-}
-
-}  // end of @members
 
 start
 @init {
     srcSB = new StringBuilder();
-    srcSB.append("public void evaluate(int _x, int _y) { \n");
+    srcSB.append("public double evaluate(int _x, int _y) { \n");
 }
 @after {
     srcSB.append("} \n");
@@ -128,7 +64,7 @@ image_write returns [String src]
                        } else {
                            $src = "";
                        }
-                       $src = $src + "writeToImage(\"" + $IMAGE_VAR.text + "\", _x, _y, _band, " + $expr.src + ")";
+                       $src = $src + "return " + $expr.src;
                    }
                 ;
 

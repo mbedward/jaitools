@@ -20,6 +20,7 @@
 
 package jaitools.jiffle.runtime;
 
+import jaitools.jiffle.JiffleException;
 import java.awt.image.RenderedImage;
 import java.awt.image.WritableRenderedImage;
 import java.util.Map;
@@ -77,8 +78,8 @@ class JiffleExecutorTask implements Callable<JiffleExecutorResult> {
      * @return a result object with references to the {@code Jiffle} object,
      *         the images, and the job completion status
      */
-    public JiffleExecutorResult call() {
-        JiffleRuntime runtime = jiffle.getRuntimeInstance(true);
+    public JiffleExecutorResult call() throws JiffleException {
+        JiffleDirectRuntime runtime = jiffle.getRuntimeInstance();
         
         Map<String, Jiffle.ImageRole> imageParams = jiffle.getImageParams();
         for (String imageName : images.keySet()) {

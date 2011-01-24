@@ -29,18 +29,15 @@ import javax.media.jai.iterator.RandomIterFactory;
 import javax.media.jai.iterator.WritableRandomIter;
 
 /**
- * The default abstract base class for Jiffle runtime classes.
- * <p>
- * Runtime classes are generated dynamically by the Jiffle compiler. They
- * extend this class and provide the {@code evaluate} method defined by 
- * the {@link JiffleRuntime} interface.
+ * The default abstract base class for runtime classes that implement
+ * direct evaluation.
  * 
  * @author Michael Bedward
  * @since 1.1
  * @source $URL$
  * @version $Id$
  */
-public abstract class AbstractJiffleRuntime implements JiffleRuntime {
+public abstract class AbstractDirectRuntime implements JiffleDirectRuntime {
 
     /* 
      * Note: not using generics here because they are not

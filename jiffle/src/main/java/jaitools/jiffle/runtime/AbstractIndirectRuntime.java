@@ -21,45 +21,37 @@
 package jaitools.jiffle.runtime;
 
 import java.awt.image.RenderedImage;
-import java.awt.image.WritableRenderedImage;
-import javax.media.jai.TiledImage;
-
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Used by CustomBaseClassTest.
- * 
+ * The default abstract base class for runtime classes that implement
+ * indirect evaluation.
+ *
  * @author Michael Bedward
  * @since 1.1
- * @source $URL$
- * @version $Id$
+ * @source $URL: https://jai-tools.googlecode.com/svn/trunk/jiffle/src/main/java/jaitools/jiffle/runtime/JiffleRuntime.java $
+ * @version $Id: JiffleDirectRuntime.java 1312 2011-01-21 04:21:01Z michael.bedward $
  */
-public abstract class MockBaseClass implements JiffleDirectRuntime {
+public abstract class AbstractIndirectRuntime implements JiffleIndirectRuntime {
     
-    protected int _band = 0;
-    protected TiledImage img;
+    /* 
+     * Note: not using generics here because they are not
+     * supported by the Janino compiler.
+     */
+    List sourceImageNames = new ArrayList();
+    String destImageName;
 
-    public void setDestinationImage(String imageName, WritableRenderedImage image) {
-        img = (TiledImage) image;
+    public void setDestinationImage(String imageName) {
+        destImageName = imageName;
     }
 
     public void setSourceImage(String imageName, RenderedImage image) {
-        throw new UnsupportedOperationException("This method should not be called");
-    }
-
-    public void evaluateAll(JiffleProgressListener ignored) {
-        for (int y = 0; y < img.getHeight(); y++) {
-            for (int x = 0; x < img.getWidth(); x++) {
-                evaluate(x, y);
-            }
-        }
+        sourceImageNames.add(imageName);
     }
 
     public double readFromImage(String srcImageName, int x, int y, int band) {
-        throw new UnsupportedOperationException("This method should not be called");
-    }
-
-    public void writeToImage(String destImageName, int x, int y, int band, double value) {
-        img.setSample(x, y, band, value);
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 }

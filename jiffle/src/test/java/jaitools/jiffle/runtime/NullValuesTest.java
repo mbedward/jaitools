@@ -92,7 +92,7 @@ public class NullValuesTest {
         imgParams.put(OUT_IMAGE, Jiffle.ImageRole.DEST);
         
         Jiffle jiffle = new Jiffle(script, imgParams);
-        JiffleRuntime jr = jiffle.getRuntimeInstance();
+        JiffleDirectRuntime jr = (JiffleDirectRuntime) jiffle.getRuntimeInstance();
         
         jr.setSourceImage(IN_IMAGE1, inImg1);
         jr.setSourceImage(IN_IMAGE2, inImg2);

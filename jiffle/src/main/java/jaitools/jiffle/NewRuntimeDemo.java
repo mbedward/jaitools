@@ -6,7 +6,7 @@ import jaitools.jiffle.runtime.JiffleEvent;
 import jaitools.jiffle.runtime.JiffleEventListener;
 import jaitools.jiffle.runtime.JiffleExecutor;
 import jaitools.jiffle.runtime.JiffleExecutorResult;
-import jaitools.jiffle.runtime.JiffleRuntime;
+import jaitools.jiffle.runtime.JiffleDirectRuntime;
 import jaitools.jiffle.runtime.NullProgressListener;
 import jaitools.swing.ImageFrame;
 import java.awt.image.RenderedImage;
@@ -44,13 +44,13 @@ public class NewRuntimeDemo implements JiffleEventListener {
         
         Jiffle jiffle = new Jiffle(script, params);
         
-        JiffleRuntime runtime = jiffle.getRuntimeInstance();
+        JiffleDirectRuntime runtime = jiffle.getRuntimeInstance();
         WritableRenderedImage destImg = ImageUtils.createConstantImage(500, 500, 0d);
         runtime.setDestinationImage("dest", destImg);
         runtime.evaluateAll(new NullProgressListener());
         
         displayImage(destImg);
-        System.out.println(jiffle.getRuntimeSource(true));
+        System.out.println(jiffle.getRuntimeSource(Jiffle.EvaluationModel.DIRECT, true));
     }
     
     private void executorDemo() throws Exception {
@@ -58,6 +58,7 @@ public class NewRuntimeDemo implements JiffleEventListener {
         params.put("dest", Jiffle.ImageRole.DEST);
         
         Jiffle jiffle = new Jiffle(script, params);
+        System.out.println( jiffle.getRuntimeSource(Jiffle.EvaluationModel.DIRECT, true));
         
         Map<String, RenderedImage> images = CollectionFactory.map();
         images.put("dest", ImageUtils.createConstantImage(500, 500, Double.valueOf(0)));
@@ -70,7 +71,6 @@ public class NewRuntimeDemo implements JiffleEventListener {
 
     public void onCompletionEvent(JiffleEvent ev) {
         JiffleExecutorResult result = ev.getResult();
-        System.out.println( result.getJiffle().getRuntimeSource(true) );
         
         RenderedImage img = result.getImages().get("dest");
         displayImage(img);

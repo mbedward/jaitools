@@ -68,7 +68,7 @@ public abstract class StatementsTestBase {
         imageParams.put("src", Jiffle.ImageRole.SOURCE);
         
         Jiffle jiffle = new Jiffle(script, imageParams);
-        JiffleRuntime jr = jiffle.getRuntimeInstance();
+        JiffleDirectRuntime jr = (JiffleDirectRuntime) jiffle.getRuntimeInstance();
         
         TiledImage srcImg = createSequenceImage();
         TiledImage destImg = ImageUtils.createConstantImage(WIDTH, WIDTH, 0.0);

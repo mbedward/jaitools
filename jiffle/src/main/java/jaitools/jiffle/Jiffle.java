@@ -45,14 +45,17 @@ import jaitools.CollectionFactory;
 import jaitools.jiffle.parser.CompilerExitException;
 import jaitools.jiffle.parser.ConvertTernaryExpr;
 import jaitools.jiffle.parser.DeferredErrorReporter;
+import jaitools.jiffle.parser.DirectRuntimeSourceCreator;
 import jaitools.jiffle.parser.FunctionValidator;
+import jaitools.jiffle.parser.IndirectRuntimeSourceCreator;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
 import jaitools.jiffle.parser.ParsingErrorReporter;
 import jaitools.jiffle.parser.RuntimeSourceCreator;
 import jaitools.jiffle.parser.VarClassifier;
 import jaitools.jiffle.parser.VarTransformer;
-import jaitools.jiffle.runtime.AbstractJiffleRuntime;
+import jaitools.jiffle.runtime.JiffleDirectRuntime;
+import jaitools.jiffle.runtime.JiffleIndirectRuntime;
 import jaitools.jiffle.runtime.JiffleRuntime;
 
 /**
@@ -67,6 +70,35 @@ import jaitools.jiffle.runtime.JiffleRuntime;
  */
 public class Jiffle {
     
+    /** Constants for runtime classes. */
+    public static enum EvaluationModel {
+        /** The runtime class implements {@link JiffleDirectRuntime} */
+        DIRECT(JiffleDirectRuntime.class),
+        
+        /** The runtime class implements {@link JiffleIndirectRuntime} */
+        INDIRECT(JiffleIndirectRuntime.class);
+        
+        private Class<? extends JiffleRuntime> runtimeClass;
+        
+        private EvaluationModel(Class<? extends JiffleRuntime> clazz) {
+            this.runtimeClass = clazz;
+        }
+
+        public Class<? extends JiffleRuntime> getRuntimeClass() {
+            return runtimeClass;
+        }
+        
+        public static EvaluationModel get(Class<? extends JiffleRuntime> clazz) {
+            for (EvaluationModel t : EvaluationModel.values()) {
+                if (t.runtimeClass.isAssignableFrom(clazz)) {
+                    return t;
+                }
+            }
+            
+            return null;
+        }
+    }
+    
     private static int refCount = 0;
     
     private static final String PROPERTIES_FILE = "META-INF/jiffle.properties";
@@ -75,14 +107,20 @@ public class Jiffle {
     
     private static final String NAME_KEY = "root.name";
     private static final String RUNTIME_PACKAGE_KEY = "runtime.package";
-    private static final String RUNTIME_CLASS_KEY = "runtime.class";
-    private static final String RUNTIME_BASE_CLASS_KEY = "runtime.base.class";
-    private static final String RUNTIME_IMPORTS_KEY = "runtime.imports";
+    
+    private static final String DIRECT_CLASS_KEY = "direct.class";
+    private static final String DIRECT_BASE_CLASS_KEY = "direct.base.class";
+    
+    private static final String INDIRECT_CLASS_KEY = "indirect.class";
+    private static final String INDIRECT_BASE_CLASS_KEY = "indirect.base.class";
+    
+    private static final String IMPORTS_KEY = "runtime.imports";
     
     /** Delimiter used to separate multiple import entries */
     private static final String RUNTIME_IMPORTS_DELIM = ";";
     
-    private static final Class<? extends JiffleRuntime> DEFAULT_BASE_CLASS;
+    private static final Class<? extends JiffleRuntime> DEFAULT_DIRECT_BASE_CLASS;
+    private static final Class<? extends JiffleRuntime> DEFAULT_INDIRECT_BASE_CLASS;
     
     static {
         InputStream in = null;
@@ -90,10 +128,15 @@ public class Jiffle {
             in = Jiffle.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE);
             properties.load(in);
             
-            String baseClassName = properties.getProperty(RUNTIME_PACKAGE_KEY) + "." +
-                    properties.getProperty(RUNTIME_BASE_CLASS_KEY);
+            String className = properties.getProperty(RUNTIME_PACKAGE_KEY) + "." +
+                    properties.getProperty(DIRECT_BASE_CLASS_KEY);
             
-            DEFAULT_BASE_CLASS = (Class<? extends JiffleRuntime>) Class.forName(baseClassName);
+            DEFAULT_DIRECT_BASE_CLASS = (Class<? extends JiffleRuntime>) Class.forName(className);
+            
+            className = properties.getProperty(RUNTIME_PACKAGE_KEY) + "." +
+                    properties.getProperty(INDIRECT_BASE_CLASS_KEY);
+            
+            DEFAULT_INDIRECT_BASE_CLASS = (Class<? extends JiffleRuntime>) Class.forName(className);
             
         } catch (Exception ex) {
             throw new IllegalArgumentException("Internal compiler error", ex);
@@ -130,11 +173,6 @@ public class Jiffle {
     private CommonTree finalAST;
     private CommonTokenStream tokens;
     private ParsingErrorReporter errorReporter;
-    
-    private Class<? extends JiffleRuntime> runtimeBaseClass;
-    private JiffleRuntime runtimeInstance;
-    private String runtimeSource;
-    private boolean sourceIncludesScript;
     
     private Map<String, ImageRole> imageParams;
     private Map<String, ErrorCode> errors;
@@ -347,88 +385,69 @@ public class Jiffle {
     }
     
     /**
-     * Gets the runtime object for this script. 
+     * Creates an instance of the default runtime class. 
      * <p>
-     * The runtime object is an instance of {@link JiffleRuntime}.
-     * It is created on the first call to any one of the {@code getRuntimeInstance}
-     * methods. Subsequent calls to this function will return
-     * the same instance.
+     * The default runtime class implements {@link JiffleDirectRuntime} and
+     * extends an abstract base class provided by the Jiffle compiler. Objects
+     * of this class evaluate the Jiffle script and write results directly to
+     * the destination image(s). Client code can call either of the methods:
+     * <ul>
+     * <li>{@code evaluate(int x, int y)}
+     * <li>{@code evaluateAll(JiffleProgressListener listener}
+     * </ul>
+     * The {@code Jiffle} object must be compiled before calling this method.
      * 
      * @return the runtime object
-     * 
-     * @see JiffleRuntime
-     * @see jaitools.jiffle.runtime.AbstractJiffleRuntime
      */
-    public JiffleRuntime getRuntimeInstance() {
-        return getRuntimeInstance(false);
+    public JiffleDirectRuntime getRuntimeInstance() throws JiffleException {
+        return (JiffleDirectRuntime) createRuntimeInstance(
+                EvaluationModel.DIRECT, 
+                DEFAULT_DIRECT_BASE_CLASS);
     }
-
+    
     /**
-     * Gets the runtime object for this script. 
+     * Creates a runtime object based using the class specified by {@code type}.
      * <p>
-     * The runtime object is an instance of {@link JiffleRuntime}.
-     * It is created on the first call to any one of the {@code getRuntimeInstance}
-     * methods. Subsequent calls to this function will return
-     * the same instance unless {@code recreate} is {@code true}.
-     * 
-     * @param recreate when {@code true} a new runtime object will be
-     *        created and returned; when {@code false} a previously
-     *        created object will be returned if one exists
+     * The {@code Jiffle} object must be compiled before calling this method.
      * 
      * @return the runtime object
-     * 
-     * @see JiffleRuntime
-     * @see jaitools.jiffle.runtime.AbstractJiffleRuntime
      */
-    public JiffleRuntime getRuntimeInstance(boolean recreate) {
-        if (runtimeInstance == null || recreate) {
-            try {
-                createRuntimeInstance();
-            } catch (Exception ex) {
-                throw new IllegalStateException(ex);
-            }
+    public JiffleRuntime getRuntimeInstance(EvaluationModel type) throws JiffleException {
+        switch (type) {
+            case DIRECT:
+                return createRuntimeInstance(type, DEFAULT_DIRECT_BASE_CLASS);
+                
+            case INDIRECT:
+                return createRuntimeInstance(type, DEFAULT_INDIRECT_BASE_CLASS);
+                
+            default:
+                throw new IllegalArgumentException("Invalid runtime class type: " + type);
         }
-        
-        return runtimeInstance;
     }
     
     /**
      * Gets the runtime object for this script. 
      * <p>
      * The runtime object is an instance of {@link JiffleRuntime}. By default
-     * it extends an abstract base class included with JAI-tools that implements
-     * all methods other than {@link JiffleRuntime#evaluate(int, int)}. 
-     * <p>
-     * An alternative base class can be specified with this method. 
+     * it extends an abstract base class included with JAI-tools. An 
+     * alternative base class can be specified with this method. 
      * 
      * @param recreate when {@code true} a new runtime object will be
      *        created and returned; when {@code false} a previously
      *        created object will be returned if one exists
      * 
-     * @param baseClass an abstract base class that implements all {@link JiffleRuntime}
-     *        methods other than {@link JiffleRuntime#evaluate(int, int)}; 
-     *        or {@code null} to use the default base class
+     * @param baseClass the base class that the runtime class will extend
      * 
      * @return the runtime object
-     * 
-     * @see JiffleRuntime
-     * @see jaitools.jiffle.runtime.AbstractJiffleRuntime
      */
-    public JiffleRuntime getRuntimeInstance(boolean recreate, Class<? extends JiffleRuntime> baseClass) {
-        runtimeBaseClass = baseClass == null ? DEFAULT_BASE_CLASS : baseClass;
-        
-        // delete any existing runtime source to be safe
-        runtimeSource = null;
-        
-        if (runtimeInstance == null || recreate) {
-            try {
-                createRuntimeInstance();
-            } catch (Exception ex) {
-                throw new IllegalStateException(ex);
-            }
+    public <T extends JiffleRuntime> T getRuntimeInstance(Class<? extends JiffleRuntime> baseClass) throws JiffleException {
+        EvaluationModel type = EvaluationModel.get(baseClass);
+        if (type == null) {
+            throw new JiffleException(baseClass.getName() + 
+                    " does not implement a required Jiffle runtime interface");
         }
         
-        return runtimeInstance;
+        return (T) createRuntimeInstance(type, baseClass);
     }
     
     /**
@@ -439,16 +458,19 @@ public class Jiffle {
      * 
      * @return source for the runtime class
      */
-    public String getRuntimeSource(boolean scriptInDocs) {
-        if (runtimeSource == null || scriptInDocs != sourceIncludesScript) {
-            try {
-                createRuntimeSource(scriptInDocs);
-            } catch (Exception ex) {
-                throw new IllegalStateException(ex);
-            }
-        }
+    public String getRuntimeSource(EvaluationModel type, boolean scriptInDocs) 
+            throws JiffleException {
         
-        return runtimeSource;
+        Class<? extends JiffleRuntime> baseClass = null;
+        switch (type) {
+            case DIRECT:
+                baseClass = DEFAULT_DIRECT_BASE_CLASS;
+                break;
+                
+            case INDIRECT:
+                baseClass = DEFAULT_INDIRECT_BASE_CLASS;
+        }
+        return createRuntimeSource(type, baseClass, scriptInDocs);
     }
 
     /**
@@ -456,9 +478,7 @@ public class Jiffle {
      */
     private void init() {
         Jiffle.refCount++ ;
-        this.name = properties.getProperty(NAME_KEY) + refCount;
-
-        this.runtimeBaseClass = DEFAULT_BASE_CLASS;
+        name = properties.getProperty(NAME_KEY) + refCount;
         imageParams = CollectionFactory.map();
     }
     
@@ -478,10 +498,6 @@ public class Jiffle {
     private void clearRuntimeObjects() {
         errorReporter = null;
         errors = null;
-        runtimeBaseClass = DEFAULT_BASE_CLASS;
-        runtimeSource = null;
-        sourceIncludesScript = false;
-        runtimeInstance = null;
     }
     
     /**
@@ -618,19 +634,38 @@ public class Jiffle {
      * 
      * @throws Exception 
      */
-    private void createRuntimeInstance() throws JiffleException {
-        if (runtimeSource == null) {
-            createRuntimeSource(false);
+    private JiffleRuntime createRuntimeInstance(EvaluationModel type, 
+            Class<? extends JiffleRuntime> baseClass) throws JiffleException {
+        if (!isCompiled()) {
+            throw new JiffleException("The script has not been compiled");
         }
-        
+
+        String runtimeSource = createRuntimeSource(type, baseClass, false);
+
         try {
-        SimpleCompiler compiler = new SimpleCompiler();
-        compiler.cook(runtimeSource);
-        Class<?> clazz = compiler.getClassLoader().loadClass(
-                properties.getProperty(RUNTIME_PACKAGE_KEY) + "." +
-                properties.getProperty(RUNTIME_CLASS_KEY));
-        
-        runtimeInstance = (JiffleRuntime) clazz.newInstance();
+            SimpleCompiler compiler = new SimpleCompiler();
+            compiler.cook(runtimeSource);
+            
+            StringBuilder sb = new StringBuilder();
+            sb.append(properties.getProperty(RUNTIME_PACKAGE_KEY)).append(".");
+            
+            switch (type) {
+                case DIRECT:
+                    sb.append(properties.getProperty(DIRECT_CLASS_KEY));
+                    break;
+                    
+                case INDIRECT:
+                    sb.append(properties.getProperty(INDIRECT_CLASS_KEY));
+                    break;
+                    
+                default:
+                    throw new IllegalArgumentException("Internal compiler error");
+            }
+            
+            Class<?> clazz = compiler.getClassLoader().loadClass(sb.toString());
+
+            return (JiffleRuntime) clazz.newInstance();
+
         } catch (Exception ex) {
             throw new JiffleException("Janino compiler failed", ex);
         }
@@ -644,12 +679,14 @@ public class Jiffle {
      * 
      * @throws JiffleException if an error occurs generating the source 
      */
-    private void createRuntimeSource(boolean scriptInDocs) throws JiffleException {
+    private String createRuntimeSource(EvaluationModel type, 
+            Class<? extends JiffleRuntime> baseClass, boolean scriptInDocs) throws JiffleException {
+        
         StringBuilder sb  = new StringBuilder();
 
         sb.append("package ").append(properties.getProperty(RUNTIME_PACKAGE_KEY)).append("; \n\n");
         
-        String value = properties.getProperty(RUNTIME_IMPORTS_KEY);
+        String value = properties.getProperty(IMPORTS_KEY);
         if (value != null && !value.trim().isEmpty()) {
             String[] importNames = value.split(RUNTIME_IMPORTS_DELIM);
             for (String importName : importNames) {
@@ -662,13 +699,26 @@ public class Jiffle {
             sb.append(formatAsJavadoc(theScript));
         }
         
-        sb.append("public class ").append(properties.getProperty(RUNTIME_CLASS_KEY));
-        sb.append(" extends ").append(runtimeBaseClass.getName()).append(" { \n");
-        sb.append(formatSource(astToJava(), 4));
+        sb.append("public class ");
+        
+        switch (type) {
+            case DIRECT:
+                sb.append(properties.getProperty(DIRECT_CLASS_KEY));
+                break;
+                
+            case INDIRECT:
+                sb.append(properties.getProperty(INDIRECT_CLASS_KEY));
+                break;
+                
+            default:
+                throw new IllegalArgumentException("Internal compiler error");
+        }
+        
+        sb.append(" extends ").append(baseClass.getName()).append(" { \n");
+        sb.append(formatSource(astToJava(type), 4));
         sb.append("} \n");
         
-        runtimeSource = sb.toString();
-        sourceIncludesScript = scriptInDocs;
+        return sb.toString();
     }
     
     /**
@@ -678,16 +728,29 @@ public class Jiffle {
      * 
      * @throws JiffleException if an error occurs parsing the AST
      */
-    private String astToJava() throws JiffleException {
+    private String astToJava(EvaluationModel type) throws JiffleException {
+        BufferedTreeNodeStream nodes = new BufferedTreeNodeStream(finalAST);
+        nodes.setTokenStream(tokens);
         ParsingErrorReporter er = new DeferredErrorReporter();
+        RuntimeSourceCreator creator = null;
+        
+        switch (type) {
+            case DIRECT:
+                creator = new DirectRuntimeSourceCreator(nodes);
+                break;
+                
+            case INDIRECT:
+                creator = new IndirectRuntimeSourceCreator(nodes);
+                break;
+                
+            default:
+                throw new IllegalArgumentException("Internal compiler error");
+        }
+        
         try {
-            BufferedTreeNodeStream nodes = new BufferedTreeNodeStream(finalAST);
-            nodes.setTokenStream(tokens);
-            RuntimeSourceCreator rsc = new RuntimeSourceCreator(nodes);
-            rsc.setErrorReporter(er);
-
-            rsc.start();
-            return rsc.getSource();
+            creator.setErrorReporter(er);
+            creator.start();
+            return creator.getSource();
             
         } catch (RecognitionException ex) {
             throw new JiffleException(er.getErrors());

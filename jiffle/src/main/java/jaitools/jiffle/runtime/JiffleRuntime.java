@@ -20,11 +20,8 @@
 
 package jaitools.jiffle.runtime;
 
-import java.awt.image.RenderedImage;
-import java.awt.image.WritableRenderedImage;
-
 /**
- * Defines the methods in Jiffle runtime classes.
+ * Marker interface to identify Jiffle runtime classes.
  *
  * @author Michael Bedward
  * @since 1.1
@@ -32,61 +29,5 @@ import java.awt.image.WritableRenderedImage;
  * @version $Id$
  */
 public interface JiffleRuntime {
-    
-    /**
-     * Associates a name, as used in the Jiffle script, with a
-     * destination image.
-     * 
-     * @param imageName image name as used in the Jiffle script
-     * @param image writable image
-     */
-    void setDestinationImage(String imageName, WritableRenderedImage image);
-    
-    /**
-     * Associates a name, as used in the Jiffle script, with a
-     * source image.
-     * 
-     * @param imageName image name as used in the Jiffle script
-     * @param image writable image
-     */
-    void setSourceImage(String imageName, RenderedImage image);
-    
-    /**
-     * Evaluates the script for the given image location and writes
-     * the result to the destination image(s).
-     * 
-     * @param x destination X ordinate
-     * @param y destination Y ordinate
-     */
-    void evaluate(int x, int y);
-
-    /**
-     * Evaluates the script for all locations in the destination image(s).
-     * 
-     * @param pl an optional progress listener (may be {@code null}
-     */
-    void evaluateAll(JiffleProgressListener pl);
-    
-    /**
-     * Gets a value from a source image as a double.
-     * 
-     * @param srcImageName the source image
-     * @param x source X ordinate
-     * @param y source Y ordinate
-     * @param band source band
-     * @return image value
-     */
-    double readFromImage(String srcImageName, int x, int y, int band);
-    
-    /**
-     * Writes a value to a destination image.
-     * 
-     * @param destImageName
-     * @param x destination X ordinate
-     * @param y destination Y ordinate
-     * @param band destination band
-     * @param value the value to write
-     */
-    void writeToImage(String destImageName, int x, int y, int band, double value);
 
 }
