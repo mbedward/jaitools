@@ -37,6 +37,7 @@ options {
     tokenVocab = Jiffle;
     ASTLabelType = CommonTree;
     output = AST;
+    superClass = ErrorHandlingTreeParser;
 }
 
 tokens {
@@ -71,7 +72,16 @@ start
         throw new IllegalStateException("Internal compiler error: image params not set");
     }
 }
-                : statement+ 
+                : (var_init_block)? statement+ 
+                ;
+
+var_init_block  : ^(VAR_INIT_BLOCK var_init_list)
+                ;
+
+var_init_list   : ^(VAR_INIT_LIST (var_init)*)
+                ;
+
+var_init        : ^(VAR_INIT ID expr)
                 ;
 
 statement       : expr

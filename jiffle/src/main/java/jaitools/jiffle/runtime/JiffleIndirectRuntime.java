@@ -27,8 +27,8 @@ import java.awt.image.RenderedImage;
  *
  * @author Michael Bedward
  * @since 1.1
- * @source $URL: https://jai-tools.googlecode.com/svn/trunk/jiffle/src/main/java/jaitools/jiffle/runtime/JiffleRuntime.java $
- * @version $Id: JiffleDirectRuntime.java 1312 2011-01-21 04:21:01Z michael.bedward $
+ * @source $URL$
+ * @version $Id$
  */
 public interface JiffleIndirectRuntime extends JiffleRuntime {
     /**

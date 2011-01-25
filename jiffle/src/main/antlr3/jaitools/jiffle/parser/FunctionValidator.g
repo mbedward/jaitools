@@ -29,6 +29,7 @@ tree grammar FunctionValidator;
 options {
     tokenVocab = Jiffle;
     ASTLabelType = CommonTree;
+    superClass = ErrorHandlingTreeParser;
 }
 
 @header {
@@ -55,7 +56,16 @@ public boolean hasError() {
 
 }
 
-start           : statement+ 
+start           : (var_init_block)? statement+ 
+                ;
+
+var_init_block  : ^(VAR_INIT_BLOCK var_init_list)
+                ;
+
+var_init_list   : ^(VAR_INIT_LIST (var_init)*)
+                ;
+
+var_init        : ^(VAR_INIT ID expr)
                 ;
 
 statement       : expr

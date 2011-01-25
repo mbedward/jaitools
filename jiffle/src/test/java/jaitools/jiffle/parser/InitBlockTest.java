@@ -5,6 +5,7 @@
 
 package jaitools.jiffle.parser;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**

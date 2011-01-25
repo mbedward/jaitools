@@ -25,7 +25,6 @@ import java.util.List;
 import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.RecognizerSharedState;
 import org.antlr.runtime.tree.TreeNodeStream;
-import org.antlr.runtime.tree.TreeParser;
 
 import jaitools.CollectionFactory;
 
@@ -41,11 +40,10 @@ import jaitools.CollectionFactory;
  * @source $URL$
  * @version $Id$
  */
-public abstract class RuntimeSourceCreator extends TreeParser {
+public abstract class RuntimeSourceCreator extends ErrorHandlingTreeParser {
 
     protected StringBuilder srcSB;
     protected FunctionLookup functionLookup;
-    protected ParsingErrorReporter errorReporter;
 
     protected class LocalVar {
         String type;
@@ -73,23 +71,6 @@ public abstract class RuntimeSourceCreator extends TreeParser {
     }
     
     public abstract void start() throws RecognitionException;
-
-    public void setErrorReporter(ParsingErrorReporter er) {
-        errorReporter = er;
-    }
-
-    public ParsingErrorReporter getErrorReporter() {
-        return errorReporter;
-    }
-
-    @Override
-    public void emitErrorMessage(String msg) {
-        if (errorReporter != null) {
-            errorReporter.addError(msg);
-        } else {
-            super.emitErrorMessage(msg);
-        }
-    }
 
     public String getSource() {
         return srcSB.toString();

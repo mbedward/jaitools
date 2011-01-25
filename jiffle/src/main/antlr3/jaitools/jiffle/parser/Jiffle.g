@@ -37,6 +37,9 @@ tokens {
     REL_NBR_REF;
     POSTFIX;
     PREFIX;
+    VAR_INIT;
+    VAR_INIT_BLOCK;
+    VAR_INIT_LIST;
 }
 
 @header {
@@ -70,21 +73,21 @@ protected Object recoverFromMismatchedToken(IntStream input, int ttype, BitSet f
 }
 
 
-prog		: (init_block)? statement+ EOF
+prog		: (var_init_block)? statement+ EOF
                 ;
                 catch [UnexpectedInputException ex] {
                     throw new JiffleParserException(ex);
                 }
 
-init_block      : INIT LCURLY var_init_list RCURLY (eos)?
+var_init_block  : INIT LCURLY var_init_list RCURLY eos? -> ^(VAR_INIT_BLOCK var_init_list)
                 ;
 
-var_init_list   : (var_init (',' var_init)* )? 
+var_init_list   : (var_init (',' var_init)* )? -> ^(VAR_INIT_LIST var_init*)
                 ;
 
-var_init        : ID (EQ expr)? eos
+var_init        : ID (EQ expr)? eos -> ^(VAR_INIT ID expr)
                 ;
-                
+
 statement	: expr eos!
 		;
 		

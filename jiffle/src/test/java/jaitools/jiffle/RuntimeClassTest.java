@@ -36,8 +36,8 @@ import static org.junit.Assert.*;
  * 
  * @author Michael Bedward
  * @since 1.0
- * @source $URL: https://jai-tools.googlecode.com/svn/trunk/jiffle/src/test/java/jaitools/jiffle/JiffleBasicTest.java $
- * @version $Id: JiffleBasicTest.java 1309 2011-01-20 07:32:52Z michael.bedward $
+ * @source $URL$
+ * @version $Id$
  */
 public class RuntimeClassTest {
     

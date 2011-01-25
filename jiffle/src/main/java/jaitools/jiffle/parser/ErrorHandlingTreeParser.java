@@ -18,40 +18,43 @@
  * 
  */
 
-package jaitools.jiffle.runtime;
+package jaitools.jiffle.parser;
 
-import java.awt.image.RenderedImage;
-import java.util.ArrayList;
-import java.util.List;
+import org.antlr.runtime.RecognizerSharedState;
+import org.antlr.runtime.tree.TreeNodeStream;
+import org.antlr.runtime.tree.TreeParser;
 
 /**
- * The default abstract base class for runtime classes that implement
- * indirect evaluation.
- *
+ * Provides error handling methods for Jiffle tree parsers.
+ * 
  * @author Michael Bedward
  * @since 1.1
  * @source $URL$
  * @version $Id$
  */
-public abstract class AbstractIndirectRuntime implements JiffleIndirectRuntime {
+public abstract class ErrorHandlingTreeParser extends TreeParser {
+
+    protected ParsingErrorReporter errorReporter;
     
-    /* 
-     * Note: not using generics here because they are not
-     * supported by the Janino compiler.
-     */
-    List sourceImageNames = new ArrayList();
-    String destImageName;
-
-    public void setDestinationImage(String imageName) {
-        destImageName = imageName;
+    public ErrorHandlingTreeParser(TreeNodeStream input, RecognizerSharedState state) {
+        super(input, state);
     }
 
-    public void setSourceImage(String imageName, RenderedImage image) {
-        sourceImageNames.add(imageName);
+    @Override
+    public void emitErrorMessage(String msg) {
+        if (errorReporter != null) {
+            errorReporter.addError(msg);
+        } else {
+            super.emitErrorMessage(msg);
+        }
     }
 
-    public double readFromImage(String srcImageName, int x, int y, int band) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public ParsingErrorReporter getErrorReporter() {
+        return errorReporter;
+    }
+
+    public void setErrorReporter(ParsingErrorReporter er) {
+        errorReporter = er;
     }
 
 }

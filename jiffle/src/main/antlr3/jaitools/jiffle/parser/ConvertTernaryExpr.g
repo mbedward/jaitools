@@ -30,6 +30,7 @@ options {
     tokenVocab = VarTransformer;
     ASTLabelType = CommonTree;
     output = AST;
+    superClass = ErrorHandlingTreeParser;
 }
 
 @header {
@@ -42,28 +43,19 @@ import jaitools.CollectionFactory;
 }
 
 @members {
-private ParsingErrorReporter errorReporter = null;
 
-public void setErrorReporter( ParsingErrorReporter er ) {
-    errorReporter = er;
 }
 
-public ParsingErrorReporter getErrorReporter() {
-    return errorReporter;
-}
+start           : (var_init_block)? statement+ 
+                ;
 
-@Override 
-public void emitErrorMessage(String msg) {
-    if (errorReporter != null) {
-        errorReporter.addError(msg);
-    } else {
-        super.emitErrorMessage(msg);
-    }
-}
+var_init_block  : ^(VAR_INIT_BLOCK var_init_list)
+                ;
 
-}  // end of @members
+var_init_list   : ^(VAR_INIT_LIST (var_init)*)
+                ;
 
-start           : statement+
+var_init        : ^(VAR_INIT ID expr)
                 ;
 
 statement       : image_write

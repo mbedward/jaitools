@@ -32,6 +32,7 @@ tree grammar VarClassifier;
 options {
     tokenVocab = Jiffle;
     ASTLabelType = CommonTree;
+    superClass = ErrorHandlingTreeParser;
 }
 
 @header {
@@ -45,25 +46,6 @@ import jaitools.jiffle.Jiffle;
 }
 
 @members {
-
-private ParsingErrorReporter errorReporter = null;
-
-public void setErrorReporter( ParsingErrorReporter er ) {
-    errorReporter = er;
-}
-
-public ParsingErrorReporter getErrorReporter() {
-    return errorReporter;
-}
-
-@Override 
-public void emitErrorMessage(String msg) {
-    if (errorReporter != null) {
-        errorReporter.addError(msg);
-    } else {
-        super.emitErrorMessage(msg);
-    }
-}
 
 private Map<String, Jiffle.ImageRole> imageParams;
 
@@ -120,7 +102,16 @@ start
 @after {
     postCheck();
 }
-                : statement+ 
+                : (var_init_block)? statement+ 
+                ;
+
+var_init_block  : ^(VAR_INIT_BLOCK var_init_list)
+                ;
+
+var_init_list   : ^(VAR_INIT_LIST (var_init)*)
+                ;
+
+var_init        : ^(VAR_INIT ID expr)
                 ;
 
 statement       : assignment

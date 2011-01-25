@@ -48,7 +48,16 @@ start
 @after {
     srcSB.append("} \n");
 }
-                : (statement { srcSB.append($statement.src).append(";\n"); } )+
+                : (var_init_block)? (statement { srcSB.append($statement.src).append(";\n"); } )+
+                ;
+
+var_init_block  : ^(VAR_INIT_BLOCK var_init_list)
+                ;
+
+var_init_list   : ^(VAR_INIT_LIST (var_init)*)
+                ;
+
+var_init        : ^(VAR_INIT ID expr)
                 ;
 
 statement returns [String src]
