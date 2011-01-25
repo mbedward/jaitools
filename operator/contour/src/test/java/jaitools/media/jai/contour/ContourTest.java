@@ -258,7 +258,6 @@ public class ContourTest {
         if (args.containsKey("levels")) pb.setParameter("levels", (Collection)args.get("levels"));
         if (args.containsKey("interval")) pb.setParameter("interval", (Number)args.get("interval"));
         if (args.containsKey("simplify")) pb.setParameter("simplify", (Boolean)args.get("simplify"));
-        if (args.containsKey("mergeTiles")) pb.setParameter("mergeTiles", (Boolean)args.get("mergeTiles"));
         if (args.containsKey("smooth")) pb.setParameter("smooth", (Boolean)args.get("smooth"));
         
         RenderedOp dest = JAI.create("Contour", pb);
