@@ -89,13 +89,6 @@ public class ContourOpImage extends AttributeOpImage {
     /** Whether to simplify contour lines by removing coincident vertices */
     private final boolean simplify;
     
-    /** 
-     * Whether to merge contour lines across tile boundaries
-     * during the tracing process. This can be very slow for
-     * dense contours and large images.
-     */
-    private boolean mergeTiles;
-    
     /** Whether to apply Bezier smoothing to the contour lines */
     private final boolean smooth;
 
@@ -140,9 +133,6 @@ public class ContourOpImage extends AttributeOpImage {
      * @param simplify whether to simplify contour lines by removing
      *        colinear vertices
      * 
-     * @param mergeTiles whether to merge contour lines across source
-     *        image tile boundaries (can be very slow for dense contours)
-     * 
      * @param smooth whether contour lines should be smoothed using
      *        Bezier interpolation
      */
@@ -153,7 +143,6 @@ public class ContourOpImage extends AttributeOpImage {
             Double interval,
             Collection<? extends Number> noDataValues,
             boolean simplify,
-            boolean mergeTiles,
             boolean smooth) {
                 
         super(source, roi);
@@ -184,7 +173,6 @@ public class ContourOpImage extends AttributeOpImage {
         }
         
         this.simplify = simplify;
-        this.mergeTiles = mergeTiles;
         this.smooth = smooth;
 
         // Set the precision to use for Geometry operations
@@ -227,8 +215,7 @@ public class ContourOpImage extends AttributeOpImage {
     
 
     /**
-     * Controls contour generation. Each tile of the source image is processed
-     * in turn. The resulting contour lines are then merged.
+     * Controls contour generation.
      * 
      * @return generated contours
      */
@@ -278,7 +265,7 @@ public class ContourOpImage extends AttributeOpImage {
 
     
     /**
-     * Create contour segments for the specified source image tile.
+     * Creates contour segments.
      * The algorithm used is CONREC, devised by Paul Bourke (see class notes).
      * <p>
      * The source image is scanned with a 2x2 sample window. The algorithm
@@ -314,9 +301,6 @@ public class ContourOpImage extends AttributeOpImage {
      * which is not a problem when only plotting contours. However, here we
      * try to avoid any duplication because this can confuse the merging of
      * line segments into JTS LineStrings later.
-     * 
-     * @param tileX tile X index
-     * @param tileY tile Y index
      * 
      * @return the generated contour segments
      */
@@ -542,15 +526,12 @@ public class ContourOpImage extends AttributeOpImage {
     }
     
     /**
-     * Scans the image builds the required contour values . 
+     * Scans the image and builds the required contour values. 
      * <p>
      * Note: this method is only called when contour levels are being set 
      * according to a specified interval rather than user-supplied levels.
      * 
-     * @param tile the image tile
-     * @param bounds bounds of data in the tile
-     * 
-     * @return true if the tile had non-NaN values, false otherwise.
+     * @return the contour levels
      */
     private List<Double> buildContourLevels() {
         double minVal = 0, maxVal = 0;
@@ -597,15 +578,22 @@ public class ContourOpImage extends AttributeOpImage {
         return result;
     }
 
+    /**
+     * Positions an image iterator at the specified band.
+     * 
+     * @param iter the iterator
+     * @param targetBand the band 
+     */
     private void moveIterToBand(RectIter iter, int targetBand) {
-        // move the the desired band
-        int band = 0;
-        while(band < targetBand && !iter.nextBandDone()) {
-            band++;
+        int iband = 0;
+        iter.startBands();
+        
+        while(iband < targetBand && !iter.nextBandDone()) {
+            iband++;
         }
         
-        if(band != targetBand) {
-            throw new IllegalArgumentException("Band " + targetBand + " not found, max band is " + band);
+        if(iband != targetBand) {
+            throw new IllegalArgumentException("Band " + targetBand + " not found, max band is " + iband);
         }
     }
 

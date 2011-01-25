@@ -106,8 +106,7 @@ public class ContourDescriptor extends OperationDescriptorImpl {
     static final int INTERVAL_ARG = 3;
     static final int NO_DATA_ARG = 4;
     static final int SIMPLIFY_ARG = 5;
-    static final int MERGE_TILES_ARG = 6;
-    static final int SMOOTH_ARG = 7;
+    static final int SMOOTH_ARG = 6;
 
     private static final String[] paramNames = {
         "roi",
@@ -116,7 +115,6 @@ public class ContourDescriptor extends OperationDescriptorImpl {
         "interval",
         "nodata",
         "simplify",
-        "mergeTiles",
         "smooth"
     };
 
@@ -126,7 +124,6 @@ public class ContourDescriptor extends OperationDescriptorImpl {
          Collection.class,
          Number.class,
          Collection.class,
-         Boolean.class,
          Boolean.class,
          Boolean.class
     };
@@ -138,7 +135,6 @@ public class ContourDescriptor extends OperationDescriptorImpl {
          (Number) null,
          Arrays.asList(Double.NaN, Double.POSITIVE_INFINITY, 
             Double.NEGATIVE_INFINITY, Double.MAX_VALUE),
-         Boolean.TRUE,
          Boolean.TRUE,
          Boolean.FALSE,
     };
@@ -168,13 +164,10 @@ public class ContourDescriptor extends OperationDescriptorImpl {
                     {"arg4Desc", paramNames[4] + " (Collection<? extends Number>) " +
                               "values to treat as NO_DATA"},
                     
-                    {"arg5Desc", paramNames[5] + " (Boolean, default=true) " +
-                              "whether to merge contour lines across source image tile boundaries"},
-                    
-                    {"arg6Desc", paramNames[6] + " (Boolean, default=true) " +
+                    {"arg6Desc", paramNames[5] + " (Boolean, default=true) " +
                               "whether to simplify contour lines by removing colinear vertices"},
                     
-                    {"arg7Desc", paramNames[7] + " (Boolean, default=false) " +
+                    {"arg6Desc", paramNames[6] + " (Boolean, default=false) " +
                               "whether to smooth contour lines with Bezier interpolation"}
                 },
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
