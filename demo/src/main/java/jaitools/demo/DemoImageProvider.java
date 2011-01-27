@@ -23,10 +23,11 @@ package jaitools.demo;
 import jaitools.CollectionFactory;
 import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
-import jaitools.jiffle.runtime.JiffleCompletionEvent;
-import jaitools.jiffle.runtime.JiffleEventAdapter;
-import jaitools.jiffle.runtime.JiffleInterpreter;
-import jaitools.jiffle.runtime.JiffleProgressEvent;
+import jaitools.jiffle.runtime.JiffleEvent;
+import jaitools.jiffle.runtime.JiffleEventListener;
+import jaitools.jiffle.runtime.JiffleExecutor;
+import jaitools.jiffle.runtime.JiffleExecutorResult;
+import jaitools.jiffle.runtime.JiffleProgressListener;
 import jaitools.swing.ProgressMeter;
 import java.awt.image.RenderedImage;
 import java.io.File;
@@ -60,33 +61,63 @@ public class DemoImageProvider {
     /* single instance of this class */
     private static DemoImageProvider instance;
 
-    private JiffleInterpreter interp;
-    private RenderedImage image;
+    private JiffleExecutor executor;
 
-    private static class Job {
-        ImageReceiver receiver;
-        ProgressMeter progMeter = new ProgressMeter();
+    private static class JobListener implements JiffleProgressListener {
+        private final static long updateThreshold = 100;
+        private final long taskSize;
+        private final ProgressMeter progMeter;
+
+        public JobListener(long taskSize) {
+            this.progMeter = new ProgressMeter("Creating image");
+            this.taskSize = taskSize;
+        }
+
+        public void setTaskSize(long size) {}
+
+        public void start() {
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    progMeter.setVisible(true);
+                }
+            });
+        }
+
+        public void update(long done) {
+            if (done % updateThreshold == 0) {
+                progMeter.setProgress((float)done / taskSize);
+            }
+        }
+
+        public void finish() {
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    progMeter.setVisible(false);
+                }
+            });
+        }
+        
     }
 
-    private Map<Integer, Job> jobs = CollectionFactory.orderedMap();
+    private Map<Integer, ImageReceiver> jobs = CollectionFactory.map();
 
     /**
      * Private constructor
      */
     private DemoImageProvider() {
-        interp = new JiffleInterpreter();
-        interp.addEventListener(new JiffleEventAdapter() {
+        executor = new JiffleExecutor();
+        executor.addEventListener(new JiffleEventListener() {
 
             @Override
-            public void onCompletionEvent(JiffleCompletionEvent ev) {
+            public void onCompletionEvent(JiffleEvent ev) {
                 onCompletion(ev);
             }
 
-            @Override
-            public void onProgressEvent(JiffleProgressEvent ev) {
-                showProgress(ev);
+            public void onFailureEvent(JiffleEvent ev) {
+                throw new IllegalStateException("Jiffle script failed to run");
             }
         });
+        
     }
 
     /**
@@ -118,47 +149,29 @@ public class DemoImageProvider {
         URL url = DemoImageProvider.class.getResource(name);
         File file = new File(url.toURI());
 
-        image = ImageUtils.createConstantImage(width, height, Double.valueOf(0d));
-
-        Map<String, RenderedImage> imgParams = CollectionFactory.map();
-        imgParams.put("result", image);
+        Map<String, Jiffle.ImageRole> imgParams = CollectionFactory.map();
+        imgParams.put("result", Jiffle.ImageRole.DEST);
+        
+        Map<String, RenderedImage> images = CollectionFactory.map();
+        images.put("result", ImageUtils.createConstantImage(width, height, Double.valueOf(0d)));
 
         try {
-            Job job = new Job();
-            job.receiver = receiver;
-            job.progMeter.setTitle("Creating image");
-            job.progMeter.setVisible(true);
-
             Jiffle jiffle = new Jiffle(file, imgParams);
-            int jobID = interp.submit(jiffle);
-            jobs.put(jobID, job);
+            int jobID = executor.submit(jiffle, images, new JobListener((long)width * height));
+            jobs.put(jobID, receiver);
 
         } catch (Exception ex) {
-            ex.printStackTrace();
+            throw new RuntimeException(ex);
         }
     }
 
     /**
      * Handle completion events from the Jiffle interpreter
      */
-    private void onCompletion(JiffleCompletionEvent ev) {
-        Job job = jobs.get(ev.getJobId());
-        job.progMeter.setVisible(false);
-        job.receiver.receiveImage(ev.getJiffle().getImage("result"));
-    }
-
-    /**
-     * Updates a progress bar to show proportion of the image
-     * creation done so far
-     */
-    private void showProgress(final JiffleProgressEvent ev) {
-        final Job job = jobs.get(ev.getJobId());
-
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                job.progMeter.setProgress(ev.getProgress());
-            }
-        });
+    private void onCompletion(JiffleEvent ev) {
+        JiffleExecutorResult result = ev.getResult();
+        ImageReceiver receiver = jobs.remove( result.getJobID() );
+        receiver.receiveImage(result.getImages().get("result"));
     }
 
 }

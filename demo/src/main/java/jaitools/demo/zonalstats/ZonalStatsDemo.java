@@ -19,14 +19,16 @@
  */
 package jaitools.demo.zonalstats;
 
+import jaitools.CollectionFactory;
 import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
-import jaitools.jiffle.runtime.JiffleRunner;
+import jaitools.jiffle.runtime.JiffleDirectRuntime;
 import jaitools.media.jai.zonalstats.ZonalStats;
 import jaitools.media.jai.zonalstats.ZonalStatsDescriptor;
 import jaitools.numeric.Statistic;
 import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
+import java.awt.image.WritableRenderedImage;
 import java.util.HashMap;
 import java.util.Map;
 import javax.media.jai.JAI;
@@ -47,7 +49,7 @@ import javax.media.jai.TiledImage;
  */
 public class ZonalStatsDemo {
 
-    private RenderedImage dataImg;
+    private WritableRenderedImage dataImg;
     private RenderedImage zoneImg;
     Map<String, RenderedImage> imgParams;
 
@@ -127,13 +129,22 @@ public class ZonalStatsDemo {
         imgParams.put("dataImg", dataImg);
         imgParams.put("zoneImg", zoneDoubleImg);
 
-        Jiffle jif = new Jiffle(
-                "dataImg = rand(10); " +
-                "numZones = 5; rowsPerZone = height() / numZones;" +
-                "zoneImg = y() / rowsPerZone + 1;", imgParams);
+        String script =
+                  "dataImg = rand(10); \n"
+                + "numZones = 5; \n"
+                + "rowsPerZone = height() / numZones; \n"
+                + "zoneImg = y() / rowsPerZone + 1;";
+        
+        Map<String, Jiffle.ImageRole> imageParams = CollectionFactory.map();
+        imageParams.put("dataImg", Jiffle.ImageRole.DEST);
+        imageParams.put("zoneImg", Jiffle.ImageRole.DEST);
 
-        JiffleRunner runner = new JiffleRunner(jif);
-        runner.run();
+        Jiffle jiffle = new Jiffle(script, imageParams);
+        JiffleDirectRuntime runtime = jiffle.getRuntimeInstance();
+        
+        runtime.setDestinationImage("dataImg", dataImg);
+        runtime.setDestinationImage("zoneImg", zoneDoubleImg);
+        runtime.evaluateAll(null);
 
         /*
          * Now we convert the zone image from DOUBLE to INT for

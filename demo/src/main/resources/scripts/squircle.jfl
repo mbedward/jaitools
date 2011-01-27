@@ -27,6 +27,6 @@
 
 w = width() - 1;
 h = height() - 1;
-dx = 2 * PI * (0.5 - x() / w);
-dy = 2 * PI * (0.5 - y() / h); 
+dx = 2 * M_PI * (0.5 - x() / w);
+dy = 2 * M_PI * (0.5 - y() / h); 
 result = sqrt(abs(cos(dx) + cos(dy)));
