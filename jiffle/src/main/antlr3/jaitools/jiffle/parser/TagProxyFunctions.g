@@ -19,15 +19,13 @@
  */
   
  /** 
-  * Converts ternary expressions (a ? b : c) to IF_CALL nodes.
-  *
   * @author Michael Bedward
   */
 
-tree grammar ConvertTernaryExpr;
+tree grammar TagProxyFunctions;
 
 options {
-    tokenVocab = VarTransformer;
+    tokenVocab = Jiffle;
     ASTLabelType = CommonTree;
     output = AST;
     filter = true;
@@ -37,10 +35,32 @@ options {
 package jaitools.jiffle.parser;
 }
 
+@members {
+private FunctionLookup functionLookup = new FunctionLookup();
+}
 
-topdown     : ternary
-            ;
 
+topdown         : function_call
+                ;
 
-ternary     : ^(QUESTION e1=. e2=. e3=.) -> ^(IF_CALL ^(EXPR_LIST $e1 $e2 $e3))
-            ;
+function_call   
+@init {
+    FunctionInfo info = null;
+}
+                : ^(FUNC_CALL ID expr_list)
+                  { 
+                      try {
+                          info = functionLookup.getInfo($ID.text, $expr_list.size);
+                      } catch (UndefinedFunctionException ex) {
+                          throw new IllegalStateException("Internal compiler error", ex);
+                      }
+                  }
+
+                  -> {info.isProxy()}? VAR_IMAGE_SCOPE[info.getRuntimeExpr()]
+                  -> ^(FUNC_CALL ID expr_list)
+                ;
+
+expr_list returns [int size]
+@init { $size = 0; }
+                : ^(EXPR_LIST (e=. {$size++;})*)
+                ;

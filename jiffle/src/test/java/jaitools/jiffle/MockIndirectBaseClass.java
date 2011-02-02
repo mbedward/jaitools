@@ -20,6 +20,7 @@
 
 package jaitools.jiffle;
 
+import jaitools.jiffle.runtime.AbstractJiffleRuntime;
 import java.awt.image.RenderedImage;
 
 import jaitools.jiffle.runtime.JiffleIndirectRuntime;
@@ -33,7 +34,8 @@ import jaitools.jiffle.runtime.JiffleIndirectRuntime;
  * @source $URL$
  * @version $Id$
  */
-public abstract class MockIndirectBaseClass implements JiffleIndirectRuntime {
+public abstract class MockIndirectBaseClass 
+        extends AbstractJiffleRuntime implements JiffleIndirectRuntime {
 
     public double readFromImage(String srcImageName, int x, int y, int band) {
         throw new UnsupportedOperationException("Should not be called");

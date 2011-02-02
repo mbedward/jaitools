@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 Michael Bedward
+ * Copyright 2011 Michael Bedward
  * 
  * This file is part of jai-tools.
  *
@@ -17,20 +17,35 @@
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
+  
+ /** 
+  * @author Michael Bedward
+  */
 
-package jaitools.jiffle.parser;
+tree grammar TagConstants;
 
-/**
- * Constants used by the Jiffle compiler to indicate error levels.
- * 
- * @see ErrorCode
- * 
- * @author Michael Bedward
- * @since 1.0
- * @source $URL$
- * @version $Id$
- */
-public enum ErrorLevel {
-    WARNING,
-    ERROR;
+options {
+    tokenVocab = Jiffle;
+    ASTLabelType = CommonTree;
+    output = AST;
+    filter = true;
 }
+
+
+@header {
+package jaitools.jiffle.parser;
+}
+
+topdown         : id
+                | constant
+                ;
+
+id              : ID
+                  -> {ConstantLookup.isDefined($ID.text)}? CONSTANT[$ID.text]
+                  -> ID
+                ;
+
+constant        : TRUE -> FLOAT_LITERAL["1.0"]
+                | FALSE -> FLOAT_LITERAL["0.0"]
+                | NULL -> CONSTANT["NaN"]
+                ;

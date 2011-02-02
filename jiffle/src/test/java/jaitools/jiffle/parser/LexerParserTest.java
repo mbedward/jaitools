@@ -69,41 +69,6 @@ public class LexerParserTest {
         assertTrue(tok.getType() == JiffleLexer.INT_LITERAL);
     }
     
-    /**
-     * Test tokenizing block comments used before, within and after
-     * an expression
-     */
-    @Test
-    public void testInlineComment() {
-        System.out.println("   inline comments");
-        
-        String input = "/* pre-comment */ x = sin(/* inside comment */ PI / 6) /* post-comment */ ";
-        
-        JiffleLexer lexer = lex(input);
-        
-        Set<Integer> okHiddenTypes = CollectionFactory.set();
-        okHiddenTypes.add(JiffleLexer.BLOCK_COMMENT);
-        okHiddenTypes.add(JiffleLexer.WS);
-        okHiddenTypes.add(JiffleLexer.NEWLINE);
-        
-        Set<Integer> okVisibleTypes = CollectionFactory.set();
-        okVisibleTypes.add(JiffleLexer.ID);
-        okVisibleTypes.add(JiffleLexer.INT_LITERAL);
-        okVisibleTypes.add(JiffleLexer.EQ);
-        okVisibleTypes.add(JiffleLexer.DIV);
-        okVisibleTypes.add(JiffleLexer.LPAR);
-        okVisibleTypes.add(JiffleLexer.RPAR);
-        
-        Token tok = null;
-        while ((tok = lexer.nextToken()) != Token.EOF_TOKEN) {
-            if (tok.getChannel() == Token.HIDDEN_CHANNEL) {
-                assertTrue(okHiddenTypes.contains(tok.getType()));
-            } else {
-                assertTrue(okVisibleTypes.contains(tok.getType()));
-            }
-        }
-    }
-    
     @Test
     public void testDotNames() {
         System.out.println("dots in var names");

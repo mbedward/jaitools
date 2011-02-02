@@ -9,10 +9,14 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 /**
- *
+ * Tests basic parsing of scripts with and without an init block.
+ * For unit tests of semantic error checking of init block contents 
+ * see {@link VarClassifierTest}.
+ * 
  * @author michael
  */
-public class InitBlockTest extends TestingParser {
+@Ignore(value="while working on init block processing")
+public class InitBlockParsingTest extends ParserTestBase {
     
     @Test
     public void noBlock() throws Exception {

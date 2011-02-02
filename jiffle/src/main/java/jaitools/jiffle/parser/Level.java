@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  * 
  * This file is part of jai-tools.
  *
@@ -18,27 +18,21 @@
  * 
  */
 
-package jaitools.jiffle.runtime;
+package jaitools.jiffle.parser;
 
 /**
- * The root interface for Jiffle runtime classes.
- *
+ * Constants used by the Jiffle script and tree parsers to identify the level
+ * of a parser message (error or warning).
+ * 
+ * 
+ * @see ParserMessage
+ * 
  * @author Michael Bedward
- * @since 1.1
+ * @since 1.0
  * @source $URL$
  * @version $Id$
  */
-public interface JiffleRuntime {
-    
-    /**
-     * Returns the value of a variable that was declared in the
-     * script's init block.
-     *
-     * @param varName variable name
-     *
-     * @return the values or {@code null} if the variable name is
-     * not found
-     */
-    <T extends Number> T getValue(String varName);
-
+public enum Level {
+    WARNING,
+    ERROR;
 }

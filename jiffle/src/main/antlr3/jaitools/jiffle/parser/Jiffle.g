@@ -1,21 +1,28 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  * 
  * This file is part of jai-tools.
-
+ *
  * jai-tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the 
  * License, or (at your option) any later version.
-
+ *
  * jai-tools is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
-
+ *
  * You should have received a copy of the GNU Lesser General Public 
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  * 
+ */
+
+/**
+ * Combined parser and lexer grammar to generate the primary AST
+ * from an input Jiffle script.
+ *
+ * @author Michael Bedward
  */
 
 grammar Jiffle;
@@ -40,6 +47,14 @@ tokens {
     VAR_INIT;
     VAR_INIT_BLOCK;
     VAR_INIT_LIST;
+
+    // Used by later tree parsers
+    CONSTANT;
+    IMAGE_WRITE;
+    VAR_DEST;
+    VAR_SOURCE;
+    VAR_IMAGE_SCOPE;
+    VAR_PIXEL_SCOPE;
 }
 
 @header {
@@ -73,19 +88,16 @@ protected Object recoverFromMismatchedToken(IntStream input, int ttype, BitSet f
 }
 
 
-prog		: (var_init_block)? statement+ EOF
+prog		: (var_init_block)? statement+ EOF!
                 ;
                 catch [UnexpectedInputException ex] {
                     throw new JiffleParserException(ex);
                 }
 
-var_init_block  : INIT LCURLY var_init_list RCURLY eos? -> ^(VAR_INIT_BLOCK var_init_list)
+var_init_block  : INIT LCURLY var_init* RCURLY (eos)? -> var_init*
                 ;
 
-var_init_list   : (var_init (',' var_init)* )? -> ^(VAR_INIT_LIST var_init*)
-                ;
-
-var_init        : ID (EQ expr)? eos -> ^(VAR_INIT ID expr)
+var_init        : ID (EQ expr)? eos -> ^(VAR_INIT ID expr?)
                 ;
 
 statement	: expr eos!

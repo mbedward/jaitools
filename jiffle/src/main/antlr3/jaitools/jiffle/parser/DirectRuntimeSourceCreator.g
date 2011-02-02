@@ -46,13 +46,13 @@ import jaitools.CollectionFactory;
 
 start
 @init {
-    srcSB = new StringBuilder();
-    srcSB.append("public void evaluate(int _x, int _y) { \n");
+    evalSB = new StringBuilder();
+    evalSB.append("public void evaluate(int _x, int _y) { \n");
 }
 @after {
-    srcSB.append("} \n");
+    evalSB.append("} \n");
 }
-                : (var_init_block)? (statement { srcSB.append($statement.src).append(";\n"); } )+
+                : (var_init_block)? (statement { evalSB.append($statement.src).append(";\n"); } )+
                 ;
 
 var_init_block  : ^(VAR_INIT_BLOCK var_init_list)

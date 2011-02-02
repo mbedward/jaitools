@@ -19,45 +19,52 @@
  */
   
  /** 
-  * Takes the final Jiffle AST and generates Java source
-  * for the evaluate method in a JiffleRuntime implementation.
-  *
   * @author Michael Bedward
   */
 
-tree grammar IndirectRuntimeSourceCreator;
+tree grammar DirectRuntimeSourceCreator2;
 
 options {
     superClass = RuntimeSourceCreator;
-    tokenVocab = ConvertTernaryExpr;
+    tokenVocab = Jiffle;
     ASTLabelType = CommonTree;
 }
+
 
 @header {
 package jaitools.jiffle.parser;
 
-import java.util.List;
+import java.util.Set;
 import jaitools.CollectionFactory;
+import jaitools.jiffle.Jiffle;
+}
+
+@members {
+
+private FunctionLookup functionLookup = new FunctionLookup();
+private Set<String> imageScopeVars = CollectionFactory.orderedSet();
+
 }
 
 start
 @init {
-    evalSB = new StringBuilder();
-    evalSB.append("public double evaluate(int _x, int _y) { \n");
+    evalSB.append("public void evaluate(int _x, int _y) { \n");
 }
 @after {
     evalSB.append("} \n");
 }
-                : (var_init_block)? (statement { evalSB.append($statement.src).append(";\n"); } )+
+                : var_init* (statement { evalSB.append($statement.src).append(";\n"); } )+
                 ;
 
-var_init_block  : ^(VAR_INIT_BLOCK var_init_list)
-                ;
-
-var_init_list   : ^(VAR_INIT_LIST (var_init)*)
-                ;
-
-var_init        : ^(VAR_INIT ID expr)
+var_init        : ^(VAR_INIT ID (e=expr)?)
+                  {
+                    imageScopeVars.add($ID.text);
+                    varSB.append("double ").append($ID.text);
+                    if (e != null) {
+                        varSB.append(" = ").append($e.src);
+                    }
+                    varSB.append("; \n");
+                  }
                 ;
 
 statement returns [String src]
@@ -66,27 +73,34 @@ statement returns [String src]
                 ;
 
 image_write returns [String src]
-                : ^(IMAGE_WRITE IMAGE_VAR expr)
+                : ^(IMAGE_WRITE VAR_DEST expr)
                    {
                        if ($expr.priorSrc != null) {
                            $src = $expr.priorSrc;
                        } else {
                            $src = "";
                        }
-                       $src = $src + "return " + $expr.src;
+                       $src = $src + "writeToImage(\"" + $VAR_DEST.text + "\", _x, _y, _band, " + $expr.src + ")";
                    }
                 ;
 
 var_assignment returns [String src]
-                : ^(ASSIGN assign_op VAR expr)
+                : ^(ASSIGN assign_op assignable_var expr)
                    { 
+                       StringBuilder sb = new StringBuilder();
                        if ($expr.priorSrc != null) {
-                           $src = $expr.priorSrc;
-                       } else {
-                           $src = "";
+                           sb.append($expr.priorSrc);
                        }
-                       $src = $src + "double " + $VAR.text + $assign_op.text + $expr.src; 
+                       sb.append("double ").append($assignable_var.src);
+                       sb.append(" ").append($assign_op.text).append(" ");
+                       sb.append($expr.src);
+                       $src = sb.toString();
                    }
+                ;
+
+assignable_var returns [String src]
+                : VAR_IMAGE_SCOPE { $src = $VAR_IMAGE_SCOPE.text; }
+                | VAR_PIXEL_SCOPE { $src = $VAR_PIXEL_SCOPE.text; }
                 ;
                 
 expr returns [String src, String priorSrc ]
@@ -105,8 +119,8 @@ expr returns [String src, String priorSrc ]
                           }
 
                           int k = 0;
-                          for (ExprSrcPair esp : $expr_list.list) {
-                              sb.append(esp.src);
+                          for (String esrc : $expr_list.list) {
+                              sb.append(esrc);
                               if (++k < n) sb.append(", ");
                           }
                           if (info.isVarArg()) {
@@ -120,16 +134,17 @@ expr returns [String src, String priorSrc ]
                       }
                   }
 
+                  
                 | ^(IF_CALL expr_list)
                   {
-                    List<ExprSrcPair> argList = $expr_list.list;
+                    List<String> argList = $expr_list.list;
 
                     String signFn = getRuntimeExpr("sign", 1);
                     StringBuilder sb = new StringBuilder();
 
                     String condVar = makeLocalVar("int");
                     sb.append("int ").append(condVar).append(" = ").append(signFn);
-                    sb.append("(").append(argList.get(0).src).append("); \n");
+                    sb.append("(").append(argList.get(0)).append("); \n");
 
                     String resultVar = makeLocalVar("double");
                     sb.append("double ").append(resultVar).append(" = 0; \n");
@@ -145,7 +160,7 @@ expr returns [String src, String priorSrc ]
 
                         case 2:
                             sb.append("if (").append(condVar).append(" != 0 ) { \n");
-                            sb.append(resultVar).append(" = ").append(argList.get(1).src).append("; \n");
+                            sb.append(resultVar).append(" = ").append(argList.get(1)).append("; \n");
                             sb.append("} else { \n");
                             sb.append(resultVar).append(" = 0; \n");
                             sb.append("} \n");
@@ -153,19 +168,19 @@ expr returns [String src, String priorSrc ]
 
                         case 3:
                             sb.append("if (").append(condVar).append(" != 0 ) { \n");
-                            sb.append(resultVar).append(" = ").append(argList.get(1).src).append("; \n");
+                            sb.append(resultVar).append(" = ").append(argList.get(1)).append("; \n");
                             sb.append("} else { \n");
-                            sb.append(resultVar).append(" = ").append(argList.get(2).src).append("; \n");
+                            sb.append(resultVar).append(" = ").append(argList.get(2)).append("; \n");
                             sb.append("} \n");
                             break;
                     
                         case 4:
                             sb.append("if (").append(condVar).append(" > 0 ) { \n");
-                            sb.append(resultVar).append(" = ").append(argList.get(1).src).append("; \n");
+                            sb.append(resultVar).append(" = ").append(argList.get(1)).append("; \n");
                             sb.append("} else if (").append(condVar).append(" == 0) { \n");
-                            sb.append(resultVar).append(" = ").append(argList.get(2).src).append("; \n");
+                            sb.append(resultVar).append(" = ").append(argList.get(2)).append("; \n");
                             sb.append("} else { \n");
-                            sb.append(resultVar).append(" = ").append(argList.get(3).src).append("; \n");
+                            sb.append(resultVar).append(" = ").append(argList.get(3)).append("; \n");
                             sb.append("} \n");
                             break;
                     
@@ -175,6 +190,30 @@ expr returns [String src, String priorSrc ]
                     $priorSrc = sb.toString();
                     $src = resultVar;
 
+                  }
+
+                | ^(NBR_REF VAR_SOURCE xref=nbr_ref_expr yref=nbr_ref_expr) 
+                  {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("readFromImage(");
+                    sb.append("\"").append($VAR_SOURCE.text).append("\", ");
+
+                    if (xref.isRelative) {
+                        sb.append("(int)(_x + ");
+                    } else {
+                        sb.append("(int)(");
+                    }
+                    sb.append(xref.src).append("), ");
+
+                    if (yref.isRelative) {
+                        sb.append("(int)(_y + ");
+                    } else {
+                        sb.append("(int)(");
+                    }
+                    sb.append(yref.src).append("), ");
+
+                    sb.append("_band)");
+                    $src = sb.toString();
                   }
                   
                 | ^(POW e1=expr e2=expr) { $src = "Math.pow(" + e1.src + ", " + e2.src + ")"; }
@@ -251,47 +290,38 @@ expr returns [String src, String priorSrc ]
                 | ^(BRACKETED_EXPR e1=expr)
                   { $src = "(" + e1.src + ")"; }
   
-                | VAR 
-                  { $src = $VAR.text; }
+                | VAR_IMAGE_SCOPE
+                  { $src = $VAR_IMAGE_SCOPE.text; }
+
+                | VAR_PIXEL_SCOPE
+                  { $src = $VAR_PIXEL_SCOPE.text; }
               
-                | IMAGE_VAR 
-                  { $src = "readFromImage(\"" + $IMAGE_VAR.text + "\", _x, _y, _band)"; }
+                | VAR_SOURCE
+                  { $src = "readFromImage(\"" + $VAR_SOURCE.text + "\", _x, _y, _band)"; }
               
-                | ^(NBR_REF IMAGE_VAR xref=nbr_ref_expr yref=nbr_ref_expr) 
-                  {
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("readFromImage(");
-                    sb.append("\"").append($IMAGE_VAR.text).append("\", ");
-
-                    if (xref.isRelative) {
-                        sb.append("(int)(_x + ");
-                    } else {
-                        sb.append("(int)(");
-                    }
-                    sb.append(xref.src).append("), ");
-
-                    if (yref.isRelative) {
-                        sb.append("(int)(_y + ");
-                    } else {
-                        sb.append("(int)(");
-                    }
-                    sb.append(yref.src).append("), ");
-
-                    sb.append("_band)");
-                    $src = sb.toString();
-                  }
-                  
-                | FIXED_VALUE 
+                | CONSTANT
                   { 
-                    double value = ((FixedValueNode)$FIXED_VALUE).getValue();
-                    if (Double.isNaN(value)) {
+                    $src = String.valueOf(ConstantLookup.getValue($CONSTANT.text)); 
+                    if ("NaN".equals($src)) {
                         $src = "Double.NaN";
-                    } else {
-                        $src = String.valueOf(value);
                     }
                   }
+
+                | literal
+                  { $src = $literal.src; }
                 ;
 
+literal returns [String src]
+                : INT_LITERAL { $src = $INT_LITERAL.text; }
+                | FLOAT_LITERAL { $src = $FLOAT_LITERAL.text; }
+                ;
+
+expr_list returns [ List<String> list ] 
+                :
+                  { $list = CollectionFactory.list(); }
+                  ^(EXPR_LIST ( e=expr {$list.add(e.src);} )*)
+                ;                
+                
 nbr_ref_expr returns [ String src, boolean isRelative ]
                 : ^(ABS_NBR_REF expr)
                   { 
@@ -305,12 +335,6 @@ nbr_ref_expr returns [ String src, boolean isRelative ]
                     $isRelative = true;
                   }
                 ;
-                
-expr_list returns [ List<ExprSrcPair> list ] 
-                :
-                  { $list = CollectionFactory.list(); }
-                  ^(EXPR_LIST ( e=expr {$list.add(new ExprSrcPair(e.src, e.priorSrc));} )*)
-                ;                
                 
 assign_op	: EQ
 		| TIMESEQ

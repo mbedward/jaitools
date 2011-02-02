@@ -20,6 +20,7 @@
 
 package jaitools.jiffle;
 
+import jaitools.jiffle.runtime.AbstractJiffleRuntime;
 import jaitools.jiffle.runtime.JiffleDirectRuntime;
 import jaitools.jiffle.runtime.JiffleProgressListener;
 import java.awt.image.RenderedImage;
@@ -34,7 +35,8 @@ import java.awt.image.WritableRenderedImage;
  * @source $URL$
  * @version $Id$
  */
-public abstract class MockDirectBaseClass implements JiffleDirectRuntime {
+public abstract class MockDirectBaseClass 
+        extends AbstractJiffleRuntime implements JiffleDirectRuntime {
     
     protected int _band = 0;
     

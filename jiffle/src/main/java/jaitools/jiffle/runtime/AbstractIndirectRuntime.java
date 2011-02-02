@@ -33,7 +33,7 @@ import java.util.List;
  * @source $URL$
  * @version $Id$
  */
-public abstract class AbstractIndirectRuntime implements JiffleIndirectRuntime {
+public abstract class AbstractIndirectRuntime extends AbstractJiffleRuntime implements JiffleIndirectRuntime {
     
     /* 
      * Note: not using generics here because they are not

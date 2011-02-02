@@ -20,6 +20,7 @@
 
 package jaitools.jiffle.parser;
 
+import java.util.List;
 import java.util.Map;
 
 import jaitools.CollectionFactory;
@@ -35,13 +36,15 @@ import static org.junit.Assert.*;
  * 
  * @author Michael Bedward
  */
-public class VarClassifierTest extends TestingParser {
+public class VarClassifierTest extends ParserTestBase {
     
     private Map<String, Jiffle.ImageRole> imageParams;
+    private MessageTable msgTable;
     
     @Before
     public void setup() {
         imageParams = CollectionFactory.map();
+        msgTable = new MessageTable();
     }
 
     @Test
@@ -49,102 +52,88 @@ public class VarClassifierTest extends TestingParser {
         System.out.println("   using a var before assignment");
 
         String script = 
-                "foo = bar + 1; \n" +
-                "bar = 42; \n";
+                "dest = src + 1; \n" +
+                "src = 42; \n";
                 
-        Map<String, ErrorCode> errors = runClassifier(script);
-        
-        assertTrue(errors.containsKey("bar"));
-        assertEquals(ErrorCode.UNINIT_VAR, errors.get("bar"));
+        runClassifier(script);
+        assertGotError("src", Message.UNINIT_VAR);
     }
     
     @Test
     public void assignmentToSourceImage() throws Exception {
         System.out.println("   writing to a source image");
         
-        String script = "foo = 42; \n";
-        imageParams.put("foo", Jiffle.ImageRole.SOURCE);
-        Map<String, ErrorCode> errors = runClassifier(script);
+        String script = "dest = 42; \n";
+        imageParams.put("dest", Jiffle.ImageRole.SOURCE);
         
-        assertTrue(errors.containsKey("foo"));
-        assertEquals(ErrorCode.ASSIGNMENT_TO_SRC_IMAGE, errors.get("foo"));
+        runClassifier(script);
+        assertGotError("dest", Message.ASSIGNMENT_TO_SRC_IMAGE);
     }
     
     @Test
     public void readingFromDestinationImage() throws Exception {
         System.out.println("   reading from a destination image");
         
-        String script = "x = foo; \n";
-        imageParams.put("foo", Jiffle.ImageRole.DEST);
-        Map<String, ErrorCode> errors = runClassifier(script);
+        String script = "x = dest; \n";
+        imageParams.put("dest", Jiffle.ImageRole.DEST);
         
-        assertTrue(errors.containsKey("foo"));
-        assertEquals(ErrorCode.READING_FROM_DEST_IMAGE, errors.get("foo"));
+        runClassifier(script);
+        assertGotError("dest", Message.READING_FROM_DEST_IMAGE);
     }
 
     @Test
     public void imageNotUsed() throws Exception {
         System.out.println("   image defined but not used");
         
-        String script = "foo = bar; \n";
+        String script = "dest = src; \n";
         
-        imageParams.put("foo", Jiffle.ImageRole.DEST);
-        imageParams.put("bar", Jiffle.ImageRole.SOURCE);
+        imageParams.put("dest", Jiffle.ImageRole.DEST);
+        imageParams.put("src", Jiffle.ImageRole.SOURCE);
         imageParams.put("unused", Jiffle.ImageRole.SOURCE);
         
-        Map<String, ErrorCode> errors = runClassifier(script);
-        
-        assertTrue(errors.containsKey("unused"));
-        ErrorCode error = errors.get("unused");
-        assertEquals(ErrorCode.IMAGE_NOT_USED, error);
-        assertTrue(error.isWarning());
+        runClassifier(script);
+        assertGotError("unused", Message.IMAGE_NOT_USED);
     }
     
     @Test
     public void nbrRefOnDestImage() throws Exception {
         System.out.println("   referencing neighbourhood of destination image");
         
-        String script = "foo[1,1] = 42; \n";
-        imageParams.put("foo", Jiffle.ImageRole.DEST);
+        String script = "dest[1,1] = 42; \n";
+        imageParams.put("dest", Jiffle.ImageRole.DEST);
         
-        Map<String, ErrorCode> errors = null;
-        errors = runClassifier(script);
-
-        assertTrue(errors.containsKey("foo"));
-        assertEquals(ErrorCode.NBR_REF_ON_DEST_IMAGE_VAR, errors.get("foo"));
+        runClassifier(script);
+        assertGotError("dest", Message.NBR_REF_ON_DEST_IMAGE_VAR);
     }
 
     @Test
     public void nbrRefOnNonImageVar() throws Exception {
         System.out.println("   referencing neighbourhood of non-image var");
         
-        String script = "foo = x[1,1]; \n" +
-        imageParams.put("foo", Jiffle.ImageRole.DEST);
+        String script = "dest = x[1,1]; \n" +
+        imageParams.put("dest", Jiffle.ImageRole.DEST);
         
-        Map<String, ErrorCode> errors = null;
-        errors = runClassifier(script);
-
-        assertTrue(errors.containsKey("x"));
-        assertEquals(ErrorCode.NBR_REF_ON_NON_IMAGE_VAR, errors.get("x"));
+        runClassifier(script);
+        assertGotError("x", Message.NBR_REF_ON_NON_IMAGE_VAR);
     }
 
-    private Map<String, ErrorCode> runClassifier(String script) throws Exception {
-        VarClassifier classifier = new VarClassifier(getAST(script));
-        classifier.setImageParams(imageParams);
+    private void runClassifier(String script) throws Exception {
+        VarClassifier classifier = new VarClassifier(getAST(script), imageParams, msgTable);
         
         // set an error handler to avoid parser messages on std err
         classifier.setErrorReporter(new NullErrorReporter());
         
-        Map<String, ErrorCode> errors = null;
         try {
             classifier.start();
         } catch (CompilerExitException ex) {
             
-        } finally {
-            errors = classifier.getErrors();
-        }
-        
-        return errors;
+        } 
+    }
+
+    private void assertGotError(String key, Message code) {
+        Map<String, List<Message>> messages = msgTable.getMessages();
+        assertTrue(messages.containsKey(key));
+        assertTrue(messages.get(key).contains(code));
     }
  
 }

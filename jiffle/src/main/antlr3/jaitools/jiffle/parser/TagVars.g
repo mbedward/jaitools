@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 Michael Bedward
+ * Copyright 2011 Michael Bedward
  * 
  * This file is part of jai-tools.
  *
@@ -19,93 +19,95 @@
  */
   
  /** 
-  * Checks function calls.
-  *
   * @author Michael Bedward
   */
 
-tree grammar FunctionValidator;
+tree grammar TagVars;
 
 options {
     tokenVocab = Jiffle;
     ASTLabelType = CommonTree;
+    output = AST;
     superClass = ErrorHandlingTreeParser;
 }
+
 
 @header {
 package jaitools.jiffle.parser;
 
 import java.util.Map;
+import java.util.Set;
 import jaitools.CollectionFactory;
-import jaitools.jiffle.parser.ErrorCode;
+import jaitools.jiffle.Jiffle;
 }
 
 @members {
-private FunctionLookup functionLookup = new FunctionLookup();
 
-/* Table of function name : error code */
-private Map<String, ErrorCode> errors = CollectionFactory.orderedMap();
+private Map<String, Jiffle.ImageRole> imageParams;
+private Set<String> imageScopeVars = CollectionFactory.set();
 
-public Map<String, ErrorCode> getErrors() {
-    return errors;
+public TagVars( TreeNodeStream nodes, Map<String, Jiffle.ImageRole> params ) {
+    this(nodes);
+    if (params == null) {
+        this.imageParams = CollectionFactory.map();
+    } else {
+        this.imageParams = params;
+    }
 }
 
-public boolean hasError() {
-    return !errors.isEmpty();
+private boolean isSourceImage( String varName ) {
+    Jiffle.ImageRole role = imageParams.get( varName );
+    return role == Jiffle.ImageRole.SOURCE;
+}
+
+private boolean isDestImage( String varName ) {
+    Jiffle.ImageRole role = imageParams.get( varName );
+    return role == Jiffle.ImageRole.DEST;
 }
 
 }
 
-start           : (var_init_block)? statement+ 
+start           : var_init* statement+ 
                 ;
 
-var_init_block  : ^(VAR_INIT_BLOCK var_init_list)
-                ;
-
-var_init_list   : ^(VAR_INIT_LIST (var_init)*)
-                ;
-
-var_init        : ^(VAR_INIT ID expr)
+var_init        : ^(VAR_INIT ID {imageScopeVars.add($ID.text);} expr?)
                 ;
 
 statement       : expr
                 ;
 
-expr_list returns [int size]
-@init{
-    $size = 0;
-}
-                : ^(EXPR_LIST (expr { size++; } )*)
+expr_list       : ^(EXPR_LIST expr*)
                 ;
 
 expr            : ^(ASSIGN assign_op ID expr)
-
+                  -> {isDestImage($ID.text)}? ^(IMAGE_WRITE VAR_DEST[$ID.text] expr)
+                  -> {imageScopeVars.contains($ID.text)}? ^(ASSIGN assign_op VAR_IMAGE_SCOPE[$ID.text] expr)
+                  -> ^(ASSIGN assign_op VAR_PIXEL_SCOPE[$ID.text] expr)
+                  
                 | ^(FUNC_CALL ID expr_list)
-                  { 
-                      if (!functionLookup.isDefined($ID.text, $expr_list.size)) {
-                          errors.put($ID.text, ErrorCode.UNDEFINED_FUNCTION);
-                      }
-                  }
-
+                  
+                | ^(NBR_REF ID nbr_ref_expr nbr_ref_expr) 
+                  -> ^(NBR_REF VAR_SOURCE[$ID.text] nbr_ref_expr nbr_ref_expr)
+                  
                 | ^(IF_CALL expr_list)
-                | ^(BRACKETED_EXPR expr)                  
-                | ^(expr_op expr expr)
                 | ^(QUESTION expr expr expr)
                 | ^(PREFIX unary_op expr)
+                | ^(expr_op expr expr)
+                | ^(BRACKETED_EXPR expr)
+                | CONSTANT
+                | VAR_IMAGE_SCOPE
+
                 | ID
-                | ^(NBR_REF ID nbr_ref_expr nbr_ref_expr)
-                | INT_LITERAL 
-                | FLOAT_LITERAL 
-                | constant
+                  -> {isSourceImage($ID.text)}? VAR_SOURCE[$ID.text]
+                  -> {imageScopeVars.contains($ID.text)}? VAR_IMAGE_SCOPE[$ID.text]
+                  -> VAR_PIXEL_SCOPE[$ID.text]
+
+                | INT_LITERAL
+                | FLOAT_LITERAL
                 ;
 
 nbr_ref_expr    : ^(ABS_NBR_REF expr)
                 | ^(REL_NBR_REF expr)
-                ;
-
-constant        : TRUE
-                | FALSE
-                | NULL
                 ;
 
 expr_op         : POW

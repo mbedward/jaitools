@@ -20,25 +20,30 @@
 
 package jaitools.jiffle.runtime;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- * The root interface for Jiffle runtime classes.
+ * Provides default implementations of {@link JiffleRuntime} methods.
  *
  * @author Michael Bedward
  * @since 1.1
  * @source $URL$
  * @version $Id$
  */
-public interface JiffleRuntime {
+public abstract class AbstractJiffleRuntime implements JiffleRuntime {
     
     /**
-     * Returns the value of a variable that was declared in the
-     * script's init block.
-     *
-     * @param varName variable name
-     *
-     * @return the values or {@code null} if the variable name is
-     * not found
+     * Maps names of variables ({@link String}) declared in the script's
+     * init block with their values (&lt;T extends {@link Number}&gt;).
      */
-    <T extends Number> T getValue(String varName);
+    protected Map values = new HashMap();
+
+    /**
+     * {@inheritDoc}
+     */
+    public <T extends Number> T getValue(String varName) {
+        return (T) values.get(varName);
+    }
 
 }

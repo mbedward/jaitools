@@ -37,21 +37,45 @@ import javax.media.jai.iterator.WritableRandomIter;
  * @source $URL$
  * @version $Id$
  */
-public abstract class AbstractDirectRuntime implements JiffleDirectRuntime {
+public abstract class AbstractDirectRuntime extends AbstractJiffleRuntime implements JiffleDirectRuntime {
 
     /* 
      * Note: not using generics here because they are not
      * supported by the Janino compiler.
      */
+    
+    /** 
+     * Maps image variable names ({@link String}) to images
+     * ({@link RenderedImage}).
+     * 
+     */
     protected Map images = new HashMap();
+    
+    /** 
+     * Maps source image variable names ({@link String}) to image
+     * iterators ({@link RandomIter}).
+     */
     protected Map readers = new HashMap();
+    
+    /**
+     * Maps destination image variable names ({@link String} to
+     * image iterators ({@link WritableRandomIter}).
+     */
     protected Map writers = new HashMap();
     
     /* TODO: add band support to scripts */
     protected int _band = 0;
     
+    /** Reference image width (pixels) */
     protected int _width;
+    
+    /** Reference image height (pixels) */
     protected int _height;
+    
+    /** 
+     * The reference image. By default this is the first
+     * destination image.
+     */
     protected WritableRenderedImage _refImage;
     
 
@@ -98,5 +122,5 @@ public abstract class AbstractDirectRuntime implements JiffleDirectRuntime {
         WritableRandomIter iter = (WritableRandomIter) writers.get(imageName);
         iter.setSample(x, y, band, value);
     }
-    
+
 }

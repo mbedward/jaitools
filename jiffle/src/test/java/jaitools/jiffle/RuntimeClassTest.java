@@ -21,7 +21,6 @@
 package jaitools.jiffle;
 
 import jaitools.jiffle.runtime.JiffleDirectRuntime;
-import jaitools.jiffle.runtime.JiffleRuntime;
 import java.util.Map;
 
 import jaitools.CollectionFactory;
@@ -80,7 +79,7 @@ public class RuntimeClassTest {
     
     @Test(expected=JiffleException.class)
     public void invalidBaseClass() throws Exception {
-        class Foo implements JiffleRuntime { }
+        class Foo extends NullRuntime { }
         
         setupSingleDestScript();
         Object runtime = jiffle.getRuntimeInstance(Foo.class);

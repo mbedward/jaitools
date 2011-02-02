@@ -42,7 +42,8 @@ import jaitools.CollectionFactory;
  */
 public abstract class RuntimeSourceCreator extends ErrorHandlingTreeParser {
 
-    protected StringBuilder srcSB;
+    protected StringBuilder evalSB;
+    protected StringBuilder varSB;
     protected FunctionLookup functionLookup;
 
     protected class LocalVar {
@@ -67,13 +68,18 @@ public abstract class RuntimeSourceCreator extends ErrorHandlingTreeParser {
         super(input, state);
 
         functionLookup = new FunctionLookup();
-        srcSB = new StringBuilder();
+        evalSB = new StringBuilder();
+        varSB = new StringBuilder();
     }
     
     public abstract void start() throws RecognitionException;
 
-    public String getSource() {
-        return srcSB.toString();
+    public String getEvalSource() {
+        return evalSB.toString();
+    }
+    
+    public String getVarSource() {
+        return varSB.toString();
     }
 
     protected String getRuntimeExpr(String name, int numArgs) {

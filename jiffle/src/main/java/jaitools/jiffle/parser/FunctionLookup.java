@@ -124,9 +124,11 @@ public class FunctionLookup {
     }
     
     private List<FunctionInfo> getByName(String jiffleName) throws UndefinedFunctionException {
-        List<FunctionInfo> list = new ArrayList<FunctionInfo>();
+        List<FunctionInfo> list = CollectionFactory.list();
         for (FunctionInfo info : lookup) {
-            list.add(info);
+            if (info.getJiffleName().equals(jiffleName)) {
+                list.add(info);
+            }
         }
 
         if (list.isEmpty()) {

@@ -88,5 +88,4 @@ public interface JiffleDirectRuntime extends JiffleRuntime {
      * @param value the value to write
      */
     void writeToImage(String destImageName, int x, int y, int band, double value);
-
 }

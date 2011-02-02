@@ -21,45 +21,55 @@
 package jaitools.jiffle.parser;
 
 /**
- * Constants used by the Jiffle compiler to report errors and warnings.
+ * Constants used by the Jiffle script and tree parsers to report errors 
+ * and warnings.
  * 
- * @see ErrorLevel
+ * @see Level
  * 
  * @author Michael Bedward
  * @since 1.0
  * @source $URL$
  * @version $Id$
  */
-public enum ErrorCode {
+public enum Message {
     
     /**
      * Error: Invalid use of an image variable for both input and output
      */
-    ASSIGNMENT_TO_SRC_IMAGE(ErrorLevel.ERROR, 
+    ASSIGNMENT_TO_SRC_IMAGE(Level.ERROR, 
             "Cannot assign a value to a non-destination image"),
     
-    IMAGE_NOT_USED(ErrorLevel.WARNING,
+    IMAGE_NOT_USED(Level.WARNING,
             "Image variable is defined but not used"),
     
-    NBR_REF_ON_DEST_IMAGE_VAR(ErrorLevel.ERROR, 
+    IMAGE_VAR_INIT_LHS(Level.ERROR,
+            "An image var cannot be assigned to in the init block"),
+    
+    INVALID_ASSIGNMENT_OP_WITH_DEST_IMAGE(Level.ERROR,
+            "Invalid assignment op with destination image"),
+    
+    NBR_REF_ON_DEST_IMAGE_VAR(Level.ERROR, 
             "Neighbourhood reference cannot be used with a destination image"),
     
-    NBR_REF_ON_NON_IMAGE_VAR(ErrorLevel.ERROR, 
+    NBR_REF_ON_NON_IMAGE_VAR(Level.ERROR, 
             "Neighbourhood reference cannot be used with a non-image variable"),
     
-    READING_FROM_DEST_IMAGE(ErrorLevel.ERROR, 
+    READING_FROM_DEST_IMAGE(Level.ERROR, 
             "Cannot read a value from a destination image"),
     
-    UNDEFINED_FUNCTION(ErrorLevel.ERROR,
+    SRC_IMAGE_IN_INIT_BLOCK(Level.ERROR,
+            "Source images cannot be referenced in an init block"),
+    
+    UNDEFINED_FUNCTION(Level.ERROR,
             "Call to undefined function"),
     
-    UNINIT_VAR(ErrorLevel.ERROR, 
+    UNINIT_VAR(Level.ERROR, 
             "Variable used before being assigned a value");
     
-    private ErrorLevel level;
+    private Level level;
     private String desc;
 
-    private ErrorCode(ErrorLevel level, String desc) {
+    private Message(Level level, String desc) {
         this.level = level;
         this.desc = desc;
     }
@@ -68,14 +78,14 @@ public enum ErrorCode {
      * Tests if this is an error
      */
     public boolean isError() {
-        return level == ErrorLevel.ERROR;
+        return level == Level.ERROR;
     }
     
     /*
      * Tests if this is a warning.
      */
     public boolean isWarning() {
-        return level == ErrorLevel.WARNING;
+        return level == Level.WARNING;
     }
 
     /**

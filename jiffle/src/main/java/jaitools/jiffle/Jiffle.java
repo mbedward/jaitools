@@ -28,7 +28,6 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 
 import org.antlr.runtime.ANTLRStringStream;
@@ -40,16 +39,17 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
 
 import org.codehaus.janino.SimpleCompiler;
 
-import jaitools.jiffle.parser.ErrorCode;
+import jaitools.jiffle.parser.Message;
 import jaitools.CollectionFactory;
+import jaitools.jiffle.parser.CheckFunctionCalls;
 import jaitools.jiffle.parser.CompilerExitException;
 import jaitools.jiffle.parser.ConvertTernaryExpr;
 import jaitools.jiffle.parser.DeferredErrorReporter;
 import jaitools.jiffle.parser.DirectRuntimeSourceCreator;
-import jaitools.jiffle.parser.FunctionValidator;
 import jaitools.jiffle.parser.IndirectRuntimeSourceCreator;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
+import jaitools.jiffle.parser.MessageTable;
 import jaitools.jiffle.parser.ParsingErrorReporter;
 import jaitools.jiffle.parser.RuntimeSourceCreator;
 import jaitools.jiffle.parser.VarClassifier;
@@ -57,6 +57,7 @@ import jaitools.jiffle.parser.VarTransformer;
 import jaitools.jiffle.runtime.JiffleDirectRuntime;
 import jaitools.jiffle.runtime.JiffleIndirectRuntime;
 import jaitools.jiffle.runtime.JiffleRuntime;
+import java.util.List;
 
 /**
  * Compiles scripts into runtime objects.
@@ -175,8 +176,7 @@ public class Jiffle {
     private ParsingErrorReporter errorReporter;
     
     private Map<String, ImageRole> imageParams;
-    private Map<String, ErrorCode> errors;
-    
+    private MessageTable msgTable;
     
     /**
      * Creates a new instance.
@@ -237,7 +237,6 @@ public class Jiffle {
         setImageParams(params);
         compile();
     }
-    
     
     /**
      * Sets the script. Calling this method will clear any previous script
@@ -489,15 +488,8 @@ public class Jiffle {
         primaryAST = null;
         finalAST = null;
         tokens = null;
-        clearRuntimeObjects();
-    }
-    
-    /**
-     * Clears all runtime objects
-     */
-    private void clearRuntimeObjects() {
         errorReporter = null;
-        errors = null;
+        msgTable = new MessageTable();
     }
     
     /**
@@ -505,11 +497,16 @@ public class Jiffle {
      */
     private String getErrorString() {
         StringBuilder sb = new StringBuilder();
-        for (Entry<String, ErrorCode> e : errors.entrySet()) {
-            sb.append(e.getValue().toString());
-            sb.append(": ");
-            sb.append(e.getKey());
-            sb.append("\n");
+        if (msgTable != null) {
+            Map<String, List<Message>> messages = msgTable.getMessages();
+            for (String key : messages.keySet()) {
+                for (Message msg : messages.get(key)) {
+                    sb.append(msg.toString());
+                    sb.append(": ");
+                    sb.append(key);
+                    sb.append("\n");
+                }
+            }
         }
         return sb.toString();
     }
@@ -541,25 +538,13 @@ public class Jiffle {
      * Examine function calls in the AST built by {@link #buildAST()} and
      * check that we recognize them all
      */
-    private boolean checkFunctionCalls() throws JiffleException {
-        FunctionValidator validator = null;
-        try {
-            CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
-            nodes.setTokenStream(tokens);
-            validator = new FunctionValidator(nodes);
-            validator.start();
+    private boolean checkFunctionCalls() {
+        CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
+        nodes.setTokenStream(tokens);
+        CheckFunctionCalls fnCalls = new CheckFunctionCalls(nodes, msgTable);
 
-            if (validator.hasError()) {
-                errors = validator.getErrors();
-                return false;
-            }
-            
-        } catch (RecognitionException ex) {
-            // anything at this stage is probably programmer error
-            throw new RuntimeException(ex);
-        }
-        
-        return true;
+        fnCalls.downup(primaryAST);
+        return !msgTable.hasErrors();
     }
 
     /**
@@ -576,31 +561,23 @@ public class Jiffle {
         try {
             CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
             nodes.setTokenStream(tokens);
-            classifier = new VarClassifier(nodes);
-            classifier.setImageParams(imageParams);
+            classifier = new VarClassifier(nodes, imageParams, msgTable);
             
             /*
              * TODO: actually do something with the ANTLR error messages in the reporter
              */
             classifier.setErrorReporter(errorReporter);
-            
             classifier.start();
-            
+
             
         } catch (CompilerExitException ex) {
             // no action required
             
         } catch (RecognitionException ex) {
             throw new JiffleException("Compilation failed: error not recognized");
-            
-        } finally {
-            errors = classifier.getErrors();
         }
-
-        for (ErrorCode error : errors.values()) {
-            if (error.isError()) return false;
-        }
-        return true;
+        
+        return !msgTable.hasErrors();
     }
 
     /**
@@ -618,9 +595,8 @@ public class Jiffle {
             
             nodes = new CommonTreeNodeStream(tree);
             nodes.setTokenStream(tokens);
-            ConvertTernaryExpr cte = new ConvertTernaryExpr(nodes);
-            ConvertTernaryExpr.start_return cteResult = cte.start();
-            finalAST = (CommonTree) cteResult.getTree();
+            ConvertTernaryExpr ternary = new ConvertTernaryExpr(nodes);
+            finalAST = (CommonTree) ternary.downup(tree);
 
         } catch (RecognitionException ex) {
             throw new IllegalStateException(ex);
@@ -750,7 +726,7 @@ public class Jiffle {
         try {
             creator.setErrorReporter(er);
             creator.start();
-            return creator.getSource();
+            return creator.getEvalSource();
             
         } catch (RecognitionException ex) {
             throw new JiffleException(er.getErrors());

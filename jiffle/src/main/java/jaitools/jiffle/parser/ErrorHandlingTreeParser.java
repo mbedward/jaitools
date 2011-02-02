@@ -20,6 +20,8 @@
 
 package jaitools.jiffle.parser;
 
+import java.util.List;
+import java.util.Map;
 import org.antlr.runtime.RecognizerSharedState;
 import org.antlr.runtime.tree.TreeNodeStream;
 import org.antlr.runtime.tree.TreeParser;
@@ -35,6 +37,8 @@ import org.antlr.runtime.tree.TreeParser;
 public abstract class ErrorHandlingTreeParser extends TreeParser {
 
     protected ParsingErrorReporter errorReporter;
+    
+    protected Map<String, List<Message>> errors;
     
     public ErrorHandlingTreeParser(TreeNodeStream input, RecognizerSharedState state) {
         super(input, state);

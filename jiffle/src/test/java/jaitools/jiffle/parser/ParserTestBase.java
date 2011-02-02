@@ -33,7 +33,7 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
  * @source $URL$
  * @version $Id$
  */
-public abstract class TestingParser {
+public abstract class ParserTestBase {
     
     /**
      * Helper function to scan and parse an input script and

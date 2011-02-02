@@ -37,6 +37,7 @@ options {
 
 @header {
 package jaitools.jiffle.parser;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -47,19 +48,18 @@ import jaitools.jiffle.Jiffle;
 
 @members {
 
+private MessageTable msgTable;
 private Map<String, Jiffle.ImageRole> imageParams;
-
-public void setImageParams( Map<String, Jiffle.ImageRole> imageParams ) {
-    this.imageParams = imageParams;
-}
-
 private Set<String> varsAll = CollectionFactory.set();
 private Set<String> varsAssignedTo = CollectionFactory.set();
 
-private Map<String, ErrorCode> errors = CollectionFactory.orderedMap();
+public VarClassifier(TreeNodeStream input, 
+        Map<String, Jiffle.ImageRole> imageParams,
+        MessageTable msgTable) {
 
-public Map<String, ErrorCode> getErrors() {
-    return errors;
+    this(input);
+    this.imageParams = imageParams;
+    this.msgTable = msgTable;
 }
 
 /*
@@ -68,7 +68,7 @@ public Map<String, ErrorCode> getErrors() {
 private void postCheck() {
     for (String varName : imageParams.keySet()) {
         if (!varsAll.contains(varName)) {
-            errors.put(varName, ErrorCode.IMAGE_NOT_USED);
+            msgTable.add(varName, Message.IMAGE_NOT_USED);
         } 
     }
 }
@@ -102,7 +102,10 @@ start
 @after {
     postCheck();
 }
-                : (var_init_block)? statement+ 
+                : script
+                ;
+
+script          : (var_init_block)? statement+ 
                 ;
 
 var_init_block  : ^(VAR_INIT_BLOCK var_init_list)
@@ -111,7 +114,11 @@ var_init_block  : ^(VAR_INIT_BLOCK var_init_list)
 var_init_list   : ^(VAR_INIT_LIST (var_init)*)
                 ;
 
-var_init        : ^(VAR_INIT ID expr)
+var_init 
+                : ^(VAR_INIT ID expr)
+                  {
+                      varsAll.add($ID.text);
+                  }
                 ;
 
 statement       : assignment
@@ -125,22 +132,23 @@ assignment      : ^(ASSIGN assign_op ID expr)
                       Jiffle.ImageRole role = imageParams.get($ID.text);
                       if (role != null) {
                           if (role != Jiffle.ImageRole.DEST) {
-                              errors.put($ID.text, ErrorCode.ASSIGNMENT_TO_SRC_IMAGE);
+                              msgTable.add($ID.text, Message.ASSIGNMENT_TO_SRC_IMAGE);
                           }
                       } else {
                           varsAssignedTo.add($ID.text);
                       }
-
                   }
                 ;
 
 expr            : ^(NBR_REF ID nbr_ref_expr nbr_ref_expr)
                   { 
+                      varsAll.add($ID.text);
+
                       Jiffle.ImageRole role = imageParams.get($ID.text);
                       if (role == null) {
-                          errors.put($ID.text, ErrorCode.NBR_REF_ON_NON_IMAGE_VAR);
+                          msgTable.add($ID.text, Message.NBR_REF_ON_NON_IMAGE_VAR);
                       } else if (role == Jiffle.ImageRole.DEST) {
-                          errors.put($ID.text, ErrorCode.NBR_REF_ON_DEST_IMAGE_VAR);
+                          msgTable.add($ID.text, Message.NBR_REF_ON_DEST_IMAGE_VAR);
 
                           // give up at this point
                           throw new NbrRefException();
@@ -150,15 +158,14 @@ expr            : ^(NBR_REF ID nbr_ref_expr nbr_ref_expr)
                 | ID
                   { 
                       varsAll.add($ID.text);
-
                       if (!(varsAssignedTo.contains($ID.text)  ||
-                            ConstantLookup.isDefined($ID.text))) {
+                                   ConstantLookup.isDefined($ID.text))) {
                           if (imageParams.containsKey($ID.text)) {
                               if (imageParams.get($ID.text) == Jiffle.ImageRole.DEST) {
-                                  errors.put($ID.text, ErrorCode.READING_FROM_DEST_IMAGE);
+                                  msgTable.add($ID.text, Message.READING_FROM_DEST_IMAGE);
                               }
                           } else {
-                              errors.put($ID.text, ErrorCode.UNINIT_VAR);
+                              msgTable.add($ID.text, Message.UNINIT_VAR);
                           }
                       }
                   }
