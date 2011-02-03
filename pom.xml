@@ -111,6 +111,12 @@
             <organizationUrl>http://www.geo-solutions.it/</organizationUrl>
         </developer>
         <developer>
+            <id>aaime</id>
+            <name>Andrea Aime</name>
+            <organization>GeoSolutions</organization>
+            <organizationUrl>http://www.geo-solutions.it/</organizationUrl>
+        </developer>
+        <developer>
             <id>andrea.antonello</id>
             <name>Andrea Antonello</name>
             <organization>HydroloGIS</organization>
