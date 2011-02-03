@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  * 
  * This file is part of jai-tools.
  *
@@ -39,8 +39,14 @@ import java.util.TreeSet;
  * following the DRY (Don't Repeat Yourself) principle.
  * Examples of use:
  * <pre><code>
+ * // simple
  * List&lt;Integer&gt; list1 = CollectionFactory.list();
+ * 
+ * // nested
  * List&lt;List&lt;String&gt;&gt; list2 = CollectionFactory.list();
+ * 
+ * // a multi-map
+ * Map&lt;String, List&lt;Integer&gt;&gt; multiMap = CollectionFactory.map();
  * </code></pre>
  * 
  * @author Michael Bedward
@@ -50,11 +56,12 @@ import java.util.TreeSet;
  */
 public class CollectionFactory {
     /**
-     * Create a new {@code Map} instance.
+     * Returns a new {@code Map} object. The returned
+     * object is a {@link HashMap}.
      * <p>
      * Example of use:
      * <pre><code>
-     * Map&lt;MyObject&gt; foo = CollectionFactory.map();
+     * Map&lt;Foo, Bar&gt; myMap = CollectionFactory.map();
      * </code></pre>
      * 
      * @return a new Map&lt;K,V&gt; instance
@@ -64,12 +71,12 @@ public class CollectionFactory {
     }
 
     /**
-     * Create a new {@code Map} instance that maintains the
-     * input order of its key:value pairs.
+     * Returns a new {@code Map} object that maintains insertion
+     * order. The returned object is a {@link LinkedHashMap}.
      * <p>
      * Example of use:
      * <pre><code>
-     * Map&lt;MyObject&gt; foo = CollectionFactory.orderedMap();
+     * Map&lt;Foo, Bar&gt; myMap = CollectionFactory.orderedMap();
      * </code></pre>
      *
      * @return a new Map&lt;K,V&gt; instance
@@ -79,12 +86,13 @@ public class CollectionFactory {
     }
 
     /**
-     * Create a new {@code SortedMap} instance. Note that type
-     * {@code T} must implement {@linkplain Comparable}.
+     * Returns a new {@code SortedMap} object. Key type {@code K} must
+     * implement {@linkplain Comparable}. The returned object is a
+     * {@link TreeMap}.
      * <p>
      * Example of use:
      * <pre><code>
-     * Map&lt;MyObject&gt; foo = CollectionFactory.sortedMap();
+     * Map&lt;Foo, Bar&gt; myMap = CollectionFactory.sortedMap();
      * </code></pre>
      * 
      * @return a new SortedMap&lt;K,V&gt; instance
@@ -92,13 +100,14 @@ public class CollectionFactory {
     public static <K, V> SortedMap<K, V> sortedMap() {
         return new TreeMap<K, V>();
     }
-
+    
     /**
-     * Create a new {@code List} instance.
+     * Returns a new {@code List} object. The returned object is
+     * an {@link ArrayList}.
      * <p>
      * Example of use:
      * <pre><code>
-     * List&lt;MyObject&gt; foo = CollectionFactory.list();
+     * List&lt;Foo&gt; myList = CollectionFactory.list();
      * </code></pre>
      * 
      * @return a new List&lt;T&gt; instance
@@ -108,11 +117,11 @@ public class CollectionFactory {
     }
     
     /**
-     * Create a new {@code Stack} instance.
+     * Returns a new {@code Stack} object.
      * <p>
      * Example of use:
      * <pre><code>
-     * Stack&lt;MyObject&gt; foo = CollectionFactory.stack();
+     * Stack&lt;Foo&gt; myStack = CollectionFactory.stack();
      * </code></pre>
      * 
      * @return a new Stack&lt;T&gt; instance
@@ -122,11 +131,12 @@ public class CollectionFactory {
     }
 
     /** 
-     * Create a new {@code Set} instance.
+     * Returns a new {@code Set} instance. The returned object is
+     * a {@link HashSet}.
      * <p>
      * Example of use:
      * <pre><code>
-     * Set&lt;MyObject&gt; foo = CollectionFactory.set();
+     * Set&lt;Foo&gt; mySet = CollectionFactory.set();
      * </code></pre>
      * 
      * @return a new HashSet&lt;T&gt; instance
@@ -136,12 +146,12 @@ public class CollectionFactory {
     }
 
     /**
-     * Create a new {@code Set} instance that maintains
-     * the input order of its elements.
+     * Returns a new {@code Set} instance that maintains
+     * the insertion order of its elements.
      * <p>
      * Example of use:
      * <pre><code>
-     * Set&lt;MyObject&gt; foo = CollectionFactory.set();
+     * Set&lt;Foo&gt; mySet = CollectionFactory.set();
      * </code></pre>
      *
      * @return a new LinkedHashSet&lt;T&gt; instance
@@ -151,15 +161,16 @@ public class CollectionFactory {
     }
 
     /** 
-     * Create a new {@code SortedSet} instance. Note that the type {@code T}
-     * must implement {@linkplain Comparable}.
+     * Returns a new {@code SortedSet} instance. The type {@code T}
+     * must implement {@linkplain Comparable}. The returned object
+     * is a {@link TreeSet}.
      * <p>
      * Example of use:
      * <pre><code>
      * Set&lt;MyObject&gt; foo = CollectionFactory.sortedSet();
      * </code></pre>
      * 
-     * @return a new Set&lt;T&gt; instance
+     * @return a new TreeSet&lt;T&gt; instance
      */
     public static <T> SortedSet<T> sortedSet() {
         return new TreeSet<T>();
