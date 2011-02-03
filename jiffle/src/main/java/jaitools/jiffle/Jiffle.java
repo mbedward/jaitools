@@ -42,18 +42,20 @@ import org.codehaus.janino.SimpleCompiler;
 import jaitools.jiffle.parser.Message;
 import jaitools.CollectionFactory;
 import jaitools.jiffle.parser.CheckFunctionCalls;
-import jaitools.jiffle.parser.CompilerExitException;
+import jaitools.jiffle.parser.CheckImageUse;
+import jaitools.jiffle.parser.CheckNbrRefs;
+import jaitools.jiffle.parser.CheckUninitVars;
 import jaitools.jiffle.parser.ConvertTernaryExpr;
 import jaitools.jiffle.parser.DeferredErrorReporter;
-import jaitools.jiffle.parser.DirectRuntimeSourceCreator;
-import jaitools.jiffle.parser.IndirectRuntimeSourceCreator;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
 import jaitools.jiffle.parser.MessageTable;
 import jaitools.jiffle.parser.ParsingErrorReporter;
 import jaitools.jiffle.parser.RuntimeSourceCreator;
-import jaitools.jiffle.parser.VarClassifier;
-import jaitools.jiffle.parser.VarTransformer;
+import jaitools.jiffle.parser.RuntimeSourceCreatorBase;
+import jaitools.jiffle.parser.TagConstants;
+import jaitools.jiffle.parser.TagProxyFunctions;
+import jaitools.jiffle.parser.TagVars;
 import jaitools.jiffle.runtime.JiffleDirectRuntime;
 import jaitools.jiffle.runtime.JiffleIndirectRuntime;
 import jaitools.jiffle.runtime.JiffleRuntime;
@@ -98,6 +100,34 @@ public class Jiffle {
             
             return null;
         }
+    }
+
+    /**
+     * Identifies the runtime source elements produced by {@link #createRuntimeSource}.
+     * The constants are defined in the order that we want the elements to appear
+     * in the runtime class.
+     */
+    private static enum SourceElement {
+        /**
+         * Identifies source for image-scope variables (fields
+         * in the runtime class).
+         */
+        VARS,
+
+        /**
+         * Identifies source for the constructor.
+         */
+        CTOR,
+
+        /**
+         * Identifies source for the the evaluate method body.
+         */
+        EVAL,
+
+        /**
+         * Identifies source for the image-scope variable getter method.
+         */
+        GETTER;
     }
     
     private static int refCount = 0;
@@ -171,6 +201,7 @@ public class Jiffle {
 
     private String theScript;
     private CommonTree primaryAST;
+    private CommonTree transformedAST;
     private CommonTree finalAST;
     private CommonTokenStream tokens;
     private ParsingErrorReporter errorReporter;
@@ -363,17 +394,17 @@ public class Jiffle {
         }
         
         clearCompiledObjects();
-        buildAST();
-
-        if (!checkFunctionCalls()) {
-            throw new JiffleException(getErrorString());
-        }
-
-        if (!classifyVars()) {
+        buildPrimaryAST();
+        if (!checkPrimaryASTSemantics()) {
             throw new JiffleException(getErrorString());
         }
 
         transformTree();
+        if (!checkTransformedASTSemantics()) {
+            throw new JiffleException(getErrorString());
+        }
+
+        finalAST = transformedAST;
     }
     
     /**
@@ -411,16 +442,16 @@ public class Jiffle {
      * 
      * @return the runtime object
      */
-    public JiffleRuntime getRuntimeInstance(EvaluationModel type) throws JiffleException {
-        switch (type) {
+    public JiffleRuntime getRuntimeInstance(EvaluationModel model) throws JiffleException {
+        switch (model) {
             case DIRECT:
-                return createRuntimeInstance(type, DEFAULT_DIRECT_BASE_CLASS);
+                return createRuntimeInstance(model, DEFAULT_DIRECT_BASE_CLASS);
                 
             case INDIRECT:
-                return createRuntimeInstance(type, DEFAULT_INDIRECT_BASE_CLASS);
+                return createRuntimeInstance(model, DEFAULT_INDIRECT_BASE_CLASS);
                 
             default:
-                throw new IllegalArgumentException("Invalid runtime class type: " + type);
+                throw new IllegalArgumentException("Invalid runtime class type: " + model);
         }
     }
     
@@ -440,13 +471,13 @@ public class Jiffle {
      * @return the runtime object
      */
     public <T extends JiffleRuntime> T getRuntimeInstance(Class<T> baseClass) throws JiffleException {
-        EvaluationModel type = EvaluationModel.get(baseClass);
-        if (type == null) {
+        EvaluationModel model = EvaluationModel.get(baseClass);
+        if (model == null) {
             throw new JiffleException(baseClass.getName() + 
                     " does not implement a required Jiffle runtime interface");
         }
         
-        return (T) createRuntimeInstance(type, baseClass);
+        return (T) createRuntimeInstance(model, baseClass);
     }
     
     /**
@@ -457,19 +488,20 @@ public class Jiffle {
      * 
      * @return source for the runtime class
      */
-    public String getRuntimeSource(EvaluationModel type, boolean scriptInDocs) 
+    public String getRuntimeSource(EvaluationModel model, boolean scriptInDocs)
             throws JiffleException {
         
         Class<? extends JiffleRuntime> baseClass = null;
-        switch (type) {
+        switch (model) {
             case DIRECT:
                 baseClass = DEFAULT_DIRECT_BASE_CLASS;
                 break;
                 
             case INDIRECT:
                 baseClass = DEFAULT_INDIRECT_BASE_CLASS;
+                break;
         }
-        return createRuntimeSource(type, baseClass, scriptInDocs);
+        return createRuntimeSource(model, baseClass, scriptInDocs);
     }
 
     /**
@@ -517,7 +549,7 @@ public class Jiffle {
      * 
      * @throws jaitools.jiffle.interpreter.JiffleException
      */
-    private void buildAST() throws JiffleException {
+    private void buildPrimaryAST() throws JiffleException {
         try {
             ANTLRStringStream input = new ANTLRStringStream(theScript);
             JiffleLexer lexer = new JiffleLexer(input);
@@ -535,72 +567,126 @@ public class Jiffle {
     }
 
     /**
-     * Examine function calls in the AST built by {@link #buildAST()} and
-     * check that we recognize them all
+     * Checks for semantic errors in the AST built by {@link #buildPrimaryAST()}.
+     *
+     * @return {@code true} if no errors; {@code false} otherwise
+     */
+    private boolean checkPrimaryASTSemantics() {
+        if (!checkFunctionCalls() ||
+            !checkNeighbourRefs() ||
+            !checkImageUse()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean checkTransformedASTSemantics() {
+        if (!checkUninitVars()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Checks that function calls in the AST built by {@link #buildAST()}
+     * are valid.
+     *
+     * @return {@code true} if no errors; {@code false} otherwise
      */
     private boolean checkFunctionCalls() {
         CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
         nodes.setTokenStream(tokens);
-        CheckFunctionCalls fnCalls = new CheckFunctionCalls(nodes, msgTable);
+        CheckFunctionCalls check = new CheckFunctionCalls(nodes, msgTable);
 
-        fnCalls.downup(primaryAST);
+        check.downup(primaryAST);
         return !msgTable.hasErrors();
     }
 
     /**
-     * Examine variables in the AST built by {@link #buildAST()} and
-     * do the following:
-     * <ul>
-     * <li> Identify positional and non-positional vars
-     * <li> Report on vars that are used before being assigned a value
-     * (all being well, these will later be tagged as input image vars
-     * by {@link #validateImageVars() })
+     * Checks that references to source and destination images in the AST built by
+     * {@link #buildAST()} are valid.
+     *
+     * @return {@code true} if no errors; {@code false} otherwise
      */
-    private boolean classifyVars() throws JiffleException {
-        VarClassifier classifier = null;
-        try {
-            CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
-            nodes.setTokenStream(tokens);
-            classifier = new VarClassifier(nodes, imageParams, msgTable);
-            
-            /*
-             * TODO: actually do something with the ANTLR error messages in the reporter
-             */
-            classifier.setErrorReporter(errorReporter);
-            classifier.start();
+    private boolean checkImageUse() {
+        CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
+        nodes.setTokenStream(tokens);
+        CheckImageUse check = new CheckImageUse(nodes, imageParams, msgTable);
 
-            
-        } catch (CompilerExitException ex) {
-            // no action required
-            
-        } catch (RecognitionException ex) {
-            throw new JiffleException("Compilation failed: error not recognized");
-        }
-        
+        check.downup(primaryAST);
         return !msgTable.hasErrors();
     }
 
     /**
-     * Rewrites variable and ternary expression nodes in the AST.
+     * Checks that image neighbourhood references in the AST built by
+     * {@link #buildAST()} are valid.
+     *
+     * @return {@code true} if no errors; {@code false} otherwise
      */
-    private void transformTree() {
+    private boolean checkNeighbourRefs() {
+        CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
+        nodes.setTokenStream(tokens);
+        CheckNbrRefs check = new CheckNbrRefs(nodes, imageParams, msgTable);
+
+        check.downup(primaryAST);
+        return !msgTable.hasErrors();
+    }
+
+    /**
+     * Rewrites the primary AST in steps to produce an AST suitable for
+     * runtime source generation.
+     *
+     * @throws JiffleException if any unrecoverable tree parser errors occur
+     */
+    private void transformTree() throws JiffleException {
+        CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
+        nodes.setTokenStream(tokens);
+        CommonTree tree = primaryAST;
+
         try {
-            CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
-            nodes.setTokenStream(tokens);
-            
-            VarTransformer vt = new VarTransformer(nodes);
-            vt.setImageParams(imageParams);
-            VarTransformer.start_return vtResult = vt.start();
-            CommonTree tree = (CommonTree) vtResult.getTree();
-            
+            ConvertTernaryExpr ternary = new ConvertTernaryExpr(nodes);
+            tree = (CommonTree) ternary.downup(tree);
+
             nodes = new CommonTreeNodeStream(tree);
             nodes.setTokenStream(tokens);
-            ConvertTernaryExpr ternary = new ConvertTernaryExpr(nodes);
-            finalAST = (CommonTree) ternary.downup(tree);
 
+            TagConstants constants = new TagConstants(nodes);
+            tree = (CommonTree) constants.downup(tree);
+
+            nodes = new CommonTreeNodeStream(tree);
+            nodes.setTokenStream(tokens);
+
+            TagProxyFunctions proxyFn = new TagProxyFunctions(nodes);
+            tree = (CommonTree) proxyFn.downup(tree);
+
+            nodes = new CommonTreeNodeStream(tree);
+            nodes.setTokenStream(tokens);
+
+            TagVars vars = new TagVars(nodes, imageParams);
+            tree = (CommonTree) vars.start().getTree();
+            
         } catch (RecognitionException ex) {
-            throw new IllegalStateException(ex);
-        }        
+            throw new JiffleException(
+                    "Error in preparing the program tree for runtime source generation");
+        }
+
+        transformedAST = tree;
+    }
+
+    /**
+     * Checks for initialization of variables before use in the transformed AST.
+     *
+     * @return {@code true} if no errors; {@code false} otherwise
+     */
+    private boolean checkUninitVars() {
+        CommonTreeNodeStream nodes = new CommonTreeNodeStream(transformedAST);
+        nodes.setTokenStream(tokens);
+
+        CheckUninitVars check = new CheckUninitVars(nodes, msgTable);
+        check.downup(transformedAST);
+        return !msgTable.hasErrors();
     }
 
     /**
@@ -610,13 +696,13 @@ public class Jiffle {
      * 
      * @throws Exception 
      */
-    private JiffleRuntime createRuntimeInstance(EvaluationModel type, 
+    private JiffleRuntime createRuntimeInstance(EvaluationModel model,
             Class<? extends JiffleRuntime> baseClass) throws JiffleException {
         if (!isCompiled()) {
             throw new JiffleException("The script has not been compiled");
         }
 
-        String runtimeSource = createRuntimeSource(type, baseClass, false);
+        String runtimeSource = createRuntimeSource(model, baseClass, false);
 
         try {
             SimpleCompiler compiler = new SimpleCompiler();
@@ -625,7 +711,7 @@ public class Jiffle {
             StringBuilder sb = new StringBuilder();
             sb.append(properties.getProperty(RUNTIME_PACKAGE_KEY)).append(".");
             
-            switch (type) {
+            switch (model) {
                 case DIRECT:
                     sb.append(properties.getProperty(DIRECT_CLASS_KEY));
                     break;
@@ -655,7 +741,7 @@ public class Jiffle {
      * 
      * @throws JiffleException if an error occurs generating the source 
      */
-    private String createRuntimeSource(EvaluationModel type, 
+    private String createRuntimeSource(EvaluationModel model,
             Class<? extends JiffleRuntime> baseClass, boolean scriptInDocs) throws JiffleException {
         
         StringBuilder sb  = new StringBuilder();
@@ -676,57 +762,63 @@ public class Jiffle {
         }
         
         sb.append("public class ");
+        String className = null;
         
-        switch (type) {
+        switch (model) {
             case DIRECT:
-                sb.append(properties.getProperty(DIRECT_CLASS_KEY));
+                className = properties.getProperty(DIRECT_CLASS_KEY);
                 break;
                 
             case INDIRECT:
-                sb.append(properties.getProperty(INDIRECT_CLASS_KEY));
+                className = properties.getProperty(INDIRECT_CLASS_KEY);
                 break;
                 
             default:
                 throw new IllegalArgumentException("Internal compiler error");
         }
-        
+        sb.append(className);
+
         sb.append(" extends ").append(baseClass.getName()).append(" { \n");
-        sb.append(formatSource(astToJava(type), 4));
+
+        //sb.append(formatSource(astToJava(type), 4));
+        Map<SourceElement, String> sources = astToJava(model, className);
+
+        for (SourceElement element : SourceElement.values()) {
+            String src = sources.get(element);
+            if (src.trim().length() > 0) {
+                sb.append(formatSource(src, 4));
+            }
+        }
+
         sb.append("} \n");
-        
         return sb.toString();
     }
     
     /**
-     * Converts the AST to Java statements.
+     * Converts the AST to Java source for runtime class elements.
      * 
-     * @return Java souce code
+     * @return Java source code
      * 
      * @throws JiffleException if an error occurs parsing the AST
      */
-    private String astToJava(EvaluationModel type) throws JiffleException {
+    private Map<SourceElement, String> astToJava(EvaluationModel model, String className)
+            throws JiffleException {
+
         BufferedTreeNodeStream nodes = new BufferedTreeNodeStream(finalAST);
         nodes.setTokenStream(tokens);
+        RuntimeSourceCreatorBase creator = new RuntimeSourceCreator(nodes);
         ParsingErrorReporter er = new DeferredErrorReporter();
-        RuntimeSourceCreator creator = null;
-        
-        switch (type) {
-            case DIRECT:
-                creator = new DirectRuntimeSourceCreator(nodes);
-                break;
-                
-            case INDIRECT:
-                creator = new IndirectRuntimeSourceCreator(nodes);
-                break;
-                
-            default:
-                throw new IllegalArgumentException("Internal compiler error");
-        }
+        creator.setErrorReporter(er);
         
         try {
-            creator.setErrorReporter(er);
-            creator.start();
-            return creator.getEvalSource();
+            creator.start(model, className);
+
+            Map<SourceElement, String> sources = CollectionFactory.map();
+            sources.put(SourceElement.VARS, creator.getVarSource());
+            sources.put(SourceElement.CTOR, creator.getCtorSource());
+            sources.put(SourceElement.EVAL, creator.getEvalSource());
+            sources.put(SourceElement.GETTER, creator.getGetterSource());
+            return sources;
             
         } catch (RecognitionException ex) {
             throw new JiffleException(er.getErrors());

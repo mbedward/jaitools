@@ -32,13 +32,6 @@ options {
     filter = true;
 }
 
-tokens {
-    IMAGE_READ;
-    IMAGE_WRITE;
-    VAR_IMAGE_SCOPE;
-    VAR_PIXEL_SCOPE;
-}
-
 @header {
 package jaitools.jiffle.parser;
 

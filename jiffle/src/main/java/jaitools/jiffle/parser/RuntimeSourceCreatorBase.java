@@ -27,6 +27,7 @@ import org.antlr.runtime.RecognizerSharedState;
 import org.antlr.runtime.tree.TreeNodeStream;
 
 import jaitools.CollectionFactory;
+import jaitools.jiffle.Jiffle;
 
 /**
  * Base class for runtime source creation tree parsers.
@@ -40,10 +41,12 @@ import jaitools.CollectionFactory;
  * @source $URL$
  * @version $Id$
  */
-public abstract class RuntimeSourceCreator extends ErrorHandlingTreeParser {
+public abstract class RuntimeSourceCreatorBase extends ErrorHandlingTreeParser {
 
+    protected StringBuilder ctorSB;
     protected StringBuilder evalSB;
     protected StringBuilder varSB;
+    protected StringBuilder getterSB;
     protected FunctionLookup functionLookup;
 
     protected class LocalVar {
@@ -64,15 +67,22 @@ public abstract class RuntimeSourceCreator extends ErrorHandlingTreeParser {
         }
     }
 
-    public RuntimeSourceCreator(TreeNodeStream input, RecognizerSharedState state) {
+    public RuntimeSourceCreatorBase(TreeNodeStream input, RecognizerSharedState state) {
         super(input, state);
 
         functionLookup = new FunctionLookup();
+
+        ctorSB = new StringBuilder();
         evalSB = new StringBuilder();
         varSB = new StringBuilder();
+        getterSB = new StringBuilder();
     }
     
-    public abstract void start() throws RecognitionException;
+    public abstract void start(Jiffle.EvaluationModel model, String runtimeClassName) throws RecognitionException;
+
+    public String getCtorSource() {
+        return ctorSB.toString();
+    }
 
     public String getEvalSource() {
         return evalSB.toString();
@@ -80,6 +90,10 @@ public abstract class RuntimeSourceCreator extends ErrorHandlingTreeParser {
     
     public String getVarSource() {
         return varSB.toString();
+    }
+
+    public String getGetterSource() {
+        return getterSB.toString();
     }
 
     protected String getRuntimeExpr(String name, int numArgs) {

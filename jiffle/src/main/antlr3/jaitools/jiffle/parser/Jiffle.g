@@ -55,6 +55,7 @@ tokens {
     VAR_SOURCE;
     VAR_IMAGE_SCOPE;
     VAR_PIXEL_SCOPE;
+    VAR_PROVIDED;
 }
 
 @header {

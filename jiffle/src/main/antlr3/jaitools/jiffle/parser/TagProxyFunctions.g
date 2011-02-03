@@ -56,7 +56,7 @@ function_call
                       }
                   }
 
-                  -> {info.isProxy()}? VAR_IMAGE_SCOPE[info.getRuntimeExpr()]
+                  -> {info.isProxy()}? VAR_PROVIDED[info.getRuntimeExpr()]
                   -> ^(FUNC_CALL ID expr_list)
                 ;
 

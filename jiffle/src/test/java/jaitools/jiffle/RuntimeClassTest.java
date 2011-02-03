@@ -20,10 +20,10 @@
 
 package jaitools.jiffle;
 
-import jaitools.jiffle.runtime.JiffleDirectRuntime;
 import java.util.Map;
 
 import jaitools.CollectionFactory;
+import jaitools.jiffle.runtime.JiffleDirectRuntime;
 import jaitools.jiffle.runtime.JiffleIndirectRuntime;
 
 import org.junit.Before;
@@ -55,14 +55,14 @@ public class RuntimeClassTest {
         Object runtime = jiffle.getRuntimeInstance(Jiffle.EvaluationModel.DIRECT);
         assertTrue(runtime instanceof JiffleDirectRuntime);
     }
-    
+
     @Test
     public void getIndirectRuntime() throws Exception {
         setupSingleDestScript();
         Object runtime = jiffle.getRuntimeInstance(Jiffle.EvaluationModel.INDIRECT);
         assertTrue(runtime instanceof JiffleIndirectRuntime);
     }
-    
+
     @Test
     public void customDirectBaseClass() throws Exception {
         setupSingleDestScript();

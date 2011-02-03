@@ -95,7 +95,7 @@ expr            : ^(ASSIGN assign_op ID expr)
                 | ^(expr_op expr expr)
                 | ^(BRACKETED_EXPR expr)
                 | CONSTANT
-                | VAR_IMAGE_SCOPE
+                | VAR_PROVIDED
 
                 | ID
                   -> {isSourceImage($ID.text)}? VAR_SOURCE[$ID.text]
