@@ -18,7 +18,10 @@
  * 
  */
   
- /** 
+ /**
+  * Converts calls to functions that are proxies for reference image
+  * parameters (e.g. width(), height()) to VAR_PROVIDED tokens.
+  *
   * @author Michael Bedward
   */
 

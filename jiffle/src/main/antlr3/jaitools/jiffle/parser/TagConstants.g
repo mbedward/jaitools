@@ -18,7 +18,9 @@
  * 
  */
   
- /** 
+ /**
+  * Tags tokens in the AST representing pre-defined constants.
+  *
   * @author Michael Bedward
   */
 

@@ -19,6 +19,8 @@
  */
 
  /**
+  * Generates Java sources for the runtime class from the final AST.
+  *
   * @author Michael Bedward
   */
 
@@ -45,18 +47,22 @@ private Jiffle.EvaluationModel model;
 private FunctionLookup functionLookup = new FunctionLookup();
 private Set<String> imageScopeVars = CollectionFactory.orderedSet();
 
-private void finalizeSource() {
+private void createVarSource() {
     if (imageScopeVars.isEmpty()) return;
 
-    varSB.append("\n");
-    varSB.append("Map<String, Number> varLookup; \n");
-
-    ctorSB.append("varLookup = jaitools.CollectionFactory.map(); \n");
+    getterSB.append("public Double getVar(String varName) { \n");
+    final int N = imageScopeVars.size();
+    int k = 1;
     for (String name : imageScopeVars) {
-        ctorSB.append("varLookup.put( ");
-        ctorSB.append("\"").append(name).append("\", ").append(name);
-        ctorSB.append("); \n");
+        getterSB.append("if (\"").append(name).append("\".equals(varName)) { \n");
+        getterSB.append("return ").append(name).append("; \n");
+        getterSB.append("}");
+        if (k < N) {
+            getterSB.append(" else ");
+        }
     }
+    getterSB.append("\n").append("return null; \n");
+    getterSB.append("} \n");
 }
 
 }
@@ -81,10 +87,9 @@ start[Jiffle.EvaluationModel model, String className]
     }
 }
 @after {
+    createVarSource();
     ctorSB.append("} \n");
     evalSB.append("} \n");
-
-    finalizeSource();
 }
                 : var_init* (statement { evalSB.append($statement.src).append(";\n"); } )+
                 ;
@@ -267,9 +272,15 @@ expr returns [String src, String priorSrc ]
                 | ^(MOD e1=expr e2=expr) { $src = e1.src + " \% " + e2.src; }
                 | ^(PLUS e1=expr e2=expr) { $src = e1.src + " + " + e2.src; }
                 | ^(MINUS e1=expr e2=expr) { $src = e1.src + " - " + e2.src; }
-                | ^(PREFIX PLUS e1=expr) { $src = "+" + e1.src; }
-                | ^(PREFIX MINUS e1=expr) { $src = "-" + e1.src; }
 
+                | ^(SIGN PLUS e1=expr) { $src = "+" + e1.src; }
+                | ^(SIGN MINUS e1=expr) { $src = "-" + e1.src; }
+
+                | ^(PREFIX INCR e1=expr) { $src = "++" + e1.src; }
+                | ^(PREFIX DECR e1=expr) { $src = "--" + e1.src; }
+
+                | ^(POSTFIX INCR e1=expr) { $src = e1.src + "++"; }
+                | ^(POSTFIX DECR e1=expr) { $src = e1.src + "--"; }
 
                 | ^(OR e1=expr e2=expr)
                   {
@@ -325,7 +336,7 @@ expr returns [String src, String priorSrc ]
                     $src = fn + "(" + e1.src + ", " + e2.src + ")";
                   }
 
-                | ^(PREFIX NOT e1=expr)
+                | ^(SIGN NOT e1=expr)
                   {
                     String fn = getRuntimeExpr("NOT", 1);
                     $src = fn + "(" + e1.src + ")";

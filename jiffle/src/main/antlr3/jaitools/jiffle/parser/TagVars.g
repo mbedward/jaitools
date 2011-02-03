@@ -18,7 +18,15 @@
  * 
  */
   
- /** 
+ /**
+  * Transforms tokens representing variables into specific token types.
+  * <p>
+  * Image variable ID tokens, other than those in neighbourhood reference nodes, are
+  * transformed to either VAR_DEST or VAR_SOURCE tokens.
+  * <p>
+  * Non-image variables are transformed to VAR_IMAGE_SCOPE or VAR_PIXEL_SCOPE
+  * tokens, with the former being variables declared in an init block.
+  *
   * @author Michael Bedward
   */
 
@@ -91,7 +99,11 @@ expr            : ^(ASSIGN assign_op ID expr)
                   
                 | ^(IF_CALL expr_list)
                 | ^(QUESTION expr expr expr)
-                | ^(PREFIX unary_op expr)
+
+                | ^(SIGN sign_op expr)
+                | ^(PREFIX incdec_op expr)
+                | ^(POSTFIX incdec_op expr)
+
                 | ^(expr_op expr expr)
                 | ^(BRACKETED_EXPR expr)
                 | CONSTANT
@@ -127,26 +139,26 @@ expr_op         : POW
                 | NE 
                 ;
 
-assign_op	: EQ
-		| TIMESEQ
-		| DIVEQ
-		| MODEQ
-		| PLUSEQ
-		| MINUSEQ
-		;
-		
+assign_op       : EQ
+                | TIMESEQ
+                | DIVEQ
+                | MODEQ
+                | PLUSEQ
+                | MINUSEQ
+                ;
+
+sign_op         : PLUS
+                | MINUS
+                | NOT
+                ;
+
 incdec_op       : INCR
                 | DECR
                 ;
 
-unary_op	: PLUS
-		| MINUS
-		| NOT
-		;
-		
-type_name	: 'int'
-		| 'float'
-		| 'double'
-		| 'boolean'
-		;
+type_name       : 'int'
+                | 'float'
+                | 'double'
+                | 'boolean'
+                ;
 

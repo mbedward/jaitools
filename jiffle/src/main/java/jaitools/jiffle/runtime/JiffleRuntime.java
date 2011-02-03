@@ -37,8 +37,8 @@ public interface JiffleRuntime {
      * @param varName variable name
      *
      * @return the values or {@code null} if the variable name is
-     * not found
+     *         not found
      */
-    <T extends Number> T getValue(String varName);
+    Double getVar(String varName);
 
 }

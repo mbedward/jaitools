@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -59,12 +60,45 @@ import jaitools.jiffle.parser.TagVars;
 import jaitools.jiffle.runtime.JiffleDirectRuntime;
 import jaitools.jiffle.runtime.JiffleIndirectRuntime;
 import jaitools.jiffle.runtime.JiffleRuntime;
-import java.util.List;
 
 /**
- * Compiles scripts into runtime objects.
+ * Compiles scripts and generates Java sources and executable bytecode for
+ * runtime classes.
  * <p>
- * DOCUMENT ME PROPERLY !
+ * Example of use:
+ * <pre><code>
+ * // A script to write sequential values to image pixels
+ * String script = "init { n = 0; } dest = n++ ;" ;
+ *
+ * // We tell Jiffle about variable names that represent images
+ * // (in this case, only "dest") via a Map of parameters
+ * Map&lt;String, Jiffle.ImageRole&gt; imageParams = CollectionFactory.map();
+ * imageParams.put("dest", Jiffle.ImageRole.DEST);
+ *
+ * // Using this constructor results in the script being compiled
+ * // immediately (any errors will generate JiffleExceptions)
+ * Jiffle jiffle = new Jiffle(script, imageParams);
+ *
+ * // Now get a runtime object
+ * JiffleDirectRuntime runtime = jiffle.getRuntimeInstance();
+ *
+ * // Create an image to hold the results of the script and pass it
+ * // to the runtime object
+ * final int width = 10;
+ * TiledImage destImg = ImageUtils.createConstantImage(width, width, 0.0d);
+ * runtime.setDestinationImage("dest", destImg);
+ *
+ * // Evaluate the script for all destination image pixels
+ * runtime.evaluateAll();
+ * </code></pre>
+ * For further examples of how to create and run Jiffle scripts see the
+ * {@code jaitools.demo.jiffle} package in the JAI-tools demo module.
+ *
+ * <h4>Implementation note</h4>
+ * The Jiffle compiler is essentially a Jiffle script to Java translator.
+ * When a client requests a runtime object, this class translates the input
+ * script and passes the resulting source to the embedded Janino compiler
+ * which creates executable bytecode in memory.
  * 
  * @author Michael Bedward
  * @since 1.0
@@ -787,6 +821,7 @@ public class Jiffle {
             String src = sources.get(element);
             if (src.trim().length() > 0) {
                 sb.append(formatSource(src, 4));
+                sb.append("\n");
             }
         }
 

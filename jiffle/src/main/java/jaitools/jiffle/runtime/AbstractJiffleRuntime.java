@@ -34,16 +34,10 @@ import java.util.Map;
 public abstract class AbstractJiffleRuntime implements JiffleRuntime {
     
     /**
-     * Maps names of variables ({@link String}) declared in the script's
-     * init block with their values (&lt;T extends {@link Number}&gt;).
-     */
-    protected Map values = new HashMap();
-
-    /**
      * {@inheritDoc}
      */
-    public <T extends Number> T getValue(String varName) {
-        return (T) values.get(varName);
+    public Double getVar(String varName) {
+        return null;
     }
 
 }

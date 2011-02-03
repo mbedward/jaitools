@@ -27,7 +27,7 @@
 tree grammar ConvertTernaryExpr;
 
 options {
-    tokenVocab = VarTransformer;
+    tokenVocab = Jiffle;
     ASTLabelType = CommonTree;
     output = AST;
     filter = true;

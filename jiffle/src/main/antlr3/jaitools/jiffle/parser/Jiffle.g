@@ -42,8 +42,9 @@ tokens {
     NBR_REF;
     ABS_NBR_REF;
     REL_NBR_REF;
-    POSTFIX;
     PREFIX;
+    POSTFIX;
+    SIGN;
     VAR_INIT;
     VAR_INIT_BLOCK;
     VAR_INIT_LIST;
@@ -89,7 +90,7 @@ protected Object recoverFromMismatchedToken(IntStream input, int ttype, BitSet f
 }
 
 
-prog		: (var_init_block)? statement+ EOF!
+prog            : (var_init_block)? statement+ EOF!
                 ;
                 catch [UnexpectedInputException ex] {
                     throw new JiffleParserException(ex);
@@ -101,17 +102,19 @@ var_init_block  : INIT LCURLY var_init* RCURLY (eos)? -> var_init*
 var_init        : ID (EQ expr)? eos -> ^(VAR_INIT ID expr?)
                 ;
 
-statement	: expr eos!
-		;
-		
-expr		: assign_expr
+statement       : expr eos!
+                ;
+
+expr            : assign_expr
+                | incdec_expr
                 | cond_expr
-		;
+                ;
 
 if_call         : 'if' LPAR expr_list RPAR -> ^(IF_CALL expr_list)
                 ;
 
 func_call       : ID LPAR expr_list RPAR -> ^(FUNC_CALL ID expr_list)
+
                 /* special case for null() */
                 | NULL LPAR expr_list RPAR -> ^(FUNC_CALL ID["null"] expr_list)
                 ;
@@ -124,90 +127,96 @@ nbr_expr        : NBR_EXPR_PREFIX expr -> ^(ABS_NBR_REF expr)
                 ;
 
 expr_list       : (expr (',' expr)* )? -> ^(EXPR_LIST expr*)
-		;
-		
+        ;
+
 assign_expr     : ID assign_op expr -> ^(ASSIGN assign_op ID expr)
+                ;
+
+incdec_expr     : prefix_expr
+                | postfix_expr
+                ;
+
+prefix_expr     : incdec_op ID -> ^(PREFIX incdec_op ID)
+                ;
+
+postfix_expr    : ID incdec_op -> ^(POSTFIX incdec_op ID)
                 ;
 
 cond_expr       : or_expr (QUESTION^ expr ':'! expr)?
                 ;
 
-or_expr		: xor_expr (OR^ xor_expr)*
-		;
+or_expr         : xor_expr (OR^ xor_expr)*
+                ;
 
-xor_expr	: and_expr (XOR^ and_expr)*
-		;
-		
-and_expr	: eq_expr (AND^ eq_expr)*
-		;
+xor_expr        : and_expr (XOR^ and_expr)*
+                ;
 
-eq_expr		: comp_expr ((LOGICALEQ^ | NE^) comp_expr)?
-		;
-		
-comp_expr	: add_expr ((GT^ | GE^ | LE^ | LT^) add_expr)?
-		;
+and_expr        : eq_expr (AND^ eq_expr)*
+                ;
 
-add_expr	: mult_expr ((PLUS^ | MINUS^) mult_expr)*
-		;
-		
-mult_expr	: exp_expr ((TIMES^ | DIV^ | MOD^) exp_expr)*
-		;
+eq_expr         : comp_expr ((LOGICALEQ^ | NE^) comp_expr)?
+                ;
+
+comp_expr       : add_expr ((GT^ | GE^ | LE^ | LT^) add_expr)?
+                ;
+
+add_expr        : mult_expr ((PLUS^ | MINUS^) mult_expr)*
+                ;
+
+mult_expr       : exp_expr ((TIMES^ | DIV^ | MOD^) exp_expr)*
+                ;
 
 exp_expr        : cast_expr (POW^ cast_expr)*
                 ;
-		
-cast_expr	: LPAR type_name RPAR cast_expr -> ^(CAST cast_expr)
-		| unary_expr
-		;	
 
-unary_expr	: incdec_op postfix_expr -> ^(PREFIX incdec_op postfix_expr)
-		| unary_op postfix_expr -> ^(PREFIX unary_op postfix_expr)
-		| postfix_expr
-		;
-		
-postfix_expr	: a=atom_expr (incdec_op^)?
-		;
-		
-atom_expr	: ID
-		| constant
-		| bracketed_expr
+cast_expr       : LPAR type_name RPAR cast_expr -> ^(CAST cast_expr)
+                | sign_expr
+                ;
+
+sign_expr       : sign_op atom_expr -> ^(SIGN sign_op atom_expr)
+                | atom_expr
+                ;
+
+atom_expr       : ID
+                | constant
+                | bracketed_expr
                 | func_call
                 | if_call
                 | nbr_ref
-		;
+                ;
 
 bracketed_expr  : LPAR expr RPAR -> ^(BRACKETED_EXPR expr)
                 ;
                 
-constant	: INT_LITERAL
-		| FLOAT_LITERAL
+constant        : INT_LITERAL
+                | FLOAT_LITERAL
                 | TRUE
                 | FALSE
                 | NULL
-		;
+                ;
 
 incdec_op       : INCR
                 | DECR
                 ;
 
-unary_op	: PLUS
-		| MINUS
-		| NOT
-		;
-		
-assign_op	: EQ
-		| TIMESEQ
-		| DIVEQ
-		| MODEQ
-		| PLUSEQ
-		| MINUSEQ
-		;
+sign_op         : PLUS
+                | MINUS
+                | NOT
+                ;
 
-type_name	: 'int'
-		| 'float'
-		| 'double'
-		| 'boolean'
-		;
+assign_op       : EQ
+                | TIMESEQ
+                | DIVEQ
+                | MODEQ
+                | PLUSEQ
+                | MINUSEQ
+                ;
+
+type_name       : 'int'
+                | 'float'
+                | 'double'
+                | 'boolean'
+                ;
                 
 eos             : (SEMICOLON|NEWLINE)+
                 ;
@@ -254,18 +263,18 @@ MOD             : '%' ;
 PLUS            : '+' ;
 MINUS           : '-' ;
 
-GT		: '>';
-GE		: '>=';
-LE		: '<=';
-LT		: '<';
+GT              : '>';
+GE              : '>=';
+LE              : '<=';
+LT                  : '<';
 
-LOGICALEQ	: '==';
-NE		: '!=';
+LOGICALEQ       : '==';
+NE              : '!=';
 
-AND		: '&&';
+AND             : '&&';
 
-OR		: '||';
-XOR		: '^|';
+OR              : '||';
+XOR             : '^|';
 
 QUESTION        : '?' ;  /* conditional operator ?: */
 
@@ -285,20 +294,20 @@ RSQUARE         : ']' ;
 LCURLY          : '{' ;
 RCURLY          : '}' ;
 
-ID		: (Letter) (Letter | UNDERSCORE | Digit | Dot)*
-		;
+ID              : (Letter) (Letter | UNDERSCORE | Digit | Dot)*
+                ;
 
 fragment
-Letter		: 'a'..'z' | 'A'..'Z'
-		;
+Letter          : 'a'..'z' | 'A'..'Z'
+                    ;
 
 UNDERSCORE      : '_' ;
 
-INT_LITERAL	: '0' | NonZeroDigit Digit*
-		;
+INT_LITERAL     : '0' | NonZeroDigit Digit*
+                ;
 
-FLOAT_LITERAL	: ('0' | NonZeroDigit Digit*)? Dot Digit* FloatExp?
-		;
+FLOAT_LITERAL   : ('0' | NonZeroDigit Digit*)? Dot Digit* FloatExp?
+        ;
 fragment
 Digit           : '0'..'9'
                 ;
@@ -314,8 +323,8 @@ NonZeroDigit    : '1'..'9'
 fragment
 FloatExp        : ('e'|'E' (PLUS|MINUS)? '0'..'9'+)
                 ;
-				
-SEMICOLON	: ';'
+
+SEMICOLON       : ';'
                 ;
 
 /* Mac: \r  PC: \r\n  Unix \n */
@@ -329,8 +338,8 @@ NEWLINE
     onCommentLine = false;
 }
                 : '\r' '\n'?
-		| '\n'
-		;
+                | '\n'
+                ;
 
 /* Fragment tokens for selective case-insensitive matching */
 fragment A:('a'|'A');
@@ -360,4 +369,4 @@ fragment X:('x'|'X');
 fragment Y:('y'|'Y');
 fragment Z:('z'|'Z');
 
-WS  		:  (' '|'\t'|'\u000C') {$channel=HIDDEN;} ;
+WS   :  (' '|'\t'|'\u000C') {$channel=HIDDEN;} ;

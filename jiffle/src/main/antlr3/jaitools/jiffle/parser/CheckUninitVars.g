@@ -19,7 +19,7 @@
  */
 
 /**
- * Checks for valid use of image variables in the primary AST.
+ * Checks for any references to uninitialized variables in expressions.
  *
  * @author Michael Bedward
  */

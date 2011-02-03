@@ -19,7 +19,7 @@
  */
 
 /**
- * Checks for valid use neighbourhood references.
+ * Checks for valid use of image neighbourhood references.
  *
  * @author Michael Bedward
  */
