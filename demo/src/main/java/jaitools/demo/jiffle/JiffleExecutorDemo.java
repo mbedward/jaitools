@@ -38,7 +38,7 @@ import jaitools.swing.ImageFrame;
 /**
  * Demonstrates the use of {@link JiffleExecutor} to run a script.
  * <br>
- * There are three options for running a Jiffle script...
+ * There are two options for running a Jiffle script...
  * <ol type="1">
  * <li>Directly, by getting a {@link jaitools.jiffle.runtime.JiffleRuntime} object
  *     from the compiled {@code Jiffle} object.
