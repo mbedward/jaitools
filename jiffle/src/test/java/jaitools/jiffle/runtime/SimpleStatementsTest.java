@@ -175,7 +175,7 @@ public class SimpleStatementsTest extends StatementsTestBase {
                     }
                 });
     }
-    
+
     @Test
     public void precedence1() throws Exception {
         String src = "dest = 1 + src * 2;";

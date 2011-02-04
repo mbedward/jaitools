@@ -45,7 +45,8 @@ public abstract class StatementsTestBase {
     
     private final JiffleProgressListener nullListener = new NullProgressListener();
     
-    Map<String, Jiffle.ImageRole> imageParams;
+    protected Map<String, Jiffle.ImageRole> imageParams;
+    protected JiffleDirectRuntime runtimeInstance;
 
     interface Evaluator {
         double eval(double val);
@@ -68,14 +69,14 @@ public abstract class StatementsTestBase {
         imageParams.put("src", Jiffle.ImageRole.SOURCE);
         
         Jiffle jiffle = new Jiffle(script, imageParams);
-        JiffleDirectRuntime jr = (JiffleDirectRuntime) jiffle.getRuntimeInstance();
+        runtimeInstance = (JiffleDirectRuntime) jiffle.getRuntimeInstance();
         
         TiledImage srcImg = createSequenceImage();
         TiledImage destImg = ImageUtils.createConstantImage(WIDTH, WIDTH, 0.0);
         
-        jr.setSourceImage("src", srcImg);
-        jr.setDestinationImage("dest", destImg);
-        jr.evaluateAll(nullListener);
+        runtimeInstance.setSourceImage("src", srcImg);
+        runtimeInstance.setDestinationImage("dest", destImg);
+        runtimeInstance.evaluateAll(nullListener);
         
         for (int y = 0; y < WIDTH; y++) {
             for (int x = 0; x < WIDTH; x++) {
