@@ -27,7 +27,7 @@
 tree grammar RuntimeSourceCreator;
 
 options {
-    superClass = RuntimeSourceCreatorBase;
+    superClass = AbstractRuntimeSourceCreator;
     tokenVocab = Jiffle;
     ASTLabelType = CommonTree;
 }
@@ -191,12 +191,16 @@ expr returns [String src, String priorSrc ]
                     String signFn = getRuntimeExpr("sign", 1);
                     StringBuilder sb = new StringBuilder();
 
-                    String condVar = makeLocalVar("int");
-                    sb.append("int ").append(condVar).append(" = ").append(signFn);
-                    sb.append("(").append(argList.get(0)).append("); \n");
+                    String condVar = makeLocalVar("Integer");
+                    sb.append("Integer ").append(condVar).append(" = ");
+                    sb.append(signFn).append("(").append(argList.get(0)).append("); \n");
 
                     String resultVar = makeLocalVar("double");
-                    sb.append("double ").append(resultVar).append(" = 0; \n");
+                    sb.append("double ").append(resultVar).append("; \n");
+
+                    sb.append("if (").append(condVar).append(" == null) { \n");
+                    sb.append(resultVar).append(" = Double.NaN; \n");
+                    sb.append("} else { \n");
 
                     switch (argList.size()) {
                         case 1:
@@ -236,6 +240,8 @@ expr returns [String src, String priorSrc ]
                         default:
                             throw new IllegalArgumentException("if function error");
                     }
+
+                    sb.append("} \n");
                     $priorSrc = sb.toString();
                     $src = resultVar;
 

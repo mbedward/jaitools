@@ -35,7 +35,6 @@ import java.util.concurrent.CountDownLatch;
  */
 public class WaitingListener implements JiffleEventListener {
     
-    private final Object lock = new Object();
     private CountDownLatch latch;
 
     private final Map<Integer, JiffleExecutorResult> results = 
@@ -46,10 +45,12 @@ public class WaitingListener implements JiffleEventListener {
      * 
      * @param n number of jobs
      */
-    public void setNumJobs(int n) {
-        synchronized(lock) {
-            latch = new CountDownLatch(n);
+    public synchronized void setNumJobs(int n) {
+        if (latch != null && latch.getCount() > 0) {
+            throw new IllegalStateException("Method called during wait period");
         }
+
+        latch = new CountDownLatch(n);
     }
     
     /**
@@ -61,26 +62,20 @@ public class WaitingListener implements JiffleEventListener {
         } catch (InterruptedException ignored) {}
     }
     
-    public JiffleExecutorResult getResult(int jobID) {
-        synchronized (lock) {
-            return results.get(jobID);
-        }
+    public synchronized JiffleExecutorResult getResult(int jobID) {
+        return results.get(jobID);
     }
 
     public void onCompletionEvent(JiffleEvent ev) {
-        synchronized (lock) {
-            latch.countDown();
-            JiffleExecutorResult result = ev.getResult();
-            results.put(result.getJobID(), result);
-        }
+        latch.countDown();
+        JiffleExecutorResult result = ev.getResult();
+        results.put(result.getJobID(), result);
     }
 
     public void onFailureEvent(JiffleEvent ev) {
-        synchronized (lock) {
-            latch.countDown();
-            JiffleExecutorResult result = ev.getResult();
-            results.put(result.getJobID(), result);
-        }
+        latch.countDown();
+        JiffleExecutorResult result = ev.getResult();
+        results.put(result.getJobID(), result);
     }
 
     public void onProgressEvent(float progress) {

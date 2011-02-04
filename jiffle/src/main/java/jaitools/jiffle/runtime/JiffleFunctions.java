@@ -37,12 +37,6 @@ public class JiffleFunctions {
     
     private static Random rr;
     
-    /** 
-     * Integer valued returned by {@link #sign(double)} if it 
-     * is passed a Double.NaN argument.
-     */
-    public static int NAN = -2;
-
     /**
      * Converts an angle in degrees to radians.
      * 
@@ -61,13 +55,13 @@ public class JiffleFunctions {
      * @param x test value
      * 
      * @return -1 if x is negative; 0 if x is 0; 1 if x is positive; 
-     *         or JiffleFunction.NAN if x is NaN
+     *         or {@code null} if x is NaN
      */
-    public static int sign(double x) {
+    public static Integer sign(double x) {
         if (!Double.isNaN(x)) {
             return dcomp(x, 0);
         }
-        return NAN;
+        return null;
     }
     
     /**

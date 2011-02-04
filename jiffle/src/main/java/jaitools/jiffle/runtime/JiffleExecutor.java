@@ -36,7 +36,81 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 
 /**
- * Executes Jiffle scripts on separate threads.
+ * A multi-threaded, event-driven executor service for Jiffle scripts.
+ * <p>
+ * As an alternative to getting a {@link jaitools.jiffle.runtime.JiffleRuntime}
+ * instance from a compiled {@code Jiffle} object and using it directly, Jiffle
+ * objects can be submitted to this class to execute. This can be preferable
+ * for computationally demanding tasks because the scripts run in a separate
+ * thread to the client code. For multiple tasks, the executor can be set up to:
+ * run all tasks concurrently in separate threads (if system resources permit),
+ * or run up to N tasks concurrently while hold further tasks in a queue. Setting
+ * N to 1 gives the option of serial execution.
+ * <p>
+ * The client is informed about completion or failure via {@link JiffleEvent}s
+ * and can follow progress using a {@link jaitools.jiffle.runtime.JiffleProgressListener}.
+ * <p>
+ * Example of use:
+ * <br>
+ * First we create an executor (we assume it is a class field here), then
+ * register an event listener and identify the methods to run when the script
+ * completes or fails...
+ * <pre><code>
+ * executor = new JiffleExecutor();
+ *
+ * executor.addEventListener(new JiffleEventListener() {
+ *
+ *     public void onCompletionEvent(JiffleEvent ev) {
+ *         myCompletionMethod(ev);
+ *     }
+ *
+ *     public void onFailureEvent(JiffleEvent ev) {
+ *         myFailureMethod(ev);
+ *     }
+ * });
+ * </code></pre>
+ * Now we can submit a task to the executor in the form of a Jiffle object
+ * and the associated source and destination images...
+ * <pre><code>
+ * String script = "dest = src < 10 ? NULL : src;" ;
+ *
+ * // Parameters to identify the image variables
+ * Map&lt;String, Jiffle.ImageRole&gt; imageParams = CollectionFactory.map();
+ * imageParams.put("src", Jiffle.ImageRole.SOURCE);
+ * imageParams.put("dest", Jiffle.ImageRole.DEST);
+ *
+ * // Using this constructor checks and compiles the script immediately
+ * Jiffle jiffle = new Jiffle(script, imageParams);
+ *
+ * // Provide a Map with the source and destination images
+ * RenderedImage sourceImg = ...
+ * WritableRenderedImage destImg = ...
+ * Map&lt;String, RenderedImage&gt; images = CollectionFactory.map();
+ * images.put("src", sourceImg);
+ * images.put("dest", destImg);
+ *
+ * // Submit the task to the executor
+ * executor.submit(j, images, new NullProgressListener());
+ * </code></pre>
+ * Finally, here are the methods called when the script completes or fails...
+ * <pre><code>
+ * private void myCompletionMethod(JiffleEvent ev) {
+ *     // Get and display the result image
+ *     JiffleExecutorResult result = ev.getResult();
+ *     final RenderedImage img = result.getImages().get("dest");
+ *
+ *     SwingUtilities.invokeLater(new Runnable() {
+ *         public void run() {
+ *             ImageFrame frame = new ImageFrame(img, "My image");
+ *             frame.setVisible(true);
+ *         }
+ *     });
+ * }
+ *
+ * private void myFailureMethod(JiffleEvent ev) {
+ *     System.out.println("Bummer...");
+ * }
+</code></pre>
  * 
  * @author Michael Bedward
  * @since 1.0
@@ -222,11 +296,14 @@ public class JiffleExecutor {
     }
     
     private void startPolling() {
-        poll = pollingExecutor.scheduleAtFixedRate( new Runnable() {
-                    public void run() {
-                        pollJobs();
-                    }
-        }, pollingInterval, pollingInterval, TimeUnit.MILLISECONDS);
+        if (poll == null || !poll.isCancelled()) {
+            poll = pollingExecutor.scheduleAtFixedRate(new Runnable() {
+
+                public void run() {
+                    pollJobs();
+                }
+            }, pollingInterval, pollingInterval, TimeUnit.MILLISECONDS);
+        }
     }
 
     private void pollJobs() {

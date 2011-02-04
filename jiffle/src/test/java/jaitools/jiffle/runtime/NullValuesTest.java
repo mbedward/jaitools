@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Random;
 import javax.media.jai.TiledImage;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -37,13 +36,9 @@ import static org.junit.Assert.*;
  * 
  * @author Michael Bedward
  */
-@Ignore
 public class NullValuesTest {
     
-    private final int WIDTH = 100;
-    private final String IN_IMAGE1 = "in1";
-    private final String IN_IMAGE2 = "in2";
-    private final String OUT_IMAGE = "out";
+    private final int WIDTH = 10;
 
     /**
      * Tests for correct treatment of null (NaN) values in an arithmetic
@@ -52,9 +47,7 @@ public class NullValuesTest {
     @Test
     public void subtraction() throws Exception {
         System.out.println("   subtraction with null and non-null image values");
-        
-        assertScript(String.format("%s = %s - %s",
-                OUT_IMAGE, IN_IMAGE1, IN_IMAGE2));
+        assertScript("out = in1 - in2");
     }
 
     /**
@@ -64,11 +57,7 @@ public class NullValuesTest {
     @Test
     public void subtractionWithinIf() throws Exception {
         System.out.println("   subtraction with null and non-null values within if statements");
-
-        assertScript("out = if (in1 - in2, 1, 0, -1)");
-        assertScript(String.format("%s = if(%s - %s, 1, 0, -1)",
-                OUT_IMAGE, IN_IMAGE1, IN_IMAGE2));
-        
+        assertScript("out = if(in1 - in2, 1, 0, -1)");
     }
 
 
@@ -87,16 +76,16 @@ public class NullValuesTest {
         TiledImage outImg = ImageUtils.createConstantImage(WIDTH, WIDTH, 0d);
         
         Map<String, Jiffle.ImageRole> imgParams = CollectionFactory.map();
-        imgParams.put(IN_IMAGE1, Jiffle.ImageRole.SOURCE);
-        imgParams.put(IN_IMAGE2, Jiffle.ImageRole.SOURCE);
-        imgParams.put(OUT_IMAGE, Jiffle.ImageRole.DEST);
+        imgParams.put("in1", Jiffle.ImageRole.SOURCE);
+        imgParams.put("in2", Jiffle.ImageRole.SOURCE);
+        imgParams.put("out", Jiffle.ImageRole.DEST);
         
         Jiffle jiffle = new Jiffle(script, imgParams);
         JiffleDirectRuntime jr = (JiffleDirectRuntime) jiffle.getRuntimeInstance();
         
-        jr.setSourceImage(IN_IMAGE1, inImg1);
-        jr.setSourceImage(IN_IMAGE2, inImg2);
-        jr.setDestinationImage(OUT_IMAGE, outImg);
+        jr.setSourceImage("in1", inImg1);
+        jr.setSourceImage("in2", inImg2);
+        jr.setDestinationImage("out", outImg);
         jr.evaluateAll(null);
         
         boolean b = false;

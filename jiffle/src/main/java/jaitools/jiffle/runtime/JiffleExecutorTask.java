@@ -105,7 +105,6 @@ class JiffleExecutorTask implements Callable<JiffleExecutorResult> {
         }
 
         completed = !gotEx;
-        
         return new JiffleExecutorResult(id, jiffle, images, completed);
     }
 

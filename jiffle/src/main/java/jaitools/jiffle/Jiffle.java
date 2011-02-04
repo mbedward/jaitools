@@ -53,7 +53,7 @@ import jaitools.jiffle.parser.JiffleParser;
 import jaitools.jiffle.parser.MessageTable;
 import jaitools.jiffle.parser.ParsingErrorReporter;
 import jaitools.jiffle.parser.RuntimeSourceCreator;
-import jaitools.jiffle.parser.RuntimeSourceCreatorBase;
+import jaitools.jiffle.parser.AbstractRuntimeSourceCreator;
 import jaitools.jiffle.parser.TagConstants;
 import jaitools.jiffle.parser.TagProxyFunctions;
 import jaitools.jiffle.parser.TagVars;
@@ -99,6 +99,8 @@ import jaitools.jiffle.runtime.JiffleRuntime;
  * When a client requests a runtime object, this class translates the input
  * script and passes the resulting source to the embedded Janino compiler
  * which creates executable bytecode in memory.
+ *
+ * @see jaitools.jiffle.runtime.JiffleExecutor
  * 
  * @author Michael Bedward
  * @since 1.0
@@ -841,7 +843,7 @@ public class Jiffle {
 
         BufferedTreeNodeStream nodes = new BufferedTreeNodeStream(finalAST);
         nodes.setTokenStream(tokens);
-        RuntimeSourceCreatorBase creator = new RuntimeSourceCreator(nodes);
+        AbstractRuntimeSourceCreator creator = new RuntimeSourceCreator(nodes);
         ParsingErrorReporter er = new DeferredErrorReporter();
         creator.setErrorReporter(er);
         

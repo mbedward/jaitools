@@ -41,7 +41,7 @@ import jaitools.jiffle.Jiffle;
  * @source $URL$
  * @version $Id$
  */
-public abstract class RuntimeSourceCreatorBase extends ErrorHandlingTreeParser {
+public abstract class AbstractRuntimeSourceCreator extends ErrorHandlingTreeParser {
 
     protected StringBuilder ctorSB;
     protected StringBuilder evalSB;
@@ -67,7 +67,7 @@ public abstract class RuntimeSourceCreatorBase extends ErrorHandlingTreeParser {
         }
     }
 
-    public RuntimeSourceCreatorBase(TreeNodeStream input, RecognizerSharedState state) {
+    public AbstractRuntimeSourceCreator(TreeNodeStream input, RecognizerSharedState state) {
         super(input, state);
 
         functionLookup = new FunctionLookup();

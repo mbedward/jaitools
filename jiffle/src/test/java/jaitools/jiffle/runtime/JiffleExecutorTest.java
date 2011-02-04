@@ -20,16 +20,15 @@
 
 package jaitools.jiffle.runtime;
 
-import javax.media.jai.iterator.RectIter;
 import java.awt.image.RenderedImage;
 import java.util.Map;
+import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 
 import jaitools.CollectionFactory;
 import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -41,7 +40,6 @@ import static org.junit.Assert.*;
  * @source $URL$
  * @version $Id$
  */
-@Ignore(value="Problem with thread deadlock needs fixing")
 public class JiffleExecutorTest {
     private static final int WIDTH = 100;
     private static final double TOL = 1.0e-8;
