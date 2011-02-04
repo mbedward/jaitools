@@ -94,8 +94,8 @@ expr            : ^(ASSIGN assign_op ID expr)
                   
                 | ^(FUNC_CALL ID expr_list)
                   
-                | ^(NBR_REF ID nbr_ref_expr nbr_ref_expr) 
-                  -> ^(NBR_REF VAR_SOURCE[$ID.text] nbr_ref_expr nbr_ref_expr)
+                | ^(IMAGE_POS ID band_specifier? pixel_specifier?)
+                  -> ^(IMAGE_POS VAR_SOURCE[$ID.text] band_specifier? pixel_specifier?)
                   
                 | ^(IF_CALL expr_list)
                 | ^(QUESTION expr expr expr)
@@ -118,8 +118,14 @@ expr            : ^(ASSIGN assign_op ID expr)
                 | FLOAT_LITERAL
                 ;
 
-nbr_ref_expr    : ^(ABS_NBR_REF expr)
-                | ^(REL_NBR_REF expr)
+band_specifier  : ^(BAND_REF expr)
+                ;
+
+pixel_specifier : ^(PIXEL_REF x=pixel_pos y=pixel_pos)
+                ;
+
+pixel_pos       : ^(ABS_POS expr)
+                | ^(REL_POS expr)
                 ;
 
 expr_op         : POW

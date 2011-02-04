@@ -33,21 +33,26 @@ options {
 }
 
 tokens {
+    VAR_INIT;
+    VAR_INIT_BLOCK;
+    VAR_INIT_LIST;
+
     ASSIGN;
     CAST;
     EXPR_LIST;
     BRACKETED_EXPR;
     FUNC_CALL;
     IF_CALL;
-    NBR_REF;
-    ABS_NBR_REF;
-    REL_NBR_REF;
+
+    IMAGE_POS;
+    BAND_REF;
+    PIXEL_REF;
+    ABS_POS;
+    REL_POS;
+
     PREFIX;
     POSTFIX;
     SIGN;
-    VAR_INIT;
-    VAR_INIT_BLOCK;
-    VAR_INIT_LIST;
 
     // Used by later tree parsers
     CONSTANT;
@@ -118,16 +123,29 @@ func_call       : ID LPAR expr_list RPAR -> ^(FUNC_CALL ID expr_list)
                 /* special case for null() */
                 | NULL LPAR expr_list RPAR -> ^(FUNC_CALL ID["null"] expr_list)
                 ;
+
+image_location
+options {
+    backtrack = true;
+    memoize = true;
+}
+                : ID band_specifier pixel_specifier -> ^(IMAGE_POS ID band_specifier pixel_specifier)
+                | ID pixel_specifier -> ^(IMAGE_POS ID pixel_specifier)
+                | ID band_specifier -> ^(IMAGE_POS ID band_specifier)
+                ;
                 
-nbr_ref         : ID LSQUARE nbr_expr ',' nbr_expr RSQUARE -> ^(NBR_REF ID nbr_expr nbr_expr)
+pixel_specifier : LSQUARE pixel_pos ',' pixel_pos RSQUARE -> ^(PIXEL_REF pixel_pos pixel_pos)
                 ;
 
-nbr_expr        : NBR_EXPR_PREFIX expr -> ^(ABS_NBR_REF expr)
-                | expr -> ^(REL_NBR_REF expr)
+band_specifier  : LSQUARE expr RSQUARE -> ^(BAND_REF expr)
+                ;
+
+pixel_pos       : ABS_POS_PREFIX expr -> ^(ABS_POS expr)
+                | expr -> ^(REL_POS expr)
                 ;
 
 expr_list       : (expr (',' expr)* )? -> ^(EXPR_LIST expr*)
-        ;
+                ;
 
 assign_expr     : ID assign_op expr -> ^(ASSIGN assign_op ID expr)
                 ;
@@ -182,7 +200,7 @@ atom_expr       : ID
                 | bracketed_expr
                 | func_call
                 | if_call
-                | nbr_ref
+                | image_location
                 ;
 
 bracketed_expr  : LPAR expr RPAR -> ^(BRACKETED_EXPR expr)
@@ -247,7 +265,7 @@ NULL            : N U L L
 
 /* Operators sorted and grouped by precedence order */
 
-NBR_EXPR_PREFIX : '$'  ;
+ABS_POS_PREFIX  : '$'  ;
 
 INCR            : '++' ;  /* pre-fix and post-fix operations */
 DECR            : '--' ;

@@ -48,11 +48,11 @@ public enum Message {
     INVALID_ASSIGNMENT_OP_WITH_DEST_IMAGE(Level.ERROR,
             "Invalid assignment op with destination image"),
     
-    NBR_REF_ON_DEST_IMAGE_VAR(Level.ERROR, 
-            "Neighbourhood reference cannot be used with a destination image"),
+    IMAGE_POS_ON_DEST(Level.ERROR,
+            "Image position cannot be specified for a destination image"),
     
-    NBR_REF_ON_NON_IMAGE_VAR(Level.ERROR, 
-            "Neighbourhood reference cannot be used with a non-image variable"),
+    IMAGE_POS_ON_NON_IMAGE(Level.ERROR,
+            "Image position specifier(s) used with a non-image variable"),
     
     READING_FROM_DEST_IMAGE(Level.ERROR, 
             "Cannot read a value from a destination image"),

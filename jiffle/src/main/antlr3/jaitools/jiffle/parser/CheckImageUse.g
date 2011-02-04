@@ -100,7 +100,7 @@ assignment      : ^(ASSIGN assign_op ID expr)
                 }
                 ;
 
-nbr_ref         : ^(NBR_REF ID e=.+)
+image_pos       : ^(IMAGE_POS ID e=.+)
                 ;
 
 expr            : ^(FUNC_CALL ID expr_list)
@@ -118,10 +118,6 @@ expr            : ^(FUNC_CALL ID expr_list)
                 ;
 
 expr_list       : ^(EXPR_LIST (expr)*)
-                ;
-
-nbr_ref_expr    : ^(ABS_NBR_REF expr)
-                | ^(REL_NBR_REF expr)
                 ;
 
 expr_op         : POW

@@ -23,15 +23,31 @@ package jaitools.jiffle.runtime;
 import org.junit.Test;
 
 /**
- * Test the neighbourhood accessor: imgVar[x, y]
+ * Unit tests for the source image pixel specifiers.
+ * <p>
+ * Source image position can be specified as:
+ * <pre>
+ *     imageName[ b ][ xref, yref ]
+ *
+ * where:
+ *     b is an expression for band number;
+ *
+ *     xref and yref are either expressions for absolute X and Y
+ *     ordinates (if prefixed by '$' symbol) or offsets relative
+ *     to current evaluation pixel (no prefix).
+ * </pre>
+ * The unit tests here work with a single band image
  * 
  * @author Michael Bedward
+ * @since 1.1
+ * @source $URL$
+ * @version $Id$
  */
-public class NeighbourhoodTest extends StatementsTestBase {
+public class SingleBandImagePosTest extends StatementsTestBase {
     
     @Test
     public void relativeReferences() throws Exception {
-        System.out.println("   relative neighbourhood references");
+        System.out.println("   relative pixel position");
         
         String src = "dest = if (x() > 0, src[-1, 0], NULL)";
         
@@ -56,7 +72,7 @@ public class NeighbourhoodTest extends StatementsTestBase {
     
     @Test
     public void absoluteReferences() throws Exception {
-        System.out.println("   absolute neighbourhood references");
+        System.out.println("   absolute pixel position");
         
         String src = "dest = if (x() > 5 && y() > 5, src[$5, $5], NULL);";
         

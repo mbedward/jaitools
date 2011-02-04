@@ -19,12 +19,12 @@
  */
 
 /**
- * Checks for valid use of image neighbourhood references.
+ * Checks for valid use of image position (band and/or pixel) specifiers.
  *
  * @author Michael Bedward
  */
 
-tree grammar CheckNbrRefs;
+tree grammar CheckImagePos;
 
 options {
     ASTLabelType = CommonTree;
@@ -45,7 +45,7 @@ private Map<String, Jiffle.ImageRole> imageParams;
 
 private MessageTable msgTable;
 
-public CheckNbrRefs(TreeNodeStream input, 
+public CheckImagePos(TreeNodeStream input,
         Map<String, Jiffle.ImageRole> imageParams, MessageTable msgTable) {
     this(input);
     if (msgTable == null) {
@@ -72,16 +72,16 @@ private boolean isDestImage( String varName ) {
 
 }
 
-topdown         : nbr_ref
+topdown         : image_pos
                 ;
 
-nbr_ref         : ^(NBR_REF ID .*)
+image_pos       : ^(IMAGE_POS ID .*)
                 {
                     if (!isSourceImage($ID.text)) {
                         if (isDestImage($ID.text)) {
-                            msgTable.add( $ID.text, Message.NBR_REF_ON_DEST_IMAGE_VAR );
+                            msgTable.add( $ID.text, Message.IMAGE_POS_ON_DEST );
                         } else {
-                            msgTable.add( $ID.text, Message.NBR_REF_ON_NON_IMAGE_VAR );
+                            msgTable.add( $ID.text, Message.IMAGE_POS_ON_NON_IMAGE );
                         }
                     }
                 }

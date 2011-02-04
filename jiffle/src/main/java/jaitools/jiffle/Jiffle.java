@@ -43,8 +43,8 @@ import org.codehaus.janino.SimpleCompiler;
 import jaitools.jiffle.parser.Message;
 import jaitools.CollectionFactory;
 import jaitools.jiffle.parser.CheckFunctionCalls;
+import jaitools.jiffle.parser.CheckImagePos;
 import jaitools.jiffle.parser.CheckImageUse;
-import jaitools.jiffle.parser.CheckNbrRefs;
 import jaitools.jiffle.parser.CheckUninitVars;
 import jaitools.jiffle.parser.ConvertTernaryExpr;
 import jaitools.jiffle.parser.DeferredErrorReporter;
@@ -664,7 +664,7 @@ public class Jiffle {
     private boolean checkNeighbourRefs() {
         CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
         nodes.setTokenStream(tokens);
-        CheckNbrRefs check = new CheckNbrRefs(nodes, imageParams, msgTable);
+        CheckImagePos check = new CheckImagePos(nodes, imageParams, msgTable);
 
         check.downup(primaryAST);
         return !msgTable.hasErrors();

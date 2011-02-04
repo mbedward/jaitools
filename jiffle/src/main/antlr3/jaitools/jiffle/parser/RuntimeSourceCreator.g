@@ -140,16 +140,20 @@ var_assignment returns [String src]
                        if ($expr.priorSrc != null) {
                            sb.append($expr.priorSrc);
                        }
-                       sb.append("double ").append($assignable_var.src);
+
+                       if (!$assignable_var.imageScope) {
+                           sb.append("double ");
+                       }
+                       sb.append($assignable_var.src);
                        sb.append(" ").append($assign_op.text).append(" ");
                        sb.append($expr.src);
                        $src = sb.toString();
                    }
                 ;
 
-assignable_var returns [String src]
-                : VAR_IMAGE_SCOPE { $src = $VAR_IMAGE_SCOPE.text; }
-                | VAR_PIXEL_SCOPE { $src = $VAR_PIXEL_SCOPE.text; }
+assignable_var returns [String src, boolean imageScope]
+                : VAR_IMAGE_SCOPE { $src = $VAR_IMAGE_SCOPE.text; $imageScope = true; }
+                | VAR_PIXEL_SCOPE { $src = $VAR_PIXEL_SCOPE.text; $imageScope = false; }
                 ;
 
 expr returns [String src, String priorSrc ]
@@ -247,29 +251,7 @@ expr returns [String src, String priorSrc ]
 
                   }
 
-                | ^(NBR_REF VAR_SOURCE xref=nbr_ref_expr yref=nbr_ref_expr)
-                  {
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("readFromImage(");
-                    sb.append("\"").append($VAR_SOURCE.text).append("\", ");
-
-                    if (xref.isRelative) {
-                        sb.append("(int)(_x + ");
-                    } else {
-                        sb.append("(int)(");
-                    }
-                    sb.append(xref.src).append("), ");
-
-                    if (yref.isRelative) {
-                        sb.append("(int)(_y + ");
-                    } else {
-                        sb.append("(int)(");
-                    }
-                    sb.append(yref.src).append("), ");
-
-                    sb.append("_band)");
-                    $src = sb.toString();
-                  }
+                | image_pos { $src = $image_pos.src; }
 
                 | ^(POW e1=expr e2=expr) { $src = "Math.pow(" + e1.src + ", " + e2.src + ")"; }
 
@@ -386,35 +368,80 @@ expr_list returns [ List<String> list ]
                   ^(EXPR_LIST ( e=expr {$list.add(e.src);} )*)
                 ;
 
-nbr_ref_expr returns [ String src, boolean isRelative ]
-                : ^(ABS_NBR_REF expr)
+image_pos returns [String src]
+                : ^(IMAGE_POS VAR_SOURCE b=band_specifier? p=pixel_specifier?)
+                  {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("readFromImage(");
+                    sb.append("\"").append($VAR_SOURCE.text).append("\", ");
+
+                    if (p != null) {
+                        sb.append(p).append(", ");
+                    } else {
+                        sb.append("_x, _y, ");
+                    }
+
+                    if (b != null) {
+                        sb.append("(int)(").append(b).append("))");
+                    } else {
+                        sb.append("0)");  // band 0
+                    }
+                    $src = sb.toString();
+                  }
+                ;
+
+band_specifier returns [String src]
+                : ^(BAND_REF expr)
+                  { $src = $expr.src; }
+                ;
+
+pixel_specifier returns [String src]
+                : ^(PIXEL_REF x=pixel_pos y=pixel_pos)
+                  {
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("(int)(");
+                    if (x.isRelative) {
+                        sb.append("_x + ");
+                    }
+                    sb.append(x.src).append("), ");
+
+                    sb.append("(int)(");
+                    if (y.isRelative) {
+                        sb.append("_y + ");
+                    }
+                    sb.append(y.src).append(")");
+                    $src = sb.toString();
+                  }
+                ;
+
+pixel_pos returns [ String src, boolean isRelative ]
+                : ^(ABS_POS expr)
                   {
                     $src = $expr.src;
                     $isRelative = false;
                   }
 
-                | ^(REL_NBR_REF expr)
+                | ^(REL_POS expr)
                   {
                     $src = $expr.src;
                     $isRelative = true;
                   }
                 ;
 
-assign_op	: EQ
-		| TIMESEQ
-		| DIVEQ
-		| MODEQ
-		| PLUSEQ
-		| MINUSEQ
-		;
+assign_op       : EQ
+                | TIMESEQ
+                | DIVEQ
+                | MODEQ
+                | PLUSEQ
+                | MINUSEQ
+                ;
 
 incdec_op       : INCR
                 | DECR
                 ;
 
-type_name	: 'int'
-		| 'float'
-		| 'double'
-		| 'boolean'
-		;
-
+type_name       : 'int'
+                | 'float'
+                | 'double'
+                | 'boolean'
+                ;
