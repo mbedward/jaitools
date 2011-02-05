@@ -108,7 +108,6 @@ public class DemoImageProvider {
         executor = new JiffleExecutor();
         executor.addEventListener(new JiffleEventListener() {
 
-            @Override
             public void onCompletionEvent(JiffleEvent ev) {
                 onCompletion(ev);
             }
