@@ -27,7 +27,9 @@ import javax.media.jai.TiledImage;
 import jaitools.CollectionFactory;
 import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
+import jaitools.jiffle.JiffleException;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -65,7 +67,7 @@ public class MutliBandImagePosTest {
 
     @Test
     public void noBandSpecifier() throws Exception {
-        System.out.println("no band specifier");
+        System.out.println("   no band specifier");
 
         String script = "dest = src;" ;
 
@@ -80,7 +82,7 @@ public class MutliBandImagePosTest {
 
     @Test
     public void constantBandSpecifier() throws Exception {
-        System.out.println("constant band specifier");
+        System.out.println("   constant band specifier");
 
         String script = "dest = src[1];" ;
 
@@ -95,7 +97,7 @@ public class MutliBandImagePosTest {
 
     @Test
     public void variableBandSpecifier() throws Exception {
-        System.out.println("variable band specifier");
+        System.out.println("   variable band specifier");
 
         String script = "init { i = 0; } dest = src[i]; i = (i + 1)%3;" ;
 
@@ -110,6 +112,86 @@ public class MutliBandImagePosTest {
         };
 
         testScript(script, 3, e);
+    }
+
+    @Test
+    public void multipleBands() throws Exception {
+        System.out.println("   script specifying multiple image bands");
+
+        String script = "dest = src[0] + src[1] + src[2];" ;
+
+        Evaluator e = new Evaluator() {
+
+            public double eval(double[] values) {
+                double sum = 0;
+                for (int i = 0; i < values.length; i++) {
+                    sum += values[i];
+                }
+                return sum;
+            }
+        };
+
+        testScript(script, 3, e);
+    }
+
+    @Test
+    public void bandRelativePixel() throws Exception {
+        System.out.println("   band plus relative pixel position");
+
+        String script = "dest = if (x() > 0 && y() > 0, src[1][-1,-1], NULL);" ;
+
+        Evaluator e = new Evaluator() {
+            int x = 0;
+            int y = 0;
+            double[] prevRow = new double[WIDTH];
+
+            public double eval(double[] values) {
+                double rtn = (x > 0 && y > 0 ? prevRow[x-1] : Double.NaN);
+                prevRow[x] = values[1];
+                if (++x == WIDTH) {
+                    x = 0;
+                    y++ ;
+                }
+                return rtn;
+            }
+        };
+
+        testScript(script, 3, e);
+    }
+
+
+    @Test
+    public void bandAbsolutePixel() throws Exception {
+        System.out.println("   band plus absolute pixel position");
+
+        String script = "dest = if (x() > 0 && y() > 0, src[1][$(x()-1), $(y()-1)], NULL);";
+
+        Evaluator e = new Evaluator() {
+            int x = 0;
+            int y = 0;
+            double[] prevRow = new double[WIDTH];
+
+            public double eval(double[] values) {
+                double rtn = (x > 0 && y > 0 ? prevRow[x-1] : Double.NaN);
+                prevRow[x] = values[1];
+                if (++x == WIDTH) {
+                    x = 0;
+                    y++ ;
+                }
+                return rtn;
+            }
+        };
+
+        testScript(script, 3, e);
+    }
+
+    @Ignore("todo: get the compiler to throw an exception on this coding mistake")
+    @Test(expected=JiffleException.class)
+    public void emptyBandSpecifier() throws Exception {
+        System.out.println("   malformed band specifier");
+
+        String script = "dest = src[];" ;
+        testScript(script, 3, null);
     }
 
     private void testScript(String script, int numSrcBands, Evaluator evaluator) throws Exception {
