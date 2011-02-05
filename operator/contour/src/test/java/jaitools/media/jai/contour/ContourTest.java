@@ -104,6 +104,36 @@ public class ContourTest {
     }
     
     /**
+     * Check using interval works (issue 81)
+     */
+    @Test
+    public void intervalsVerticalGradient() {
+        PlanarImage src = createGradientImage(Gradient.VERTICAL);
+        
+        args.put("interval", 10);
+        Collection<LineString> contours = doOp(src);
+        assertEquals(9, contours.size());
+        
+        // test in a way that makes no assumptions about the collection contents order (so that
+        // implementation is free to be changed and eventually result in a different order)
+        boolean[] found = new boolean[10];
+        for (LineString contour : contours) {
+            double level = (Double) contour.getUserData();
+            
+            // check the level is multiple of 10 and within the expected limits
+            assertEquals(0d, level % 10, 0d);
+            assertTrue(level > 0 && level < 100);
+            
+            // check it's the first time we see this level
+            assertTrue(!found[(int) level / 10]);
+            found[(int) level / 10] = true;
+            
+            // check the contour geometry is consistent
+            assertContour(contour, 0, level, IMAGE_WIDTH-1, level);
+        }
+    }
+    
+    /**
      * Trace a single contour in a source image with a vertical
      * gradient of values. Contour simplification is on (default).
      */

@@ -149,8 +149,8 @@ public class ContourOpImage extends AttributeOpImage {
 
         this.band = band;
         
-        this.contourLevels = new ArrayList<Double>();
         if (levels != null) {
+            this.contourLevels = new ArrayList<Double>();
             // Use specific levels
             for (Number z : levels) {
                 this.contourLevels.add(z.doubleValue());
