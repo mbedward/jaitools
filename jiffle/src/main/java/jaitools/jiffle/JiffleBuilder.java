@@ -68,7 +68,7 @@ import jaitools.jiffle.runtime.JiffleDirectRuntime;
  * runtime.setDestinationImage("dest", destImg);
  *
  * // Now run the script
- * runtime.evaluateAll();
+ * runtime.evaluateAll(null);
  * </code></pre>
  * Here is how we would do the same thing with JiffleBuilder...
  * <pre><code>
@@ -87,20 +87,24 @@ import jaitools.jiffle.runtime.JiffleDirectRuntime;
  * jb.dest("dest", fooImg.getWidth(), fooImg.getHeight());
  *
  * // Run the script
- * jb.getRuntime().evaluateAll();
+ * jb.getRuntime().evaluateAll(null);
  *
  * // Since we asked the builder to create the destination image we
  * // now need to get a reference to it
  * WritableRenderedImage destImg = jb.getImage("dest");
- *
  * </code></pre>
  * When a script does not use any source images, {@code JiffleBuilder} makes
  * for very concise code...
  * <pre><code>
+ * String script = "waves = sin( 4 * M_PI * x() / width() );" ;
+ * JiffleBuilder jb = new JiffleBuilder();
+ * jb.script(script).dest("waves", 500, 200).getRuntime().evaluateAll(null);
+ * RenderedImage wavesImg = jb.getImage("waves");
+ * </code></pre>
  * 
  *
  * @author Michael Bedward
- * @since 1.0
+ * @since 1.1
  * @source $URL$
  * @version $Id$
  */
