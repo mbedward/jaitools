@@ -39,20 +39,20 @@ import static org.junit.Assert.*;
  */
 public abstract class StatementsTestBase {
 
-    static final int WIDTH = 10;
-    static final int NUM_PIXELS = WIDTH * WIDTH;
-    static final double TOL = 1.0e-8;
+    protected static final int WIDTH = 10;
+    protected static final int NUM_PIXELS = WIDTH * WIDTH;
+    protected static final double TOL = 1.0e-8;
     
     private final JiffleProgressListener nullListener = new NullProgressListener();
     
     protected Map<String, Jiffle.ImageRole> imageParams;
     protected JiffleDirectRuntime runtimeInstance;
 
-    interface Evaluator {
+    public interface Evaluator {
         double eval(double val);
     }
     
-    TiledImage createSequenceImage() {
+    protected TiledImage createSequenceImage() {
         TiledImage img = ImageUtils.createConstantImage(WIDTH, WIDTH, 0.0);
         int k = 0;
         for (int y = 0; y < WIDTH; y++) {
@@ -63,7 +63,7 @@ public abstract class StatementsTestBase {
         return img;
     }
 
-    void testScript(String script, Evaluator evaluator) throws Exception {
+    protected void testScript(String script, Evaluator evaluator) throws Exception {
         imageParams = CollectionFactory.map();
         imageParams.put("dest", Jiffle.ImageRole.DEST);
         imageParams.put("src", Jiffle.ImageRole.SOURCE);
@@ -77,7 +77,11 @@ public abstract class StatementsTestBase {
         runtimeInstance.setSourceImage("src", srcImg);
         runtimeInstance.setDestinationImage("dest", destImg);
         runtimeInstance.evaluateAll(nullListener);
-        
+
+        assertScript(srcImg, destImg, evaluator);
+    }
+
+    protected void assertScript(TiledImage srcImg, TiledImage destImg, Evaluator evaluator) {
         for (int y = 0; y < WIDTH; y++) {
             for (int x = 0; x < WIDTH; x++) {
                 assertEquals(evaluator.eval(srcImg.getSampleDouble(x, y, 0)), destImg.getSampleDouble(x, y, 0), TOL);
