@@ -78,10 +78,10 @@ public abstract class StatementsTestBase {
         runtimeInstance.setDestinationImage("dest", destImg);
         runtimeInstance.evaluateAll(nullListener);
 
-        assertScript(srcImg, destImg, evaluator);
+        assertImage(srcImg, destImg, evaluator);
     }
 
-    protected void assertScript(TiledImage srcImg, TiledImage destImg, Evaluator evaluator) {
+    protected void assertImage(TiledImage srcImg, TiledImage destImg, Evaluator evaluator) {
         for (int y = 0; y < WIDTH; y++) {
             for (int x = 0; x < WIDTH; x++) {
                 assertEquals(evaluator.eval(srcImg.getSampleDouble(x, y, 0)), destImg.getSampleDouble(x, y, 0), TOL);
