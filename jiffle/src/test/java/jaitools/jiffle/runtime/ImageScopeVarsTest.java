@@ -105,4 +105,20 @@ public class ImageScopeVarsTest extends StatementsTestBase {
 
         testScript(script, e);
     }
+
+    @Test
+    public void ifWithinInitBlock() throws Exception {
+        System.out.println("   using if expressions in init block");
+
+        String script = "init { n = if (width() > 100, 2, 1); } dest = n;" ;
+        
+        Evaluator e = new Evaluator() {
+
+            public double eval(double val) {
+                return WIDTH > 100 ? 2 : 1;
+            }
+        };
+
+        testScript(script, e);
+    }
 }

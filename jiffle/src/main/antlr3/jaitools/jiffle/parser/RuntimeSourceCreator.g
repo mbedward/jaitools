@@ -45,7 +45,7 @@ import jaitools.jiffle.Jiffle;
 
 private Jiffle.EvaluationModel model;
 private FunctionLookup functionLookup = new FunctionLookup();
-private Map<String, String> imageScopeVars = CollectionFactory.orderedMap();
+private Map<String, ExprSrcPair> imageScopeVars = CollectionFactory.orderedMap();
 
 private void createVarSource() {
     if (imageScopeVars.isEmpty()) return;
@@ -55,11 +55,12 @@ private void createVarSource() {
     final int numVars = imageScopeVars.size();
     int k = 1;
     for (String name : imageScopeVars.keySet()) {
-        String exprSrc = imageScopeVars.get(name);
+        ExprSrcPair pair = imageScopeVars.get(name);
         varSB.append("double ").append(name).append("; \n");
 
-        if (exprSrc != null) {
-            initSB.append("this.").append(name).append(" = ").append(exprSrc).append("; \n");
+        if (pair != null) {
+            if (pair.priorSrc != null) initSB.append(pair.priorSrc);
+            initSB.append(name).append(" = ").append(pair.src).append("; \n");
         }
 
         getterSB.append("if (\"").append(name).append("\".equals(varName)) { \n");
@@ -107,8 +108,11 @@ start[Jiffle.EvaluationModel model, String className]
 
 var_init        : ^(VAR_INIT ID (e=expr)?)
                   {
-                    String exprSrc = (e == null ? null : e.src);
-                    imageScopeVars.put($ID.text, exprSrc);
+                    ExprSrcPair pair = null;
+                    if (e != null) {
+                        pair = new ExprSrcPair(e.priorSrc, e.src);
+                    }
+                    imageScopeVars.put($ID.text, pair);
                   }
                 ;
 

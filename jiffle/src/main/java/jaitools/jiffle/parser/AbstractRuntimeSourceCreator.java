@@ -62,9 +62,9 @@ public abstract class AbstractRuntimeSourceCreator extends ErrorHandlingTreePars
         String src;
         String priorSrc;
 
-        ExprSrcPair(String src, String priorSrc) {
-            this.src = src;
+        ExprSrcPair(String priorSrc, String src) {
             this.priorSrc = priorSrc;
+            this.src = src;
         }
     }
 
