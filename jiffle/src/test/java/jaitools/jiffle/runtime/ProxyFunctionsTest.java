@@ -31,8 +31,8 @@ import jaitools.imageutils.ImageUtils;
  *
  * @author Michael Bedward
  * @since 1.1
- * @source $URL: https://jai-tools.googlecode.com/svn/trunk/jiffle/src/test/java/jaitools/jiffle/runtime/SimpleStatementsTest.java $
- * @version $Id: SimpleStatementsTest.java 1335 2011-02-04 13:34:28Z michael.bedward $
+ * @source $URL$
+ * @version $Id$
  */
 public class ProxyFunctionsTest extends StatementsTestBase {
 
