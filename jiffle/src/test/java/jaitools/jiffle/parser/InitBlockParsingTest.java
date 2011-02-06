@@ -65,5 +65,18 @@ public class InitBlockParsingTest extends ParserTestBase {
         
         getAST(script);
     }
+
+    @Test
+    public void blockWithNewLinesAndWhitespace() throws Exception {
+        System.out.println("   block with newlines");
+        String script =
+                  "init { \n\n"
+                + "    n1 = 0; \n\n"
+                + "    n2 = 42; \n\n"
+                + "} \n"
+                + "dest = n2 - n1;";
+
+        getAST(script);
+    }
     
 }
