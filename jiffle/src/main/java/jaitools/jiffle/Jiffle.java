@@ -100,6 +100,7 @@ import jaitools.jiffle.runtime.JiffleRuntime;
  * script and passes the resulting source to the embedded Janino compiler
  * which creates executable bytecode in memory.
  *
+ * @see JiffleBuilder
  * @see jaitools.jiffle.runtime.JiffleExecutor
  * 
  * @author Michael Bedward
