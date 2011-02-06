@@ -109,7 +109,7 @@ public abstract class AbstractDirectRuntime extends AbstractJiffleRuntime implem
         
         listener.start();
         for (int y = _miny, iy = 0; iy < _height; y++, iy++) {
-            for (int x = _minx, ix = 0; ix < _height; x++, ix++) {
+            for (int x = _minx, ix = 0; ix < _width; x++, ix++) {
                 evaluate(x, y);
                 listener.update( ++count );
             }

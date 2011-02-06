@@ -22,16 +22,17 @@ package jaitools.jiffle;
 
 import java.awt.Rectangle;
 import java.awt.image.RenderedImage;
+
 import javax.media.jai.TiledImage;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
+
 import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.runtime.JiffleDirectRuntime;
 import jaitools.jiffle.runtime.StatementsTestBase;
-
-import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * Unit tests for the JiffleBuilder helper class.

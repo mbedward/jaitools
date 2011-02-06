@@ -20,8 +20,9 @@
 
 package jaitools.jiffle.parser;
 
-import jaitools.CollectionFactory;
 import java.util.Map;
+
+import jaitools.CollectionFactory;
 
 /**
  * A lookup for named constants used by the Jiffle compiler.

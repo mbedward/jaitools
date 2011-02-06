@@ -20,8 +20,8 @@
 
 package jaitools.jiffle.runtime;
 
-import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Test;
 
 /**
  * Unit tests of scripts with image scope variables declared in an init block.

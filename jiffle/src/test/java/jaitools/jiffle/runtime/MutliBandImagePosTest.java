@@ -22,16 +22,17 @@ package jaitools.jiffle.runtime;
 
 import java.util.Arrays;
 import java.util.Map;
+
 import javax.media.jai.TiledImage;
+
+import static org.junit.Assert.*;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import jaitools.CollectionFactory;
 import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
 import jaitools.jiffle.JiffleException;
-
-import org.junit.Ignore;
-import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * Unit tests for the source image pixel specifiers with multi-band images

@@ -20,16 +20,17 @@
 
 package jaitools.jiffle.runtime;
 
+import java.util.Map;
+import java.util.Random;
+
+import javax.media.jai.TiledImage;
+
+import static org.junit.Assert.*;
+import org.junit.Test;
+
 import jaitools.CollectionFactory;
 import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
-
-import java.util.Map;
-import java.util.Random;
-import javax.media.jai.TiledImage;
-
-import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * Unit tests for dealing with null values (NODATA) in arithmetic statements.

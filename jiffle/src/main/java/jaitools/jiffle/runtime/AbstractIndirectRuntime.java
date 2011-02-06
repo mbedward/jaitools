@@ -21,6 +21,7 @@
 package jaitools.jiffle.runtime;
 
 import java.awt.image.RenderedImage;
+
 import java.util.ArrayList;
 import java.util.List;
 

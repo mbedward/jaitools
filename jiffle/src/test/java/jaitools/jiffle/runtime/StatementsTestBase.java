@@ -64,26 +64,35 @@ public abstract class StatementsTestBase {
     }
 
     protected void testScript(String script, Evaluator evaluator) throws Exception {
+        TiledImage srcImg = createSequenceImage();
+        testScript(script, srcImg, evaluator);
+    }
+
+    protected void testScript(String script, TiledImage srcImg, Evaluator evaluator) throws Exception {
         imageParams = CollectionFactory.map();
         imageParams.put("dest", Jiffle.ImageRole.DEST);
         imageParams.put("src", Jiffle.ImageRole.SOURCE);
-        
+
         Jiffle jiffle = new Jiffle(script, imageParams);
         runtimeInstance = (JiffleDirectRuntime) jiffle.getRuntimeInstance();
-        
-        TiledImage srcImg = createSequenceImage();
-        TiledImage destImg = ImageUtils.createConstantImage(WIDTH, WIDTH, 0.0);
-        
-        runtimeInstance.setSourceImage("src", srcImg);
-        runtimeInstance.setDestinationImage("dest", destImg);
-        runtimeInstance.evaluateAll(nullListener);
 
+        testRuntime(srcImg, runtimeInstance, evaluator);
+    }
+
+    protected void testRuntime(TiledImage srcImg, JiffleDirectRuntime runtime, Evaluator evaluator) {
+        runtime.setSourceImage("src", srcImg);
+
+        TiledImage destImg = ImageUtils.createConstantImage(
+                srcImg.getMinX(), srcImg.getMinY(), WIDTH, WIDTH, 0.0);
+        runtime.setDestinationImage("dest", destImg);
+
+        runtime.evaluateAll(nullListener);
         assertImage(srcImg, destImg, evaluator);
     }
 
     protected void assertImage(TiledImage srcImg, TiledImage destImg, Evaluator evaluator) {
-        for (int y = 0; y < WIDTH; y++) {
-            for (int x = 0; x < WIDTH; x++) {
+        for (int y = srcImg.getMinY(), iy=0; iy < WIDTH; y++, iy++) {
+            for (int x = srcImg.getMinX(), ix = 0; ix < WIDTH; x++, ix++) {
                 assertEquals(evaluator.eval(srcImg.getSampleDouble(x, y, 0)), destImg.getSampleDouble(x, y, 0), TOL);
             }
         }

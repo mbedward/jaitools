@@ -20,9 +20,9 @@
 
 package jaitools.jiffle.parser;
 
-import jaitools.CollectionFactory;
-import java.util.ArrayList;
 import java.util.List;
+
+import jaitools.CollectionFactory;
 
 /**
  * A lookup service used by the Jiffle compiler when parsing function
@@ -91,6 +91,8 @@ public class FunctionLookup {
         lookup.add( new FunctionInfo( "size", "_size", 0, FunctionInfo.PROXY, false));
         lookup.add( new FunctionInfo( "x", "_x", 0, FunctionInfo.PROXY, false));
         lookup.add( new FunctionInfo( "y", "_y", 0, FunctionInfo.PROXY, false));
+        lookup.add( new FunctionInfo( "xmin", "_minx", 0, FunctionInfo.PROXY, false));
+        lookup.add( new FunctionInfo( "ymin", "_miny", 0, FunctionInfo.PROXY, false));
         lookup.add( new FunctionInfo( "row", "_row", 0, FunctionInfo.PROXY, false));
         lookup.add( new FunctionInfo( "col", "_col", 0, FunctionInfo.PROXY, false));
     }

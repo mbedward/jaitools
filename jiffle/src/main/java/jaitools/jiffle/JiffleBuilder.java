@@ -26,6 +26,7 @@ import java.awt.image.WritableRenderedImage;
 import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.Map;
+
 import javax.media.jai.TiledImage;
 
 import jaitools.CollectionFactory;

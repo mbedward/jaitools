@@ -20,8 +20,8 @@
 
 package jaitools.jiffle.parser;
 
-import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Test;
 
 /**
  * Unit tests for ConstantLookup.

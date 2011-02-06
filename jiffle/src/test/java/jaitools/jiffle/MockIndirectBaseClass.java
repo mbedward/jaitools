@@ -20,9 +20,9 @@
 
 package jaitools.jiffle;
 
-import jaitools.jiffle.runtime.AbstractJiffleRuntime;
 import java.awt.image.RenderedImage;
 
+import jaitools.jiffle.runtime.AbstractJiffleRuntime;
 import jaitools.jiffle.runtime.JiffleIndirectRuntime;
 
 

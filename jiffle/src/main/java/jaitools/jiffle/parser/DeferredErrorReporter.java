@@ -20,9 +20,10 @@
 
 package jaitools.jiffle.parser;
 
-import jaitools.CollectionFactory;
 import java.util.Collections;
 import java.util.List;
+
+import jaitools.CollectionFactory;
 
 /**
  * Used by the Jiffle compiler to accumulate ANTLR parsing error messages.

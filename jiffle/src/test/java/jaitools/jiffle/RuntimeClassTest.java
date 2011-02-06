@@ -22,13 +22,13 @@ package jaitools.jiffle;
 
 import java.util.Map;
 
+import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.Test;
+
 import jaitools.CollectionFactory;
 import jaitools.jiffle.runtime.JiffleDirectRuntime;
 import jaitools.jiffle.runtime.JiffleIndirectRuntime;
-
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  * Unit tests for basic Jiffle object creation, setting attributes and compiling.

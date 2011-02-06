@@ -20,11 +20,12 @@
 
 package jaitools.jiffle;
 
+import java.awt.image.RenderedImage;
+import java.awt.image.WritableRenderedImage;
+
 import jaitools.jiffle.runtime.AbstractJiffleRuntime;
 import jaitools.jiffle.runtime.JiffleDirectRuntime;
 import jaitools.jiffle.runtime.JiffleProgressListener;
-import java.awt.image.RenderedImage;
-import java.awt.image.WritableRenderedImage;
 
 
 /**

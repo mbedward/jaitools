@@ -20,9 +20,9 @@
 package jaitools.jiffle.runtime;
 
 
-import jaitools.numeric.DoubleComparison;
-
 import org.junit.Test;
+
+import jaitools.numeric.DoubleComparison;
 
 /**
  * Unit tests for the evaluation of simple logical statements with a 

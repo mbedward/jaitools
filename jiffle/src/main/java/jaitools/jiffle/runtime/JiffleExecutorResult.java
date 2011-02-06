@@ -20,9 +20,10 @@
 
 package jaitools.jiffle.runtime;
 
-import jaitools.jiffle.Jiffle;
 import java.awt.image.RenderedImage;
 import java.util.Map;
+
+import jaitools.jiffle.Jiffle;
 
 /**
  * Used by {@link JiffleExecutor} to send the results of an executed

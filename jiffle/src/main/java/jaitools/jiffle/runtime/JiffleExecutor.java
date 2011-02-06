@@ -23,17 +23,17 @@ package jaitools.jiffle.runtime;
 import java.awt.image.RenderedImage;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import jaitools.CollectionFactory;
 import jaitools.jiffle.Jiffle;
 import jaitools.jiffle.JiffleException;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledFuture;
 
 /**
  * A multi-threaded, event-driven executor service for Jiffle scripts.

@@ -21,9 +21,10 @@
 package jaitools.jiffle.runtime;
 
 import java.util.Random;
-import jaitools.numeric.SampleStats;
+
 import static jaitools.numeric.DoubleComparison.dcomp;
 import static jaitools.numeric.DoubleComparison.dzero;
+import jaitools.numeric.SampleStats;
 
 /**
  * Provides static functions than can be called by Jiffle runtime objects.

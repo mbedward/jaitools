@@ -19,7 +19,6 @@
  */
 package jaitools.jiffle.runtime;
 
-
 import org.junit.Test;
 
 /**

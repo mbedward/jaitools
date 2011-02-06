@@ -40,8 +40,8 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
 
 import org.codehaus.janino.SimpleCompiler;
 
-import jaitools.jiffle.parser.Message;
 import jaitools.CollectionFactory;
+import jaitools.jiffle.parser.AbstractRuntimeSourceCreator;
 import jaitools.jiffle.parser.CheckFunctionCalls;
 import jaitools.jiffle.parser.CheckImagePos;
 import jaitools.jiffle.parser.CheckImageUse;
@@ -50,10 +50,10 @@ import jaitools.jiffle.parser.ConvertTernaryExpr;
 import jaitools.jiffle.parser.DeferredErrorReporter;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
+import jaitools.jiffle.parser.Message;
 import jaitools.jiffle.parser.MessageTable;
 import jaitools.jiffle.parser.ParsingErrorReporter;
 import jaitools.jiffle.parser.RuntimeSourceCreator;
-import jaitools.jiffle.parser.AbstractRuntimeSourceCreator;
 import jaitools.jiffle.parser.TagConstants;
 import jaitools.jiffle.parser.TagProxyFunctions;
 import jaitools.jiffle.parser.TagVars;

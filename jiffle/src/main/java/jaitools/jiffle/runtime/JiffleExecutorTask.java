@@ -20,13 +20,13 @@
 
 package jaitools.jiffle.runtime;
 
-import jaitools.jiffle.JiffleException;
 import java.awt.image.RenderedImage;
 import java.awt.image.WritableRenderedImage;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
 import jaitools.jiffle.Jiffle;
+import jaitools.jiffle.JiffleException;
 
 /**
  * Executes a runtime object in a thread provided by a {@link JiffleExecutor}.
