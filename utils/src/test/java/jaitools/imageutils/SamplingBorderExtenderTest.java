@@ -53,7 +53,7 @@ public class SamplingBorderExtenderTest {
 
     @BeforeClass
     public static void setup() {
-        TiledImage timg = ImageUtils.createDoubleImage(SOURCE_WIDTH, SOURCE_WIDTH);
+        TiledImage timg = ImageUtils.createConstantImage(SOURCE_WIDTH, SOURCE_WIDTH, 0d);
         WritableRectIter iter = RectIterFactory.createWritable(timg, null);
         double y = 0d;
         double x = 0d;

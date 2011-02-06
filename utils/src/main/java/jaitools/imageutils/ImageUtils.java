@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  * 
  * This file is part of jai-tools.
  *
@@ -20,21 +20,30 @@
 
 package jaitools.imageutils;
 
-import jaitools.CollectionFactory;
 import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.image.ColorModel;
+import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
+import java.awt.image.SampleModel;
+import java.awt.image.WritableRaster;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.SortedSet;
+
 import javax.media.jai.JAI;
 import javax.media.jai.LookupTableJAI;
 import javax.media.jai.ParameterBlockJAI;
+import javax.media.jai.PlanarImage;
+import javax.media.jai.RasterFactory;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.TiledImage;
 import javax.media.jai.iterator.RectIterFactory;
 import javax.media.jai.iterator.WritableRectIter;
+
+import jaitools.CollectionFactory;
 
 /**
  * Static helper functions for common image tasks.
@@ -45,73 +54,6 @@ import javax.media.jai.iterator.WritableRectIter;
  * @version $Id$
  */
 public class ImageUtils {
-
-    /**
-     * Creates a new TiledImage object with a single band filled with zero
-     * values
-     * @param width image width in pixels
-     * @param height image height in pixels
-     * @return a new TiledImage object
-     *
-     * @deprecated This method will be removed in version 1.1.
-     *             Please use {@linkplain #createConstantImage(int, int, java.lang.Number)}
-     */
-    public static TiledImage createDoubleImage(int width, int height) {
-        return createDoubleImage(width, height, new double[] {0});
-    }
-
-    /**
-     * Creates a new TiledImage object with one or more bands filled with zero
-     * values
-     * @param width image width in pixels
-     * @param height image height in pixels
-     * @param numBands number of image bands (must be >= 1)
-     * @return a new TiledImage object
-     *
-     * @deprecated This method will be removed in version 1.1.
-     *             Please use {@linkplain #createConstantImage(int, int, java.lang.Number)}
-     */
-    public static TiledImage createDoubleImage(int width, int height, int numBands) {
-        if (numBands < 1) {
-            throw new IllegalArgumentException("numBands must be at least 1");
-        }
-        
-        double[] bandValues = new double[numBands];
-        for (int i = 0; i < numBands; i++) { bandValues[i] = 0d; }
-        return createDoubleImage(width, height, bandValues);
-    }
-
-    
-    /**
-     * Creates a new TiledImage object with one or more bands of constant value.
-     * The number of bands in the output image corresponds to the length of
-     * the input values array
-     * @param width image width in pixels
-     * @param height image height in pixels
-     * @param values array of double values (must contain at least one element)
-     * @return a new TiledImage object
-     *
-     * @deprecated This method will be removed in version 1.1.
-     *             Please use {@linkplain #createConstantImage(int width, int height, Number[] values)}
-     */
-    public static TiledImage createDoubleImage(int width, int height, double[] values) {
-        if (values == null || values.length < 1) {
-            throw new IllegalArgumentException("values array must contain at least 1 value");
-        }
-        
-        Double[] dvalues = new Double[values.length];
-        for (int i = 0; i < values.length; i++) {
-            dvalues[i] = Double.valueOf(values[i]);
-        }
-        
-        ParameterBlockJAI pb = new ParameterBlockJAI("constant");
-        pb.setParameter("width", (float)width);
-        pb.setParameter("height", (float)height);
-        pb.setParameter("bandValues", dvalues);
-        
-        RenderedOp op = JAI.create("constant", pb);
-        return new TiledImage(op, false);
-    }
 
     /**
      * Creates a new TiledImage object with a single band of constant value.
@@ -130,6 +72,26 @@ public class ImageUtils {
     }
 
     /**
+     * Creates a new TiledImage object with a single band of constant value.
+     * The data type of the image corresponds to the class of {@code value}.
+     *
+     * @param minx minimum image X ordinate
+     *
+     * @param miny minimum image Y ordinate
+     *
+     * @param width image width in pixels
+     *
+     * @param height image height in pixels
+     *
+     * @param value the constant value to fill the image
+     *
+     * @return a new TiledImage object
+     */
+    public static TiledImage createConstantImage(int minx, int miny, int width, int height, Number value) {
+        return createConstantImage(minx, miny, width, height, new Number[] {value});
+    }
+
+    /**
      * Creates a new TiledImage object with one or more bands of constant value.
      * The number of bands in the output image corresponds to the length of
      * the input values array and the data type of the image corresponds to the
@@ -144,40 +106,132 @@ public class ImageUtils {
      * @return a new TiledImage object
      */
     public static TiledImage createConstantImage(int width, int height, Number[] values) {
+        return createConstantImage(0, 0, width, height, values);
+    }
+
+    /**
+     * Creates a new TiledImage object with one or more bands of constant value.
+     * The number of bands in the output image corresponds to the length of
+     * the input values array and the data type of the image corresponds to the
+     * {@code Number} class used.
+     *
+     * @param minx minimum image X ordinate
+     *
+     * @param miny minimum image Y ordinate
+     *
+     * @param width image width in pixels
+     *
+     * @param height image height in pixels
+     *
+     * @param values array of values (must contain at least one element)
+     *
+     * @return a new TiledImage object
+     */
+
+    public static TiledImage createConstantImage(int minx, int miny, int width, int height, Number[] values) {
+        Dimension tileSize = JAI.getDefaultTileSize();
+        return createConstantImage(minx, miny, width, height, tileSize.width, tileSize.height, values);
+    }
+    /**
+     * Creates a new TiledImage object with one or more bands of constant value.
+     * The number of bands in the output image corresponds to the length of
+     * the input values array and the data type of the image corresponds to the
+     * {@code Number} class used.
+     *
+     * @param minx minimum image X ordinate
+     *
+     * @param miny minimum image Y ordinate
+     *
+     * @param width image width
+     *
+     * @param height image height
+     *
+     * @param tileWidth width of image tiles
+     *
+     * @param tileHeight height of image tiles
+     *
+     * @param values array of values (must contain at least one element)
+     *
+     * @return a new TiledImage object
+     */
+    public static TiledImage createConstantImage(int minx, int miny, int width, int height,
+            int tileWidth, int tileHeight, Number[] values) {
         if (values == null || values.length < 1) {
             throw new IllegalArgumentException("values array must contain at least 1 value");
         }
 
-        ParameterBlockJAI pb = new ParameterBlockJAI("constant");
-        pb.setParameter("width", (float)width);
-        pb.setParameter("height", (float)height);
+        final int numBands = values.length;
 
-        Number[] typedValues = null;
+        double[] doubleValues = null;
+        float[] floatValues = null;
+        int[] intValues = null;
+        Object typedValues = null;
+        int dataType = DataBuffer.TYPE_UNDEFINED;
+
         if (values[0] instanceof Double) {
-            typedValues = new Double[values.length];
+            doubleValues = new double[values.length];
+            dataType = DataBuffer.TYPE_DOUBLE;
+            for (int i = 0; i < numBands; i++) doubleValues[i] = (Double) values[i];
+            typedValues = doubleValues;
+
         } else if (values[0] instanceof Float) {
-            typedValues = new Float[values.length];
+            floatValues = new float[values.length];
+            dataType = DataBuffer.TYPE_FLOAT;
+            for (int i = 0; i < numBands; i++) floatValues[i] = (Float) values[i];
+            typedValues = floatValues;
+
         } else if (values[0] instanceof Integer) {
-            typedValues = new Integer[values.length];
+            intValues = new int[values.length];
+            dataType = DataBuffer.TYPE_INT;
+            for (int i = 0; i < numBands; i++) intValues[i] = (Integer) values[i];
+            typedValues = intValues;
+
         } else if (values[0] instanceof Short) {
-            typedValues = new Short[values.length];
+            intValues = new int[values.length];
+            dataType = DataBuffer.TYPE_SHORT;
+            for (int i = 0; i < numBands; i++) intValues[i] = (Short) values[i];
+            typedValues = intValues;
+
         } else if (values[0] instanceof Byte) {
-            typedValues = new Byte[values.length];
+            intValues = new int[values.length];
+            dataType = DataBuffer.TYPE_BYTE;
+            for (int i = 0; i < numBands; i++) intValues[i] = (Byte) values[i];
+            typedValues = intValues;
+
         } else {
             throw new UnsupportedOperationException("Unsupported data type: " +
                     values[0].getClass().getName());
         }
 
-        for (int i = 0; i < values.length; i++) {
-            typedValues[i] = values[i];
+        SampleModel sm = RasterFactory.createPixelInterleavedSampleModel(
+                dataType, tileWidth, tileHeight, numBands);
+        
+        ColorModel cm = PlanarImage.createColorModel(sm);
+
+        TiledImage tImg = new TiledImage(minx, miny, width, height, 0, 0, sm, cm);
+
+        WritableRaster tile0 = null;
+        int tileW = 0, tileH = 0;
+        for (int tileY = tImg.getMinTileY(); tileY <= tImg.getMaxTileY(); tileY++) {
+            for (int tileX = tImg.getMinTileX(); tileX <= tImg.getMaxTileX(); tileX++) {
+                WritableRaster raster = tImg.getWritableTile(tileX, tileY);
+                WritableRaster child = raster.createWritableTranslatedChild(0, 0);
+
+                if (tile0 == null) {
+                    tile0 = child;
+                    tileW = tile0.getWidth();
+                    tileH = tile0.getHeight();
+                    fillRaster(tile0, tileW, tileH, dataType, typedValues);
+                } else {
+                    child.setDataElements(0, 0, tile0);
+                }
+                tImg.releaseWritableTile(tileX, tileY);
+            }
         }
         
-        pb.setParameter("bandValues", typedValues);
-
-        RenderedOp op = JAI.create("constant", pb);
-        return new TiledImage(op, false);
+        return tImg;
     }
-    
+
     /**
      * Create a set of colours using a simple colour ramp algorithm in the HSB colour space.
      *
@@ -416,5 +470,59 @@ public class ImageUtils {
         }
 
         return images;
+    }
+
+    private static void fillRaster(WritableRaster wr, int w, int h, int dataType, Object typedValues) {
+        switch (dataType) {
+            case DataBuffer.TYPE_DOUBLE:
+            {
+                double[] values = (double[]) typedValues;
+                fillRasterDouble(wr, w, h, values);
+            }
+            break;
+
+            case DataBuffer.TYPE_FLOAT:
+            {
+                float[] values = (float[]) typedValues;
+                fillRasterFloat(wr, w, h, values);
+            }
+            break;
+
+            case DataBuffer.TYPE_BYTE:
+            case DataBuffer.TYPE_SHORT:
+            case DataBuffer.TYPE_INT:
+            {
+                int[] values = (int[]) typedValues;
+                fillRasterInt(wr, w, h, values);
+            }
+            break;
+        }
+    }
+
+    private static void fillRasterDouble(WritableRaster wr, int w, int h, double[] values) {
+        WritableRaster child = wr.createWritableTranslatedChild(0, 0);
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                child.setPixel(x, y, values);
+            }
+        }
+    }
+
+    private static void fillRasterFloat(WritableRaster wr, int w, int h, float[] values) {
+        WritableRaster child = wr.createWritableTranslatedChild(0, 0);
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                child.setPixel(x, y, values);
+            }
+        }
+    }
+
+    private static void fillRasterInt(WritableRaster wr, int w, int h, int[] values) {
+        WritableRaster child = wr.createWritableTranslatedChild(0, 0);
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                child.setPixel(x, y, values);
+            }
+        }
     }
 }
