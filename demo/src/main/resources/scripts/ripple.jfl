@@ -25,8 +25,11 @@
  * Author: Michael Bedward
  */
 
-xc = width() / 2;
-yc = height() / 2;
+init {
+    xc = width() / 2;
+    yc = height() / 2;
+}
+
 dx = (x()-xc)/xc;
 dy = (y()-yc)/yc;
 d = sqrt(dx^2 + dy^2);

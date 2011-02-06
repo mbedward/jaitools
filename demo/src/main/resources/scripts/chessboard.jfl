@@ -24,9 +24,11 @@
  * Author: Michael Bedward
  */
 
-len = width() > height() ? width() : height()
-square = floor(len / 8)
-edge_pos = square * 8;
+init {
+    len = width() > height() ? width() : height();
+    square = floor(len / 8);
+    edge_pos = square * 8;
+}
 
 odd_row = floor(y() / square) % 2 == 1
 odd_col = floor(x() / square) % 2 == 1
