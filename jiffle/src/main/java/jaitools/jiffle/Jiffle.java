@@ -145,7 +145,7 @@ public class Jiffle {
      */
     private static enum SourceElement {
         /**
-         * Identifies source for image-scope variables (fields
+         * Identifies source for declaration of image-scope variables (fields
          * in the runtime class).
          */
         VARS,
@@ -154,6 +154,11 @@ public class Jiffle {
          * Identifies source for the constructor.
          */
         CTOR,
+
+        /**
+         * Identifies source for the image-scope variable initializing method.
+         */
+        INIT,
 
         /**
          * Identifies source for the the evaluate method body.
@@ -853,6 +858,7 @@ public class Jiffle {
             Map<SourceElement, String> sources = CollectionFactory.map();
             sources.put(SourceElement.VARS, creator.getVarSource());
             sources.put(SourceElement.CTOR, creator.getCtorSource());
+            sources.put(SourceElement.INIT, creator.getInitSource());
             sources.put(SourceElement.EVAL, creator.getEvalSource());
             sources.put(SourceElement.GETTER, creator.getGetterSource());
             return sources;

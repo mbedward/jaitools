@@ -42,6 +42,18 @@ public abstract class AbstractIndirectRuntime extends AbstractJiffleRuntime impl
     List sourceImageNames = new ArrayList();
     String destImageName;
 
+    /** Processing bounds min X ordinate */
+    protected int _minx;
+
+    /** Processing bounds min Y ordinate */
+    protected int _miny;
+
+    /** Processing bounds width */
+    protected int _width;
+
+    /** Processing bounds height */
+    protected int _height;
+
     public void setDestinationImage(String imageName) {
         destImageName = imageName;
     }
@@ -50,8 +62,25 @@ public abstract class AbstractIndirectRuntime extends AbstractJiffleRuntime impl
         sourceImageNames.add(imageName);
     }
 
+    public void setBounds(int minx, int miny, int width, int height) {
+        _minx = minx;
+        _miny = miny;
+        _width = width;
+        _height = height;
+
+        initImageScopeVars();
+    }
+
     public double readFromImage(String srcImageName, int x, int y, int band) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+
+    /**
+     * Initializes image-scope variables. These are fields in the runtime class.
+     * They are initialized in a separate method rather than the constructor
+     * because they may depend on expressions involving values that are not
+     * known until the processing area is set (e.g. Jiffle's width() function).
+     */
+    protected abstract void initImageScopeVars();
 
 }

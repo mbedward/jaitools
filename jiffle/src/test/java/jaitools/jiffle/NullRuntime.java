@@ -33,7 +33,11 @@ import jaitools.jiffle.runtime.JiffleRuntime;
 public class NullRuntime implements JiffleRuntime {
 
     public Double getVar(String varName) {
-        return null;
+        throw new UnsupportedOperationException("Should not be called");
+    }
+
+    public void setBounds(int minx, int miny, int width, int height) {
+        throw new UnsupportedOperationException("Should not be called");
     }
 
 }

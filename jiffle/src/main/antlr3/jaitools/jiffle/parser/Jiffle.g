@@ -101,7 +101,7 @@ prog            : (var_init_block)? statement+ EOF!
                     throw new JiffleParserException(ex);
                 }
 
-var_init_block  : INIT LCURLY var_init* RCURLY (eos)? -> var_init*
+var_init_block  : INIT LCURLY NEWLINE* var_init* RCURLY (eos)? -> var_init*
                 ;
 
 var_init        : ID (EQ expr)? eos -> ^(VAR_INIT ID expr?)

@@ -44,6 +44,7 @@ import jaitools.jiffle.Jiffle;
 public abstract class AbstractRuntimeSourceCreator extends ErrorHandlingTreeParser {
 
     protected StringBuilder ctorSB;
+    protected StringBuilder initSB;
     protected StringBuilder evalSB;
     protected StringBuilder varSB;
     protected StringBuilder getterSB;
@@ -73,6 +74,7 @@ public abstract class AbstractRuntimeSourceCreator extends ErrorHandlingTreePars
         functionLookup = new FunctionLookup();
 
         ctorSB = new StringBuilder();
+        initSB = new StringBuilder();
         evalSB = new StringBuilder();
         varSB = new StringBuilder();
         getterSB = new StringBuilder();
@@ -82,6 +84,10 @@ public abstract class AbstractRuntimeSourceCreator extends ErrorHandlingTreePars
 
     public String getCtorSource() {
         return ctorSB.toString();
+    }
+
+    public String getInitSource() {
+        return initSB.toString();
     }
 
     public String getEvalSource() {

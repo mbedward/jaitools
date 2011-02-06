@@ -62,33 +62,37 @@ public abstract class AbstractDirectRuntime extends AbstractJiffleRuntime implem
      * image iterators ({@link WritableRandomIter}).
      */
     protected Map writers = new HashMap();
-    
-    /* TODO: add band support to scripts */
-    protected int _band = 0;
-    
-    /** Reference image width (pixels) */
+
+    /** Processing bounds min X ordinate */
+    protected int _minx;
+
+    /** Processing bounds min Y ordinate */
+    protected int _miny;
+
+    /** Processing bounds width */
     protected int _width;
     
-    /** Reference image height (pixels) */
+    /** Processing bounds height */
     protected int _height;
     
-    /** 
-     * The reference image. By default this is the first
-     * destination image.
-     */
-    protected WritableRenderedImage _refImage;
-    
-
     public void setDestinationImage(String imageName, WritableRenderedImage image) {
         images.put(imageName, image);
         
         if (writers.isEmpty()) {
-            _refImage = image;
-            _width = image.getWidth();
-            _height = image.getHeight();
+            setBounds(image.getMinX(), image.getMinY(),
+                    image.getWidth(), image.getHeight());
         }
         
         writers.put(imageName, RandomIterFactory.createWritable(image, null));
+    }
+
+    public void setBounds(int minx, int miny, int width, int height) {
+        _minx = minx;
+        _miny = miny;
+        _width = width;
+        _height = height;
+
+        initImageScopeVars();
     }
 
     public void setSourceImage(String imageName, RenderedImage image) {
@@ -99,13 +103,13 @@ public abstract class AbstractDirectRuntime extends AbstractJiffleRuntime implem
     public void evaluateAll(JiffleProgressListener pl) {
         JiffleProgressListener listener = pl == null ? new NullProgressListener() : pl;
 
-        final long numPixels = (long)_refImage.getWidth() * _refImage.getHeight();
+        final long numPixels = (long)_width * _height;
         listener.setTaskSize(numPixels);
         long count = 0;
         
         listener.start();
-        for (int y = _refImage.getMinY(), iy = 0; iy < _height; y++, iy++) {
-            for (int x = _refImage.getMinX(), ix = 0; ix < _height; x++, ix++) {
+        for (int y = _miny, iy = 0; iy < _height; y++, iy++) {
+            for (int x = _minx, ix = 0; ix < _height; x++, ix++) {
                 evaluate(x, y);
                 listener.update( ++count );
             }
@@ -122,5 +126,13 @@ public abstract class AbstractDirectRuntime extends AbstractJiffleRuntime implem
         WritableRandomIter iter = (WritableRandomIter) writers.get(imageName);
         iter.setSample(x, y, band, value);
     }
+
+    /**
+     * Initializes image-scope variables. These are fields in the runtime class.
+     * They are initialized in a separate method rather than the constructor
+     * because they may depend on expressions involving values that are not
+     * known until the processing area is set (e.g. Jiffle's width() function).
+     */
+    protected abstract void initImageScopeVars();
 
 }

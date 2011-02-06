@@ -89,4 +89,20 @@ public class ImageScopeVarsTest extends StatementsTestBase {
         testScript(script, e);
         assertEquals(NUM_PIXELS / 2, runtimeInstance.getVar("n"), TOL);
     }
+
+    @Test
+    public void proxyFunctionInInitBlock() throws Exception {
+        System.out.println("   using image info function in init block");
+
+        String script = "init { n = width(); } dest = n;" ;
+
+        Evaluator e = new Evaluator() {
+
+            public double eval(double val) {
+                return WIDTH;
+            }
+        };
+
+        testScript(script, e);
+    }
 }

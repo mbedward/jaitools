@@ -29,6 +29,17 @@ package jaitools.jiffle.runtime;
  * @version $Id$
  */
 public interface JiffleRuntime {
+
+    /**
+     * Set the bounds of the processing area. Usually this will be
+     * the bounds of the destination image(s).
+     *
+     * @param minx min X pixel ordinate
+     * @param miny min Y pixel ordinate
+     * @param width width of processing area
+     * @param height height of processing area
+     */
+    void setBounds(int minx, int miny, int width, int height);
     
     /**
      * Returns the value of a variable that was declared in the

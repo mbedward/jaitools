@@ -48,5 +48,9 @@ public abstract class MockIndirectBaseClass
     public void setSourceImage(String imageName, RenderedImage image) {
         throw new UnsupportedOperationException("Should not be called");
     }
+
+    public void setBounds(int minx, int miny, int width, int height) {
+        throw new UnsupportedOperationException("Should not be called");
+    }
     
 }

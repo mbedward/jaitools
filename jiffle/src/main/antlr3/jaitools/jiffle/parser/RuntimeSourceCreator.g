@@ -36,7 +36,7 @@ options {
 @header {
 package jaitools.jiffle.parser;
 
-import java.util.Set;
+import java.util.Map;
 import jaitools.CollectionFactory;
 import jaitools.jiffle.Jiffle;
 }
@@ -45,21 +45,30 @@ import jaitools.jiffle.Jiffle;
 
 private Jiffle.EvaluationModel model;
 private FunctionLookup functionLookup = new FunctionLookup();
-private Set<String> imageScopeVars = CollectionFactory.orderedSet();
+private Map<String, String> imageScopeVars = CollectionFactory.orderedMap();
 
 private void createVarSource() {
     if (imageScopeVars.isEmpty()) return;
 
     getterSB.append("public Double getVar(String varName) { \n");
-    final int N = imageScopeVars.size();
+
+    final int numVars = imageScopeVars.size();
     int k = 1;
-    for (String name : imageScopeVars) {
+    for (String name : imageScopeVars.keySet()) {
+        String exprSrc = imageScopeVars.get(name);
+        varSB.append("double ").append(name).append("; \n");
+
+        if (exprSrc != null) {
+            initSB.append("this.").append(name).append(" = ").append(exprSrc).append("; \n");
+        }
+
         getterSB.append("if (\"").append(name).append("\".equals(varName)) { \n");
         getterSB.append("return ").append(name).append("; \n");
         getterSB.append("}");
-        if (k < N) {
+        if (k < numVars) {
             getterSB.append(" else ");
         }
+        k++ ;
     }
     getterSB.append("\n").append("return null; \n");
     getterSB.append("} \n");
@@ -72,6 +81,7 @@ start[Jiffle.EvaluationModel model, String className]
     this.model = model;
 
     ctorSB.append("public ").append(className).append("() { \n");
+    initSB.append("protected void initImageScopeVars() { \n");
 
     switch (model) {
         case DIRECT:
@@ -89,6 +99,7 @@ start[Jiffle.EvaluationModel model, String className]
 @after {
     createVarSource();
     ctorSB.append("} \n");
+    initSB.append("} \n");
     evalSB.append("} \n");
 }
                 : var_init* (statement { evalSB.append($statement.src).append(";\n"); } )+
@@ -96,12 +107,8 @@ start[Jiffle.EvaluationModel model, String className]
 
 var_init        : ^(VAR_INIT ID (e=expr)?)
                   {
-                    imageScopeVars.add($ID.text);
-                    varSB.append("double ").append($ID.text);
-                    if (e != null) {
-                        varSB.append(" = ").append($e.src);
-                    }
-                    varSB.append("; \n");
+                    String exprSrc = (e == null ? null : e.src);
+                    imageScopeVars.put($ID.text, exprSrc);
                   }
                 ;
 
@@ -122,7 +129,7 @@ image_write returns [String src]
                            case DIRECT:
                                sb.append("writeToImage( \"");
                                sb.append($VAR_DEST.text);
-                               sb.append("\", _x, _y, _band, ");
+                               sb.append("\", _x, _y, 0, ");
                                sb.append($expr.src).append(" )");
                                break;
 
@@ -343,7 +350,7 @@ expr returns [String src, String priorSrc ]
                   { $src = $VAR_PROVIDED.text; }
 
                 | VAR_SOURCE
-                  { $src = "readFromImage(\"" + $VAR_SOURCE.text + "\", _x, _y, _band)"; }
+                  { $src = "readFromImage(\"" + $VAR_SOURCE.text + "\", _x, _y, 0)"; }
 
                 | CONSTANT
                   {

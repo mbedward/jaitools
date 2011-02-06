@@ -20,9 +20,6 @@
 
 package jaitools.jiffle.runtime;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * Provides default implementations of {@link JiffleRuntime} methods.
  *

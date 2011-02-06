@@ -38,13 +38,15 @@ import java.awt.image.WritableRenderedImage;
 public abstract class MockDirectBaseClass 
         extends AbstractJiffleRuntime implements JiffleDirectRuntime {
     
-    protected int _band = 0;
-    
     public void setDestinationImage(String imageName, WritableRenderedImage image) {
         throw new UnsupportedOperationException("Should not be called");
     }
 
     public void setSourceImage(String imageName, RenderedImage image) {
+        throw new UnsupportedOperationException("Should not be called");
+    }
+
+    public void setBounds(int minx, int miny, int width, int height) {
         throw new UnsupportedOperationException("Should not be called");
     }
 
