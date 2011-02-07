@@ -21,9 +21,7 @@ package jaitools.demo.jiffle;
 
 import java.awt.image.RenderedImage;
 import java.io.File;
-import java.net.URL;
 import java.util.Map;
-import javax.swing.SwingUtilities;
 
 import jaitools.CollectionFactory;
 import jaitools.imageutils.ImageUtils;
@@ -55,9 +53,7 @@ import jaitools.swing.ImageFrame;
  * @source $URL$
  * @version $Id$
  */
-public class JiffleExecutorDemo {
-    private final static int WIDTH = 600;
-    private final static int HEIGHT = 600;
+public class JiffleExecutorDemo extends JiffleDemoBase {
 
     private JiffleExecutor executor;
     
@@ -70,25 +66,7 @@ public class JiffleExecutorDemo {
      */
     public static void main(String[] args) throws Exception {
         JiffleExecutorDemo demo = new JiffleExecutorDemo();
-
-        URL url = demo.getClass().getResource("/scripts/ripple.jfl");
-
-        if (args.length == 1) {
-            String arg = args[0];
-            System.out.println(arg);
-            File file = new File(arg);
-            if (file.exists()) {
-                url = file.toURI().toURL();
-            } else {
-                int dot = arg.lastIndexOf('.');
-                if (dot < 0) {
-                    arg = arg + ".jfl";
-                }
-                url = demo.getClass().getResource("/scripts/" + arg);
-            }
-        }
-
-        File f = new File(url.toURI());
+        File f = demo.getScriptFile(args, "/scripts/ripple.jfl");
         demo.compileAndRun(f);        
     }
 
@@ -137,14 +115,10 @@ public class JiffleExecutorDemo {
      */
     private void onCompletion(JiffleEvent ev) {
         JiffleExecutorResult result = ev.getResult();
-        final RenderedImage img = result.getImages().get("result");
+        RenderedImage img = result.getImages().get("result");
 
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                ImageFrame frame = new ImageFrame(img, "Jiffle image demo");
-                frame.setVisible(true);
-            }
-        });
+        ImageFrame frame = new ImageFrame(img, "Jiffle image demo");
+        frame.setVisible(true);
     }
 
     /**
