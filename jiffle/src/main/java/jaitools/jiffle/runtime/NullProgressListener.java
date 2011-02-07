@@ -21,7 +21,9 @@
 package jaitools.jiffle.runtime;
 
 /**
- * A progress listener that ignores all inputs. All methods of this class are empty.
+ * A no-action progress listener. All setter and update methods are empty and
+ * {@link #getUpdateInterval()} returns {@code Long.MAX_VALUE} so that runtime
+ * object never bothers calling.
  * 
  * @author Michael Bedward
  * @since 1.1
@@ -37,5 +39,16 @@ public class NullProgressListener implements JiffleProgressListener {
     public void update(long done) {}
 
     public void finish() {}
+
+    public void setUpdateInterval(long numPixels) {}
+
+    public void setUpdateInterval(double propPixels) {}
+
+    /**
+     * {@inheritDoc}
+     * @return Always returns {@link Long#MAX_VALUE} which effectively means
+     *         "don't bother calling me".
+     */
+    public long getUpdateInterval() { return Long.MAX_VALUE; }
 
 }

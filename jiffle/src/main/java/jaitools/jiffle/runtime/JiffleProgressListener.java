@@ -36,28 +36,58 @@ package jaitools.jiffle.runtime;
 public interface JiffleProgressListener {
 
     /**
-     * Sets the total task size (number of pixels to be processed).
-     * 
-     * @param n task size
+     * Called by the client to request that the listener be notified
+     * of task progress after each {@code numPixels] number of destination
+     * pixels have been processed by the runtime object.
+     *
+     * @param numPixels number of pixels between listener updates
      */
-    public void setTaskSize(long size);
+    public void setUpdateInterval(long numPixels);
+
+    /**
+     * Called by the client to request that the listener be notified
+     * of task progress after each {@code propPixels} proportion of the
+     * destination pixels has been processed by the runtime object.
+     *
+     * @param propPixels proportion of pixels between listener updates
+     */
+    public void setUpdateInterval(double propPixels);
+
+    /**
+     * Called by the runtime object before processing begins to get
+     * the update interval as number of destination image pixels.
+     *
+     * @return update interval as number of pixels
+     */
+    public long getUpdateInterval();
+
+    /**
+     * Called by the runtime object to inform the listener of the total
+     * number of pixels in the largest destination image that will be
+     * processed.
+     * 
+     * @param numPixels number of destination image pixels
+     */
+    public void setTaskSize(long numPixels);
     
     /**
-     * Called when the task starts.
+     * Called by the runtime object when the task starts.
      */
     public void start();
     
     /**
-     * Called when each pixel is processed. If you don't want to slow down
-     * your tasks, make sure that implementing classes keep this method
-     * short and fast.
+     * Called by the runtime object at update intervals as specified by
+     * either {@link #setUpdateInterval(long)} or {@link #setUpdateInterval(double)}.
+     * <p>
+     * It is important to keep the amount of processing done in this method
+     * to a minimum to avoid slowing down processing too much.
      * 
      * @param done number of pixels processed
      */
     public void update(long done);
 
     /**
-     * Called when the task finishes.
+     * Called by the runtime object when the task finishes.
      */
     public void finish();
 
