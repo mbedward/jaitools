@@ -34,8 +34,7 @@ options {
 
 tokens {
     VAR_INIT;
-    VAR_INIT_BLOCK;
-    VAR_INIT_LIST;
+    JIFFLE_OPTION;
 
     ASSIGN;
     CAST;
@@ -95,16 +94,26 @@ protected Object recoverFromMismatchedToken(IntStream input, int ttype, BitSet f
 }
 
 
-prog            : (var_init_block)? statement+ EOF!
+prog            : header_blocks? statement+ EOF!
                 ;
                 catch [UnexpectedInputException ex] {
                     throw new JiffleParserException(ex);
                 }
 
-var_init_block  : INIT LCURLY NEWLINE* var_init* RCURLY (eos)? -> var_init*
+header_blocks   : options_block var_init_block?
+                | var_init_block options_block?
                 ;
 
-var_init        : ID (EQ expr)? eos -> ^(VAR_INIT ID expr?)
+options_block   : OPTIONS LCURLY NEWLINE* option* RCURLY NEWLINE* -> option*
+                ;
+
+option          : key=ID EQ value=ID eos -> ^(JIFFLE_OPTION $key $value)
+                ;
+
+var_init_block  : INIT LCURLY NEWLINE* var_init* RCURLY NEWLINE* -> var_init*
+                ;
+
+var_init        : ID EQ expr eos -> ^(VAR_INIT ID expr)
                 ;
 
 statement       : expr eos!
@@ -237,6 +246,9 @@ type_name       : 'int'
                 ;
                 
 eos             : (SEMICOLON|NEWLINE)+
+                ;
+
+OPTIONS         : 'options'
                 ;
 
 INIT            : 'init'
