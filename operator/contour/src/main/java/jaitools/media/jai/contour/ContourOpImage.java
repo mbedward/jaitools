@@ -41,6 +41,8 @@ import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 
 import com.vividsolutions.jts.geom.LineString;
+import jaitools.numeric.DoubleComparison;
+import jaitools.numeric.Range;
 
 /**
  * Generates contours for user-specified levels of values in the source image.
@@ -61,11 +63,16 @@ import com.vividsolutions.jts.geom.LineString;
  * @version $Id$
  */
 public class ContourOpImage extends AttributeOpImage {
-    
-    private static final int TL = 0;
-    private static final int TR = 1;
-    private static final int BL = 2;
-    private static final int BR = 3;
+
+    /*
+     * Constants to identify vertices for each group of
+     * data points being processed, as per the diagram
+     * in the javadoc for getContourSegments method.
+     */
+    private static final int BL_VERTEX1 = 0;
+    private static final int BR_VERTEX2 = 1;
+    private static final int TR_VERTEX3 = 2;
+    private static final int TL_VERTEX4 = 3;
     
     /** The source image band to process */
     private int band;
@@ -80,8 +87,13 @@ public class ContourOpImage extends AttributeOpImage {
      */
     private Double contourInterval;
     
-    /** Values to treat as NO_DATA */
-    private List<Double> noDataValues;
+    /** List of Numbers to treat as NO_DATA */
+    private List<Double> noDataNumbers;
+    /** List of Ranges to treat as NO_DATA */
+    private List<Range<Double>> noDataRanges;
+
+    /** Whether to use strict NODATA exclusion */
+    private final boolean strictNodata;
     
     /** Output contour lines */
     private SoftReference<List<LineString>> cachedContours;
@@ -141,7 +153,8 @@ public class ContourOpImage extends AttributeOpImage {
             int band,
             Collection<? extends Number> levels,
             Double interval,
-            Collection<? extends Number> noDataValues,
+            Collection<Object> noDataValues,
+            boolean strictNodata,
             boolean simplify,
             boolean smooth) {
                 
@@ -165,13 +178,39 @@ public class ContourOpImage extends AttributeOpImage {
             throw new IllegalArgumentException("At least one of levels or interval must be supplied");
         }
         
-        this.noDataValues = CollectionFactory.list();
+        this.noDataNumbers = CollectionFactory.list();
+        this.noDataRanges = CollectionFactory.list();
+
         if (noDataValues != null) {
-            for (Number z : noDataValues) {
-                this.noDataValues.add(z.doubleValue());
+            // Only add values that are not in the default set:
+            // NaN, +ve and -ve Inf, MaxValue
+            for (Object oelem : noDataValues) {
+                if (oelem instanceof Number) {
+                    double dz = ((Number)oelem).doubleValue();
+                    if (!(Double.isNaN(dz) ||
+                          Double.isInfinite(dz) ||
+                          Double.compare(dz, Double.MAX_VALUE) == 0)) {
+                        this.noDataNumbers.add(dz);
+                    }
+                } else if (oelem instanceof Range) {
+                    Range r = (Range) oelem;
+                    Double min = r.getMin().doubleValue();
+                    Double max = r.getMax().doubleValue();
+                    Range<Double> rd = new Range<Double>(
+                            min, r.isMinIncluded(), max, r.isMaxIncluded());
+                    this.noDataRanges.add((Range)oelem);
+
+                } else {
+                    // This should have been picked up by validateParameters
+                    // method in ContourDescriptor, but just in case...
+                    throw new IllegalArgumentException(
+                              "only Number and Range elements are permitted in the "
+                            + "noDataValues Collection");
+                }
             }
-        }
-        
+        } 
+
+        this.strictNodata = strictNodata;
         this.simplify = simplify;
         this.smooth = smooth;
 
@@ -301,6 +340,9 @@ public class ContourOpImage extends AttributeOpImage {
      * which is not a problem when only plotting contours. However, here we
      * try to avoid any duplication because this can confuse the merging of
      * line segments into JTS LineStrings later.
+     * <p>
+     * NODATA values are handled by ignoring all triangles that have any
+     * NODATA vertices.
      * 
      * @return the generated contour segments
      */
@@ -309,11 +351,12 @@ public class ContourOpImage extends AttributeOpImage {
         Map<Integer, Segments> segments = new HashMap<Integer, Segments>();
 
         double[] sample = new double[4];
+        boolean[] nodata = new boolean[4];
         double[] h = new double[5];
         double[] xh = new double[5];
         double[] yh = new double[5];
         int[] sh = new int[5];
-        double temp1, temp2;
+        double temp1, temp2, temp3, temp4;
 
         int[][][] configLookup = {
             {{0, 0, 8}, {0, 2, 5}, {7, 6, 9}},
@@ -336,162 +379,228 @@ public class ContourOpImage extends AttributeOpImage {
             iter1.startPixels();
             iter2.startPixels();
             
-            sample[BR] = iter1.getSampleDouble();
-            sample[TR] = iter2.getSampleDouble();
+            sample[BR_VERTEX2] = iter1.getSampleDouble();
+            nodata[BR_VERTEX2] = isNoData(sample[BR_VERTEX2]);
+
+            sample[TR_VERTEX3] = iter2.getSampleDouble();
+            nodata[TR_VERTEX3] = isNoData(sample[TR_VERTEX3]);
+            
             iter1.nextPixel();
             iter2.nextPixel();
             int x = (int) src.getBounds().getMinX() + 1;
             while (!iter1.finishedPixels() && !iter2.finishedPixels()) {
-                sample[BL] = sample[BR];
-                sample[BR] = iter1.getSampleDouble();
-                sample[TL] = sample[TR];
-                sample[TR] = iter2.getSampleDouble();
+                sample[BL_VERTEX1] = sample[BR_VERTEX2];
+                nodata[BL_VERTEX1] = nodata[BR_VERTEX2];
 
-                temp1 = Math.min(sample[BL], sample[TL]);
-                temp2 = Math.min(sample[BR], sample[TR]);
-                double dmin = Math.min(temp1, temp2);
+                sample[BR_VERTEX2] = iter1.getSampleDouble();
+                nodata[BR_VERTEX2] = isNoData(sample[BR_VERTEX2]);
 
-                temp1 = Math.max(sample[BL], sample[TL]);
-                temp2 = Math.max(sample[BR], sample[TR]);
-                double dmax = Math.max(temp1, temp2);
+                sample[TL_VERTEX4] = sample[TR_VERTEX3];
+                nodata[TL_VERTEX4] = nodata[TR_VERTEX3];
 
-                final int size=contourLevels.size();
-                for (int levelIndex = 0; levelIndex < size; levelIndex++) {
-                    double levelValue = contourLevels.get(levelIndex);
-                    if (levelValue < dmin || levelValue > dmax) {
-                        continue;
+                sample[TR_VERTEX3] = iter2.getSampleDouble();
+                nodata[TR_VERTEX3] = isNoData(sample[TR_VERTEX3]);
+
+                boolean processSquare = true;
+                boolean hasSingleNoData = false;
+                for (int i = 0; i < 4 && processSquare; i++) {
+                    if (nodata[i]) {
+                        if (strictNodata || hasSingleNoData) {
+                            processSquare = false;
+                            break;
+                        } else {
+                            hasSingleNoData = true;
+                        }
+                    }
+                }
+
+                if (processSquare) {
+                    if (nodata[BL_VERTEX1]) {
+                        temp1 = temp3 = sample[TL_VERTEX4];
+                    } else if (nodata[TL_VERTEX4]) {
+                        temp1 = temp3 = sample[BL_VERTEX1];
+                    } else {
+                        temp1 = Math.min(sample[BL_VERTEX1], sample[TL_VERTEX4]);
+                        temp3 = Math.max(sample[BL_VERTEX1], sample[TL_VERTEX4]);
                     }
 
-                    Segments zlist = segments.get(levelIndex);
-                    if (zlist == null) {
-                        zlist = new Segments(simplify);
-                        segments.put(levelIndex, zlist);
+                    if (nodata[BR_VERTEX2]) {
+                        temp2 = temp4 = sample[TR_VERTEX3];
+                    } else if (nodata[TR_VERTEX3]) {
+                        temp2 = temp4 = sample[BR_VERTEX2];
+                    } else {
+                        temp2 = Math.min(sample[BR_VERTEX2], sample[TR_VERTEX3]);
+                        temp4 = Math.max(sample[BR_VERTEX2], sample[TR_VERTEX3]);
                     }
-                    
-                    h[4] = sample[TL] - levelValue;
-                    xh[4] = x - 1;
-                    yh[4] = y + 1;
-                    sh[4] = Double.compare(h[4], 0.0);
+                    double dmin = Math.min(temp1, temp2);
+                    double dmax = Math.max(temp3, temp4);
 
-                    h[3] = sample[TR] - levelValue;
-                    xh[3] = x;
-                    yh[3] = y + 1;
-                    sh[3] = Double.compare(h[3], 0.0);
-
-                    h[2] = sample[BR] - levelValue;
-                    xh[2] = x;
-                    yh[2] = y;
-                    sh[2] = Double.compare(h[2], 0.0);
-
-                    h[1] = sample[BL] - levelValue;
-                    xh[1] = x - 1;
-                    yh[1] = y;
-                    sh[1] = Double.compare(h[1], 0.0);
-
-                    h[0] = (h[1] + h[2] + h[3] + h[4]) / 4.0;
-                    xh[0] = x - 0.5;
-                    yh[0] = y + 0.5;
-                    sh[0] = Double.compare(h[0], 0.0);
-
-                    /* Scan each triangle in the box */
-                    int m1, m2, m3;
-                    for (int m = 1; m <= 4; m++) {
-                        m1 = m;
-                        m2 = 0;
-                        m3 = m == 4 ? 1 : m + 1;
-
-                        int config = configLookup[sh[m1] + 1][sh[m2] + 1][sh[m3] + 1];
-                        if (config == 0) {
+                    final int size=contourLevels.size();
+                    for (int levelIndex = 0; levelIndex < size; levelIndex++) {
+                        double levelValue = contourLevels.get(levelIndex);
+                        if (levelValue < dmin || levelValue > dmax) {
                             continue;
                         }
 
-                        double x0 = 0.0, y0 = 0.0, x1 = 0.0, y1 = 0.0;
-                        boolean addSegment = true;
-                        switch (config) {
-                            /* Line between vertices 1 and 2 */
-                            case 1: 
-                                x0 = xh[m1];
-                                y0 = yh[m1];
-                                x1 = xh[m2];
-                                y1 = yh[m2];
-                                break;
-
-                            /* Line between vertices 2 and 3 */
-                            case 2: 
-                                x0 = xh[m2];
-                                y0 = yh[m2];
-                                x1 = xh[m3];
-                                y1 = yh[m3];
-                                break;
-
-                            /* 
-                             * Line between vertices 3 and 1.
-                             * We only want to generate this segment
-                             * for triangles m=2 and m=3, otherwise
-                             * we will end up with duplicate segments.
-                             */
-                            case 3: 
-                                if (m == 2 || m == 3) {
-                                    x0 = xh[m3];
-                                    y0 = yh[m3];
-                                    x1 = xh[m1];
-                                    y1 = yh[m1];
-                                } else {
-                                    addSegment = false;
-                                }
-                                break;
-
-                            /* Line between vertex 1 and side 2-3 */
-                            case 4: 
-                                x0 = xh[m1];
-                                y0 = yh[m1];
-                                x1 = sect(m2, m3, h, xh);
-                                y1 = sect(m2, m3, h, yh);
-                                break;
-
-                            /* Line between vertex 2 and side 3-1 */
-                            case 5: 
-                                x0 = xh[m2];
-                                y0 = yh[m2];
-                                x1 = sect(m3, m1, h, xh);
-                                y1 = sect(m3, m1, h, yh);
-                                break;
-
-                            /* Line between vertex 3 and side 1-2 */
-                            case 6: 
-                                x0 = xh[m3];
-                                y0 = yh[m3];
-                                x1 = sect(m1, m2, h, xh);
-                                y1 = sect(m1, m2, h, yh);
-                                break;
-
-                            /* Line between sides 1-2 and 2-3 */
-                            case 7: 
-                                x0 = sect(m1, m2, h, xh);
-                                y0 = sect(m1, m2, h, yh);
-                                x1 = sect(m2, m3, h, xh);
-                                y1 = sect(m2, m3, h, yh);
-                                break;
-
-                            /* Line between sides 2-3 and 3-1 */
-                            case 8: 
-                                x0 = sect(m2, m3, h, xh);
-                                y0 = sect(m2, m3, h, yh);
-                                x1 = sect(m3, m1, h, xh);
-                                y1 = sect(m3, m1, h, yh);
-                                break;
-
-                            /* Line between sides 3-1 and 1-2 */
-                            case 9: 
-                                x0 = sect(m3, m1, h, xh);
-                                y0 = sect(m3, m1, h, yh);
-                                x1 = sect(m1, m2, h, xh);
-                                y1 = sect(m1, m2, h, yh);
-                                break;
+                        Segments zlist = segments.get(levelIndex);
+                        if (zlist == null) {
+                            zlist = new Segments(simplify);
+                            segments.put(levelIndex, zlist);
                         }
 
-                        if (addSegment) {
-                            zlist.add(x0, y0, x1, y1);
+                        if (!nodata[TL_VERTEX4]) {
+                            h[4] = sample[TL_VERTEX4] - levelValue;
+                            xh[4] = x - 1;
+                            yh[4] = y + 1;
+                            sh[4] = Double.compare(h[4], 0.0);
+                        }
+
+                        if (!nodata[TR_VERTEX3]) {
+                            h[3] = sample[TR_VERTEX3] - levelValue;
+                            xh[3] = x;
+                            yh[3] = y + 1;
+                            sh[3] = Double.compare(h[3], 0.0);
+                        }
+
+                        if (!nodata[BR_VERTEX2]) {
+                            h[2] = sample[BR_VERTEX2] - levelValue;
+                            xh[2] = x;
+                            yh[2] = y;
+                            sh[2] = Double.compare(h[2], 0.0);
+                        }
+
+                        if (!nodata[BL_VERTEX1]) {
+                            h[1] = sample[BL_VERTEX1] - levelValue;
+                            xh[1] = x - 1;
+                            yh[1] = y;
+                            sh[1] = Double.compare(h[1], 0.0);
+                        }
+
+                        h[0] = 0.0;
+                        int nh = 0;
+                        for (int i = 0; i < 4; i++) {
+                            if (!nodata[i]) {
+                                h[0] += h[i+1];
+                                nh++ ;
+                            }
+                        }
+
+                        // Just in case
+                        if (nh < 3) {
+                            throw new IllegalStateException(
+                                    "Internal error: number data vertices = " + nh);
+                        }
+
+                        h[0] /= nh;
+                        xh[0] = x - 0.5;
+                        yh[0] = y + 0.5;
+                        sh[0] = Double.compare(h[0], 0.0);
+
+                        /* Scan each triangle in the box */
+                        int m1, m2, m3;
+                        for (int m = 1; m <= 4; m++) {
+                            m1 = m;
+                            m2 = 0;
+                            m3 = m == 4 ? 1 : m + 1;
+
+                            if (nodata[m1 - 1] || nodata[m3 - 1]) {
+                                // skip this triangle with a NODATA vertex
+                                continue;
+                            }
+
+                            int config = configLookup[sh[m1] + 1][sh[m2] + 1][sh[m3] + 1];
+                            if (config == 0) {
+                                continue;
+                            }
+
+                            double x0 = 0.0, y0 = 0.0, x1 = 0.0, y1 = 0.0;
+                            boolean addSegment = true;
+                            switch (config) {
+                                /* Line between vertices 1 and 2 */
+                                case 1:
+                                    x0 = xh[m1];
+                                    y0 = yh[m1];
+                                    x1 = xh[m2];
+                                    y1 = yh[m2];
+                                    break;
+
+                                /* Line between vertices 2 and 3 */
+                                case 2:
+                                    x0 = xh[m2];
+                                    y0 = yh[m2];
+                                    x1 = xh[m3];
+                                    y1 = yh[m3];
+                                    break;
+
+                                /*
+                                 * Line between vertices 3 and 1.
+                                 * We only want to generate this segment
+                                 * for triangles m=2 and m=3, otherwise
+                                 * we will end up with duplicate segments.
+                                 */
+                                case 3:
+                                    if (m == 2 || m == 3) {
+                                        x0 = xh[m3];
+                                        y0 = yh[m3];
+                                        x1 = xh[m1];
+                                        y1 = yh[m1];
+                                    } else {
+                                        addSegment = false;
+                                    }
+                                    break;
+
+                                /* Line between vertex 1 and side 2-3 */
+                                case 4:
+                                    x0 = xh[m1];
+                                    y0 = yh[m1];
+                                    x1 = sect(m2, m3, h, xh);
+                                    y1 = sect(m2, m3, h, yh);
+                                    break;
+
+                                /* Line between vertex 2 and side 3-1 */
+                                case 5:
+                                    x0 = xh[m2];
+                                    y0 = yh[m2];
+                                    x1 = sect(m3, m1, h, xh);
+                                    y1 = sect(m3, m1, h, yh);
+                                    break;
+
+                                /* Line between vertex 3 and side 1-2 */
+                                case 6:
+                                    x0 = xh[m3];
+                                    y0 = yh[m3];
+                                    x1 = sect(m1, m2, h, xh);
+                                    y1 = sect(m1, m2, h, yh);
+                                    break;
+
+                                /* Line between sides 1-2 and 2-3 */
+                                case 7:
+                                    x0 = sect(m1, m2, h, xh);
+                                    y0 = sect(m1, m2, h, yh);
+                                    x1 = sect(m2, m3, h, xh);
+                                    y1 = sect(m2, m3, h, yh);
+                                    break;
+
+                                /* Line between sides 2-3 and 3-1 */
+                                case 8:
+                                    x0 = sect(m2, m3, h, xh);
+                                    y0 = sect(m2, m3, h, yh);
+                                    x1 = sect(m3, m1, h, xh);
+                                    y1 = sect(m3, m1, h, yh);
+                                    break;
+
+                                /* Line between sides 3-1 and 1-2 */
+                                case 9:
+                                    x0 = sect(m3, m1, h, xh);
+                                    y0 = sect(m3, m1, h, yh);
+                                    x1 = sect(m1, m2, h, xh);
+                                    y1 = sect(m1, m2, h, yh);
+                                    break;
+                            }
+
+                            if (addSegment) {
+                                zlist.add(x0, y0, x1, y1);
+                            }
                         }
                     }
                 }
@@ -597,4 +706,33 @@ public class ContourOpImage extends AttributeOpImage {
         }
     }
 
+    /**
+     * Tests if a value should be treated as NODATA.
+     * Values that are NaN, infinite or equal to Double.MAX_VALUE
+     * are always treated as NODATA.
+     * 
+     * @param value the value to test
+     * 
+     * @return {@code true} if a NODATA value; {@code false} otherwise
+     */
+    private boolean isNoData(double value) {
+        if (Double.isNaN(value) || Double.isInfinite(value) ||
+            Double.compare(value, Double.MAX_VALUE) == 0) {
+            return true;
+        }
+
+        for (Double d : noDataNumbers) {
+            if (DoubleComparison.dequal(value, d)) {
+                return true;
+            }
+        }
+
+        for (Range r : noDataRanges) {
+            if (r.contains(value)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

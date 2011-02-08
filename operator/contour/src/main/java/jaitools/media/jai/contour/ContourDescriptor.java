@@ -20,6 +20,7 @@
 
 package jaitools.media.jai.contour;
 
+import jaitools.numeric.Range;
 import java.awt.image.renderable.ParameterBlock;
 import java.util.Arrays;
 import java.util.Collection;
@@ -105,8 +106,9 @@ public class ContourDescriptor extends OperationDescriptorImpl {
     static final int LEVELS_ARG = 2;
     static final int INTERVAL_ARG = 3;
     static final int NO_DATA_ARG = 4;
-    static final int SIMPLIFY_ARG = 5;
-    static final int SMOOTH_ARG = 6;
+    static final int STRICT_NO_DATA_ARG = 5;
+    static final int SIMPLIFY_ARG = 6;
+    static final int SMOOTH_ARG = 7;
 
     private static final String[] paramNames = {
         "roi",
@@ -114,6 +116,7 @@ public class ContourDescriptor extends OperationDescriptorImpl {
         "levels",
         "interval",
         "nodata",
+        "strictNodata",
         "simplify",
         "smooth"
     };
@@ -125,16 +128,19 @@ public class ContourDescriptor extends OperationDescriptorImpl {
          Number.class,
          Collection.class,
          Boolean.class,
+         Boolean.class,
          Boolean.class
     };
 
-    private static final Object[] paramDefaults = {
+    // package access for use by ContourOpImage
+    static final Object[] paramDefaults = {
          (ROI) null,
          Integer.valueOf(0),
          (Collection) null,
          (Number) null,
          Arrays.asList(Double.NaN, Double.POSITIVE_INFINITY, 
             Double.NEGATIVE_INFINITY, Double.MAX_VALUE),
+         Boolean.TRUE,
          Boolean.TRUE,
          Boolean.FALSE,
     };
@@ -161,13 +167,16 @@ public class ContourDescriptor extends OperationDescriptorImpl {
                     {"arg3Desc", paramNames[3] + " (Number) " +
                               "interval between contour values (ignored if levels arg is supplied)"},
                     
-                    {"arg4Desc", paramNames[4] + " (Collection<? extends Number>) " +
-                              "values to treat as NO_DATA"},
-                    
-                    {"arg6Desc", paramNames[5] + " (Boolean, default=true) " +
+                    {"arg4Desc", paramNames[4] + " (Collection) " +
+                              "values to treat as NO_DATA; elements can be Number and/or Range"},
+
+                    {"arg5Desc", paramNames[5] + " (Boolean, default=true) " +
+                              "if true, use strict NODATA exclusion; if false use accept some NODATA"},
+
+                    {"arg6Desc", paramNames[6] + " (Boolean, default=true) " +
                               "whether to simplify contour lines by removing colinear vertices"},
                     
-                    {"arg6Desc", paramNames[6] + " (Boolean, default=false) " +
+                    {"arg7Desc", paramNames[7] + " (Boolean, default=false) " +
                               "whether to smooth contour lines with Bezier interpolation"}
                 },
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
@@ -184,6 +193,9 @@ public class ContourDescriptor extends OperationDescriptorImpl {
 
     @Override
     protected boolean validateParameters(String modeName, ParameterBlock pb, StringBuffer msg) {
+        final String nodataErrorMsg =
+                "nodata parameter must be a Collection of Numbers and/or Ranges";
+
         boolean ok = super.validateParameters(modeName, pb, msg);
         
         if (ok) {
@@ -210,8 +222,25 @@ public class ContourDescriptor extends OperationDescriptorImpl {
                     msg.append("levels parameter must be a Collection of one or more numbers");
                 }
             }
+
+            Object objc = pb.getObjectParameter(NO_DATA_ARG);
+            if (objc != null) {
+                if (!(objc instanceof Collection)) {
+                    msg.append(nodataErrorMsg);
+                    ok = false;
+                } else {
+                    Collection col = (Collection) objc;
+                    for (Object oelem : col) {
+                        if (!(oelem instanceof Number || oelem instanceof Range)) {
+                            msg.append(nodataErrorMsg);
+                            ok = false;
+                            break;
+                        }
+                    }
+                }
+            }
         }
-        
+
         return ok;
     }    
 }

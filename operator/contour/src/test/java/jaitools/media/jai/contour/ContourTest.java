@@ -20,12 +20,7 @@
 
 package jaitools.media.jai.contour;
 
-import static jaitools.numeric.DoubleComparison.dequal;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import jaitools.imageutils.ImageUtils;
-
+import jaitools.numeric.Range;
 import java.awt.Point;
 import java.awt.Transparency;
 import java.awt.color.ColorSpace;
@@ -51,11 +46,19 @@ import javax.media.jai.ROI;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.TiledImage;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.io.WKTReader;
+import jaitools.CollectionFactory;
+
+import jaitools.imageutils.ImageUtils;
+import static jaitools.numeric.DoubleComparison.dequal;
 
 /**
  * Unit tests for the "Contour" operation.
@@ -66,7 +69,9 @@ import com.vividsolutions.jts.geom.LineString;
  * @version $Id$
  */
 public class ContourTest {
-    
+
+    private static final double TOL = 1.0e-6d;
+
     enum Gradient { VERTICAL, HORIZONTAL, RADIAL };
     
     private static final int IMAGE_WIDTH = 100;
@@ -84,7 +89,7 @@ public class ContourTest {
      */
     @Test(expected=IllegalArgumentException.class)
     public void missingLevelsParameter() {
-        PlanarImage src = ImageUtils.createConstantImage(IMAGE_WIDTH, IMAGE_WIDTH, 0);
+        TiledImage src = ImageUtils.createConstantImage(IMAGE_WIDTH, IMAGE_WIDTH, 0);
         doOp(src);
     }
     
@@ -94,7 +99,7 @@ public class ContourTest {
      */
     @Test
     public void noContours() {
-        PlanarImage src = ImageUtils.createConstantImage(IMAGE_WIDTH, IMAGE_WIDTH, 0);
+        TiledImage src = ImageUtils.createConstantImage(IMAGE_WIDTH, IMAGE_WIDTH, 0);
         List<Integer> levels = Arrays.asList(new Integer[]{-10, -5, 5, 10});
         args.put("levels", levels);
         Collection<LineString> contours = doOp(src);
@@ -108,7 +113,7 @@ public class ContourTest {
      */
     @Test
     public void intervalsVerticalGradient() {
-        PlanarImage src = createGradientImage(Gradient.VERTICAL);
+        TiledImage src = createGradientImage(Gradient.VERTICAL);
         
         args.put("interval", 10);
         Collection<LineString> contours = doOp(src);
@@ -139,7 +144,7 @@ public class ContourTest {
      */
     @Test
     public void singleContourVerticalGradient() {
-        PlanarImage src = createGradientImage(Gradient.VERTICAL);
+        TiledImage src = createGradientImage(Gradient.VERTICAL);
         
         args.put("levels", Collections.singleton(IMAGE_WIDTH / 2));
         Collection<LineString> contours = doOp(src);
@@ -155,7 +160,7 @@ public class ContourTest {
      */
     @Test
     public void doNotSimplify() {
-        PlanarImage src = createGradientImage(Gradient.VERTICAL);
+        TiledImage src = createGradientImage(Gradient.VERTICAL);
         
         args.put("levels", Collections.singleton(IMAGE_WIDTH / 2));
         args.put("simplify", false);
@@ -174,16 +179,16 @@ public class ContourTest {
      */
     @Test
     public void singleContourHorizontalGradient() {
-        PlanarImage src = createGradientImage(Gradient.HORIZONTAL);
-        
+        TiledImage src = createGradientImage(Gradient.HORIZONTAL);
+
         args.put("levels", Collections.singleton(IMAGE_WIDTH / 2));
         Collection<LineString> contours = doOp(src);
         assertEquals(1, contours.size());
-        
+
         LineString contour = contours.iterator().next();
         assertContour(contour, IMAGE_WIDTH/2, 0, IMAGE_WIDTH/2, IMAGE_WIDTH-1);
     }
-    
+
     /**
      * Trace a single ring contour from a source image with a radial value
      * gradient and check that each vertex of the contour is within an 
@@ -191,7 +196,7 @@ public class ContourTest {
      */
     @Test
     public void singleContourRadialGradient() {
-        PlanarImage src = createGradientImage(Gradient.RADIAL);
+        TiledImage src = createGradientImage(Gradient.RADIAL);
         
         final double value = IMAGE_WIDTH / 3.0d;
         args.put("levels", Collections.singleton(value));
@@ -206,7 +211,7 @@ public class ContourTest {
             assertTrue(dequal(value, c.distance(mid), tol));
         }
     }
-    
+
     @Test
     public void demTest() {
     	double[] matrix = new double[] { //
@@ -232,7 +237,7 @@ public class ContourTest {
      */
     @Test
     public void intervalContoursVerticalGradient() {
-        PlanarImage src = createGradientImage(Gradient.VERTICAL);
+        TiledImage src = createGradientImage(Gradient.VERTICAL);
         
         int interval = 10;
         args.put("interval", IMAGE_WIDTH / interval);
@@ -258,7 +263,7 @@ public class ContourTest {
      */
     @Test
     public void levelsParamOverridesIntervalParam() {
-        PlanarImage src = createGradientImage(Gradient.VERTICAL);
+        TiledImage src = createGradientImage(Gradient.VERTICAL);
         
         final int LEVEL = 42;
         args.put("levels", Collections.singleton(LEVEL));
@@ -271,7 +276,79 @@ public class ContourTest {
         assertEquals(42, val);
     }
     
-    
+    /**
+     * Trace a contour in a source image with a horizontal
+     * gradient of values and NaN values across the middle.
+     */
+    @Test
+    public void strictNODATA_NaN() throws Exception {
+        nodataValueTest(Double.NaN);
+    }
+
+    /**
+     * Trace a contour in a source image with a horizontal
+     * gradient of values and user-defined NODATA values across the middle.
+     */
+    @Test
+    public void strictNODATA_UserValue() throws Exception {
+        args.put("nodata", Collections.singleton(-1.0d));
+        nodataValueTest(-1.0);
+    }
+
+    private void nodataValueTest(double nodataValue) throws Exception {
+        TiledImage src = createGradientImage(Gradient.HORIZONTAL);
+
+        int minNoDataY = IMAGE_WIDTH / 4;
+        int maxNoDataY = 3 * IMAGE_WIDTH / 4;
+        for (int y = minNoDataY; y <= maxNoDataY; y++) {
+            for (int x = 0; x < IMAGE_WIDTH; x++) {
+                src.setSample(x, y, 0, nodataValue);
+            }
+        }
+
+        args.put("levels", Collections.singleton(IMAGE_WIDTH / 2));
+        Collection<LineString> contours = doOp(src);
+
+        // expected contours
+        WKTReader reader = new WKTReader();
+        LineString c1 = (LineString) reader.read(String.format(
+                "LINESTRING (50 0, 50 %d)", IMAGE_WIDTH / 4 - 1));
+
+        LineString c2 = (LineString) reader.read(String.format(
+                "LINESTRING (50 %d, 50 %d)", 3 * IMAGE_WIDTH / 4 + 1, IMAGE_WIDTH - 1));
+
+        assertContoursMatch(contours, c1, c2);
+    }
+
+    /**
+     * Tests using a Range to define NODATA values.
+     */
+    @Test
+    public void strictNODATA_Range() throws Exception {
+        TiledImage src = createGradientImage(Gradient.HORIZONTAL);
+
+        double minNODATA = IMAGE_WIDTH / 2 - 5;
+        double maxNODATA = IMAGE_WIDTH / 2 + 5;
+        Range<Double> r = Range.create(minNODATA, true, maxNODATA, true);
+        args.put("nodata", Collections.singleton(r));
+
+        args.put("interval", IMAGE_WIDTH / 4);
+        Collection<LineString> contours = doOp(src);
+
+        // expected contours
+        WKTReader reader = new WKTReader();
+        int z = IMAGE_WIDTH / 4;
+        LineString c1 = (LineString) reader.read(String.format(
+                "LINESTRING (%d 0, %d 99)", z, z));
+
+        LineString c2 = (LineString) reader.read(String.format(
+                "LINESTRING (%d 0, %d 99)", 3*z, 3*z));
+
+        assertContoursMatch(contours, c1, c2);
+
+    }
+
+
     /**
      * Helper method: runs the operation and retrieves the contours.
      * 
@@ -287,6 +364,8 @@ public class ContourTest {
         if (args.containsKey("band")) pb.setParameter("band", (Integer)args.get("band"));
         if (args.containsKey("levels")) pb.setParameter("levels", (Collection)args.get("levels"));
         if (args.containsKey("interval")) pb.setParameter("interval", (Number)args.get("interval"));
+        if (args.containsKey("nodata")) pb.setParameter("nodata", (Collection)args.get("nodata"));
+        if (args.containsKey("strictNodata")) pb.setParameter("strictNodata", (Boolean)args.get("strictNodata"));
         if (args.containsKey("simplify")) pb.setParameter("simplify", (Boolean)args.get("simplify"));
         if (args.containsKey("smooth")) pb.setParameter("smooth", (Boolean)args.get("smooth"));
         
@@ -300,13 +379,6 @@ public class ContourTest {
     
     /**
      * Helper method to check a single contour's end-points and number of coordinates.
-     * 
-     * @param contour the contour
-     * @param x0 expected first x
-     * @param y0 expected first y
-     * @param x1 expected last x
-     * @param y1 expected last y
-     * @param N  expected number of coordinates
      */
     private void assertContour(LineString contour, double x0, double y0, double x1, double y1) {
         contour.normalize(); 
@@ -318,6 +390,43 @@ public class ContourTest {
         assertTrue( dequal(coords[N-1].x, x1) );
         assertTrue( dequal(coords[N-1].y, y1) );
     }
+
+    /**
+     * Assert that a collection of contours matches those expected.
+     *
+     * @param contours collection returned by the operator
+     * @param expected expected contours
+     */
+    private void assertContoursMatch(Collection<LineString> contours, LineString ...expected) {
+        assertEquals(expected.length, contours.size());
+
+        // copy into a new collection just in case the caller needs the
+        //  input collection afterwards
+        List<LineString> list = CollectionFactory.list();
+        list.addAll(contours);
+
+        for (LineString contour : list) {
+            contour.normalize();
+        }
+
+        for (LineString exp : expected) {
+            boolean found = false;
+            exp.normalize();
+            // might be JTS pre 1.12 so do equality test explicitly
+            for (LineString contour : list) {
+                if (exp.equalsExact(contour, TOL)) {
+                    list.remove(contour);
+                    found = true;
+                    break;
+                }
+            }
+
+            assertTrue("Expected contour not found", found);
+        }
+
+        assertEquals("result collection had additional contours", 0, list.size());
+    }
+
     
     /**
      * Creates an image with a linear gradient of values.
@@ -326,7 +435,7 @@ public class ContourTest {
      * 
      * @return the image
      */
-    private PlanarImage createGradientImage(Gradient gradient) {
+    private TiledImage createGradientImage(Gradient gradient) {
         TiledImage src = ImageUtils.createConstantImage(IMAGE_WIDTH, IMAGE_WIDTH, Double.valueOf(0));
         
         switch (gradient) {
