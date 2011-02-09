@@ -36,7 +36,7 @@ import jaitools.numeric.SampleStats;
  */
 public class JiffleFunctions {
     
-    private static Random rr;
+    private static Random rr = new Random();
     
     /**
      * Converts an angle in degrees to radians.

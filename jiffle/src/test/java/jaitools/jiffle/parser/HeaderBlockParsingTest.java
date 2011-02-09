@@ -25,7 +25,10 @@ import org.junit.Test;
 /**
  * Tests basic parsing of scripts with and without init and options blocks.
  * 
- * @author michael
+ * @author Michael Bedward
+ * @since 1.1
+ * @source $URL$
+ * @version $Id$
  */
 public class HeaderBlockParsingTest extends ParserTestBase {
     

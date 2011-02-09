@@ -329,7 +329,7 @@ ID              : (Letter) (Letter | UNDERSCORE | Digit | Dot)*
 
 fragment
 Letter          : 'a'..'z' | 'A'..'Z'
-                    ;
+                ;
 
 UNDERSCORE      : '_' ;
 
@@ -337,7 +337,8 @@ INT_LITERAL     : '0' | NonZeroDigit Digit*
                 ;
 
 FLOAT_LITERAL   : ('0' | NonZeroDigit Digit*)? Dot Digit* FloatExp?
-        ;
+                ;
+
 fragment
 Digit           : '0'..'9'
                 ;

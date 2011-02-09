@@ -64,16 +64,13 @@ public class DemoImageProvider {
     private JiffleExecutor executor;
 
     private static class JobListener implements JiffleProgressListener {
-        private final static long updateThreshold = 100;
-        private final long taskSize;
+        private final static long updateInterval = 1000;
+        private long taskSize;
         private final ProgressMeter progMeter;
 
-        public JobListener(long taskSize) {
+        public JobListener() {
             this.progMeter = new ProgressMeter("Creating image");
-            this.taskSize = taskSize;
         }
-
-        public void setTaskSize(long size) {}
 
         public void start() {
             SwingUtilities.invokeLater(new Runnable() {
@@ -84,9 +81,7 @@ public class DemoImageProvider {
         }
 
         public void update(long done) {
-            if (done % updateThreshold == 0) {
-                progMeter.setProgress((float)done / taskSize);
-            }
+            progMeter.setProgress((float)done / taskSize);
         }
 
         public void finish() {
@@ -95,6 +90,18 @@ public class DemoImageProvider {
                     progMeter.setVisible(false);
                 }
             });
+        }
+
+        public void setUpdateInterval(long numPixels) {}
+
+        public void setUpdateInterval(double propPixels) {}
+
+        public long getUpdateInterval() {
+            return updateInterval;
+        }
+
+        public void setTaskSize(long numPixels) {
+            taskSize = numPixels;
         }
         
     }
@@ -156,7 +163,7 @@ public class DemoImageProvider {
 
         try {
             Jiffle jiffle = new Jiffle(file, imgParams);
-            int jobID = executor.submit(jiffle, images, new JobListener((long)width * height));
+            int jobID = executor.submit(jiffle, images, new JobListener());
             jobs.put(jobID, receiver);
 
         } catch (Exception ex) {
