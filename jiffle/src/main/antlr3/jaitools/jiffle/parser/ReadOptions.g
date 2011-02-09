@@ -1,3 +1,29 @@
+/*
+ * Copyright 2011 Michael Bedward
+ *
+ * This file is part of jai-tools.
+ *
+ * jai-tools is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * jai-tools is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+/**
+ * Reads the options block in a Jiffle script.
+ *
+ * @author Michael Bedward
+ */
+
 grammar ReadOptions;
 
 @header {
@@ -17,13 +43,15 @@ public Map<String, String> getOptions() {
     return optionsTable;
 }
 
+private boolean readOptionsBlock = false;
+
 }
 
 
 start
-    :    (options_block | general_statement)+ EOF
+    :    options_block general_statement+ EOF
     ;
-    
+
 general_statement
     :    ~(OPTIONS) ( options { greedy = false; } : . )* (SEMI | RCURLY)
     ;
@@ -63,29 +91,4 @@ WS  :   ( ' '
         | '\r'
         | '\n'
         ) {$channel=HIDDEN;}
-    ;
-
-CHAR:  '\'' ( ESC_SEQ | ~('\''|'\\') ) '\''
-    ;
-
-fragment
-HEX_DIGIT : ('0'..'9'|'a'..'f'|'A'..'F') ;
-
-fragment
-ESC_SEQ
-    :   '\\' ('b'|'t'|'n'|'f'|'r'|'\"'|'\''|'\\')
-    |   UNICODE_ESC
-    |   OCTAL_ESC
-    ;
-
-fragment
-OCTAL_ESC
-    :   '\\' ('0'..'3') ('0'..'7') ('0'..'7')
-    |   '\\' ('0'..'7') ('0'..'7')
-    |   '\\' ('0'..'7')
-    ;
-
-fragment
-UNICODE_ESC
-    :   '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
     ;

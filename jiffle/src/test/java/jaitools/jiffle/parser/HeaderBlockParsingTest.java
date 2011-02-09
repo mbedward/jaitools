@@ -110,8 +110,8 @@ public class HeaderBlockParsingTest extends ParserTestBase {
     }
 
     @Test(expected=JiffleParserException.class)
-    public void misplacedOptionsBlock() throws Exception {
-        System.out.println("   options block in wrong part of script");
+    public void misplacedOptionsBlock1() throws Exception {
+        System.out.println("   options block not at start of script");
         String script =
                   "dest = 42;"
                 + "options { format = jiffle; } \n";
@@ -131,9 +131,9 @@ public class HeaderBlockParsingTest extends ParserTestBase {
         getAST(script);
     }
 
-    @Test
-    public void initBeforeOptionsBlock() throws Exception {
-        System.out.println("   init then options block");
+    @Test(expected=JiffleParserException.class)
+    public void misplacedOptionsBlock2() throws Exception {
+        System.out.println("   options block after init block");
         String script =
                   "init { n = 0; }"
                 + "options { format = jiffle; }"
@@ -143,8 +143,8 @@ public class HeaderBlockParsingTest extends ParserTestBase {
     }
 
     @Test
-    public void optionsBeforeInitBlock() throws Exception {
-        System.out.println("   options then init block");
+    public void optionsAndInitBlock() throws Exception {
+        System.out.println("   options and init blocks in script");
         String script =
                   "options { format = jiffle; }"
                 + "init { n = 0; }"

@@ -49,7 +49,7 @@ public class SingleBandImagePosTest extends StatementsTestBase {
     public void relativeReferences() throws Exception {
         System.out.println("   relative pixel position");
         
-        String src = "dest = if (x() > 0, src[-1, 0], NULL)";
+        String src = "dest = if (x() > 0, src[-1, 0], NULL);";
         
         testScript(src, new Evaluator() {
             double lastVal;

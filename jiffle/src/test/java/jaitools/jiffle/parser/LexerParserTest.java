@@ -51,27 +51,26 @@ public class LexerParserTest {
                 "/* a block comment \n " +
                 " * with newlines \n " +
                 " * embedded followed by \n" +
-                " * an INT_LITERAL */ \n" +
-                "42 \n";
+                " * an INT_LITERAL */" +
+                "42; \n";
 
         JiffleLexer lexer = lex(input);
 
         Token tok = null;
         tok = lexer.nextToken();
         assertTrue(tok.getChannel() == Token.HIDDEN_CHANNEL);
-        assertTrue(tok.getType() == JiffleLexer.BLOCK_COMMENT);
+        assertTrue(tok.getType() == JiffleLexer.COMMENT);
 
         do {
             tok = lexer.nextToken();
         } while (tok.getChannel() == Token.HIDDEN_CHANNEL);
         
-        System.out.println("   INT literal");
         assertTrue(tok.getType() == JiffleLexer.INT_LITERAL);
     }
     
     @Test
     public void testDotNames() {
-        System.out.println("dots in var names");
+        System.out.println("   dots in var names");
         
         String input = "my.var=5.0";
         JiffleLexer lexer = lex(input);
@@ -89,7 +88,7 @@ public class LexerParserTest {
     
     @Test
     public void testNullKeywordAndFunction() throws Exception {
-        System.out.println("recognizing null keyword vs null() function");
+        System.out.println("   recognizing null keyword vs null() function");
         
         String input = "a=null; b=null();";
         JiffleLexer lexer = lex(input);

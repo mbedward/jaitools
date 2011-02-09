@@ -48,7 +48,7 @@ public class NullValuesTest {
     @Test
     public void subtraction() throws Exception {
         System.out.println("   subtraction with null and non-null image values");
-        assertScript("out = in1 - in2");
+        assertScript("out = in1 - in2;");
     }
 
     /**
@@ -58,7 +58,7 @@ public class NullValuesTest {
     @Test
     public void subtractionWithinIf() throws Exception {
         System.out.println("   subtraction with null and non-null values within if statements");
-        assertScript("out = if(in1 - in2, 1, 0, -1)");
+        assertScript("out = if(in1 - in2, 1, 0, -1);");
     }
 
 

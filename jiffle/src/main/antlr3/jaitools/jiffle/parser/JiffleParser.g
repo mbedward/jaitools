@@ -70,12 +70,6 @@ package jaitools.jiffle.parser;
 
 @members {
 
-private class UnexpectedInputException extends RuntimeException {
-    UnexpectedInputException(String msg) {
-        super(msg);
-    }
-}
-
 @Override
 protected Object recoverFromMismatchedToken(IntStream input, int ttype, BitSet follow) throws RecognitionException {
     if (ttype == Token.EOF) {
@@ -86,29 +80,28 @@ protected Object recoverFromMismatchedToken(IntStream input, int ttype, BitSet f
 
 }
 
-prog            : header_blocks? statement+ EOF!
+prog            : options_block? var_init_block? statement+ EOF!
                 ;
                 catch [UnexpectedInputException ex] {
                     throw new JiffleParserException(ex);
                 }
-
-header_blocks   : options_block var_init_block?
-                | var_init_block options_block?
-                ;
+                catch [EarlyExitException ex] {
+                    throw new JiffleParserException("Unexpected input at line " + ex.line);
+                }
 
 options_block   : OPTIONS LCURLY NEWLINE* option* RCURLY NEWLINE* -> option*
                 ;
 
-option          : key=ID EQ value=ID eos -> ^(JIFFLE_OPTION $key $value)
+option          : key=ID EQ value=ID SEMI -> ^(JIFFLE_OPTION $key $value)
                 ;
 
 var_init_block  : INIT LCURLY NEWLINE* var_init* RCURLY NEWLINE* -> var_init*
                 ;
 
-var_init        : ID EQ expr eos -> ^(VAR_INIT ID expr)
+var_init        : ID EQ expr SEMI -> ^(VAR_INIT ID expr)
                 ;
 
-statement       : expr eos!
+statement       : expr SEMI!
                 ;
 
 expr            : assign_expr
@@ -235,7 +228,4 @@ type_name       : INT_TYPE
                 | FLOAT_TYPE
                 | DOUBLE_TYPE
                 | BOOLEAN_TYPE
-                ;
-
-eos             : (SEMI|NEWLINE)+
                 ;

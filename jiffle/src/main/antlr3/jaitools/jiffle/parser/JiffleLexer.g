@@ -92,6 +92,9 @@ RSQUARE : ']' ;
 LCURLY  : '{' ;
 RCURLY  : '}' ;
 
+/* r.mapcalc line continuation char */
+BACKSLASH : '\\' ;
+
 ID      : (Letter) (Letter | UNDERSCORE | Digit | Dot)*
         ;
 
@@ -126,18 +129,14 @@ FloatExp
         : ('e'|'E' (PLUS|MINUS)? '0'..'9'+)
         ;
 
-/* Mac: \r  PC: \r\n  Unix \n */
-NEWLINE : '\r' '\n'?
-        | '\n'
-        ;
-
-// generated
-
 WS  :   ( ' '
         | '\t'
+        | '\r'
+        | '\n'
         | '\u000C'
         ) {$channel=HIDDEN;}
     ;
+
 
 /* The following are for future use */
 CHAR:  '\'' ( ESC_SEQ | ~('\''|'\\') ) '\''
