@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.antlr.runtime.ANTLRStringStream;
-import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.tree.BufferedTreeNodeStream;
 import org.antlr.runtime.tree.CommonTree;
@@ -50,6 +49,7 @@ import jaitools.jiffle.parser.ConvertTernaryExpr;
 import jaitools.jiffle.parser.DeferredErrorReporter;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
+import jaitools.jiffle.parser.JiffleTokenStream;
 import jaitools.jiffle.parser.Message;
 import jaitools.jiffle.parser.MessageTable;
 import jaitools.jiffle.parser.ParsingErrorReporter;
@@ -245,7 +245,7 @@ public class Jiffle {
     private CommonTree primaryAST;
     private CommonTree transformedAST;
     private CommonTree finalAST;
-    private CommonTokenStream tokens;
+    private JiffleTokenStream tokens;
     private ParsingErrorReporter errorReporter;
     
     private Map<String, ImageRole> imageParams;
@@ -595,7 +595,7 @@ public class Jiffle {
         try {
             ANTLRStringStream input = new ANTLRStringStream(theScript);
             JiffleLexer lexer = new JiffleLexer(input);
-            tokens = new CommonTokenStream(lexer);
+            tokens = new JiffleTokenStream(lexer);
 
             JiffleParser parser = new JiffleParser(tokens);
             JiffleParser.prog_return r = parser.prog();

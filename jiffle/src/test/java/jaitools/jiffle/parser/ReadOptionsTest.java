@@ -8,8 +8,6 @@ package jaitools.jiffle.parser;
 import java.util.Map;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CharStream;
-import org.antlr.runtime.CommonTokenStream;
-import org.antlr.runtime.TokenStream;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
@@ -76,10 +74,10 @@ public class ReadOptionsTest {
         return parser.getOptions();
     }
 
-    private TokenStream lexScript(String script) {
+    private JiffleTokenStream lexScript(String script) {
         CharStream input = new ANTLRStringStream(script);
         ReadOptionsLexer lexer = new ReadOptionsLexer(input);
-        TokenStream tokens = new CommonTokenStream(lexer);
+        JiffleTokenStream tokens = new JiffleTokenStream(lexer);
         return tokens;
     }
 

@@ -21,7 +21,6 @@
 package jaitools.jiffle.parser;
 
 import org.antlr.runtime.ANTLRStringStream;
-import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.tree.CommonTree;
 import org.antlr.runtime.tree.CommonTreeNodeStream;
 
@@ -47,7 +46,7 @@ public abstract class ParserTestBase {
 
         ANTLRStringStream strm = new ANTLRStringStream(input);
         JiffleLexer lexer = new JiffleLexer(strm);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        JiffleTokenStream tokens = new JiffleTokenStream(lexer);
 
         JiffleParser parser = new JiffleParser(tokens);
         JiffleParser.prog_return r = parser.prog();
