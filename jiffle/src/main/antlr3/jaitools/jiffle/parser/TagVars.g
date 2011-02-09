@@ -33,7 +33,7 @@
 tree grammar TagVars;
 
 options {
-    tokenVocab = Jiffle;
+    tokenVocab = JiffleParser;
     ASTLabelType = CommonTree;
     output = AST;
     superClass = ErrorHandlingTreeParser;

@@ -28,7 +28,7 @@
 tree grammar TagProxyFunctions;
 
 options {
-    tokenVocab = Jiffle;
+    tokenVocab = JiffleParser;
     ASTLabelType = CommonTree;
     output = AST;
     filter = true;

@@ -27,7 +27,7 @@
 tree grammar CheckFunctionCalls;
 
 options {
-    tokenVocab = Jiffle;
+    tokenVocab = JiffleParser;
     ASTLabelType = CommonTree;
     filter = true;
 }

@@ -28,7 +28,7 @@ tree grammar CheckImageUse;
 
 options {
     ASTLabelType = CommonTree;
-    tokenVocab = Jiffle;
+    tokenVocab = JiffleParser;
     filter = true;
 }
 

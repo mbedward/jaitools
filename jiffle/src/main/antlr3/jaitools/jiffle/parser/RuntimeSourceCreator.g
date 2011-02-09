@@ -28,7 +28,7 @@ tree grammar RuntimeSourceCreator;
 
 options {
     superClass = AbstractRuntimeSourceCreator;
-    tokenVocab = Jiffle;
+    tokenVocab = JiffleParser;
     ASTLabelType = CommonTree;
 }
 

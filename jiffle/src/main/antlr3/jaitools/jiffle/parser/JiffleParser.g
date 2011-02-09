@@ -1,11 +1,11 @@
 /*
  * Copyright 2009-2011 Michael Bedward
- * 
+ *
  * This file is part of jai-tools.
  *
  * jai-tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of the 
+ * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * jai-tools is distributed in the hope that it will be useful,
@@ -13,22 +13,23 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public 
+ * You should have received a copy of the GNU Lesser General Public
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  */
 
 /**
- * Combined parser and lexer grammar to generate the primary AST
+ * Jiffle language parser grammar. Generates the primary AST
  * from an input Jiffle script.
  *
  * @author Michael Bedward
  */
 
-grammar Jiffle;
+parser grammar JiffleParser;
 
 options {
-    output = AST;
+    tokenVocab = JiffleLexer;
+    output=AST;
     ASTLabelType = CommonTree;
 }
 
@@ -67,10 +68,6 @@ tokens {
 package jaitools.jiffle.parser;
 }
 
-@lexer::header {
-package jaitools.jiffle.parser;
-}
-
 @members {
 
 private class UnexpectedInputException extends RuntimeException {
@@ -88,11 +85,6 @@ protected Object recoverFromMismatchedToken(IntStream input, int ttype, BitSet f
 }
 
 }
-
-@lexer::members {
-    private boolean onCommentLine = false;
-}
-
 
 prog            : header_blocks? statement+ EOF!
                 ;
@@ -124,7 +116,7 @@ expr            : assign_expr
                 | cond_expr
                 ;
 
-if_call         : 'if' LPAR expr_list RPAR -> ^(IF_CALL expr_list)
+if_call         : IF LPAR expr_list RPAR -> ^(IF_CALL expr_list)
                 ;
 
 func_call       : ID LPAR expr_list RPAR -> ^(FUNC_CALL ID expr_list)
@@ -142,8 +134,8 @@ options {
                 | ID pixel_specifier -> ^(IMAGE_POS ID pixel_specifier)
                 | ID band_specifier -> ^(IMAGE_POS ID band_specifier)
                 ;
-                
-pixel_specifier : LSQUARE pixel_pos ',' pixel_pos RSQUARE -> ^(PIXEL_REF pixel_pos pixel_pos)
+
+pixel_specifier : LSQUARE pixel_pos COMMA pixel_pos RSQUARE -> ^(PIXEL_REF pixel_pos pixel_pos)
                 ;
 
 band_specifier  : LSQUARE expr RSQUARE -> ^(BAND_REF expr)
@@ -153,7 +145,7 @@ pixel_pos       : ABS_POS_PREFIX expr -> ^(ABS_POS expr)
                 | expr -> ^(REL_POS expr)
                 ;
 
-expr_list       : (expr (',' expr)* )? -> ^(EXPR_LIST expr*)
+expr_list       : (expr (COMMA expr)* )? -> ^(EXPR_LIST expr*)
                 ;
 
 assign_expr     : ID assign_op expr -> ^(ASSIGN assign_op ID expr)
@@ -169,7 +161,7 @@ prefix_expr     : incdec_op ID -> ^(PREFIX incdec_op ID)
 postfix_expr    : ID incdec_op -> ^(POSTFIX incdec_op ID)
                 ;
 
-cond_expr       : or_expr (QUESTION^ expr ':'! expr)?
+cond_expr       : or_expr (QUESTION^ expr COLON! expr)?
                 ;
 
 or_expr         : xor_expr (OR^ xor_expr)*
@@ -214,7 +206,7 @@ atom_expr       : ID
 
 bracketed_expr  : LPAR expr RPAR -> ^(BRACKETED_EXPR expr)
                 ;
-                
+
 constant        : INT_LITERAL
                 | FLOAT_LITERAL
                 | TRUE
@@ -239,165 +231,11 @@ assign_op       : EQ
                 | MINUSEQ
                 ;
 
-type_name       : 'int'
-                | 'float'
-                | 'double'
-                | 'boolean'
-                ;
-                
-eos             : (SEMICOLON|NEWLINE)+
+type_name       : INT_TYPE
+                | FLOAT_TYPE
+                | DOUBLE_TYPE
+                | BOOLEAN_TYPE
                 ;
 
-OPTIONS         : 'options'
+eos             : (SEMI|NEWLINE)+
                 ;
-
-INIT            : 'init'
-                ;
-
-BLOCK_COMMENT   : '/*' (~'*' | '*' ~'/')* '*/' 
-                  { $channel = HIDDEN; onCommentLine = true; }
-                ;
-
-LINE_COMMENT    : '//' (~('\n' | '\r'))* 
-                  { $channel = HIDDEN; onCommentLine = true; }
-                ;
-                
-
-/* these named constants are defined using case-insensitive fragments
- * (see further down)
- */
-TRUE            : T R U E
-                ;
-                
-FALSE           : F A L S E
-                ;
-                
-NULL            : N U L L
-                ;
-
-/* Operators sorted and grouped by precedence order */
-
-ABS_POS_PREFIX  : '$'  ;
-
-INCR            : '++' ;  /* pre-fix and post-fix operations */
-DECR            : '--' ;
-
-NOT             : '!' ;
-
-POW             : '^' ;      
-
-TIMES           : '*' ;
-DIV             : '/' ;
-MOD             : '%' ;
-
-PLUS            : '+' ;
-MINUS           : '-' ;
-
-GT              : '>';
-GE              : '>=';
-LE              : '<=';
-LT                  : '<';
-
-LOGICALEQ       : '==';
-NE              : '!=';
-
-AND             : '&&';
-
-OR              : '||';
-XOR             : '^|';
-
-QUESTION        : '?' ;  /* conditional operator ?: */
-
-TIMESEQ         : '*=' ;
-DIVEQ           : '/=' ;
-MODEQ           : '%=' ;
-PLUSEQ          : '+=' ;
-MINUSEQ         : '-=' ;
-EQ              : '='  ;
-
-
-/* General symbols and token rules */
-LPAR            : '(' ;
-RPAR            : ')' ;
-LSQUARE         : '[' ;
-RSQUARE         : ']' ;
-LCURLY          : '{' ;
-RCURLY          : '}' ;
-
-ID              : (Letter) (Letter | UNDERSCORE | Digit | Dot)*
-                ;
-
-fragment
-Letter          : 'a'..'z' | 'A'..'Z'
-                ;
-
-UNDERSCORE      : '_' ;
-
-INT_LITERAL     : '0' | NonZeroDigit Digit*
-                ;
-
-FLOAT_LITERAL   : ('0' | NonZeroDigit Digit*)? Dot Digit* FloatExp?
-                ;
-
-fragment
-Digit           : '0'..'9'
-                ;
-                
-fragment
-Dot             : '.'
-                ;
-
-fragment
-NonZeroDigit    : '1'..'9'
-                ;
-
-fragment
-FloatExp        : ('e'|'E' (PLUS|MINUS)? '0'..'9'+)
-                ;
-
-SEMICOLON       : ';'
-                ;
-
-/* Mac: \r  PC: \r\n  Unix \n */
-NEWLINE
-@init {
-    if (onCommentLine) {
-        $channel = HIDDEN;
-    }
-}
-@after {
-    onCommentLine = false;
-}
-                : '\r' '\n'?
-                | '\n'
-                ;
-
-/* Fragment tokens for selective case-insensitive matching */
-fragment A:('a'|'A');
-fragment B:('b'|'B');
-fragment C:('c'|'C');
-fragment D:('d'|'D');
-fragment E:('e'|'E');
-fragment F:('f'|'F');
-fragment G:('g'|'G');
-fragment H:('h'|'H');
-fragment I:('i'|'I');
-fragment J:('j'|'J');
-fragment K:('k'|'K');
-fragment L:('l'|'L');
-fragment M:('m'|'M');
-fragment N:('n'|'N');
-fragment O:('o'|'O');
-fragment P:('p'|'P');
-fragment Q:('q'|'Q');
-fragment R:('r'|'R');
-fragment S:('s'|'S');
-fragment T:('t'|'T');
-fragment U:('u'|'U');
-fragment V:('v'|'V');
-fragment W:('w'|'W');
-fragment X:('x'|'X');
-fragment Y:('y'|'Y');
-fragment Z:('z'|'Z');
-
-WS   :  (' '|'\t'|'\u000C') {$channel=HIDDEN;} ;
