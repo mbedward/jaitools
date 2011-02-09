@@ -1,34 +1,7 @@
-/*
- * Copyright 2011 Michael Bedward
- *
- * This file is part of jai-tools.
- *
- * jai-tools is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * jai-tools is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
- *
- */
-
-/**
- * Reads and checks script options that affect JiffleLexer and JiffleParser.
- *
- * @author Michael Bedward
- */
-
 grammar ReadOptions;
 
 @header {
 package jaitools.jiffle.parser;
-
 import java.util.Map;
 import jaitools.CollectionFactory;
 }
@@ -38,42 +11,81 @@ package jaitools.jiffle.parser;
 }
 
 @members {
-private Map<String, String> options = CollectionFactory.map();
+private Map<String, String> optionsTable = CollectionFactory.map();
 
-public Map<String, String> getOptions() { return options; }
+public Map<String, String> getOptions() {
+    return optionsTable;
 }
 
-start           : options_block ;
+}
 
-options_block   : OPTIONS LCURLY option* RCURLY
-                ;
 
-option          : WORD '=' value ';'
-                  { options.put($WORD.text, $value.text); }
-                ;
+start
+    :    (options_block | general_statement)+ EOF
+    ;
+    
+general_statement
+    :    ~(OPTIONS) ( options { greedy = false; } : . )* (SEMI | RCURLY)
+    ;
 
-value           : WORD | INT
-                ;
+options_block
+    :    OPTIONS LCURLY option* RCURLY
+    ;
 
-OPTIONS         : 'options'
-                ;
+option
+    :    ID EQ value SEMI { optionsTable.put($ID.text, $value.text); }
+    ;
 
-WORD            : Letter+
-                ;
+value
+    :    ID | INT
+    ;
 
-INT             : Digit+
-                ;
+OPTIONS :   'options' ;
+    
+LCURLY     :   '{' ;
+RCURLY  :   '}' ;
+SEMI    :   ';' ;
+EQ      :   '=' ;
 
-LCURLY          : '{' ;
-RCURLY          : '}' ;
-SEMI            : ';' ;
+ID  :    ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'0'..'9'|'_')*
+    ;
+
+INT :    '0'..'9'+
+    ;
+
+COMMENT
+    :   '//' ~('\n'|'\r')* '\r'? '\n' {$channel=HIDDEN;}
+    |   '/*' ( options {greedy=false;} : . )* '*/' {$channel=HIDDEN;}
+    ;
+
+WS  :   ( ' '
+        | '\t'
+        | '\r'
+        | '\n'
+        ) {$channel=HIDDEN;}
+    ;
+
+CHAR:  '\'' ( ESC_SEQ | ~('\''|'\\') ) '\''
+    ;
 
 fragment
-Letter          : 'a'..'z' | 'A'..'Z'
-                ;
+HEX_DIGIT : ('0'..'9'|'a'..'f'|'A'..'F') ;
 
 fragment
-Digit           : '0'..'9'
-                ;
+ESC_SEQ
+    :   '\\' ('b'|'t'|'n'|'f'|'r'|'\"'|'\''|'\\')
+    |   UNICODE_ESC
+    |   OCTAL_ESC
+    ;
 
-WS   :  (' '|'\t'|'\r'|'\n'|'\u000C') {$channel=HIDDEN;} ;
+fragment
+OCTAL_ESC
+    :   '\\' ('0'..'3') ('0'..'7') ('0'..'7')
+    |   '\\' ('0'..'7') ('0'..'7')
+    |   '\\' ('0'..'7')
+    ;
+
+fragment
+UNICODE_ESC
+    :   '\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+    ;
