@@ -21,6 +21,7 @@
 package jaitools.jiffle.parser;
 
 import org.antlr.runtime.ANTLRStringStream;
+import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.Token;
 import org.antlr.runtime.tree.CommonTree;
 import org.antlr.runtime.tree.CommonTreeNodeStream;
@@ -91,7 +92,7 @@ public class LexerParserTest {
         
         String input = "a=null; b=null();";
         JiffleLexer lexer = lex(input);
-        JiffleTokenStream tokStrm = new JiffleTokenStream(lexer);
+        CommonTokenStream tokStrm = new CommonTokenStream(lexer);
         JiffleParser parser = new JiffleParser(tokStrm);
 
         CommonTree ast = (CommonTree) parser.prog().getTree();

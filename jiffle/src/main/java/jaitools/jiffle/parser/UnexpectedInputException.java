@@ -29,7 +29,7 @@ package jaitools.jiffle.parser;
  * @version $Id: HeaderBlockParsingTest.java 1374 2011-02-09 00:33:31Z michael.bedward $
  */
 public class UnexpectedInputException extends RuntimeException {
-    UnexpectedInputException(String msg) {
+    public UnexpectedInputException(String msg) {
         super(msg);
     }
 }

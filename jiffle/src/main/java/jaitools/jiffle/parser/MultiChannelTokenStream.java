@@ -32,7 +32,7 @@ import org.antlr.runtime.TokenSource;
  * allows the parser to receive tokens from more than more than one channel.
  *
  * @author Michael Bedward
- * @since 1.0
+ * @since 1.1
  * @source $URL$
  * @version $Id$
  */

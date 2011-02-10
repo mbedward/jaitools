@@ -26,9 +26,14 @@
 
 lexer grammar JiffleLexer;
 
-@lexer::header {
+@header {
 package jaitools.jiffle.parser;
 }
+
+@members {
+public static final int NEWLINE_CHANNEL = Token.DEFAULT_CHANNEL + 1;
+}
+
 
 COMMENT
     :   '//' ~('\n'|'\r')* '\r'? '\n' {$channel=HIDDEN;}
@@ -92,9 +97,6 @@ RSQUARE : ']' ;
 LCURLY  : '{' ;
 RCURLY  : '}' ;
 
-/* r.mapcalc line continuation char */
-BACKSLASH : '\\' ;
-
 ID      : (Letter) (Letter | UNDERSCORE | Digit | Dot)*
         ;
 
@@ -138,7 +140,10 @@ WS  :   ( ' '
     ;
 
 
-/* The following are for future use */
+/* 
+ * The following are for future use 
+ */
+
 CHAR:  '\'' ( ESC_SEQ | ~('\''|'\\') ) '\''
     ;
 

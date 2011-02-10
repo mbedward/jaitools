@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.antlr.runtime.ANTLRStringStream;
+import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.tree.BufferedTreeNodeStream;
 import org.antlr.runtime.tree.CommonTree;
@@ -49,9 +50,10 @@ import jaitools.jiffle.parser.ConvertTernaryExpr;
 import jaitools.jiffle.parser.DeferredErrorReporter;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
-import jaitools.jiffle.parser.JiffleTokenStream;
+import jaitools.jiffle.parser.MapcalcScriptReformatter;
 import jaitools.jiffle.parser.Message;
 import jaitools.jiffle.parser.MessageTable;
+import jaitools.jiffle.parser.OptionsLexer;
 import jaitools.jiffle.parser.ParsingErrorReporter;
 import jaitools.jiffle.parser.RuntimeSourceCreator;
 import jaitools.jiffle.parser.TagConstants;
@@ -60,6 +62,7 @@ import jaitools.jiffle.parser.TagVars;
 import jaitools.jiffle.runtime.JiffleDirectRuntime;
 import jaitools.jiffle.runtime.JiffleIndirectRuntime;
 import jaitools.jiffle.runtime.JiffleRuntime;
+import org.antlr.runtime.Token;
 
 /**
  * Compiles scripts and generates Java sources and executable bytecode for
@@ -245,7 +248,7 @@ public class Jiffle {
     private CommonTree primaryAST;
     private CommonTree transformedAST;
     private CommonTree finalAST;
-    private JiffleTokenStream tokens;
+    private CommonTokenStream tokens;
     private ParsingErrorReporter errorReporter;
     
     private Map<String, ImageRole> imageParams;
@@ -326,8 +329,26 @@ public class Jiffle {
             clearCompiledObjects();
         }
         
-        // add extra new line just in case last statement hits EOF
-        theScript = script + "\n";
+        // Check for a mapcalc format script
+        Map<String, String> options = getOptions(script);
+        if (options.containsKey("format") && options.get("format").equals("mapcalc")) {
+            theScript = MapcalcScriptReformatter.reformat(script);
+        } else {
+            // add extra new line just in case last statement hits EOF
+            theScript = script + "\n";
+        }
+    }
+
+    private Map<String, String> getOptions(String script) throws JiffleException {
+        ANTLRStringStream input = new ANTLRStringStream(script);
+        OptionsLexer lexer = new OptionsLexer(input);
+        
+        Token t = null;
+        do {
+            t = lexer.nextToken();
+        } while (t.getType() != Token.EOF);
+        
+        return lexer.getOptions();
     }
     
     /**
@@ -595,7 +616,7 @@ public class Jiffle {
         try {
             ANTLRStringStream input = new ANTLRStringStream(theScript);
             JiffleLexer lexer = new JiffleLexer(input);
-            tokens = new JiffleTokenStream(lexer);
+            tokens = new CommonTokenStream(lexer);
 
             JiffleParser parser = new JiffleParser(tokens);
             JiffleParser.prog_return r = parser.prog();
