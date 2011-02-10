@@ -33,7 +33,6 @@ import jaitools.jiffle.JiffleException;
  * 
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 class JiffleExecutorTask implements Callable<JiffleExecutorResult> {

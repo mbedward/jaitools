@@ -31,7 +31,6 @@ import jaitools.numeric.SampleStats;
  * 
  * @author Michael Bedward
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public class JiffleFunctions {

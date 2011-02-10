@@ -30,7 +30,6 @@ package jaitools.imageutils;
  * 
  * @author Michael Bedward
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public enum PixelCoordType {

@@ -233,7 +233,6 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * @author Andrea Antonello
  * @author Daniele Romagnoli, GeoSolutions S.A.S.
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class ZonalStatsDescriptor extends OperationDescriptorImpl {

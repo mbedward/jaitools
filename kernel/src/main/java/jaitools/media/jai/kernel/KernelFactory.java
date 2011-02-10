@@ -39,7 +39,6 @@ import javax.media.jai.KernelJAI;
  *
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class KernelFactory {

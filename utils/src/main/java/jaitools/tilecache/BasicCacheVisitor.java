@@ -39,7 +39,6 @@ import java.util.Map.Entry;
  *
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class BasicCacheVisitor implements DiskMemTileCacheVisitor {

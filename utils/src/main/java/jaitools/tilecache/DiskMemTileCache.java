@@ -70,7 +70,6 @@ import javax.media.jai.TileCache;
  * @author Simone Giannecchini, GeoSolutions SAS
  *
  * @since 1.0
- * @source $URL$
  * @version $Id$
  * 
  * @see DiskCachedTile

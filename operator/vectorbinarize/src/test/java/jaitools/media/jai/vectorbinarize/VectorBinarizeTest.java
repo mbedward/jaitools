@@ -42,7 +42,6 @@ import static org.junit.Assert.*;
  * @author Michael Bedward
  * @author Andrea Aime
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public class VectorBinarizeTest {

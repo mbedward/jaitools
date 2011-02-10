@@ -31,7 +31,6 @@ import jaitools.jiffle.Jiffle;
  * 
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class JiffleExecutorResult {

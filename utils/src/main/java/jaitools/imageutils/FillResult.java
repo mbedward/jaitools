@@ -36,7 +36,6 @@ import java.util.Map;
  *
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class FillResult {

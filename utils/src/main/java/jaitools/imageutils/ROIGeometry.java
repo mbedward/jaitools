@@ -51,7 +51,6 @@ import javax.media.jai.ROI;
  * @author Michael Bedward
  * @author Andrea Aime
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public class ROIGeometry extends ROI {

@@ -70,7 +70,6 @@ import javax.media.jai.PlanarImage;
  *
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class DiskMemImageGraphics extends Graphics2D {

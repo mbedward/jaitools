@@ -65,7 +65,6 @@ import static jaitools.numeric.DoubleComparison.dequal;
  *
  * @author Michael Bedward
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public class ContourTest {

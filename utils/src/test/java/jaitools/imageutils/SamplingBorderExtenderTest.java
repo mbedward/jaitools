@@ -40,7 +40,6 @@ import static org.junit.Assert.*;
  *
  * @author Michael Bedward
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public class SamplingBorderExtenderTest {

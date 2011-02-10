@@ -66,7 +66,6 @@ import javax.media.jai.TileCache;
  * 
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class RegionalizeOpImage extends PointOpImage {

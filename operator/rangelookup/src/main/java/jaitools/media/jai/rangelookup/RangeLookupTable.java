@@ -30,7 +30,6 @@ import java.util.List;
  * @author Michael Bedward
  * @author Simone Giannecchini, GeoSolutions
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class RangeLookupTable<T extends Number & Comparable<? super T>, U extends Number & Comparable<? super U>> {

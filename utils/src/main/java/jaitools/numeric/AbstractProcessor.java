@@ -34,7 +34,6 @@ import java.util.Map;
  * @author Daniele Romagnoli, GeoSolutions S.A.S.
  *
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public abstract class AbstractProcessor implements Processor {

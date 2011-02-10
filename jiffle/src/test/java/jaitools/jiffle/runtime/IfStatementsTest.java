@@ -26,7 +26,6 @@ import org.junit.Test;
  * Unit tests for the various {@code if} fnctions and the ternary statement.
  * @author Michael Bedward
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public class IfStatementsTest extends StatementsTestBase {

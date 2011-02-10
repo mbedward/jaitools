@@ -31,7 +31,6 @@ import jaitools.imageutils.ImageUtils;
  *
  * @author Michael Bedward
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public class ProxyFunctionsTest extends StatementsTestBase {

@@ -58,7 +58,6 @@ import com.vividsolutions.jts.operation.polygonize.Polygonizer;
  * @author Michael Bedward
  * @author Simone Giannecchini, GeoSolutions
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public class VectorizeOpImage extends AttributeOpImage {

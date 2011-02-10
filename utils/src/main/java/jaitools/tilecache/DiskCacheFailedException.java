@@ -29,7 +29,6 @@ import java.awt.image.RenderedImage;
  * @see DiskMemTileCache
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class DiskCacheFailedException extends DiskMemCacheException {

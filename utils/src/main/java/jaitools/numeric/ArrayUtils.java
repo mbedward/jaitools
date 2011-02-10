@@ -34,7 +34,6 @@ import java.util.Arrays;
  * @author Michael Bedward
  * @author Martin Desruisseaux
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public class ArrayUtils {

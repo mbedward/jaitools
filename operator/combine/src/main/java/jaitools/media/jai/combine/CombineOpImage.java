@@ -95,7 +95,6 @@ import jaitools.numeric.ArrayUtils;
  * "{@linkplain BandCombineDescriptor BandCombine}" operation.
  *
  * @since 1.1
- * @source $URL$
  * @version $Id$
  * @author Martin Desruisseaux (IRD)
  * @author Remi Eve

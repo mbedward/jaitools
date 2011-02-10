@@ -34,7 +34,6 @@ import javax.media.jai.iterator.WritableRandomIter;
  * 
  * @author Michael Bedward
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public abstract class AbstractDirectRuntime extends AbstractJiffleRuntime implements JiffleDirectRuntime {

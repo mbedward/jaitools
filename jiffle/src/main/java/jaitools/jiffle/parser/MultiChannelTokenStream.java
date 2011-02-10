@@ -33,7 +33,6 @@ import org.antlr.runtime.TokenSource;
  *
  * @author Michael Bedward
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public final class MultiChannelTokenStream extends BufferedTokenStream {

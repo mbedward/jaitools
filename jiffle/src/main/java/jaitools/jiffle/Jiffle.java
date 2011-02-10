@@ -108,7 +108,6 @@ import org.antlr.runtime.Token;
  * 
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class Jiffle {

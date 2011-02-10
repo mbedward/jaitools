@@ -29,7 +29,6 @@ import java.awt.image.RenderedImage;
  * @see DiskMemTileCache
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class TileNotResidentException extends DiskMemCacheException {

@@ -32,7 +32,6 @@ import java.net.URL;
  *
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public abstract class JiffleDemoBase {

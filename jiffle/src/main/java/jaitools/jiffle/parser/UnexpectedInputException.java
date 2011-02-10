@@ -25,7 +25,6 @@ package jaitools.jiffle.parser;
  *
  * @author Michael Bedward
  * @since 1.1
- * @source $URL: https://jai-tools.googlecode.com/svn/trunk/jiffle/src/test/java/jaitools/jiffle/parser/HeaderBlockParsingTest.java $
  * @version $Id: HeaderBlockParsingTest.java 1374 2011-02-09 00:33:31Z michael.bedward $
  */
 public class UnexpectedInputException extends RuntimeException {

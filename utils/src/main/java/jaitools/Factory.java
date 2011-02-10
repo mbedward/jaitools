@@ -31,7 +31,6 @@ import java.util.Set;
  *
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public abstract class Factory {

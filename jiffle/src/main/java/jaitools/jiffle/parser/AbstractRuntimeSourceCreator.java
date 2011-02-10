@@ -38,7 +38,6 @@ import jaitools.jiffle.Jiffle;
  * 
  * @author Michael Bedward
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public abstract class AbstractRuntimeSourceCreator extends ErrorHandlingTreeParser {

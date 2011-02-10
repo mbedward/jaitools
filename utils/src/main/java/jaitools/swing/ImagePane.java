@@ -36,7 +36,6 @@ import javax.media.jai.iterator.RandomIterFactory;
  *
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 class ImagePane extends DisplayJAI {

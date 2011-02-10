@@ -34,7 +34,6 @@ import javax.media.jai.ROI;
  *
  * @author Michael Bedward
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public class VectorizeRIF implements RenderedImageFactory {

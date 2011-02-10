@@ -29,7 +29,6 @@ import org.antlr.runtime.tree.CommonTree;
  * 
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class FixedValueNode extends CommonTree {

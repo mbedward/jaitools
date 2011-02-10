@@ -40,7 +40,6 @@ import javax.media.jai.JAI;
  * 
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class RegionalizeRIF implements RenderedImageFactory {

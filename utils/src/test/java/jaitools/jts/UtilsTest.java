@@ -37,7 +37,6 @@ import com.vividsolutions.jts.io.WKTReader;
  * @author Simone Giannecchini, GeoSolutions SAS
  * @author Michael Bedward
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 

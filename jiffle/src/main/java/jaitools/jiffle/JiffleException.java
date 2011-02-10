@@ -27,7 +27,6 @@ import java.util.List;
  * 
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class JiffleException extends Exception {

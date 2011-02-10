@@ -36,7 +36,6 @@ import javax.media.jai.PlanarImage;
  *
  * @author Michael Bedward
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public class RandomBorderExtender extends BorderExtender {

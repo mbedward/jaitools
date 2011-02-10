@@ -37,7 +37,6 @@ import javax.media.jai.RenderedOp;
  *
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class RegionalizeDemo implements ImageReceiver {

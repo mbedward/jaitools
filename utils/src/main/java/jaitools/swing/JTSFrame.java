@@ -42,7 +42,6 @@ import javax.swing.JPanel;
  * 
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class JTSFrame extends JFrame {

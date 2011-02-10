@@ -32,7 +32,6 @@ import javax.media.jai.registry.RenderedRegistryMode;
  *
  * @author Michael Bedward
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public class VectorizeSpi implements OperationRegistrySpi {

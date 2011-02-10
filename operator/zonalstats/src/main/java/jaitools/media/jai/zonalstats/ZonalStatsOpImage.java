@@ -57,7 +57,6 @@ import javax.media.jai.iterator.RectIterFactory;
  * @author Andrea Antonello
  * @author Daniele Romagnoli, GeoSolutions S.A.S.
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class ZonalStatsOpImage extends NullOpImage {

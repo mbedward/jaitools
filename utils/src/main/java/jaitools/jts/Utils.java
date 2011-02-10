@@ -40,7 +40,6 @@ import com.vividsolutions.jts.geom.PrecisionModel;
  * @author Simone Giannecchini, GeoSolutions SAS
  * @author Michael Bedward
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public class Utils {

@@ -28,7 +28,6 @@ package jaitools.jiffle.parser;
  * 
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public enum Message {

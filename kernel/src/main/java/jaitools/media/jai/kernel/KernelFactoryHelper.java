@@ -30,7 +30,6 @@ import java.util.Arrays;
  *
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 class KernelFactoryHelper {

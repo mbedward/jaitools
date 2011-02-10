@@ -55,7 +55,6 @@ import javax.media.jai.CachedTile;
  * @author Michael Bedward
  * @author Simone Giannecchini, GeoSolutions SAS
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public final class DiskCachedTile implements CachedTile {

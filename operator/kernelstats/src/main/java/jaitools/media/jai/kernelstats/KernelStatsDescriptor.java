@@ -50,7 +50,6 @@ import javax.media.jai.registry.RenderedRegistryMode;
  *
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class KernelStatsDescriptor extends OperationDescriptorImpl {

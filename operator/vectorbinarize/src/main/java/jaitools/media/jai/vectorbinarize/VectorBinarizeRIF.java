@@ -44,7 +44,6 @@ import javax.media.jai.JAI;
  * @author Michael Bedward
  * @author Andrea Aime
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public class VectorBinarizeRIF implements RenderedImageFactory {

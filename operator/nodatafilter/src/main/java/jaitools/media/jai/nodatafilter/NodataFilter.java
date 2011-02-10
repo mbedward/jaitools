@@ -37,7 +37,6 @@ import javax.media.jai.iterator.RandomIterFactory;
  * by the computed average. Otherwise, the {@code NaN} value is left unchanged.
  *
  * @since 2.1
- * @source $URL: http://svn.osgeo.org/geotools/trunk/modules/library/coverage/src/main/java/org/geotools/image/jai/NodataFilter.java $
  * @version $Id: NodataFilter.java 30643 2008-06-12 18:27:03Z acuster $
  * @author Lionel Flahaut (2ie Technologie, IRD)
  * @author Martin Desruisseaux

@@ -41,7 +41,6 @@ import javax.swing.SwingUtilities;
  *
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class DemoImageProvider {

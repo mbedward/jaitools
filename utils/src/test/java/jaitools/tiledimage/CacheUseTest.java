@@ -30,7 +30,6 @@ import static org.junit.Assert.*;
  * @author Michael Bedward
  * @since 1.0
  * @version $Id$
- * @source $URL$
  */
 public class CacheUseTest extends TiledImageTestBase {
 

@@ -33,7 +33,6 @@ import jaitools.jiffle.runtime.JiffleProgressListener;
  * 
  * @author Michael Bedward
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public abstract class MockDirectBaseClass 

@@ -27,7 +27,6 @@ import java.awt.image.RenderedImage;
  *
  * @author Michael Bedward
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public interface JiffleIndirectRuntime extends JiffleRuntime {

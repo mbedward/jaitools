@@ -56,7 +56,6 @@ import static org.junit.Assert.*;
  * @author Andrea Antonello
  * @author Simone Giannecchini, GeoSolutions SAS
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class ZonalStatsTest {

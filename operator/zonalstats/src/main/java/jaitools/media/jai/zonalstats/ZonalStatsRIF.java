@@ -47,7 +47,6 @@ import com.sun.media.jai.util.ImageUtil;
  * @author Andrea Antonello
  * @author Daniele Romagnoli, GeoSolutions S.A.S.
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class ZonalStatsRIF implements RenderedImageFactory {

@@ -35,7 +35,6 @@ import javax.media.jai.ROI;
  *
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class MaskedConvolveRIF implements RenderedImageFactory {

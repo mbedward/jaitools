@@ -26,7 +26,6 @@ import javax.media.jai.util.Range;
  * The descriptor for the {@link NodataFilter} operation.
  *
  * @since 2.1
- * @source $URL: http://svn.osgeo.org/geotools/trunk/modules/library/coverage/src/main/java/org/geotools/image/jai/NodataFilterDescriptor.java $
  * @version $Id: NodataFilterDescriptor.java 30643 2008-06-12 18:27:03Z acuster $
  * @author Lionel Flahaut (2ie Technologie, IRD)
  */

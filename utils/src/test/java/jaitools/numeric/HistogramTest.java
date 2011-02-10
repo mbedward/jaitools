@@ -31,7 +31,6 @@ import static org.junit.Assert.*;
  * 
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class HistogramTest {

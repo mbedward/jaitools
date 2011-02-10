@@ -43,7 +43,6 @@ import javax.media.jai.RasterFormatTag;
  * 
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class KernelStatsOpImage extends AreaOpImage {

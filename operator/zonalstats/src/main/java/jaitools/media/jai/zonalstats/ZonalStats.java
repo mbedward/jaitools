@@ -102,7 +102,6 @@ import java.util.SortedSet;
  * @author Michael Bedward
  * @author Daniele Romagnoli, GeoSolutions S.A.S.
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class ZonalStats {

@@ -39,7 +39,6 @@ import java.util.List;
  * 
  * @author Michael Bedward
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public class LineSmoother extends AbstractSmoother {

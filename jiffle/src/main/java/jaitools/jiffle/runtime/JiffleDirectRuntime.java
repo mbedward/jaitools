@@ -28,7 +28,6 @@ import java.awt.image.WritableRenderedImage;
  *
  * @author Michael Bedward
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public interface JiffleDirectRuntime extends JiffleRuntime {

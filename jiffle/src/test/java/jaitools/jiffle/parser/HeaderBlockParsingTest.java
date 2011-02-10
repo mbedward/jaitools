@@ -27,7 +27,6 @@ import org.junit.Test;
  * 
  * @author Michael Bedward
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 public class HeaderBlockParsingTest extends ParserTestBase {

@@ -38,7 +38,6 @@ import jaitools.swing.ImageFrame;
  * 
  * @author Michael Bedward
  * @since 1.0
- * @source $URL$
  * @version $Id$
  */
 public class DirectRuntimeDemo extends JiffleDemoBase {

@@ -39,7 +39,6 @@ import jaitools.jiffle.Jiffle;
  * 
  * @author Michael Bedward
  * @since 1.1
- * @source $URL$
  * @version $Id$
  */
 @Ignore("thread deadlock problem with WaitingListener needs to be fixed")
