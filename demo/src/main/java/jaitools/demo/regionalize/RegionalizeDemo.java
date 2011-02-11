@@ -19,17 +19,18 @@
  */
 package jaitools.demo.regionalize;
 
-import jaitools.demo.DemoImageProvider;
-import jaitools.demo.ImageReceiver;
+import java.awt.image.RenderedImage;
+import java.util.List;
+
+import javax.media.jai.JAI;
+import javax.media.jai.ParameterBlockJAI;
+import javax.media.jai.RenderedOp;
+
+import jaitools.demo.DemoImages;
 import jaitools.imageutils.ImageUtils;
 import jaitools.media.jai.regionalize.Region;
 import jaitools.media.jai.regionalize.RegionalizeDescriptor;
 import jaitools.swing.ImageFrame;
-import java.awt.image.RenderedImage;
-import java.util.List;
-import javax.media.jai.JAI;
-import javax.media.jai.ParameterBlockJAI;
-import javax.media.jai.RenderedOp;
 
 /**
  * Demonstrates using the Regionalize operation to identify regions
@@ -39,7 +40,7 @@ import javax.media.jai.RenderedOp;
  * @since 1.0
  * @version $Id$
  */
-public class RegionalizeDemo implements ImageReceiver {
+public class RegionalizeDemo {
 
     /**
      * Main method: simple calls the demo method
@@ -52,24 +53,11 @@ public class RegionalizeDemo implements ImageReceiver {
 
     /**
      * Gets a test image (the chessboard image) from the
-     * {@linkplain DemoImageProvider object}. When the image
+     * {@linkplain DemoImages object}. When the image
      * has been created the receiveImage method will be called.
      */
     public void demo() {
-        try {
-            DemoImageProvider.getInstance().requestImage(
-                    DemoImageProvider.CHESSBOARD, 320, 320, this);
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    /**
-     * Receives the test image from {@linkplain DemoImageProvider}
-     * and calls the regionalizing method
-     */
-    public void receiveImage(RenderedImage image) {
+        RenderedImage image = DemoImages.get(DemoImages.Choice.CHESSBOARD, 320, 320);
         ImageFrame frame;
         frame = new ImageFrame(image, "Regionalize demo: test image");
         frame.setVisible(true);

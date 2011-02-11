@@ -20,19 +20,20 @@
 
 package jaitools.demo.kernelstats;
 
-import jaitools.demo.DemoImageProvider;
-import jaitools.demo.ImageReceiver;
-import jaitools.imageutils.ImageUtils;
-import jaitools.media.jai.kernel.KernelFactory;
-import jaitools.numeric.Statistic;
-import jaitools.swing.ImageFrame;
 import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
 import java.util.List;
+
 import javax.media.jai.BorderExtender;
 import javax.media.jai.JAI;
 import javax.media.jai.KernelJAI;
 import javax.media.jai.ParameterBlockJAI;
+
+import jaitools.demo.DemoImages;
+import jaitools.imageutils.ImageUtils;
+import jaitools.media.jai.kernel.KernelFactory;
+import jaitools.numeric.Statistic;
+import jaitools.swing.ImageFrame;
 
 /**
  * Demonstrates using the KernelStats operator to calculate summary
@@ -42,27 +43,15 @@ import javax.media.jai.ParameterBlockJAI;
  * @since 1.0
  * @version $Id$
  */
-public class KernelStatsDemo implements ImageReceiver {
+public class KernelStatsDemo {
 
     public static void main(String[] args) {
         KernelStatsDemo me = new KernelStatsDemo();
         me.demo();
     }
 
-    private KernelStatsDemo() {
-    }
-
     private void demo() {
-        try {
-            DemoImageProvider.getInstance().requestImage(
-                    DemoImageProvider.INTERFERENCE, 300, 300, this);
-
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    public void receiveImage(RenderedImage image) {
+        RenderedImage image = DemoImages.get(DemoImages.Choice.INTERFERENCE, 300, 300);
         ImageFrame frame = new ImageFrame(image, "KernelStats: source image");
         frame.setVisible(true);
 

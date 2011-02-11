@@ -30,8 +30,8 @@ init {
     edge_pos = square * 8;
 }
 
-odd_row = floor(y() / square) % 2 == 1
-odd_col = floor(x() / square) % 2 == 1
-inside = x() < edge_pos && y() < edge_pos
+odd_row = floor(y() / square) % 2 == 1;
+odd_col = floor(x() / square) % 2 == 1;
+inside = x() < edge_pos && y() < edge_pos;
 
-result = inside ? (odd_row ^| odd_col) : null
+result = inside ? (odd_row ^| odd_col) : null;
