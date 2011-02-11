@@ -85,15 +85,15 @@ public class FunctionLookup {
         /*
          * Image functions which are proxies for runtime variables
          */
-        lookup.add( new FunctionInfo( "width", "_width", 0, FunctionInfo.PROXY, false));
-        lookup.add( new FunctionInfo( "height", "_height", 0, FunctionInfo.PROXY, false));
-        lookup.add( new FunctionInfo( "size", "_size", 0, FunctionInfo.PROXY, false));
-        lookup.add( new FunctionInfo( "x", "_x", 0, FunctionInfo.PROXY, false));
-        lookup.add( new FunctionInfo( "y", "_y", 0, FunctionInfo.PROXY, false));
-        lookup.add( new FunctionInfo( "xmin", "_minx", 0, FunctionInfo.PROXY, false));
-        lookup.add( new FunctionInfo( "ymin", "_miny", 0, FunctionInfo.PROXY, false));
-        lookup.add( new FunctionInfo( "row", "_row", 0, FunctionInfo.PROXY, false));
-        lookup.add( new FunctionInfo( "col", "_col", 0, FunctionInfo.PROXY, false));
+        lookup.add( new FunctionInfo( "width", "(double)_width", 0, FunctionInfo.PROXY, false));
+        lookup.add( new FunctionInfo( "height", "(double)_height", 0, FunctionInfo.PROXY, false));
+        lookup.add( new FunctionInfo( "size", "(double)_size", 0, FunctionInfo.PROXY, false));
+        lookup.add( new FunctionInfo( "x", "(double)_x", 0, FunctionInfo.PROXY, false));
+        lookup.add( new FunctionInfo( "y", "(double)_y", 0, FunctionInfo.PROXY, false));
+        lookup.add( new FunctionInfo( "xmin", "(double)_minx", 0, FunctionInfo.PROXY, false));
+        lookup.add( new FunctionInfo( "ymin", "(double)_miny", 0, FunctionInfo.PROXY, false));
+        lookup.add( new FunctionInfo( "row", "(double)_row", 0, FunctionInfo.PROXY, false));
+        lookup.add( new FunctionInfo( "col", "(double)_col", 0, FunctionInfo.PROXY, false));
     }
     
     

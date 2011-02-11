@@ -23,8 +23,11 @@ package jaitools.jiffle;
 import java.awt.Rectangle;
 import java.awt.image.RenderedImage;
 import java.awt.image.WritableRenderedImage;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.util.List;
 import java.util.Map;
 
 import javax.media.jai.TiledImage;
@@ -109,19 +112,39 @@ import jaitools.jiffle.runtime.JiffleDirectRuntime;
  */
 public class JiffleBuilder {
 
+    private static class ImageRef {
+        Object ref;
+        boolean weak;
+
+        ImageRef(RenderedImage image, boolean weak) {
+            if (weak) {
+                ref = new WeakReference<RenderedImage>(image);
+            } else {
+                ref = image;
+            }
+            this.weak = weak;
+        }
+
+        RenderedImage get() {
+            if (weak) {
+                RenderedImage image = ((WeakReference<RenderedImage>) ref).get();
+                return image;
+            } else {
+                return (RenderedImage) ref;
+            }
+        }
+    }
+
     private String script;
     private final Map<String, Jiffle.ImageRole> imageParams;
-    private final Map<String, WeakReference<RenderedImage>> weakImages;
-
-    private final List<WritableRenderedImage> strongImages;
+    private final Map<String, ImageRef> images;
 
     /**
      * Creates a new JiffleBuilder instance.
      */
     public JiffleBuilder() {
         imageParams = CollectionFactory.orderedMap();
-        weakImages = CollectionFactory.orderedMap();
-        strongImages = CollectionFactory.list();
+        images = CollectionFactory.orderedMap();
     }
 
     /**
@@ -132,8 +155,7 @@ public class JiffleBuilder {
     public void clear() {
         script = null;
         imageParams.clear();
-        weakImages.clear();
-        strongImages.clear();
+        images.clear();
     }
 
     /**
@@ -149,6 +171,19 @@ public class JiffleBuilder {
     }
 
     /**
+     * Sets the script to the contents of the {@code scriptFile}.
+     *
+     * @param scriptFile file containing the script
+     *
+     * @return the instance of this class to allow method chaining
+     * @throws JiffleException if there were problems reading the file
+     */
+    public JiffleBuilder script(File scriptFile) throws JiffleException {
+        script = readScriptFile(scriptFile);
+        return this;
+    }
+
+    /**
      * Sets a source image associated with a variable name in the script.
      *
      * @param varName variable name
@@ -158,8 +193,8 @@ public class JiffleBuilder {
      */
     public JiffleBuilder source(String varName, RenderedImage sourceImage) {
         imageParams.put(varName, Jiffle.ImageRole.SOURCE);
-        WeakReference<RenderedImage> ref = new WeakReference<RenderedImage>(sourceImage);
-        weakImages.put(varName, ref);
+        // store as weak reference
+        images.put(varName, new ImageRef(sourceImage, true));
         return this;
     }
 
@@ -167,7 +202,7 @@ public class JiffleBuilder {
      * Creates a new destination image and associates it with a variable name
      * in the script.
      * <p>
-     * Note: a {@code JiffleBuilder} maintains only {@code WeakReferences}
+     * Note: a {@code JiffleBuilder} maintains only {@code SoftReferences}
      * to all source images and any destination images passed to it via
      * the {@link #dest(String, WritableRenderedImage)} method. However,
      * a strong reference is stored to the destination images created with this
@@ -191,7 +226,7 @@ public class JiffleBuilder {
      * in the script. The minimum pixel X and Y ordinates of the destination
      * image will be 0.
      * <p>
-     * Note: a {@code JiffleBuilder} maintains only {@code WeakReferences}
+     * Note: a {@code JiffleBuilder} maintains only {@code SoftReferences}
      * to all source images and any destination images passed to it via
      * the {@link #dest(String, WritableRenderedImage)} method. However,
      * a strong reference is stored to the destination images created with this
@@ -211,7 +246,7 @@ public class JiffleBuilder {
      * Creates a new destination image and associates it with a variable name
      * in the script.
      * <p>
-     * Note: a {@code JiffleBuilder} maintains only {@code WeakReferences}
+     * Note: a {@code JiffleBuilder} maintains only {@code SoftReferences}
      * to all source images and any destination images passed to it via
      * the {@link #dest(String, WritableRenderedImage)} method. However,
      * a strong reference is stored to the destination images created with this
@@ -226,15 +261,17 @@ public class JiffleBuilder {
      * @return the instance of this class to allow method chaining
      */
     public JiffleBuilder dest(String varName, int minx, int miny, int width, int height) {
-        TiledImage img = ImageUtils.createConstantImage(minx, miny, width, height, 0d);
-        strongImages.add(img);
-        return dest(varName, img);
+        TiledImage image = ImageUtils.createConstantImage(minx, miny, width, height, 0d);
+        imageParams.put(varName, Jiffle.ImageRole.DEST);
+        // store as strong reference
+        images.put(varName, new ImageRef(image, false));
+        return this;
     }
 
     /**
      * Sets a destination image associated with a variable name in the script.
      * <p>
-     * Note: The builder will only hold a weak reference to {@code destImg} so
+     * Note: The builder will only hold a soft reference to {@code destImg} so
      * it's not a good idea to create an image on the fly when calling this
      * method...
      * <pre><code>
@@ -265,8 +302,8 @@ public class JiffleBuilder {
      */
     public JiffleBuilder dest(String varName, WritableRenderedImage destImage) {
         imageParams.put(varName, Jiffle.ImageRole.DEST);
-        WeakReference<RenderedImage> ref = new WeakReference<RenderedImage>(destImage);
-        weakImages.put(varName, ref);
+        // store as weak reference
+        images.put(varName, new ImageRef(destImage, true));
         return this;
     }
 
@@ -285,8 +322,8 @@ public class JiffleBuilder {
 
         Jiffle jiffle = new Jiffle(script, imageParams);
         JiffleDirectRuntime runtime = jiffle.getRuntimeInstance();
-        for (String var : weakImages.keySet()) {
-            RenderedImage img = weakImages.get(var).get();
+        for (String var : images.keySet()) {
+            RenderedImage img = images.get(var).get();
             if (img == null) {
                 throw new JiffleException(
                         "Image for variable " + var + " has been garbage collected");
@@ -320,11 +357,40 @@ public class JiffleBuilder {
      *         not recognized or the image has since been garbage collected
      */
     public RenderedImage getImage(String varName) {
-        WeakReference<RenderedImage> ref = weakImages.get(varName);
+        ImageRef ref = images.get(varName);
         if (ref != null) {
             return ref.get();
         }
-
         return null;
     }
+
+    private String readScriptFile(File scriptFile) throws JiffleException {
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader(scriptFile));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.length() > 0) {
+                    sb.append(line);
+                    sb.append('\n');  // put the newline back on for the parser
+                }
+            }
+
+            return sb.toString();
+
+        } catch (IOException ex) {
+            throw new JiffleException("Could not read the script file", ex);
+
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException ignored) {
+                }
+            }
+        }
+    }
+
 }
