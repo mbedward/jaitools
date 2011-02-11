@@ -21,6 +21,7 @@
 package jaitools.jiffle.parser;
 
 import java.io.InputStream;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 
@@ -45,9 +46,12 @@ public class FunctionLookup {
             in = FunctionLookup.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE);
             Properties properties = new Properties();
             properties.load(in);
-
-            for (String jiffleName : properties.stringPropertyNames()) {
+            
+            Enumeration<?> names = properties.propertyNames();
+            while (names.hasMoreElements()) {
+                String jiffleName = (String) names.nextElement();
                 String value = properties.getProperty(jiffleName);
+
                 String[] attr = value.split("[,\\s]+");
                 if (attr.length != 4) {
                     throw new IllegalArgumentException(
