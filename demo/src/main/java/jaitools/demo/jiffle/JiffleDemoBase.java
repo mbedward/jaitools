@@ -35,9 +35,19 @@ import java.net.URL;
  * @version $Id$
  */
 public abstract class JiffleDemoBase {
+    /** Width of images in demo apps */
     protected final static int WIDTH = 600;
+    /** Height of images in demo apps */
     protected final static int HEIGHT = 600;
 
+    /**
+     * Looks for a file specified on command line args.
+     *
+     * @param args command lines args passed from the demo app.
+     * @param defaultResource default script file
+     * @return the script file
+     * @throws Exception on problems getting the file
+     */
     protected File getScriptFile(String[] args, String defaultResource) throws Exception {
         URL url = getClass().getResource(defaultResource);
 
@@ -60,6 +70,13 @@ public abstract class JiffleDemoBase {
     }
 
     
+    /**
+     * Reads the contents of a script file.
+     *
+     * @param scriptFile the file
+     * @return the script as a String
+     * @throws Exception on problems reading the file
+     */
     protected String readScriptFile(File scriptFile) throws Exception {
         BufferedReader reader = null;
         try {

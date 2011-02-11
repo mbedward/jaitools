@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -19,22 +19,17 @@
  */
 package jaitools.demo.zonalstats;
 
-import jaitools.CollectionFactory;
-import jaitools.imageutils.ImageUtils;
-import jaitools.jiffle.Jiffle;
-import jaitools.jiffle.runtime.JiffleDirectRuntime;
-import jaitools.media.jai.zonalstats.ZonalStats;
-import jaitools.media.jai.zonalstats.ZonalStatsDescriptor;
-import jaitools.numeric.Statistic;
 import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
-import java.awt.image.WritableRenderedImage;
-import java.util.HashMap;
-import java.util.Map;
+
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
-import javax.media.jai.TiledImage;
+
+import jaitools.jiffle.JiffleBuilder;
+import jaitools.media.jai.zonalstats.ZonalStats;
+import jaitools.media.jai.zonalstats.ZonalStatsDescriptor;
+import jaitools.numeric.Statistic;
 
 /**
  * Demonstrates using the ZonalStats operator to calculate summary statistics of values
@@ -48,9 +43,8 @@ import javax.media.jai.TiledImage;
  */
 public class ZonalStatsDemo {
 
-    private WritableRenderedImage dataImg;
+    private RenderedImage dataImg;
     private RenderedImage zoneImg;
-    Map<String, RenderedImage> imgParams;
 
     /**
      * Main method: constructs an instance of this class (which
@@ -112,7 +106,10 @@ public class ZonalStatsDemo {
 
 
     /**
-     * Constructor - generates test data
+     * Constructor. Generates test data.
+     *
+     * @throws Exception on errors running the Jiffle script that builds
+     *         the example data images
      */
     public ZonalStatsDemo() throws Exception {
         /*
@@ -121,36 +118,24 @@ public class ZonalStatsDemo {
          *   between 0 and 10
          * - a zone image where zones are equal-area horizontal bands
          */
-        dataImg = ImageUtils.createConstantImage(500, 500, Double.valueOf(0d));
-        TiledImage zoneDoubleImg = ImageUtils.createConstantImage(500, 500, Double.valueOf(0d));
-
-        imgParams = new HashMap<String, RenderedImage>();
-        imgParams.put("dataImg", dataImg);
-        imgParams.put("zoneImg", zoneDoubleImg);
-
         String script =
                   "dataImg = rand(10); \n"
                 + "numZones = 5; \n"
                 + "rowsPerZone = height() / numZones; \n"
                 + "zoneImg = y() / rowsPerZone + 1;";
-        
-        Map<String, Jiffle.ImageRole> imageParams = CollectionFactory.map();
-        imageParams.put("dataImg", Jiffle.ImageRole.DEST);
-        imageParams.put("zoneImg", Jiffle.ImageRole.DEST);
 
-        Jiffle jiffle = new Jiffle(script, imageParams);
-        JiffleDirectRuntime runtime = jiffle.getRuntimeInstance();
-        
-        runtime.setDestinationImage("dataImg", dataImg);
-        runtime.setDestinationImage("zoneImg", zoneDoubleImg);
-        runtime.evaluateAll(null);
+        JiffleBuilder jb = new JiffleBuilder();
+        jb.script(script).dest("dataImg", 500, 500).dest("zoneImg", 500, 500);
+        jb.getRuntime().evaluateAll(null);
+        dataImg = jb.getImage("dataImg");
+        RenderedImage zoneImgDouble = jb.getImage("zoneImg");
 
         /*
          * Now we convert the zone image from DOUBLE to INT for
          * the ZonalStats operator
          */
         ParameterBlockJAI pb = new ParameterBlockJAI("format");
-        pb.setSource("source0", zoneDoubleImg);
+        pb.setSource("source0", zoneImgDouble);
         pb.setParameter("dataType", DataBuffer.TYPE_INT);
         zoneImg = JAI.create("format", pb);
     }

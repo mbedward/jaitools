@@ -46,6 +46,11 @@ public class TileCacheDemo implements Observer {
     private static final int IMAGE_WIDTH = TILE_WIDTH * 3;
     private static final int IMAGE_HEIGHT = TILE_WIDTH * 2;
 
+    /**
+     * Run the example app.
+     *
+     * @param args ignored
+     */
     public static void main(String[] args) {
         TileCacheDemo me = new TileCacheDemo();
         me.demo();
@@ -132,6 +137,8 @@ public class TileCacheDemo implements Observer {
 
     /**
      * This method handles Observer notifications from the cache
+     * @param ocache the cache
+     * @param otile a cached tile
      */
     public void update(Observable ocache, Object otile) {
         DiskCachedTile tile = (DiskCachedTile)otile;

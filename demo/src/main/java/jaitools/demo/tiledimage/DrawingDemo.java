@@ -45,6 +45,10 @@ import java.awt.image.SampleModel;
  */
 public class DrawingDemo {
 
+    /**
+     * Run the demo application.
+     * @param args ignored
+     */
     public static void main(String[] args) {
         DrawingDemo me = new DrawingDemo();
         me.demo();

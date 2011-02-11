@@ -62,6 +62,7 @@ public class JiffleExecutorDemo extends JiffleDemoBase {
      * "interference", "ripple" or "squircle".
      * 
      * @param args (optional) the script to run
+     * @throws Exception on problems compiling the script
      */
     public static void main(String[] args) throws Exception {
         JiffleExecutorDemo demo = new JiffleExecutorDemo();
@@ -91,6 +92,7 @@ public class JiffleExecutorDemo extends JiffleDemoBase {
      * Compiles a script read from a file and submits it for execution.
      * 
      * @param scriptFile file containing the Jiffle script
+     * @throws Exception on problems compiling the script
      */
     public void compileAndRun(File scriptFile) throws Exception {
         Map<String, Jiffle.ImageRole> imageParams = CollectionFactory.map();

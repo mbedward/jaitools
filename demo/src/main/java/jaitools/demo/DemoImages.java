@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -39,9 +39,21 @@ public class DemoImages {
 
     /** Available images */
     public static enum Choice {
+        /**
+         * Chessboard pattern with 0 and 1 values.
+         */
         CHESSBOARD("chessboard"),
+        /**
+         * Complex interference pattern.
+         */
         INTERFERENCE("interference"),
+        /**
+         * Concentric, sinusoidal ripples.
+         */
         RIPPLES("ripple"),
+        /**
+         * Sort of a square circle thing.
+         */
         SQUIRCLE("squircle");
 
         String name;
@@ -57,6 +69,8 @@ public class DemoImages {
      * @param choice one of CHESSBOARD, INTERFERENCE, RIPPLES, SQUIRCLES
      * @param width image width
      * @param height image height
+     *
+     * @return the requested image
      */
     public static RenderedImage get(Choice choice, int width, int height) {
         try {
@@ -72,13 +86,6 @@ public class DemoImages {
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-    }
-
-    public static void main(String[] args) {
-        RenderedImage img = get(Choice.INTERFERENCE, 400, 400);
-        ImageFrame f = new ImageFrame(img, "test");
-        f.setSize(450, 450);
-        f.setVisible(true);
     }
 
 }

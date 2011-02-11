@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Michael Bedward
+ * Copyright 2010-2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -51,6 +51,10 @@ import javax.media.jai.TiledImage;
  */
 public class VectorizeDemo {
     
+    /**
+     * Run the demo application.
+     * @param args ignored
+     */
     public static void main(String[] args) {
         VectorizeDemo me = new VectorizeDemo();
         me.demo();
