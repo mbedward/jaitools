@@ -20,7 +20,9 @@
 
 package jaitools.jiffle.parser;
 
+import java.io.InputStream;
 import java.util.List;
+import java.util.Properties;
 
 import jaitools.CollectionFactory;
 
@@ -33,71 +35,68 @@ import jaitools.CollectionFactory;
  * @version $Id$
  */
 public class FunctionLookup {
-    
-    private List<FunctionInfo> lookup = CollectionFactory.list();
-    
-    public FunctionLookup() {
-        lookup.add( new FunctionInfo("abs", "abs", 1, FunctionInfo.MATH, false) );
-        lookup.add( new FunctionInfo( "acos", "acos", 1, FunctionInfo.MATH, false));
-        lookup.add( new FunctionInfo( "asin", "asin", 1, FunctionInfo.MATH, false));
-        lookup.add( new FunctionInfo( "atan", "atan", 1, FunctionInfo.MATH, false));
-        lookup.add( new FunctionInfo( "cos", "cos", 1, FunctionInfo.MATH, false));
-        lookup.add( new FunctionInfo( "degToRad", "degToRad", 1, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "floor", "floor", 1, FunctionInfo.MATH, false));
-        lookup.add( new FunctionInfo( "isinf", "isinf", 1, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "isnan", "isnan", 1, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "isnull", "isnull", 1, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "log", "log", 1, FunctionInfo.MATH, false));
-        lookup.add( new FunctionInfo( "log", "log2Arg", 2, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "max", "max", FunctionInfo.VARARG, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "mean", "mean", FunctionInfo.VARARG, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "median", "median", FunctionInfo.VARARG, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "min", "min", FunctionInfo.VARARG, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "mode", "mode", FunctionInfo.VARARG, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "null", "nullValue", 0, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "radToDeg", "radToDeg", 1, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "rand", "rand", 1, FunctionInfo.JIFFLE, true));
-        lookup.add( new FunctionInfo( "randInt", "randInt", 1, FunctionInfo.JIFFLE, true));
-        lookup.add( new FunctionInfo( "range", "range", 1, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "round", "round", 1, FunctionInfo.MATH, false));
-        lookup.add( new FunctionInfo( "round", "round2Arg", 2, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "sign", "sign", 1, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "sdev", "sdev", FunctionInfo.VARARG, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "sin", "sin", 1, FunctionInfo.MATH, false));
-        lookup.add( new FunctionInfo( "sqrt", "sqrt", 1, FunctionInfo.MATH, false));
-        lookup.add( new FunctionInfo( "tan", "tan", 1, FunctionInfo.MATH, false));
-        lookup.add( new FunctionInfo( "variance", "variance", FunctionInfo.VARARG, FunctionInfo.JIFFLE, false));
-        
-        /*
-         * Logical operators
-         */
-        lookup.add( new FunctionInfo( "OR", "OR", 2, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "AND", "AND", 2, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "XOR", "XOR", 2, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "GT", "GT", 2, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "GE", "GE", 2, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "LT", "LT", 2, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "LE", "LE", 2, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "EQ", "EQ", 2, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "NE", "NE", 2, FunctionInfo.JIFFLE, false));
-        lookup.add( new FunctionInfo( "NOT", "NOT", 1, FunctionInfo.JIFFLE, false));
-        
-        /*
-         * Image functions which are proxies for runtime variables
-         */
-        lookup.add( new FunctionInfo( "width", "(double)_width", 0, FunctionInfo.PROXY, false));
-        lookup.add( new FunctionInfo( "height", "(double)_height", 0, FunctionInfo.PROXY, false));
-        lookup.add( new FunctionInfo( "size", "(double)_size", 0, FunctionInfo.PROXY, false));
-        lookup.add( new FunctionInfo( "x", "(double)_x", 0, FunctionInfo.PROXY, false));
-        lookup.add( new FunctionInfo( "y", "(double)_y", 0, FunctionInfo.PROXY, false));
-        lookup.add( new FunctionInfo( "xmin", "(double)_minx", 0, FunctionInfo.PROXY, false));
-        lookup.add( new FunctionInfo( "ymin", "(double)_miny", 0, FunctionInfo.PROXY, false));
-        lookup.add( new FunctionInfo( "row", "(double)_row", 0, FunctionInfo.PROXY, false));
-        lookup.add( new FunctionInfo( "col", "(double)_col", 0, FunctionInfo.PROXY, false));
+
+    private static final String PROPERTIES_FILE = "META-INF/FunctionLookup.properties";
+    private static final List<FunctionInfo> lookup = CollectionFactory.list();
+
+    static {
+        InputStream in = null;
+        try {
+            in = FunctionLookup.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE);
+            Properties properties = new Properties();
+            properties.load(in);
+
+            for (String jiffleName : properties.stringPropertyNames()) {
+                String value = properties.getProperty(jiffleName);
+                String[] attr = value.split("[,\\s]+");
+                if (attr.length != 4) {
+                    throw new IllegalArgumentException(
+                            "Error reading Jiffle function definitions from " + PROPERTIES_FILE);
+                }
+
+                String runtimeName = attr[0];
+                int numArgs = 0;
+                if (attr[1].toUpperCase().contains("VARARG")) {
+                    numArgs = FunctionInfo.VARARG;
+                } else {
+                    numArgs = Integer.parseInt(attr[1]);
+                }
+
+                FunctionInfo.Provider provider = FunctionInfo.Provider.get( attr[2] );
+                if (provider == null) {
+                    throw new IllegalArgumentException(
+                            "Unrecognized Jiffle function provider (" + attr[2] + ") in " + PROPERTIES_FILE);
+                }
+
+                boolean isVolatile = Boolean.parseBoolean(attr[3]);
+
+                lookup.add( new FunctionInfo(
+                        jiffleName, runtimeName, numArgs, provider, isVolatile) );
+            }
+
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Internal compiler error", ex);
+
+        } finally {
+            try {
+                if (in != null) in.close();
+            } catch (Exception ex) {
+                // ignore
+            }
+        }
     }
     
-    
-    public boolean isDefined(String jiffleName, int numArgs) {
+    /**
+     * Checks if a function is defined.
+     *
+     * @param jiffleName the name of the function used in a Jiffle script
+     *
+     * @param numArgs number of arguments or {@link FunctionInfo#VARARG} (-1)
+     *        for a variable argument function
+     *
+     * @return {@code true} if defined; {@code false} otherwise
+     */
+    public static boolean isDefined(String jiffleName, int numArgs) {
         try {
             getInfo(jiffleName, numArgs);
         } catch (UndefinedFunctionException ex) {
@@ -107,7 +106,20 @@ public class FunctionLookup {
         return true;
     }
     
-    public FunctionInfo getInfo(String jiffleName, int numArgs) throws UndefinedFunctionException {
+    /**
+     * Gets the info for a function.
+     *
+     * @param jiffleName the name of the function used in a Jiffle script
+     *
+     * @param numArgs number of arguments or {@link FunctionInfo#VARARG} (-1)
+     *        for a variable argument function
+     *
+     * @return function info
+     * @throws UndefinedFunctionException if {@code jiffleName} is not recognized
+     */
+    public static FunctionInfo getInfo(String jiffleName, int numArgs)
+            throws UndefinedFunctionException {
+
         List<FunctionInfo> list = getByName(jiffleName);
         for (FunctionInfo info : list) {
             if (info.getJiffleName().equals(jiffleName)
@@ -120,11 +132,25 @@ public class FunctionLookup {
         throw new IllegalStateException("Internal compiler error");
     }
     
-    public String getRuntimeExpr(String jiffleName, int numArgs) throws UndefinedFunctionException {
+    /**
+     * Gets the runtime source for the function. This will consist of
+     * provider name plus function name in the case of {@code JiffleFunction}
+     * and {@code java.lang.Math} methods, or runtime class field name in the
+     * case of proxy (image info) functions.
+     *
+     * @param jiffleName the name of the function used in a Jiffle script
+     *
+     * @param numArgs number of arguments or {@link FunctionInfo#VARARG} (-1)
+     *        for a variable argument function
+     *
+     * @return the runtime source
+     * @throws UndefinedFunctionException if {@code jiffleName} is not recognized
+     */
+    public static String getRuntimeExpr(String jiffleName, int numArgs) throws UndefinedFunctionException {
         return getInfo(jiffleName, numArgs).getRuntimeExpr();
     }
     
-    private List<FunctionInfo> getByName(String jiffleName) throws UndefinedFunctionException {
+    private static List<FunctionInfo> getByName(String jiffleName) throws UndefinedFunctionException {
         List<FunctionInfo> list = CollectionFactory.list();
         for (FunctionInfo info : lookup) {
             if (info.getJiffleName().equals(jiffleName)) {

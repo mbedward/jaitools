@@ -36,8 +36,6 @@ public class DeferredErrorReporter implements ParsingErrorReporter {
     
     private List<String> errors = CollectionFactory.list();
     
-    public DeferredErrorReporter() {}
-
     public void addError(String errorText) {
         errors.add(errorText);
     }

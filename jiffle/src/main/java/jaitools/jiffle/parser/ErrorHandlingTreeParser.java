@@ -20,15 +20,13 @@
 
 package jaitools.jiffle.parser;
 
-import java.util.List;
-import java.util.Map;
-
 import org.antlr.runtime.RecognizerSharedState;
 import org.antlr.runtime.tree.TreeNodeStream;
 import org.antlr.runtime.tree.TreeParser;
 
 /**
- * Provides error handling methods for Jiffle tree parsers.
+ * A base class for Jiffle tree parsers that want to intercept
+ * ANTLR error and warning messages.
  * 
  * @author Michael Bedward
  * @since 1.1
@@ -36,14 +34,25 @@ import org.antlr.runtime.tree.TreeParser;
  */
 public abstract class ErrorHandlingTreeParser extends TreeParser {
 
+    /** Stores error and warning messages. */
     protected ParsingErrorReporter errorReporter;
     
-    protected Map<String, List<Message>> errors;
-    
+    /**
+     * Constructor.
+     *
+     * @param input AST node stream
+     * @param state ANTLR recognizer state (not presently used by Jiffle)
+     */
     public ErrorHandlingTreeParser(TreeNodeStream input, RecognizerSharedState state) {
         super(input, state);
     }
 
+    /**
+     * Overrides the ANTLR parser method to capture an error message that
+     * would otherwise be sent to std err.
+     *
+     * @param msg the message
+     */
     @Override
     public void emitErrorMessage(String msg) {
         if (errorReporter != null) {
@@ -53,10 +62,21 @@ public abstract class ErrorHandlingTreeParser extends TreeParser {
         }
     }
 
+    /**
+     * Gets the error reporter object.
+     *
+     * @return the error reporter
+     */
     public ParsingErrorReporter getErrorReporter() {
         return errorReporter;
     }
 
+    /**
+     * Sets the error reporter.
+     *
+     * @param er the error reporter (may be {@code null} if message
+     *        interception is not required).
+     */
     public void setErrorReporter(ParsingErrorReporter er) {
         errorReporter = er;
     }

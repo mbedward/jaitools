@@ -29,6 +29,10 @@ package jaitools.jiffle.parser;
  */
 public class CompilerExitException extends RuntimeException {
 
+    /**
+     * Default construct. Jiffle doesn't use this exception class to pass
+     * error information so this is all that is required.
+     */
     public CompilerExitException() {}
     
 }

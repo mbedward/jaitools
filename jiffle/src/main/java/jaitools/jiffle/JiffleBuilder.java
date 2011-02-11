@@ -3,9 +3,9 @@
  *
  * This file is part of jai-tools.
  *
- * jai-tools is free software: you can redistribute it and/or modify
+ * jai-tools is free Weakware: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of the
+ * published by the Free Weakware Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
  * jai-tools is distributed in the hope that it will be useful,
@@ -37,11 +37,15 @@ import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.runtime.JiffleDirectRuntime;
 
 /**
- * A helper class to create runtime objects from scripts and images with a bit
- * less code than required when working with {@link Jiffle} objects directly.
+ * A helper class to compile and run Jiffle scripts while avoiding Jiffle's
+ * boiler-plate code.
  * <p>
- * To illustrate its use, we first look at an example of creating a {@code Jiffle}
- * object and retrieving the runtime instance 'by hand'...
+ * When working with Jiffle objects directly you end up writing a certain 
+ * amount of boiler-plate code for image parameters etc. JiffleBuilder offers
+ * concise, chained methods to help you get your imges with fewer keystrokes.
+ * <p>
+ * Here is an example of creating a Jiffle object and retrieving the runtime
+ * instance 'by hand'...
  * <pre><code>
  * // A script to sum values from two source images
  * String sumScript = "dest = foo + bar;" ;
@@ -73,7 +77,7 @@ import jaitools.jiffle.runtime.JiffleDirectRuntime;
  * // Now run the script
  * runtime.evaluateAll(null);
  * </code></pre>
- * Here is how we would do the same thing with JiffleBuilder...
+ * Now here is the same task done using JiffleBuilder...
  * <pre><code>
  * // A script to sum values from two source images
  * String sumScript = "dest = foo + bar;" ;
@@ -81,12 +85,10 @@ import jaitools.jiffle.runtime.JiffleDirectRuntime;
  * RenderedImage fooImg = ...
  * RenderedImage barImg = ...
  *
- * // Create a builder and use its chaining methods to associate source images
- * // with script variables
  * JiffleBuilder jb = new JiffleBuilder();
  * jb.script(sumScript).source("foo", fooImg).script("bar", barImg);
  *
- * // Get the builder to create the destination image for us
+ * // We can get the builder to create the destination image for us
  * jb.dest("dest", fooImg.getWidth(), fooImg.getHeight());
  *
  * // Run the script
@@ -94,7 +96,7 @@ import jaitools.jiffle.runtime.JiffleDirectRuntime;
  *
  * // Since we asked the builder to create the destination image we
  * // now need to get a reference to it
- * WritableRenderedImage destImg = jb.getImage("dest");
+ * RenderedImage destImg = jb.getImage("dest");
  * </code></pre>
  * When a script does not use any source images, {@code JiffleBuilder} makes
  * for very concise code...
@@ -185,10 +187,10 @@ public class JiffleBuilder {
 
     /**
      * Sets a source image associated with a variable name in the script.
+     * The image will be stored by the builder as a weak reference.
      *
      * @param varName variable name
-     * @param destImage the source image
-     *
+     * @param sourceImage the source image
      * @return the instance of this class to allow method chaining
      */
     public JiffleBuilder source(String varName, RenderedImage sourceImage) {
@@ -202,11 +204,12 @@ public class JiffleBuilder {
      * Creates a new destination image and associates it with a variable name
      * in the script.
      * <p>
-     * Note: a {@code JiffleBuilder} maintains only {@code SoftReferences}
+     * Note: a {@code JiffleBuilder} maintains only {@code WeakReferences}
      * to all source images and any destination images passed to it via
      * the {@link #dest(String, WritableRenderedImage)} method. However,
      * a strong reference is stored to the destination images created with this
-     * method. This can be freed later by calling {@link #clear()}.
+     * method. This can be freed later by calling {@link #clear()} or
+     * {@link #removeImage(String varName)}.
      *
      * @param varName variable name
      * @param destBounds the bounds of the new destination image
@@ -226,11 +229,12 @@ public class JiffleBuilder {
      * in the script. The minimum pixel X and Y ordinates of the destination
      * image will be 0.
      * <p>
-     * Note: a {@code JiffleBuilder} maintains only {@code SoftReferences}
+     * Note: a {@code JiffleBuilder} maintains only {@code WeakReferences}
      * to all source images and any destination images passed to it via
      * the {@link #dest(String, WritableRenderedImage)} method. However,
      * a strong reference is stored to the destination images created with this
-     * method. This can be freed later by calling {@link #clear()}.
+     * method. This can be freed later by calling {@link #clear()} or
+     * {@link #removeImage(String varName)}.
      *
      * @param varName variable name
      * @param width image width (pixels)
@@ -246,11 +250,12 @@ public class JiffleBuilder {
      * Creates a new destination image and associates it with a variable name
      * in the script.
      * <p>
-     * Note: a {@code JiffleBuilder} maintains only {@code SoftReferences}
+     * Note: a {@code JiffleBuilder} maintains only {@code WeakReferences}
      * to all source images and any destination images passed to it via
      * the {@link #dest(String, WritableRenderedImage)} method. However,
      * a strong reference is stored to the destination images created with this
-     * method. This can be freed later by calling {@link #clear()}.
+     * method. This can be freed later by calling {@link #clear()} or
+     * {@link #removeImage(String varName)}.
      *
      * @param varName variable name
      * @param minx minimum pixel X ordinate
@@ -271,7 +276,7 @@ public class JiffleBuilder {
     /**
      * Sets a destination image associated with a variable name in the script.
      * <p>
-     * Note: The builder will only hold a soft reference to {@code destImg} so
+     * Note: The builder will only hold a Weak reference to {@code destImg} so
      * it's not a good idea to create an image on the fly when calling this
      * method...
      * <pre><code>
@@ -358,6 +363,27 @@ public class JiffleBuilder {
      */
     public RenderedImage getImage(String varName) {
         ImageRef ref = images.get(varName);
+        if (ref != null) {
+            return ref.get();
+        }
+        return null;
+    }
+
+    /**
+     * Removes an image associated with a script variable name. The image should
+     * have been previously suppolied to the builder using the (@code source}
+     * method or one of the {@code dest} methods.
+     * <p>
+     * In the case of a destination image the object returned can be cast
+     * to {@link WritableRenderedImage}.
+     *
+     * @param varName variable name
+     *
+     * @return the associated image or {@code null} if the variable name is
+     *         not recognized or the image has since been garbage collected
+     */
+    public RenderedImage removeImage(String varName) {
+        ImageRef ref = images.remove(varName);
         if (ref != null) {
             return ref.get();
         }

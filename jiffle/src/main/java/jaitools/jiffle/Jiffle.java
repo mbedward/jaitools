@@ -126,10 +126,23 @@ public class Jiffle {
             this.runtimeClass = clazz;
         }
 
+        /**
+         * Gets the runtime interface.
+         *
+         * @return the runtime interface
+         */
         public Class<? extends JiffleRuntime> getRuntimeClass() {
             return runtimeClass;
         }
         
+        /**
+         * Gets the matching constant for the given runtime class.
+         *
+         * @param clazz a runtime class
+         *
+         * @return the contant or {@code null} if the class does not derive
+         *         from a supported base class
+         */
         public static EvaluationModel get(Class<? extends JiffleRuntime> clazz) {
             for (EvaluationModel t : EvaluationModel.values()) {
                 if (t.runtimeClass.isAssignableFrom(clazz)) {
@@ -305,7 +318,7 @@ public class Jiffle {
      *         any errors compiling the script
      */
     public Jiffle(File scriptFile, Map<String, ImageRole> params)
-            throws JiffleException, IOException {
+            throws JiffleException {
 
         init();
         setScript(scriptFile);
@@ -318,6 +331,7 @@ public class Jiffle {
      * and runtime objects.
      * 
      * @param script a Jiffle script
+     * @throws JiffleException if the script is null or empty
      */
     public final void setScript(String script) throws JiffleException {
         if (script == null || script.trim().length() == 0) {
@@ -355,6 +369,7 @@ public class Jiffle {
      * and runtime objects.
      * 
      * @param scriptFile a file containing a Jiffle script
+     * @throws JiffleException on errors reading the script file
      */
     public final void setScript(File scriptFile) throws JiffleException {
         BufferedReader reader = null;
@@ -433,7 +448,9 @@ public class Jiffle {
 
     /**
      * Gets the name assigned to this object. This will either be the
-     * default name or one assigned by the user via {@link #setName(String)}
+     * default name or one assigned by the client via {@link #setName(String)}
+     *
+     * @return the name
      */
     public String getName() {
         return name;
@@ -471,6 +488,9 @@ public class Jiffle {
     
     /**
      * Tests whether the script has been compiled successfully.
+     *
+     * @return {@code true} if the script has been compiled;
+     *         {@code false} otherwise
      */
     public boolean isCompiled() {
         return (finalAST != null);
@@ -490,6 +510,7 @@ public class Jiffle {
      * The {@code Jiffle} object must be compiled before calling this method.
      * 
      * @return the runtime object
+     * @throws JiffleException if the runtime object could not be created
      */
     public JiffleDirectRuntime getRuntimeInstance() throws JiffleException {
         return (JiffleDirectRuntime) createRuntimeInstance(
@@ -498,11 +519,13 @@ public class Jiffle {
     }
     
     /**
-     * Creates a runtime object based using the class specified by {@code type}.
+     * Creates a runtime object based using the class specified by {@code model}.
      * <p>
      * The {@code Jiffle} object must be compiled before calling this method.
      * 
+     * @param model the {@link Jiffle.EvaluationModel}
      * @return the runtime object
+     * @throws JiffleException if the runtime object could not be created
      */
     public JiffleRuntime getRuntimeInstance(EvaluationModel model) throws JiffleException {
         switch (model) {
@@ -524,13 +547,11 @@ public class Jiffle {
      * it extends an abstract base class included with JAI-tools. An 
      * alternative base class can be specified with this method. 
      * 
-     * @param recreate when {@code true} a new runtime object will be
-     *        created and returned; when {@code false} a previously
-     *        created object will be returned if one exists
-     * 
-     * @param baseClass the base class that the runtime class will extend
+     * @param <T> the runtime base class type
+     * @param baseClass the runtime base class
      * 
      * @return the runtime object
+     * @throws JiffleException if the runtime object could not be created
      */
     public <T extends JiffleRuntime> T getRuntimeInstance(Class<T> baseClass) throws JiffleException {
         EvaluationModel model = EvaluationModel.get(baseClass);
@@ -545,10 +566,12 @@ public class Jiffle {
     /**
      * Gets a copy of the Java source for the runtime class.
      * 
+     * @param model the {@link Jiffle.EvaluationModel}
      * @param scriptInDocs whether to include the original Jiffle script
      *        in the class javadocs
      * 
      * @return source for the runtime class
+     * @throws JiffleException on error creating the runtime source
      */
     public String getRuntimeSource(EvaluationModel model, boolean scriptInDocs)
             throws JiffleException {

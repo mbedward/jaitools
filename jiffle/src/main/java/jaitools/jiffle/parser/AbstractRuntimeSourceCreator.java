@@ -42,20 +42,35 @@ import jaitools.jiffle.Jiffle;
  */
 public abstract class AbstractRuntimeSourceCreator extends ErrorHandlingTreeParser {
 
+    /** StringBuilder for constructor source */
     protected StringBuilder ctorSB;
+    /** StringBuilder for init method source */
     protected StringBuilder initSB;
+    /** StringBuilder for evaluate method source */
     protected StringBuilder evalSB;
+    /** StringBuilder for runtime class field delcarations */
     protected StringBuilder varSB;
+    /** StringBuilder for class field (image scope variable) getter method source */
     protected StringBuilder getterSB;
-    protected FunctionLookup functionLookup;
 
+    /**
+     * Holds details of a local variable created
+     * during source generation.
+     */
     protected class LocalVar {
         String type;
         String name;
     }
 
+    /**
+     * Local variables (e.g. used to implement conditional statements).
+     */
     protected List<LocalVar> localVars = CollectionFactory.list();
     
+    /**
+     * String pair used to pass source elements between rules in
+     * the source creation parser.
+     */
     protected class ExprSrcPair {
 
         String src;
@@ -67,10 +82,14 @@ public abstract class AbstractRuntimeSourceCreator extends ErrorHandlingTreePars
         }
     }
 
+    /**
+     * Constructor called in the ANTLR grammar.
+     *
+     * @param input AST node stream
+     * @param state parser state (not used by Jiffle directly)
+     */
     public AbstractRuntimeSourceCreator(TreeNodeStream input, RecognizerSharedState state) {
         super(input, state);
-
-        functionLookup = new FunctionLookup();
 
         ctorSB = new StringBuilder();
         initSB = new StringBuilder();
@@ -79,36 +98,85 @@ public abstract class AbstractRuntimeSourceCreator extends ErrorHandlingTreePars
         getterSB = new StringBuilder();
     }
     
+    /**
+     * Call the start rule of the source creation parser.
+     *
+     * @param model evaluation model for the runtime class being created
+     * @param runtimeClassName runtime class name
+     * @throws RecognitionException on errors walking the input AST
+     */
     public abstract void start(Jiffle.EvaluationModel model, String runtimeClassName) throws RecognitionException;
 
+    /**
+     * Gets the source for the runtime class constructor.
+     *
+     * @return constructor source
+     */
     public String getCtorSource() {
         return ctorSB.toString();
     }
 
+    /**
+     * Gets the source for the method that initializes runtime class fields
+     * (Jiffle image-scope variables).
+     *
+     * @return init method source
+     */
     public String getInitSource() {
         return initSB.toString();
     }
 
+    /**
+     * Gets the source for the evaluate method.
+     *
+     * @return evaluate method source
+     */
     public String getEvalSource() {
         return evalSB.toString();
     }
     
+    /**
+     * Gets the source for the runtime class field declarations
+     * (Jiffle image scope variables).
+     *
+     * @return runtime class field source
+     */
     public String getVarSource() {
         return varSB.toString();
     }
 
+    /**
+     * Gets the source for the field variable getter method.
+     *
+     * @return getter method source
+     */
     public String getGetterSource() {
         return getterSB.toString();
     }
 
+    /**
+     * Looks up the runtime source for a Jiffle function.
+     *
+     * @param name function name
+     * @param numArgs number of arguments
+     *
+     * @return runtime source
+     */
     protected String getRuntimeExpr(String name, int numArgs) {
         try {
-            return functionLookup.getRuntimeExpr(name, numArgs);
+            return FunctionLookup.getRuntimeExpr(name, numArgs);
         } catch (UndefinedFunctionException ex) {
             throw new IllegalArgumentException(ex);
         }
     }
 
+    /**
+     * Creates a uniquely named, local variable for use in a runtime class method.
+     *
+     * @param type variable type name
+     *
+     * @return variable name
+     */
     protected String makeLocalVar(String type) {
         LocalVar var = new LocalVar();
         var.type = type;
