@@ -30,22 +30,22 @@ package jaitools.jiffle.runtime;
  * @version $Id$
  */
 public class JiffleEvent {
+    /** Holds results and other objects passed by the {@link JiffleExecutor}. */
     protected final JiffleExecutorResult result;
     
     /**
-     * Constructor
+     * Creates a new event.
      * 
-     * @param jobId 
-     * @param jiffle
+     * @param result result object
      */
     public JiffleEvent(JiffleExecutorResult result) {
         this.result = result;
     }
     
     /**
-     * Gets the job result.
+     * Gets the task result.
      * 
-     * @return the job result
+     * @return a result object
      */
     public JiffleExecutorResult getResult() {
         return result;

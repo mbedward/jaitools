@@ -33,8 +33,6 @@ import java.util.List;
  */
 public class NullErrorReporter implements ParsingErrorReporter {
     
-    public NullErrorReporter() {}
-
     public void addError(String errorText) {
         // does nothing
     }

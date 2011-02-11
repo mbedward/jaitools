@@ -24,7 +24,6 @@ package jaitools.jiffle.parser;
  * Constants used by the Jiffle script and tree parsers to identify the level
  * of a parser message (error or warning).
  * 
- * 
  * @see ParserMessage
  * 
  * @author Michael Bedward
@@ -32,6 +31,9 @@ package jaitools.jiffle.parser;
  * @version $Id$
  */
 public enum Level {
+    /** Indicates a warning message. */
     WARNING,
+
+    /** Indicates an error message. */
     ERROR;
 }

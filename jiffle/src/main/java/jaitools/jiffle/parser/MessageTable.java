@@ -36,6 +36,12 @@ public class MessageTable {
 
     private Map<String, List<Message>> errors = CollectionFactory.map();
 
+    /**
+     * Adds a message.
+     * 
+     * @param varName the variable that the message relates to
+     * @param code the message code
+     */
     public void add(String varName, Message code) {
         List<Message> codes = errors.get(varName);
         if (codes == null) {
@@ -45,6 +51,10 @@ public class MessageTable {
         codes.add(code);
     }
     
+    /**
+     * Checks if this table contains any error messages.
+     * @return {@code true} if errors are present, {@code false} otherwise
+     */
     public boolean hasErrors() {
         for (List<Message> codes : errors.values()) {
             for (Message code : codes) {
@@ -55,6 +65,10 @@ public class MessageTable {
         return false;
     }
     
+    /**
+     * Checks if this table contains any warning messages.
+     * @return {@code true} if warnings are present, {@code false} otherwise
+     */
     public boolean hasWarnings() {
         for (List<Message> codes : errors.values()) {
             for (Message code : codes) {
@@ -65,6 +79,12 @@ public class MessageTable {
         return false;
     }
     
+    /**
+     * Gets all messages. The returned {@code Map} has variable names
+     * as keys and {@code Lists} of messages as values.
+     * 
+     * @return all messages keyed by variable name
+     */
     public Map<String, List<Message>> getMessages() {
         return Collections.unmodifiableMap(errors);
     }

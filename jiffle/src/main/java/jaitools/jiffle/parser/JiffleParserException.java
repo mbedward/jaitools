@@ -29,10 +29,20 @@ package jaitools.jiffle.parser;
  */
 public class JiffleParserException extends RuntimeException {
 
+    /**
+     * Creates a new exception.
+     * 
+     * @param thrwbl the base exception
+     */
     public JiffleParserException(Throwable thrwbl) {
         super(thrwbl);
     }
 
+    /**
+     * Creates a new exception.
+     * 
+     * @param msg error message
+     */
     public JiffleParserException(String msg) {
         super(msg);
     }

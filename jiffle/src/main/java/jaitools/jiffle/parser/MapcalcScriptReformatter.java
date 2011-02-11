@@ -27,12 +27,19 @@ package jaitools.jiffle.parser;
  * 
  * @author Michael Bedward
  * @since 1.1
- * @version $Id: $
+ * @version $Id$
  */
 public class MapcalcScriptReformatter {
     
     private static final String NewlinePlusIndent = "\n    ";
 
+    /**
+     * Reformat the input script.
+     * 
+     * @param script a script assumed to be in mapcalc format
+     * 
+     * @return reformatted script
+     */
     public static String reformat(String script) {
         String s = script + "\n";
         

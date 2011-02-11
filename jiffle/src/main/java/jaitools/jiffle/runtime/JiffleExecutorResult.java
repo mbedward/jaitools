@@ -26,17 +26,23 @@ import java.util.Map;
 import jaitools.jiffle.Jiffle;
 
 /**
- * Used by {@link JiffleExecutor} to send the results of an executed
- * task to {@link JiffleEventListener}s.
+ * Used by {@link JiffleExecutor} to send the results of a task to 
+ * {@link JiffleEventListener}s.
  * 
  * @author Michael Bedward
- * @since 1.0
+ * @since 1.1
  * @version $Id$
  */
 public class JiffleExecutorResult {
 
+    /**
+     * Constants to indicate the general status of the task.
+     */
     public static enum Status {
+        /** Task completed successfully. */
         COMPLETED,
+
+        /** Task failed. */
         FAILED;
     }
     
@@ -45,26 +51,54 @@ public class JiffleExecutorResult {
     private final Map<String, RenderedImage> images;
     private final Status status;
 
-    public JiffleExecutorResult(int jobID, Jiffle jiffle, Map<String, RenderedImage> images, boolean completed) {
-        this.jobID = jobID;
+    /**
+     * Creates a new result object.
+     * 
+     * @param taskID the task ID assigned by the executor
+     * @param jiffle the input {@link Jiffle} object
+     * @param images source and destination images keyed by script variable name
+     * @param completed whether the task was completed successfully
+     */
+    public JiffleExecutorResult(int taskID, Jiffle jiffle, Map<String, RenderedImage> images, boolean completed) {
+        this.jobID = taskID;
         this.jiffle = jiffle;
         this.images = images;
         
         status = completed ? Status.COMPLETED : Status.FAILED;
     }
 
+    /**
+     * Gets source and/or destination images that were used.
+     * 
+     * @return the images keyed by script variable name
+     */
     public Map<String, RenderedImage> getImages() {
         return images;
     }
 
+    /**
+     * Gets the {@link Jiffle} object
+     * 
+     * @return the {@link Jiffle} object
+     */
     public Jiffle getJiffle() {
         return jiffle;
     }
 
-    public int getJobID() {
+    /**
+     * Gets the task ID assigned by the executor.
+     * 
+     * @return task ID
+     */
+    public int getTaskID() {
         return jobID;
     }
 
+    /**
+     * Gets the completion status of the task.
+     * 
+     * @return completion status
+     */
     public Status getStatus() {
         return status;
     }

@@ -38,10 +38,6 @@ options {
 package jaitools.jiffle.parser;
 }
 
-@members {
-private FunctionLookup functionLookup = new FunctionLookup();
-}
-
 
 topdown         : function_call
                 ;
@@ -53,7 +49,7 @@ function_call
                 : ^(FUNC_CALL ID expr_list)
                   { 
                       try {
-                          info = functionLookup.getInfo($ID.text, $expr_list.size);
+                          info = FunctionLookup.getInfo($ID.text, $expr_list.size);
                       } catch (UndefinedFunctionException ex) {
                           throw new IllegalStateException("Internal compiler error", ex);
                       }

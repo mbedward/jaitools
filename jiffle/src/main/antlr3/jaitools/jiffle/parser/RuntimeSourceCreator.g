@@ -44,7 +44,6 @@ import jaitools.jiffle.Jiffle;
 @members {
 
 private Jiffle.EvaluationModel model;
-private FunctionLookup functionLookup = new FunctionLookup();
 private Map<String, ExprSrcPair> imageScopeVars = CollectionFactory.orderedMap();
 
 private void createVarSource() {
@@ -173,7 +172,7 @@ expr returns [String src, String priorSrc ]
                       final int n = $expr_list.list.size();
                       StringBuilder sb = new StringBuilder();
                       try {
-                          FunctionInfo info = functionLookup.getInfo($ID.text, n);
+                          FunctionInfo info = FunctionLookup.getInfo($ID.text, n);
                           sb.append(info.getRuntimeExpr()).append("(");
 
                           // Work around Janino not handling vararg methods

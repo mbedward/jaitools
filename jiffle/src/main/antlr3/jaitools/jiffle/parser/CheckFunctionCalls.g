@@ -37,7 +37,6 @@ package jaitools.jiffle.parser;
 }
 
 @members {
-private FunctionLookup functionLookup = new FunctionLookup();
 
 private MessageTable msgTable;
 
@@ -57,7 +56,7 @@ topdown : function_call
 
 function_call   : ^(FUNC_CALL ID expr_list)
                   { 
-                      if (!functionLookup.isDefined($ID.text, $expr_list.size)) {
+                      if (!FunctionLookup.isDefined($ID.text, $expr_list.size)) {
                           msgTable.add($ID.text, Message.UNDEFINED_FUNCTION);
                       }
                   }

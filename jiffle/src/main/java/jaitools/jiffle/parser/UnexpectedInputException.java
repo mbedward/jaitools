@@ -28,6 +28,11 @@ package jaitools.jiffle.parser;
  * @version $Id: HeaderBlockParsingTest.java 1374 2011-02-09 00:33:31Z michael.bedward $
  */
 public class UnexpectedInputException extends RuntimeException {
+    /**
+     * Creates a new excpetion with the given error message.
+     * 
+     * @param msg error message
+     */
     public UnexpectedInputException(String msg) {
         super(msg);
     }

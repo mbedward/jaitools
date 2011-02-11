@@ -30,6 +30,12 @@ package jaitools.jiffle.parser;
  */
 public class UndefinedFunctionException extends Exception {
 
+    /**
+     * Creates a new exception with the unrecognized function name in
+     * the message.
+     * 
+     * @param funcName unrecognized function name
+     */
     public UndefinedFunctionException(String funcName) {
         super("Undefined function: " + funcName);
     }
