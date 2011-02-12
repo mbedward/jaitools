@@ -43,6 +43,7 @@ tokens {
     BRACKETED_EXPR;
     FUNC_CALL;
     IF_CALL;
+    BLOCK;
 
     IMAGE_POS;
     BAND_REF;
@@ -89,24 +90,38 @@ prog            : options_block? var_init_block? statement+ EOF!
                     throw new JiffleParserException("Unexpected input at line " + ex.line);
                 }
 
-options_block   : OPTIONS LCURLY NEWLINE* option* RCURLY NEWLINE* -> option*
+options_block   : OPTIONS LCURLY option* RCURLY -> option*
                 ;
 
 option          : key=ID EQ value=ID SEMI -> ^(JIFFLE_OPTION $key $value)
                 ;
 
-var_init_block  : INIT LCURLY NEWLINE* var_init* RCURLY NEWLINE* -> var_init*
+var_init_block  : INIT LCURLY var_init* RCURLY -> var_init*
                 ;
 
 var_init        : ID EQ expr SEMI -> ^(VAR_INIT ID expr)
                 ;
 
 statement       : expr SEMI!
+                | loop
+                | SEMI!
+                ;
+
+loop            : while_loop statement
+                ;
+
+while_loop      : WHILE^ bracketed_expr block
+                ;
+
+block           : LCURLY statement* RCURLY -> ^(BLOCK statement*)
                 ;
 
 expr            : assign_expr
                 | incdec_expr
                 | cond_expr
+                ;
+
+bracketed_expr  : LPAR expr RPAR -> ^(BRACKETED_EXPR expr)
                 ;
 
 if_call         : IF LPAR expr_list RPAR -> ^(IF_CALL expr_list)
@@ -195,9 +210,6 @@ atom_expr       : ID
                 | func_call
                 | if_call
                 | image_location
-                ;
-
-bracketed_expr  : LPAR expr RPAR -> ^(BRACKETED_EXPR expr)
                 ;
 
 constant        : INT_LITERAL

@@ -37,6 +37,7 @@ options {
 package jaitools.jiffle.parser;
 
 import java.util.Map;
+import java.util.Set;
 import jaitools.CollectionFactory;
 import jaitools.jiffle.Jiffle;
 }
@@ -45,6 +46,8 @@ import jaitools.jiffle.Jiffle;
 
 private Jiffle.EvaluationModel model;
 private Map<String, ExprSrcPair> imageScopeVars = CollectionFactory.orderedMap();
+
+Set<String> declaredVars = CollectionFactory.set();
 
 private void createVarSource() {
     if (imageScopeVars.isEmpty()) return;
@@ -76,6 +79,7 @@ private void createVarSource() {
 
 }
 
+
 start[Jiffle.EvaluationModel model, String className]
 @init {
     this.model = model;
@@ -102,7 +106,8 @@ start[Jiffle.EvaluationModel model, String className]
     initSB.append("} \n");
     evalSB.append("} \n");
 }
-                : var_init* (statement { evalSB.append($statement.src).append(";\n"); } )+
+                : var_init* ( statement { evalSB.append($statement.src).append(";\n"); } 
+                            | while_loop { evalSB.append($while_loop.src).append("\n"); })+
                 ;
 
 var_init        : ^(VAR_INIT ID (e=expr)?)
@@ -116,6 +121,20 @@ var_init        : ^(VAR_INIT ID (e=expr)?)
                 ;
 
 statement returns [String src]
+@init {
+    $src = "";
+}
+                : value_setting_statement { $src = $value_setting_statement.src; }
+                | expr 
+                  {
+                    if ($expr.priorSrc != null) {
+                        $src = $expr.priorSrc;
+                    }
+                    $src = $src + $expr.src;
+                  }
+                ;
+
+value_setting_statement returns [String src]
                 : image_write { $src = $image_write.src; }
                 | var_assignment { $src = $var_assignment.src; }
                 ;
@@ -151,9 +170,6 @@ var_assignment returns [String src]
                            sb.append($expr.priorSrc);
                        }
 
-                       if (!$assignable_var.imageScope) {
-                           sb.append("double ");
-                       }
                        sb.append($assignable_var.src);
                        sb.append(" ").append($assign_op.text).append(" ");
                        sb.append($expr.src);
@@ -161,9 +177,46 @@ var_assignment returns [String src]
                    }
                 ;
 
-assignable_var returns [String src, boolean imageScope]
-                : VAR_IMAGE_SCOPE { $src = $VAR_IMAGE_SCOPE.text; $imageScope = true; }
-                | VAR_PIXEL_SCOPE { $src = $VAR_PIXEL_SCOPE.text; $imageScope = false; }
+assignable_var returns [String src]
+@init {
+    $src = "";
+}
+                : VAR_IMAGE_SCOPE { $src = $VAR_IMAGE_SCOPE.text; }
+                | VAR_PIXEL_SCOPE 
+                  { 
+                    if (!declaredVars.contains($VAR_PIXEL_SCOPE.text)) {
+                        $src = "double ";
+                        declaredVars.add($VAR_PIXEL_SCOPE.text);
+                    }
+                    $src = $src + $VAR_PIXEL_SCOPE.text;
+                  }
+                ;
+
+while_loop returns [String src]
+@init {
+    boolean hasBlock = false;
+    StringBuilder sb = new StringBuilder("while (");
+}
+@after {
+    if (!hasBlock) sb.append(";");
+    $src = sb.toString();
+}
+                :^(WHILE expr {
+                        sb.append(getRuntimeExpr("sign", 1)).append("(");
+                        sb.append($expr.src).append(") != 0) ");
+                        } 
+                  (block {sb.append($block.src); hasBlock = true;} )? )
+                ;
+
+block returns [String src]
+@init {
+    StringBuilder sb = new StringBuilder("{ \n");
+}
+@after {
+    sb.append("} \n");
+    $src = sb.toString();
+}
+                : ^(BLOCK (statement { sb.append($statement.src).append(";\n"); } )*)
                 ;
 
 expr returns [String src, String priorSrc ]

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-11 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  * 
  * This file is part of jai-tools.
  *
@@ -814,7 +814,7 @@ public class Jiffle {
             return (JiffleRuntime) clazz.newInstance();
 
         } catch (Exception ex) {
-            throw new JiffleException("Janino compiler failed", ex);
+            throw new JiffleException("Runtime source error", ex);
         }
     }
     

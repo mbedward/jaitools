@@ -53,6 +53,7 @@ BOOLEAN_TYPE    : 'boolean' ;
 OPTIONS : 'options' ;
 INIT    : 'init' ;
 IF      : 'if' ;
+WHILE   : 'while' ;
 
 /* Operators sorted and grouped by precedence order */
 

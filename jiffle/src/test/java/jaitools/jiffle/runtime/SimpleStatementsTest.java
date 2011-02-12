@@ -244,4 +244,31 @@ public class SimpleStatementsTest extends StatementsTestBase {
                 });
     }
     
+    /**
+     * Repeated assignment to a pixel-scope variable in a script.
+     * Previously, Jiffle was generating runtime source where
+     * the variable would be incorrectly re-declared on second
+     * and later assignment.
+     */
+    @Test
+    public void repeatedSimpleAssign() throws Exception {
+        System.out.println("   repreated assignment to pixel-scope var");
+        String script = 
+                  "n = x(); \n"
+                + "n = n + 1; \n"
+                + "dest = n;" ;
+        
+        Evaluator e = new Evaluator() {
+            int x = 0;
+
+            public double eval(double val) {
+                double value = x + 1;
+                x = (x + 1) % WIDTH;
+                return value;
+            }
+        };
+        
+        testScript(script, e);
+    }
+    
 }

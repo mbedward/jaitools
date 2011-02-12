@@ -84,6 +84,9 @@ var_init        : ^(VAR_INIT ID {imageScopeVars.add($ID.text);} expr?)
 statement       : expr
                 ;
 
+block           : ^(BLOCK statement*)
+                ;
+
 expr_list       : ^(EXPR_LIST expr*)
                 ;
 
@@ -98,6 +101,7 @@ expr            : ^(ASSIGN assign_op ID expr)
                   -> ^(IMAGE_POS VAR_SOURCE[$ID.text] band_specifier? pixel_specifier?)
                   
                 | ^(IF_CALL expr_list)
+                | ^(WHILE expr block?)
                 | ^(QUESTION expr expr expr)
 
                 | ^(SIGN sign_op expr)
