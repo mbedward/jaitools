@@ -20,6 +20,7 @@
 
 package jaitools.imageutils;
 
+import com.vividsolutions.jts.awt.ShapeWriter;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -27,6 +28,8 @@ import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.prep.PreparedGeometry;
 import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory;
+import com.vividsolutions.jts.geom.util.AffineTransformation;
+
 import jaitools.jts.CoordinateSequence2D;
 
 import java.awt.Point;
@@ -237,7 +240,15 @@ public class ROIGeometry extends ROI {
 
     @Override
     public Shape getAsShape() {
-        throw new UnsupportedOperationException("Not implemented");
+        return new ShapeWriter().toShape(theGeom.getGeometry());
+    }
+    
+    /**
+     * Returns the shape as a JTS geometry
+     * @return
+     */
+    public Geometry getAsGeometry() {
+        return theGeom.getGeometry();
     }
 
     @Override
@@ -308,12 +319,15 @@ public class ROIGeometry extends ROI {
 
     @Override
     public ROI transform(AffineTransform at, Interpolation interp) {
-        throw new UnsupportedOperationException("Not implemented");
+        return transform(at);
     }
 
     @Override
     public ROI transform(AffineTransform at) {
-        throw new UnsupportedOperationException("Not implemented");
+        Geometry cloned = (Geometry) theGeom.getGeometry().clone();
+        cloned.apply(new AffineTransformation(at.getScaleX(), at.getShearX(), at.getTranslateX(), 
+                at.getShearY(), at.getScaleY(), at.getTranslateY()));
+        return new ROIGeometry(cloned);
     }
 
     private void setTestRect(double x, double y, double w, double h) {
