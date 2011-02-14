@@ -28,7 +28,7 @@ tree grammar RuntimeSourceCreator;
 
 options {
     superClass = AbstractRuntimeSourceCreator;
-    tokenVocab = JiffleParser;
+    tokenVocab = Jiffle;
     ASTLabelType = CommonTree;
 }
 
@@ -46,8 +46,7 @@ import jaitools.jiffle.Jiffle;
 
 private Jiffle.EvaluationModel model;
 private Map<String, ExprSrcPair> imageScopeVars = CollectionFactory.orderedMap();
-
-Set<String> declaredVars = CollectionFactory.set();
+private Set<String> declaredVars = CollectionFactory.set();
 
 private void createVarSource() {
     if (imageScopeVars.isEmpty()) return;
@@ -106,107 +105,34 @@ start[Jiffle.EvaluationModel model, String className]
     initSB.append("} \n");
     evalSB.append("} \n");
 }
-                : var_init* ( statement { evalSB.append($statement.src).append(";\n"); } 
-                            | while_loop { evalSB.append($while_loop.src).append("\n"); })+
+                : jiffleOption* varDeclaration* (s=statement 
+                        {
+                            evalSB.append(s.src); 
+                            String eol = s.isBlock ? "\n" : ";\n" ;
+                            evalSB.append(eol);
+                        })+
                 ;
 
-var_init        : ^(VAR_INIT ID (e=expr)?)
-                  {
+
+jiffleOption    : ^(JIFFLE_OPTION ID optionValue)
+                ;
+
+
+optionValue     : ID
+                | INT_LITERAL
+                ;
+
+
+varDeclaration  : ^(IMAGE_SCOPE_VAR_DECL VAR_IMAGE_SCOPE e=expression)
+                {
                     ExprSrcPair pair = null;
                     if (e != null) {
                         pair = new ExprSrcPair(e.priorSrc, e.src);
                     }
-                    imageScopeVars.put($ID.text, pair);
-                  }
+                    imageScopeVars.put($VAR_IMAGE_SCOPE.text, pair);
+                }
                 ;
 
-statement returns [String src]
-@init {
-    $src = "";
-}
-                : value_setting_statement { $src = $value_setting_statement.src; }
-                | expr 
-                  {
-                    if ($expr.priorSrc != null) {
-                        $src = $expr.priorSrc;
-                    }
-                    $src = $src + $expr.src;
-                  }
-                ;
-
-value_setting_statement returns [String src]
-                : image_write { $src = $image_write.src; }
-                | var_assignment { $src = $var_assignment.src; }
-                ;
-
-image_write returns [String src]
-                : ^(IMAGE_WRITE VAR_DEST expr)
-                   {
-                       StringBuilder sb = new StringBuilder();
-                       if ($expr.priorSrc != null) {
-                           sb.append($expr.priorSrc);
-                       }
-
-                       switch (model) {
-                           case DIRECT:
-                               sb.append("writeToImage( \"");
-                               sb.append($VAR_DEST.text);
-                               sb.append("\", _x, _y, 0, ");
-                               sb.append($expr.src).append(" )");
-                               break;
-
-                           case INDIRECT:
-                               sb.append("return ").append($expr.src);
-                       }
-                       $src = sb.toString();
-                   }
-                ;
-
-var_assignment returns [String src]
-                : ^(ASSIGN assign_op assignable_var expr)
-                   {
-                       StringBuilder sb = new StringBuilder();
-                       if ($expr.priorSrc != null) {
-                           sb.append($expr.priorSrc);
-                       }
-
-                       sb.append($assignable_var.src);
-                       sb.append(" ").append($assign_op.text).append(" ");
-                       sb.append($expr.src);
-                       $src = sb.toString();
-                   }
-                ;
-
-assignable_var returns [String src]
-@init {
-    $src = "";
-}
-                : VAR_IMAGE_SCOPE { $src = $VAR_IMAGE_SCOPE.text; }
-                | VAR_PIXEL_SCOPE 
-                  { 
-                    if (!declaredVars.contains($VAR_PIXEL_SCOPE.text)) {
-                        $src = "double ";
-                        declaredVars.add($VAR_PIXEL_SCOPE.text);
-                    }
-                    $src = $src + $VAR_PIXEL_SCOPE.text;
-                  }
-                ;
-
-while_loop returns [String src]
-@init {
-    boolean hasBlock = false;
-    StringBuilder sb = new StringBuilder("while (");
-}
-@after {
-    if (!hasBlock) sb.append(";");
-    $src = sb.toString();
-}
-                :^(WHILE expr {
-                        sb.append(getRuntimeExpr("sign", 1)).append("(");
-                        sb.append($expr.src).append(") != 0) ");
-                        } 
-                  (block {sb.append($block.src); hasBlock = true;} )? )
-                ;
 
 block returns [String src]
 @init {
@@ -216,13 +142,154 @@ block returns [String src]
     sb.append("} \n");
     $src = sb.toString();
 }
-                : ^(BLOCK (statement { sb.append($statement.src).append(";\n"); } )*)
+                : ^(BLOCK (s=statement 
+                        {
+                            sb.append(s.src);
+                            String eol = s.isBlock ? "\n" : ";\n" ;
+                            sb.append(eol);
+                        } )* )
                 ;
 
-expr returns [String src, String priorSrc ]
-                : ^(FUNC_CALL ID expr_list)
+
+statement returns [String src, boolean isBlock]
+                : simpleStatement {$src = $simpleStatement.src; $isBlock = false;}
+                | block {$src = $block.src; $isBlock = true;}
+                ;
+
+
+simpleStatement returns [String src]
+@init {
+    $src = "";
+}
+                : imageWrite
+                { $src = $imageWrite.src; }
+
+                | assignmentExpression
+                { $src = $assignmentExpression.src; }
+
+
+                | loop
+                { $src = $loop.src; }
+
+                | expression
+                {
+                    if ($expression.priorSrc != null) {
+                        $src = $expression.priorSrc;
+                    }
+                    $src = $src + $expression.src;
+                }
+                ;
+
+
+imageWrite returns [String src]
+                : ^(IMAGE_WRITE VAR_DEST expression)
+                { 
+                    StringBuilder sb = new StringBuilder();
+                    if ($expression.priorSrc != null) {
+                        sb.append($expression.priorSrc);
+                    }
+
+                    switch (model) {
+                        case DIRECT:
+                            sb.append("writeToImage(");
+                            sb.append("\"").append($VAR_DEST.text).append("\", ");
+                            sb.append("_x, _y, 0, ");
+                            sb.append($expression.src).append(" )");
+                            break;
+
+                        case INDIRECT:
+                            sb.append("return ").append($expression.src);
+                    }
+                    $src = sb.toString();
+                }
+                ;
+
+
+assignmentExpression returns [String src]
+                : ^(assignmentOp assignableVar expression)
+                {
+                    StringBuilder sb = new StringBuilder();
+                    if ($expression.priorSrc != null) {
+                        sb.append($expression.priorSrc);
+                    }
+
+                    sb.append($assignableVar.src);
+                    sb.append(" ").append($assignmentOp.start.getText()).append(" ");
+                    sb.append($expression.src);
+                    $src = sb.toString();
+                }
+                ;
+
+
+assignmentOp    : EQ
+                | TIMESEQ
+                | DIVEQ
+                | MODEQ
+                | PLUSEQ
+                | MINUSEQ
+                ;
+
+
+assignableVar returns [String src]
+@init {
+    $src = "";
+}
+                : VAR_IMAGE_SCOPE 
+                { 
+                    $src = $VAR_IMAGE_SCOPE.text; 
+                }
+
+                | VAR_PIXEL_SCOPE 
+                { 
+                    if (!declaredVars.contains($VAR_PIXEL_SCOPE.text)) {
+                        declaredVars.add($VAR_PIXEL_SCOPE.text);
+                        $src = "double ";
+                    }
+                    $src = $src + $VAR_PIXEL_SCOPE.text;
+                }
+                ;
+
+
+loop returns [String src]
+@init {
+    StringBuilder sb = new StringBuilder();
+}
+@after {
+    $src = sb.toString();
+}
+                : ^(loopType e=expression s=statement)
+                {
+                    sb.append("while (");
+                    sb.append(getRuntimeExpr("sign", 1));
+                    sb.append("(").append(e.src).append(")");
+                    switch( $loopType.start.getType() ) {
+                        case WHILE:
+                            sb.append(" != 0) ");
+                            break;
+
+                        case UNTIL:
+                            sb.append(" == 0) ");
+                            break;
+
+                        default:
+                            throw new RuntimeException("Unknown loop type");
+                    }
+                    sb.append($s.src);
+                    String eol = s.isBlock ? "\n" : ";\n" ;
+                    sb.append(eol);
+                }
+                ;
+
+
+loopType        : WHILE
+                | UNTIL
+                ;
+
+
+expression returns [String src, String priorSrc ]
+                : ^(FUNC_CALL ID expressionList)
                   {
-                      final int n = $expr_list.list.size();
+                      final int n = $expressionList.list.size();
                       StringBuilder sb = new StringBuilder();
                       try {
                           FunctionInfo info = FunctionLookup.getInfo($ID.text, n);
@@ -235,7 +302,7 @@ expr returns [String src, String priorSrc ]
                           }
 
                           int k = 0;
-                          for (String esrc : $expr_list.list) {
+                          for (String esrc : $expressionList.list) {
                               sb.append(esrc);
                               if (++k < n) sb.append(", ");
                           }
@@ -251,9 +318,9 @@ expr returns [String src, String priorSrc ]
                   }
 
 
-                | ^(IF_CALL expr_list)
+                | ^(IF_CALL expressionList)
                   {
-                    List<String> argList = $expr_list.list;
+                    List<String> argList = $expressionList.list;
 
                     String signFn = getRuntimeExpr("sign", 1);
                     StringBuilder sb = new StringBuilder();
@@ -314,86 +381,81 @@ expr returns [String src, String priorSrc ]
 
                   }
 
-                | image_pos { $src = $image_pos.src; }
+                | imagePos { $src = $imagePos.src; }
 
-                | ^(POW e1=expr e2=expr) { $src = "Math.pow(" + e1.src + ", " + e2.src + ")"; }
+                | ^(POW e1=expression e2=expression) { $src = "Math.pow(" + e1.src + ", " + e2.src + ")"; }
 
-                | ^(TIMES e1=expr e2=expr) { $src = e1.src + " * " + e2.src; }
-                | ^(DIV e1=expr e2=expr) { $src = e1.src + " / " + e2.src; }
-                | ^(MOD e1=expr e2=expr) { $src = e1.src + " \% " + e2.src; }
-                | ^(PLUS e1=expr e2=expr) { $src = e1.src + " + " + e2.src; }
-                | ^(MINUS e1=expr e2=expr) { $src = e1.src + " - " + e2.src; }
+                | ^(TIMES e1=expression e2=expression) { $src = e1.src + " * " + e2.src; }
 
-                | ^(SIGN PLUS e1=expr) { $src = "+" + e1.src; }
-                | ^(SIGN MINUS e1=expr) { $src = "-" + e1.src; }
+                | ^(DIV e1=expression e2=expression) { $src = e1.src + " / " + e2.src; }
 
-                | ^(PREFIX INCR e1=expr) { $src = "++" + e1.src; }
-                | ^(PREFIX DECR e1=expr) { $src = "--" + e1.src; }
+                | ^(MOD e1=expression e2=expression) { $src = e1.src + " \% " + e2.src; }
 
-                | ^(POSTFIX INCR e1=expr) { $src = e1.src + "++"; }
-                | ^(POSTFIX DECR e1=expr) { $src = e1.src + "--"; }
+                | ^(PLUS e1=expression e2=expression) { $src = e1.src + " + " + e2.src; }
 
-                | ^(OR e1=expr e2=expr)
+                | ^(MINUS e1=expression e2=expression) { $src = e1.src + " - " + e2.src; }
+
+                | ^(PREFIX NOT e1=expression) {$src = getRuntimeExpr("NOT", 1) + "(" + e1.src + ")";}
+
+                | ^(PREFIX op=prefixOp e1=expression) { $src = $op.src + e1.src; }
+
+                | ^(POSTFIX op=postfixOp e1=expression) { $src = e1.src + $op.src; }
+
+                | ^(OR e1=expression e2=expression)
                   {
                     String fn = getRuntimeExpr("OR", 2);
                     $src = fn + "(" + e1.src + ", " + e2.src + ")";
                   }
 
-                | ^(AND e1=expr e2=expr)
+                | ^(AND e1=expression e2=expression)
                   {
                     String fn = getRuntimeExpr("AND", 2);
                     $src = fn + "(" + e1.src + ", " + e2.src + ")";
                   }
 
-                | ^(XOR e1=expr e2=expr)
+                | ^(XOR e1=expression e2=expression)
                   {
                     String fn = getRuntimeExpr("XOR", 2);
                     $src = fn + "(" + e1.src + ", " + e2.src + ")";
                   }
 
-                | ^(GT e1=expr e2=expr)
+                | ^(GT e1=expression e2=expression)
                   {
                     String fn = getRuntimeExpr("GT", 2);
                     $src = fn + "(" + e1.src + ", " + e2.src + ")";
                   }
 
-                | ^(GE e1=expr e2=expr)
+                | ^(GE e1=expression e2=expression)
                   {
                     String fn = getRuntimeExpr("GE", 2);
                     $src = fn + "(" + e1.src + ", " + e2.src + ")";
                   }
 
-                | ^(LT e1=expr e2=expr)
+                | ^(LT e1=expression e2=expression)
                   {
                     String fn = getRuntimeExpr("LT", 2);
                     $src = fn + "(" + e1.src + ", " + e2.src + ")";
                   }
 
-                | ^(LE e1=expr e2=expr)
+                | ^(LE e1=expression e2=expression)
                   {
                     String fn = getRuntimeExpr("LE", 2);
                     $src = fn + "(" + e1.src + ", " + e2.src + ")";
                   }
 
-                | ^(LOGICALEQ e1=expr e2=expr)
+                | ^(LOGICALEQ e1=expression e2=expression)
                   {
                     String fn = getRuntimeExpr("EQ", 2);
                     $src = fn + "(" + e1.src + ", " + e2.src + ")";
                   }
 
-                | ^(NE e1=expr e2=expr)
+                | ^(NE e1=expression e2=expression)
                   {
                     String fn = getRuntimeExpr("NE", 2);
                     $src = fn + "(" + e1.src + ", " + e2.src + ")";
                   }
 
-                | ^(SIGN NOT e1=expr)
-                  {
-                    String fn = getRuntimeExpr("NOT", 1);
-                    $src = fn + "(" + e1.src + ")";
-                  }
-
-                | ^(BRACKETED_EXPR e1=expr)
+                | ^(PAR e1=expression)
                   { $src = "(" + e1.src + ")"; }
 
                 | VAR_IMAGE_SCOPE
@@ -425,14 +487,16 @@ literal returns [String src]
                 | FLOAT_LITERAL { $src = $FLOAT_LITERAL.text; }
                 ;
 
-expr_list returns [ List<String> list ]
+
+expressionList returns [ List<String> list ]
                 :
                   { $list = CollectionFactory.list(); }
-                  ^(EXPR_LIST ( e=expr {$list.add(e.src);} )*)
+                  ^(EXPR_LIST ( e=expression {$list.add(e.src);} )*)
                 ;
 
-image_pos returns [String src]
-                : ^(IMAGE_POS VAR_SOURCE b=band_specifier? p=pixel_specifier?)
+
+imagePos returns [String src]
+                : ^(IMAGE_POS VAR_SOURCE b=bandSpecifier? p=pixelSpecifier?)
                   {
                     StringBuilder sb = new StringBuilder();
                     sb.append("readFromImage(");
@@ -453,13 +517,15 @@ image_pos returns [String src]
                   }
                 ;
 
-band_specifier returns [String src]
-                : ^(BAND_REF expr)
-                  { $src = $expr.src; }
+
+bandSpecifier returns [String src]
+                : ^(BAND_REF expression)
+                  { $src = $expression.src; }
                 ;
 
-pixel_specifier returns [String src]
-                : ^(PIXEL_REF x=pixel_pos y=pixel_pos)
+
+pixelSpecifier returns [String src]
+                : ^(PIXEL_REF x=pixelPos y=pixelPos)
                   {
                     StringBuilder sb = new StringBuilder();
                     sb.append("(int)(");
@@ -477,34 +543,35 @@ pixel_specifier returns [String src]
                   }
                 ;
 
-pixel_pos returns [ String src, boolean isRelative ]
-                : ^(ABS_POS expr)
+
+pixelPos returns [ String src, boolean isRelative ]
+                : ^(ABS_POS expression)
                   {
-                    $src = $expr.src;
+                    $src = $expression.src;
                     $isRelative = false;
                   }
 
-                | ^(REL_POS expr)
+                | ^(REL_POS expression)
                   {
-                    $src = $expr.src;
+                    $src = $expression.src;
                     $isRelative = true;
                   }
                 ;
 
-assign_op       : EQ
-                | TIMESEQ
-                | DIVEQ
-                | MODEQ
-                | PLUSEQ
-                | MINUSEQ
+
+prefixOp returns [String src]
+                : PLUS { $src = "+"; }
+                | MINUS { $src = "-"; }
+                | incdecOp { $src = $incdecOp.src; }
                 ;
 
-incdec_op       : INCR
-                | DECR
+
+postfixOp returns [String src]
+                : incdecOp { $src = $incdecOp.src; }
                 ;
 
-type_name       : 'int'
-                | 'float'
-                | 'double'
-                | 'boolean'
+
+incdecOp returns [String src]
+                : INCR { $src = "++"; }
+                | DECR { $src = "--"; }
                 ;

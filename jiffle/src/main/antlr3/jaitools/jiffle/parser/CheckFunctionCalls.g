@@ -27,7 +27,7 @@
 tree grammar CheckFunctionCalls;
 
 options {
-    tokenVocab = JiffleParser;
+    tokenVocab = Jiffle;
     ASTLabelType = CommonTree;
     filter = true;
 }
@@ -50,19 +50,19 @@ public CheckFunctionCalls(TreeNodeStream input, MessageTable msgTable) {
 
 }
 
-topdown : function_call
+topdown : functionCall
         ;
 
 
-function_call   : ^(FUNC_CALL ID expr_list)
+functionCall    : ^(FUNC_CALL ID expressionList)
                   { 
-                      if (!FunctionLookup.isDefined($ID.text, $expr_list.size)) {
+                      if (!FunctionLookup.isDefined($ID.text, $expressionList.size)) {
                           msgTable.add($ID.text, Message.UNDEFINED_FUNCTION);
                       }
                   }
                 ;
 
-expr_list returns [int size]
+expressionList returns [int size]
 @init{ $size = 0; }
-                : ^(EXPR_LIST (. {$size++;})*)
+                : ^(EXPR_LIST (. {$size++;} )* )
                 ;

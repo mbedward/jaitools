@@ -17,61 +17,38 @@
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-  
- /**
-  * Transforms tokens representing variables into specific token types.
-  *
-  * @author Michael Bedward
-  */
 
-tree grammar TagVars;
+/**
+ * Checks for valid use of image variables.
+ *
+ * @author Michael Bedward
+ */
+
+tree grammar CheckAssignments;
 
 options {
-    tokenVocab = Jiffle;
     ASTLabelType = CommonTree;
-    output = AST;
-    superClass = ErrorHandlingTreeParser;
+    tokenVocab = Jiffle;
 }
-
 
 @header {
 package jaitools.jiffle.parser;
 
-import java.util.Map;
 import java.util.Set;
 import jaitools.CollectionFactory;
-import jaitools.jiffle.Jiffle;
 }
 
 @members {
 
-private Map<String, Jiffle.ImageRole> imageParams;
-private Set<String> imageScopeVars = CollectionFactory.set();
 private MessageTable msgTable;
+private Set<String> initializedVars = CollectionFactory.set();
 
-public TagVars( TreeNodeStream nodes, Map<String, Jiffle.ImageRole> params, MessageTable msgTable ) {
-    this(nodes);
-
-    if (params == null) {
-        this.imageParams = CollectionFactory.map();
-    } else {
-        this.imageParams = params;
-    }
-
+public CheckAssignments(TreeNodeStream input, MessageTable msgTable) {
+    this(input);
     if (msgTable == null) {
         throw new IllegalArgumentException( "msgTable should not be null" );
     }
     this.msgTable = msgTable;
-}
-
-private boolean isSourceImage( String varName ) {
-    Jiffle.ImageRole role = imageParams.get( varName );
-    return role == Jiffle.ImageRole.SOURCE;
-}
-
-private boolean isDestImage( String varName ) {
-    Jiffle.ImageRole role = imageParams.get( varName );
-    return role == Jiffle.ImageRole.DEST;
 }
 
 }
@@ -81,25 +58,14 @@ start           : jiffleOption* varDeclaration* statement+
                 ;
 
 
-jiffleOption    : ^(JIFFLE_OPTION ID optionValue)
+jiffleOption    : ^(JIFFLE_OPTION ID .)
                 ;
 
 
-optionValue     : ID
-                | INT_LITERAL
-                ;
-
-
-varDeclaration  : ^(IMAGE_SCOPE_VAR_DECL ID expression)
-                {
-                    String varName = $ID.text;
-                    if (isSourceImage(varName) || isDestImage(varName)) {
-                        msgTable.add( varName, Message.IMAGE_VAR_INIT_LHS );
-                    } else {
-                        imageScopeVars.add(varName); 
-                    }
+varDeclaration  : ^(IMAGE_SCOPE_VAR_DECL VAR_IMAGE_SCOPE .)
+                { 
+                    initializedVars.add($VAR_IMAGE_SCOPE.text);
                 }
-                  -> ^(IMAGE_SCOPE_VAR_DECL VAR_IMAGE_SCOPE[varName] expression)
                 ;
 
 
@@ -125,8 +91,26 @@ expressionList  : ^(EXPR_LIST expression*)
 
 assignmentExpression
                 : ^(assignmentOp identifier expression)
-                  -> {isDestImage($identifier.text)}? ^(IMAGE_WRITE identifier expression)
-                  -> ^(assignmentOp identifier expression)
+                { 
+                    String varName = $identifier.start.getText();
+                    if ($identifier.start.getType() == CONSTANT) {
+                        msgTable.add(varName, Message.CONSTANT_LHS);
+
+                    } else if ($identifier.start.getType() == VAR_SOURCE) {
+                        msgTable.add(varName, Message.ASSIGNMENT_TO_SRC_IMAGE); 
+
+                    } else if ($assignmentOp.start.getType() == EQ) {
+                        initializedVars.add(varName);
+
+                    } else {
+                        if ($identifier.start.getType() == VAR_DEST) {
+                            msgTable.add(varName, Message.INVALID_ASSIGNMENT_OP_WITH_DEST_IMAGE);
+
+                        } else if (!initializedVars.contains(varName)) {
+                            msgTable.add(varName, Message.UNINIT_VAR);
+                        }
+                    }
+                }
                 ;
 
 
@@ -139,11 +123,26 @@ assignmentOp    : EQ
                 ;
 
 
-expression
-                : ^(FUNC_CALL ID expressionList)
+identifier      : imageVar
+                | userVar
+                | CONSTANT
+                ;
+
+
+imageVar        : VAR_SOURCE
+                | VAR_DEST
+                ;
+
+userVar         : VAR_IMAGE_SCOPE
+                | VAR_PIXEL_SCOPE
+                ;
+
+
+expression      : ^(FUNC_CALL ID expressionList)
                 | ^(IF_CALL expressionList)
                 | ^(QUESTION expression expression expression)
-                | ^(IMAGE_POS identifier bandSpecifier? pixelSpecifier?)
+                | ^(IMAGE_WRITE . expression)
+                | ^(IMAGE_POS . bandSpecifier? pixelSpecifier?)
                 | ^(logicalOp expression expression)
                 | ^(arithmeticOp expression expression)
                 | ^(POW expression expression)
@@ -151,16 +150,16 @@ expression
                 | ^(POSTFIX incdecOp expression)
                 | ^(PAR expression)
                 | literal
-                | identifier
-                ;
+                | imageVar
+                | CONSTANT
 
-
-identifier      : ID
-                  -> {isSourceImage($ID.text)}? VAR_SOURCE[$ID.text]
-                  -> {isDestImage($ID.text)}? VAR_DEST[$ID.text]
-                  -> {imageScopeVars.contains($ID.text)}? VAR_IMAGE_SCOPE[$ID.text]
-                  -> {ConstantLookup.isDefined($ID.text)}? CONSTANT[$ID.text]
-                  -> VAR_PIXEL_SCOPE[$ID.text]
+                | userVar
+                {
+                    String varName = $userVar.start.getText();
+                    if (!initializedVars.contains(varName)) {
+                        msgTable.add(varName, Message.UNINIT_VAR);
+                    }
+                }
                 ;
 
 
@@ -211,7 +210,7 @@ pixelPos        : ^(ABS_POS expression)
 
 literal         : INT_LITERAL
                 | FLOAT_LITERAL
-                | TRUE -> FLOAT_LITERAL["1.0"]
-                | FALSE -> FLOAT_LITERAL["0.0"]
-                | NULL -> CONSTANT["NaN"]
+                | TRUE
+                | FALSE
+                | NULL
                 ;

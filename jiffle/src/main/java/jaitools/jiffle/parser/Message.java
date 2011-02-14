@@ -39,6 +39,12 @@ public enum Message {
             "Cannot assign a value to a non-destination image"),
     
     /**
+     * Error: constant on the left hand side of an assignment.
+     */
+    CONSTANT_LHS(Level.ERROR,
+            "Constant on the left hand side of an expression"),
+    
+    /**
      * Warning: an image variable parameter was passed to Jiffle but not 
      * used in the script.
      */

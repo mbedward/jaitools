@@ -49,8 +49,7 @@ public abstract class ParserTestBase {
         CommonTokenStream tokens = new CommonTokenStream(lexer);
 
         JiffleParser parser = new JiffleParser(tokens);
-        JiffleParser.prog_return r = parser.prog();
-        CommonTree tree = (CommonTree) r.getTree();
+        CommonTree tree = (CommonTree) parser.prog().getTree();
 
         CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
         nodes.setTokenStream(tokens);

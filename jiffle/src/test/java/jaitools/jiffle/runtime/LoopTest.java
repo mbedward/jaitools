@@ -52,4 +52,25 @@ public class LoopTest extends StatementsTestBase {
         
         testScript(script, e);
     }
+    
+    @Test
+    public void whileLoopWithSimpleStatement() throws Exception {
+        System.out.println("   while loop with simple statement");
+        String script = 
+                  "n = 0; \n"
+                + "while (n < x()) n++; \n"
+                + "dest = n;" ;
+        
+        Evaluator e = new Evaluator() {
+            int x = 0;
+            
+            public double eval(double val) {
+                int xx = x;
+                x = (x + 1) % WIDTH;
+                return xx;
+            }
+        };
+        
+        testScript(script, e);
+    }
 }

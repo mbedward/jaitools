@@ -34,7 +34,7 @@ import java.util.Properties;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
-import org.antlr.runtime.tree.BufferedTreeNodeStream;
+import org.antlr.runtime.Token;
 import org.antlr.runtime.tree.CommonTree;
 import org.antlr.runtime.tree.CommonTreeNodeStream;
 
@@ -42,11 +42,8 @@ import org.codehaus.janino.SimpleCompiler;
 
 import jaitools.CollectionFactory;
 import jaitools.jiffle.parser.AbstractRuntimeSourceCreator;
+import jaitools.jiffle.parser.CheckAssignments;
 import jaitools.jiffle.parser.CheckFunctionCalls;
-import jaitools.jiffle.parser.CheckImagePos;
-import jaitools.jiffle.parser.CheckImageUse;
-import jaitools.jiffle.parser.CheckUninitVars;
-import jaitools.jiffle.parser.ConvertTernaryExpr;
 import jaitools.jiffle.parser.DeferredErrorReporter;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
@@ -56,13 +53,11 @@ import jaitools.jiffle.parser.MessageTable;
 import jaitools.jiffle.parser.OptionsLexer;
 import jaitools.jiffle.parser.ParsingErrorReporter;
 import jaitools.jiffle.parser.RuntimeSourceCreator;
-import jaitools.jiffle.parser.TagConstants;
-import jaitools.jiffle.parser.TagProxyFunctions;
 import jaitools.jiffle.parser.TagVars;
+import jaitools.jiffle.parser.TransformExpressions;
 import jaitools.jiffle.runtime.JiffleDirectRuntime;
 import jaitools.jiffle.runtime.JiffleIndirectRuntime;
 import jaitools.jiffle.runtime.JiffleRuntime;
-import org.antlr.runtime.Token;
 
 /**
  * Compiles scripts and generates Java sources and executable bytecode for
@@ -258,7 +253,6 @@ public class Jiffle {
 
     private String theScript;
     private CommonTree primaryAST;
-    private CommonTree transformedAST;
     private CommonTree finalAST;
     private CommonTokenStream tokens;
     private ParsingErrorReporter errorReporter;
@@ -474,16 +468,9 @@ public class Jiffle {
         
         clearCompiledObjects();
         buildPrimaryAST();
-        if (!checkPrimaryASTSemantics()) {
+        if (!checkFunctionCalls() || !transformAndCheckVars()) {
             throw new JiffleException(getErrorString());
         }
-
-        transformTree();
-        if (!checkTransformedASTSemantics()) {
-            throw new JiffleException(getErrorString());
-        }
-
-        finalAST = transformedAST;
     }
     
     /**
@@ -641,37 +628,13 @@ public class Jiffle {
             tokens = new CommonTokenStream(lexer);
 
             JiffleParser parser = new JiffleParser(tokens);
-            JiffleParser.prog_return r = parser.prog();
-            primaryAST = (CommonTree) r.getTree();
+            primaryAST = (CommonTree) parser.prog().getTree();
 
-        } catch (RecognitionException re) {
+        } catch (RecognitionException ex) {
             throw new JiffleException(
                     "error in script at or around line:" +
-                    re.line + " col:" + re.charPositionInLine);
+                    ex.line + " col:" + ex.charPositionInLine);
         }
-    }
-
-    /**
-     * Checks for semantic errors in the AST built by {@link #buildPrimaryAST()}.
-     *
-     * @return {@code true} if no errors; {@code false} otherwise
-     */
-    private boolean checkPrimaryASTSemantics() {
-        if (!checkFunctionCalls() ||
-            !checkNeighbourRefs() ||
-            !checkImageUse()) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private boolean checkTransformedASTSemantics() {
-        if (!checkUninitVars()) {
-            return false;
-        }
-
-        return true;
     }
 
     /**
@@ -690,88 +653,41 @@ public class Jiffle {
     }
 
     /**
-     * Checks that references to source and destination images in the AST built by
-     * {@link #buildAST()} are valid.
-     *
+     * Transforms variable tokens to specific types and does some basic
+     * error checking.
+     *  
      * @return {@code true} if no errors; {@code false} otherwise
+     * @throws JiffleException on unintercepted parser errors
      */
-    private boolean checkImageUse() {
-        CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
-        nodes.setTokenStream(tokens);
-        CheckImageUse check = new CheckImageUse(nodes, imageParams, msgTable);
-
-        check.downup(primaryAST);
-        return !msgTable.hasErrors();
-    }
-
-    /**
-     * Checks that image neighbourhood references in the AST built by
-     * {@link #buildAST()} are valid.
-     *
-     * @return {@code true} if no errors; {@code false} otherwise
-     */
-    private boolean checkNeighbourRefs() {
-        CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
-        nodes.setTokenStream(tokens);
-        CheckImagePos check = new CheckImagePos(nodes, imageParams, msgTable);
-
-        check.downup(primaryAST);
-        return !msgTable.hasErrors();
-    }
-
-    /**
-     * Rewrites the primary AST in steps to produce an AST suitable for
-     * runtime source generation.
-     *
-     * @throws JiffleException if any unrecoverable tree parser errors occur
-     */
-    private void transformTree() throws JiffleException {
-        CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
-        nodes.setTokenStream(tokens);
-        CommonTree tree = primaryAST;
-
+    private boolean transformAndCheckVars() throws JiffleException {
         try {
-            ConvertTernaryExpr ternary = new ConvertTernaryExpr(nodes);
-            tree = (CommonTree) ternary.downup(tree);
+            CommonTree tree = primaryAST;
+
+            CommonTreeNodeStream nodes = new CommonTreeNodeStream(tree);
+            nodes.setTokenStream(tokens);
+            TagVars tag = new TagVars(nodes, imageParams, msgTable);
+            tree = (CommonTree) tag.start().getTree();
+            if (msgTable.hasErrors()) return false;
 
             nodes = new CommonTreeNodeStream(tree);
             nodes.setTokenStream(tokens);
 
-            TagConstants constants = new TagConstants(nodes);
-            tree = (CommonTree) constants.downup(tree);
+            CheckAssignments check = new CheckAssignments(nodes, msgTable);
+            check.start();
+            if (msgTable.hasErrors()) return false;
 
             nodes = new CommonTreeNodeStream(tree);
-            nodes.setTokenStream(tokens);
+            TransformExpressions trexpr = new TransformExpressions(nodes);
+            tree = (CommonTree) trexpr.start().getTree();
 
-            TagProxyFunctions proxyFn = new TagProxyFunctions(nodes);
-            tree = (CommonTree) proxyFn.downup(tree);
+            finalAST = tree;
+            return true;
 
-            nodes = new CommonTreeNodeStream(tree);
-            nodes.setTokenStream(tokens);
-
-            TagVars vars = new TagVars(nodes, imageParams);
-            tree = (CommonTree) vars.start().getTree();
-            
         } catch (RecognitionException ex) {
             throw new JiffleException(
-                    "Error in preparing the program tree for runtime source generation");
+                    "error in script at or around line:" +
+                    ex.line + " col:" + ex.charPositionInLine);
         }
-
-        transformedAST = tree;
-    }
-
-    /**
-     * Checks for initialization of variables before use in the transformed AST.
-     *
-     * @return {@code true} if no errors; {@code false} otherwise
-     */
-    private boolean checkUninitVars() {
-        CommonTreeNodeStream nodes = new CommonTreeNodeStream(transformedAST);
-        nodes.setTokenStream(tokens);
-
-        CheckUninitVars check = new CheckUninitVars(nodes, msgTable);
-        check.downup(transformedAST);
-        return !msgTable.hasErrors();
     }
 
     /**
@@ -890,7 +806,7 @@ public class Jiffle {
     private Map<SourceElement, String> astToJava(EvaluationModel model, String className)
             throws JiffleException {
 
-        BufferedTreeNodeStream nodes = new BufferedTreeNodeStream(finalAST);
+        CommonTreeNodeStream nodes = new CommonTreeNodeStream(finalAST);
         nodes.setTokenStream(tokens);
         AbstractRuntimeSourceCreator creator = new RuntimeSourceCreator(nodes);
         ParsingErrorReporter er = new DeferredErrorReporter();

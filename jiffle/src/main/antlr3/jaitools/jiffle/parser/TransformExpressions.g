@@ -19,12 +19,13 @@
  */
   
  /**
-  * Transforms tokens representing variables into specific token types.
+  * Converts calls to proxy functions into the associated variables and
+  * converts ternary conditional expressions to if calls.
   *
   * @author Michael Bedward
   */
 
-tree grammar TagVars;
+tree grammar TransformExpressions;
 
 options {
     tokenVocab = Jiffle;
@@ -36,44 +37,6 @@ options {
 
 @header {
 package jaitools.jiffle.parser;
-
-import java.util.Map;
-import java.util.Set;
-import jaitools.CollectionFactory;
-import jaitools.jiffle.Jiffle;
-}
-
-@members {
-
-private Map<String, Jiffle.ImageRole> imageParams;
-private Set<String> imageScopeVars = CollectionFactory.set();
-private MessageTable msgTable;
-
-public TagVars( TreeNodeStream nodes, Map<String, Jiffle.ImageRole> params, MessageTable msgTable ) {
-    this(nodes);
-
-    if (params == null) {
-        this.imageParams = CollectionFactory.map();
-    } else {
-        this.imageParams = params;
-    }
-
-    if (msgTable == null) {
-        throw new IllegalArgumentException( "msgTable should not be null" );
-    }
-    this.msgTable = msgTable;
-}
-
-private boolean isSourceImage( String varName ) {
-    Jiffle.ImageRole role = imageParams.get( varName );
-    return role == Jiffle.ImageRole.SOURCE;
-}
-
-private boolean isDestImage( String varName ) {
-    Jiffle.ImageRole role = imageParams.get( varName );
-    return role == Jiffle.ImageRole.DEST;
-}
-
 }
 
 
@@ -81,25 +44,11 @@ start           : jiffleOption* varDeclaration* statement+
                 ;
 
 
-jiffleOption    : ^(JIFFLE_OPTION ID optionValue)
+jiffleOption    : ^(JIFFLE_OPTION .+)
                 ;
 
 
-optionValue     : ID
-                | INT_LITERAL
-                ;
-
-
-varDeclaration  : ^(IMAGE_SCOPE_VAR_DECL ID expression)
-                {
-                    String varName = $ID.text;
-                    if (isSourceImage(varName) || isDestImage(varName)) {
-                        msgTable.add( varName, Message.IMAGE_VAR_INIT_LHS );
-                    } else {
-                        imageScopeVars.add(varName); 
-                    }
-                }
-                  -> ^(IMAGE_SCOPE_VAR_DECL VAR_IMAGE_SCOPE[varName] expression)
+varDeclaration  : ^(IMAGE_SCOPE_VAR_DECL id=. expression)
                 ;
 
 
@@ -119,14 +68,14 @@ loopCondition   : expression
                 ;
 
 
-expressionList  : ^(EXPR_LIST expression*)
+expressionList returns [int size]
+@init { $size = 0; }
+                : ^(EXPR_LIST (expression {$size++;} )* )
                 ;
 
 
 assignmentExpression
                 : ^(assignmentOp identifier expression)
-                  -> {isDestImage($identifier.text)}? ^(IMAGE_WRITE identifier expression)
-                  -> ^(assignmentOp identifier expression)
                 ;
 
 
@@ -141,8 +90,24 @@ assignmentOp    : EQ
 
 expression
                 : ^(FUNC_CALL ID expressionList)
+                { 
+                    FunctionInfo info = null;
+                    try {
+                        info = FunctionLookup.getInfo($ID.text, $expressionList.size); 
+                    } catch (UndefinedFunctionException ex) {
+                        throw new RuntimeException("Internal parser error: undefined function in TagProxyFunctions");
+                    }
+                }
+                  -> {info.isProxy()}? VAR_PROVIDED[ info.getRuntimeExpr() ]
+                  -> ^(FUNC_CALL ID expressionList)
+                    
+
+                | ^(QUESTION e1=expression e2=expression e3=expression) 
+                  -> ^(IF_CALL ^(EXPR_LIST $e1 $e2 $e3))
+
+
                 | ^(IF_CALL expressionList)
-                | ^(QUESTION expression expression expression)
+                | ^(IMAGE_WRITE identifier expression)
                 | ^(IMAGE_POS identifier bandSpecifier? pixelSpecifier?)
                 | ^(logicalOp expression expression)
                 | ^(arithmeticOp expression expression)
@@ -155,12 +120,11 @@ expression
                 ;
 
 
-identifier      : ID
-                  -> {isSourceImage($ID.text)}? VAR_SOURCE[$ID.text]
-                  -> {isDestImage($ID.text)}? VAR_DEST[$ID.text]
-                  -> {imageScopeVars.contains($ID.text)}? VAR_IMAGE_SCOPE[$ID.text]
-                  -> {ConstantLookup.isDefined($ID.text)}? CONSTANT[$ID.text]
-                  -> VAR_PIXEL_SCOPE[$ID.text]
+identifier      : VAR_SOURCE
+                | VAR_DEST
+                | VAR_IMAGE_SCOPE
+                | VAR_PIXEL_SCOPE
+                | CONSTANT
                 ;
 
 
@@ -211,7 +175,7 @@ pixelPos        : ^(ABS_POS expression)
 
 literal         : INT_LITERAL
                 | FLOAT_LITERAL
-                | TRUE -> FLOAT_LITERAL["1.0"]
-                | FALSE -> FLOAT_LITERAL["0.0"]
-                | NULL -> CONSTANT["NaN"]
+                | TRUE
+                | FALSE
+                | NULL
                 ;

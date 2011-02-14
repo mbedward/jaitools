@@ -33,7 +33,7 @@ import org.junit.Test;
  * 
  * @author Michael Bedward
  * @since 1.1
- * @version $Id: $
+ * @version $Id$
  */
 public class OptionsLexerTest {
 
