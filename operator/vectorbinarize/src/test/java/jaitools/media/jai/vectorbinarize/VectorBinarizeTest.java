@@ -28,6 +28,8 @@ import jaitools.jts.CoordinateSequence2D;
 
 import java.awt.Dimension;
 import java.awt.image.Raster;
+
+import javax.imageio.ImageIO;
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
@@ -47,7 +49,7 @@ import static org.junit.Assert.*;
 public class VectorBinarizeTest {
     
     private static final GeometryFactory gf = new GeometryFactory();
-    private static final int TILE_WIDTH = 64;
+    private static final int TILE_WIDTH = 8;
     
     WKTReader reader = new WKTReader(gf);
     
@@ -58,7 +60,7 @@ public class VectorBinarizeTest {
     
     @Test
     public void rectanglePolyAcrossTiles() throws Exception {
-        final int margin = 10;
+        final int margin = 3;
         final int Ntiles = 3;
         
         int minx = margin;
@@ -82,6 +84,9 @@ public class VectorBinarizeTest {
         
         RenderedOp dest = JAI.create("VectorBinarize", pb);
         
+        // uncomment for debugging purposes, remember to comment back before committing
+        // ImageIO.write(dest, "png", new java.io.File("/tmp/binarized.png"));
+        
         CoordinateSequence2D testPointCS = new CoordinateSequence2D(1);
         Point testPoint = gf.createPoint(testPointCS);
         
@@ -93,8 +98,10 @@ public class VectorBinarizeTest {
                     for (int x = tile.getMinX(), ix = 0; ix < tile.getWidth(); x++, ix++) {
                         testPointCS.setX(0, x);
                         testPoint.geometryChanged();
-                        int expected = poly.contains(testPoint) ? 1 : 0;
-                        assertEquals(expected, tile.getSample(x, y, 0));
+                        int expected = poly.intersects(testPoint) ? 1 : 0;
+                        assertEquals("Failed test at position " + x + ", " + y + ", " +
+                        		"expected " + expected + " but got " + tile.getSample(x, y, 0), 
+                        		expected, tile.getSample(x, y, 0));
                     }
                 }
             }

@@ -23,6 +23,11 @@ package jaitools.media.jai.vectorbinarize;
 import jaitools.imageutils.PixelCoordType;
 import jaitools.jts.CoordinateSequence2D;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Shape;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
 import java.awt.image.SampleModel;
@@ -34,6 +39,7 @@ import javax.media.jai.ImageLayout;
 import javax.media.jai.RasterFactory;
 import javax.media.jai.SourcelessOpImage;
 
+import com.vividsolutions.jts.awt.ShapeWriter;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
@@ -168,20 +174,32 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
         } else if (geom.disjoint(testRect)) {
             return getBlankTile();
         } else {
+            // use java2d to quickly binarize the geometry
             WritableRaster raster = RasterFactory.createWritableRaster(
                     sampleModel, new java.awt.Point(0, 0));
-            
-            // can't use graphics2d rendering here since we miss LiteShape from GeoTools here...
-            double delta = (coordType == PixelCoordType.CENTER ? 0.5 : 0.0);
-            for (int y = minY, iy = 0; iy < raster.getHeight(); y++, iy++) {
-                testPointCS.setY(0, y + delta);
-                for (int x = minX, ix = 0; ix < raster.getWidth(); x++, ix++) {
-                    testPointCS.setX(0, x + delta);
-                    testPoint.geometryChanged();
-                    raster.setSample(ix, iy, 0, (geom.contains(testPoint) ? 1 : 0));
+            BufferedImage bi = new BufferedImage(colorModel, raster, false, null);
+            Graphics2D graphics = null;
+            try {
+                graphics = bi.createGraphics();
+                Shape shape = new ShapeWriter().toShape(geom.getGeometry());
+                
+                // translate the geometry to compensate for the tile origin at 0,0
+                graphics.setTransform(AffineTransform.getTranslateInstance(-minX, -minY));
+                
+                // fill the bg 
+                graphics.setColor(Color.BLACK);
+                graphics.fill(raster.getBounds());
+                
+                // draw the shape
+                graphics.setColor(Color.WHITE);
+                graphics.fill(shape);
+                graphics.draw(shape);
+            } finally {
+                if(graphics != null) {
+                    graphics.dispose();
                 }
             }
-            
+
             return raster;
         }
     }
