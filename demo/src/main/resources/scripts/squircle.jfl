@@ -22,7 +22,7 @@ dx = 2 * M_PI * (0.5 - x() / w);
 dy = 2 * M_PI * (0.5 - y() / h); 
 
 /* The variable 'result' represents the
- * destination image (ou can use any name
+ * destination image (you can use any name
  * you like in your own scripts).
  */
 result = sqrt(abs(cos(dx) + cos(dy)));
