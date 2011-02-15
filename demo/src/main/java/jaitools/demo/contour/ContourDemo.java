@@ -1,16 +1,26 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright 2011 Michael Bedward
+ *
+ * This file is part of jai-tools.
+ *
+ * jai-tools is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * jai-tools is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 package jaitools.demo.contour;
 
 import com.vividsolutions.jts.geom.LineString;
-
-import jaitools.demo.DemoImages;
-import jaitools.swing.JTSFrame;
-import jaitools.media.jai.contour.ContourDescriptor;
-import jaitools.swing.ImageFrame;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -22,18 +32,21 @@ import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
 
+import jaitools.demo.DemoImages;
+import jaitools.demo.ImageChoice;
+import jaitools.media.jai.contour.ContourDescriptor;
+import jaitools.swing.ImageFrame;
+import jaitools.swing.JTSFrame;
 
 /**
+ * Demonstrates the Contour operator. 
  *
- * @author michael
+ * @author Michael Bedward
+ * @since 1.1
+ * @version $Id$
  */
 public class ContourDemo {
     
-    /**
-     *
-     * @param args
-     * @throws Exception
-     */
     public static void main(String[] args) throws Exception {
         JAI.setDefaultTileSize(new Dimension(512, 512));
         ContourDemo me = new ContourDemo();
@@ -42,7 +55,7 @@ public class ContourDemo {
     
     private void doDemo() throws Exception {
         RenderedImage image = 
-                DemoImages.get(DemoImages.Choice.SQUIRCLE, 400, 400);
+                DemoImages.get(ImageChoice.SQUIRCLE, 400, 400);
 
         List<Double> contourIntervals = new ArrayList<Double>();
         

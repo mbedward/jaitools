@@ -27,6 +27,7 @@ import java.util.Map;
 import javax.media.jai.TiledImage;
 
 import jaitools.CollectionFactory;
+import jaitools.demo.ImageChoice;
 import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
 import jaitools.jiffle.runtime.JiffleDirectRuntime;
@@ -37,7 +38,7 @@ import jaitools.swing.ImageFrame;
  * Jiffle script.
  * 
  * @author Michael Bedward
- * @since 1.0
+ * @since 1.1
  * @version $Id$
  */
 public class DirectRuntimeDemo extends JiffleDemoBase {
@@ -52,7 +53,7 @@ public class DirectRuntimeDemo extends JiffleDemoBase {
      */
     public static void main(String[] args) throws Exception {
         DirectRuntimeDemo demo = new DirectRuntimeDemo();
-        File f = demo.getScriptFile(args, "/scripts/ripple.jfl");
+        File f = JiffleDemoHelper.getScriptFile(args, ImageChoice.RIPPLES);
         demo.compileAndRun(f);
     }
 

@@ -30,6 +30,7 @@ import javax.media.jai.KernelJAI;
 import javax.media.jai.ParameterBlockJAI;
 
 import jaitools.demo.DemoImages;
+import jaitools.demo.ImageChoice;
 import jaitools.imageutils.ImageUtils;
 import jaitools.media.jai.kernel.KernelFactory;
 import jaitools.numeric.Statistic;
@@ -57,7 +58,7 @@ public class KernelStatsDemo {
     }
 
     private void demo() {
-        RenderedImage image = DemoImages.get(DemoImages.Choice.INTERFERENCE, 300, 300);
+        RenderedImage image = DemoImages.get(ImageChoice.INTERFERENCE, 300, 300);
         ImageFrame frame = new ImageFrame(image, "KernelStats: source image");
         frame.setVisible(true);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -27,6 +27,7 @@ import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
 
 import jaitools.demo.DemoImages;
+import jaitools.demo.ImageChoice;
 import jaitools.imageutils.ImageUtils;
 import jaitools.media.jai.regionalize.Region;
 import jaitools.media.jai.regionalize.RegionalizeDescriptor;
@@ -57,7 +58,7 @@ public class RegionalizeDemo {
      * has been created the receiveImage method will be called.
      */
     public void demo() {
-        RenderedImage image = DemoImages.get(DemoImages.Choice.CHESSBOARD, 320, 320);
+        RenderedImage image = DemoImages.get(ImageChoice.CHESSBOARD, 320, 320);
         ImageFrame frame;
         frame = new ImageFrame(image, "Regionalize demo: test image");
         frame.setVisible(true);

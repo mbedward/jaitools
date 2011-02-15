@@ -24,6 +24,7 @@ import java.io.File;
 import java.util.Map;
 
 import jaitools.CollectionFactory;
+import jaitools.demo.ImageChoice;
 import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.runtime.JiffleExecutor;
 import jaitools.jiffle.runtime.JiffleExecutorResult;
@@ -49,7 +50,7 @@ import jaitools.swing.ImageFrame;
  * using a {@link jaitools.jiffle.runtime.JiffleProgressListener}.
  * 
  * @author Michael Bedward
- * @since 1.0
+ * @since 1.1
  * @version $Id$
  */
 public class JiffleExecutorDemo extends JiffleDemoBase {
@@ -66,7 +67,7 @@ public class JiffleExecutorDemo extends JiffleDemoBase {
      */
     public static void main(String[] args) throws Exception {
         JiffleExecutorDemo demo = new JiffleExecutorDemo();
-        File f = demo.getScriptFile(args, "/scripts/ripple.jfl");
+        File f = JiffleDemoHelper.getScriptFile(args, ImageChoice.RIPPLES);
         demo.compileAndRun(f);        
     }
 

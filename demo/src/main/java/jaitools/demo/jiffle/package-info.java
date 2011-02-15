@@ -19,8 +19,7 @@
  */
 
 /**
- * Example application for the jiffle scripting language demonstrating how to
- * run a script with the interpreter class.
+ * Example applications for the Jiffle scripting language. 
  */
 
 package jaitools.demo.jiffle;

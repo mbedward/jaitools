@@ -19,6 +19,7 @@
  */
 package jaitools.demo.jiffle;
 
+import jaitools.demo.ImageChoice;
 import java.io.File;
 
 import jaitools.jiffle.JiffleBuilder;
@@ -34,7 +35,7 @@ import jaitools.swing.ImageFrame;
  * processing results.
  *
  * @author Michael Bedward
- * @since 1.0
+ * @since 1.1
  * @version $Id$
  */
 public class JiffleBuilderDemo extends JiffleDemoBase {
@@ -46,8 +47,8 @@ public class JiffleBuilderDemo extends JiffleDemoBase {
      */
     public static void main(String[] args) throws Exception {
         JiffleBuilderDemo me = new JiffleBuilderDemo();
-        File f = me.getScriptFile(args, "/scripts/ripple.jfl");
-        String script = me.readScriptFile(f);
+        File f = JiffleDemoHelper.getScriptFile(args, ImageChoice.RIPPLES);
+        String script = JiffleDemoHelper.readScriptFile(f);
         JiffleBuilder jb = new JiffleBuilder();
         jb.script(script).dest("result", WIDTH, HEIGHT).getRuntime().evaluateAll(null);
 

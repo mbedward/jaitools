@@ -25,7 +25,6 @@ import java.io.File;
 import java.net.URL;
 
 import jaitools.jiffle.JiffleBuilder;
-import jaitools.swing.ImageFrame;
 
 /**
  * Serves images to the demo applications. Each image is generated from
@@ -37,32 +36,6 @@ import jaitools.swing.ImageFrame;
  */
 public class DemoImages {
 
-    /** Available images */
-    public static enum Choice {
-        /**
-         * Chessboard pattern with 0 and 1 values.
-         */
-        CHESSBOARD("chessboard"),
-        /**
-         * Complex interference pattern.
-         */
-        INTERFERENCE("interference"),
-        /**
-         * Concentric, sinusoidal ripples.
-         */
-        RIPPLES("ripple"),
-        /**
-         * Sort of a square circle thing.
-         */
-        SQUIRCLE("squircle");
-
-        String name;
-
-        private Choice(String name) {
-            this.name = name;
-        }
-    }
-
     /**
      * Gets an image.
      *
@@ -72,9 +45,9 @@ public class DemoImages {
      *
      * @return the requested image
      */
-    public static RenderedImage get(Choice choice, int width, int height) {
+    public static RenderedImage get(ImageChoice choice, int width, int height) {
         try {
-            String name = "/scripts/" + choice.name + ".jfl";
+            String name = "/scripts/" + choice + ".jfl";
             URL url = DemoImages.class.getResource(name);
             File file = new File(url.toURI());
 
