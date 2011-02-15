@@ -20,6 +20,23 @@
 
 /**
  * Example applications for the Jiffle scripting language. 
+ * <p>
+ * To see the various example scripts in action run the
+ * {@code JiffleDemo} program. It displays a script in a
+ * text window and the image produced by it in an adjacent
+ * window.
+ * <p>
+ * {@code JiffleBuilderDemo} shows how to compile and run scripts
+ * with {@code JiffleBuilder}. This is the easiest way to get
+ * started.
+ * <p>
+ * {@code DirectRuntimeDemo} demonstrates creating a Jiffle object
+ * directly, compiling a script, retrieving a runtime object and
+ * the using this to process images.
+ * <p>
+ * {@code JiffleExecutorDemo} show how to run Jiffle objects using
+ * a multi-threaded, event-driven executor service. This is especially
+ * useful for computationally intensive tasks.
  */
 
 package jaitools.demo.jiffle;
