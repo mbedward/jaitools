@@ -92,7 +92,7 @@ import jaitools.jiffle.runtime.JiffleDirectRuntime;
  * jb.dest("dest", fooImg.getWidth(), fooImg.getHeight());
  *
  * // Run the script
- * jb.getRuntime().evaluateAll(null);
+ * jb.getRuntime().run();
  *
  * // Since we asked the builder to create the destination image we
  * // now need to get a reference to it
@@ -103,8 +103,7 @@ import jaitools.jiffle.runtime.JiffleDirectRuntime;
  * <pre><code>
  * String script = "waves = sin( 4 * M_PI * x() / width() );" ;
  * JiffleBuilder jb = new JiffleBuilder();
- * jb.script(script).dest("waves", 500, 200).getRuntime().evaluateAll(null);
- * RenderedImage wavesImg = jb.getImage("waves");
+ * RenderedImage wavesImg = jb.script(script).dest("waves", 500, 200).run().getImage("waves");
  * </code></pre>
  * 
  *
@@ -309,6 +308,20 @@ public class JiffleBuilder {
         imageParams.put(varName, Jiffle.ImageRole.DEST);
         // store as weak reference
         images.put(varName, new ImageRef(destImage, true));
+        return this;
+    }
+    
+    /**
+     * Runs the script. Equivalent to calling 
+     * {@code builder.getRuntime().evaluateAll(null)}.
+     * 
+     * @return the instance of this class to allow method chaining
+     * 
+     * @throws JiffleException if the script has not been set yet or if
+     *         compilation errors occur
+     */
+    public JiffleBuilder run() throws JiffleException {
+        getRuntime().evaluateAll(null);
         return this;
     }
 
