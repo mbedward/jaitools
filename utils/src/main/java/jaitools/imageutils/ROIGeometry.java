@@ -20,6 +20,7 @@
 
 package jaitools.imageutils;
 
+import com.vividsolutions.jts.awt.ShapeReader;
 import com.vividsolutions.jts.awt.ShapeWriter;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
@@ -42,11 +43,13 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.renderable.ParameterBlock;
 import java.awt.image.renderable.RenderedImageFactory;
 import java.util.LinkedList;
+
 import javax.media.jai.Interpolation;
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.PlanarImage;
 import javax.media.jai.ROI;
+import javax.media.jai.ROIShape;
 
 /**
  * An {@code ROI} class that honours double precision coordinates when testing for inclusion.
@@ -144,6 +147,10 @@ public class ROIGeometry extends ROI {
      */
     @Override
     public ROI add(ROI roi) {
+        final Geometry geom = getGeometry(roi);
+        if (geom != null) {
+            return new ROIGeometry(geom.union(theGeom.getGeometry()));
+        }
         throw new UnsupportedOperationException("Not implemented");
     }
 
@@ -270,7 +277,30 @@ public class ROIGeometry extends ROI {
 
     @Override
     public ROI intersect(ROI roi) {
+        final Geometry geom = getGeometry(roi);
+        if (geom != null) {
+            return new ROIGeometry(geom.intersection(theGeom.getGeometry()));
+        }
         throw new UnsupportedOperationException("Not implemented");
+    }
+    
+    /**
+     * Get a {@link Geometry} from an input {@link ROI}.
+     * 
+     * @param roi
+     * @return a {@link Geometry} instance from the provided input, 
+     * null in case the input roi is neither a geometry, nor a shape. 
+     */
+    private Geometry getGeometry(ROI roi){
+        if (roi instanceof ROIGeometry){
+            return ((ROIGeometry) roi).getAsGeometry();
+        } else if (roi instanceof ROIShape){
+            final Shape shape = ((ROIShape) roi).getAsShape();
+            final Geometry geom = ShapeReader.read(shape, 0, geomFactory);
+            geom.apply(new AffineTransformation(1, 0, 0, 0, -1, 0));
+            return geom;
+        }
+        return null;
     }
 
     @Override
