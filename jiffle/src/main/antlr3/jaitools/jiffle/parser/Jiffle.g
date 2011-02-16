@@ -36,6 +36,7 @@ tokens {
     JIFFLE_OPTION;
     IMAGE_SCOPE_VAR_DECL;
     EXPR_LIST;
+    DECLARED_LIST;
     PAR;
     FUNC_CALL;
     IF_CALL;
@@ -47,6 +48,7 @@ tokens {
     REL_POS;
     PREFIX;
     POSTFIX;
+    SEQUENCE;
 
     // Used by later tree parsers
     CONSTANT;
@@ -141,7 +143,7 @@ loopCondition   : orExpression
  * Expression list: e.g.   foreach (i in {x(), y(), 10.0, sin(z)}) { ...
  *
  */
-loopSet         : (expression SEQUENCE expression) => (expression SEQUENCE^ expression)
+loopSet         : sequence
                 | declaredList
                 ;
 
@@ -150,7 +152,11 @@ expressionList  : (expression (COMMA expression)* )? -> ^(EXPR_LIST expression*)
                 ;
 
 
-declaredList    : LCURLY! expressionList RCURLY!
+sequence        : lo=expression COLON hi=expression -> ^(SEQUENCE $lo $hi)
+                ;
+
+
+declaredList    : LCURLY expressionList RCURLY -> ^(DECLARED_LIST expressionList)
                 ;
 
 
@@ -328,9 +334,6 @@ IN      : 'in' ;
 
 ABS_POS_PREFIX
         : '$'  ;
-
-SEQUENCE
-        : '..' ;
 
 INCR    : '++' ;
 DECR    : '--' ;

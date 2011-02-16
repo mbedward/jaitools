@@ -408,20 +408,29 @@ public abstract class AbstractRuntimeSourceCreator extends ErrorHandlingTreePars
         return sb.toString();
     }
     
-    protected String makeForEachLoop(String loopVar, 
-            ExprSrcPair loopSet, int loopSetSize,
-            String statement, boolean isBlockStatement) {
-    
+    protected String makeForEachListLoop(String loopVar, 
+            List<String> exprList, String statement, boolean isBlockStatement) {
+                
         StringBuilder sb = new StringBuilder();
-        sb.append(loopSet.priorSrc);
+        
+        String var = makeLocalVar("loopset");
+        sb.append("Double[] ").append(var).append(" = { \n");
+        
+        final int n = exprList.size();
+        int k = 0;
+        for (String expr : exprList) {
+            sb.append(expr);
+            if (++k < n) sb.append(", \n");
+        }
+        sb.append("\n}; \n");
         
         String counterVar = makeLocalVar("index");
         sb.append("for (int ").append(counterVar).append("=0; ");
-        sb.append(counterVar).append("<").append(loopSetSize).append("; ");
+        sb.append(counterVar).append("<").append(n).append("; ");
         sb.append(counterVar).append("++ )");
         
         StringBuilder loopVarSB = new StringBuilder();
-        loopVarSB.append("double ").append(loopVar).append("=").append(loopSet.src);
+        loopVarSB.append("double ").append(loopVar).append("=").append(var);
         loopVarSB.append("[").append(counterVar).append("];\n");
         
         if (isBlockStatement) {
@@ -438,21 +447,31 @@ public abstract class AbstractRuntimeSourceCreator extends ErrorHandlingTreePars
         return sb.toString();
     }
     
-    protected ExprSrcPair makeLoopSet(List<String> exprList) {
+    protected String makeForEachSequenceLoop(String loopVar, 
+            String loPrior, String loSrc, String hiPrior, String hiSrc,
+            String statement) {
+
         StringBuilder sb = new StringBuilder();
+
+        String loVar = makeLocalVar("sequence");
+        String hiVar = makeLocalVar("sequence");
         
-        String var = makeLocalVar("loopset");
-        sb.append("Double[] ").append(var).append(" = { \n");
-        
-        final int n = exprList.size();
-        int k = 0;
-        for (String expr : exprList) {
-            sb.append(expr);
-            if (++k < n) sb.append(", \n");
+        if (loPrior != null && loPrior.length() > 0) {
+            sb.append(loPrior).append("\n");
         }
-        sb.append("\n}; \n");
+        sb.append("int ").append(loVar).append(" = (int)(").append(loSrc).append(");\n");
         
-        return new ExprSrcPair(sb.toString(), var);
+        if (hiPrior != null && hiPrior.length() > 0) {
+            sb.append(hiPrior).append("\n");
+        }
+        sb.append("int ").append(hiVar).append(" = (int)(").append(hiSrc).append(");\n");
+        
+        sb.append("for (int ").append(loopVar).append(" = ").append(loVar).append("; ");
+        sb.append(loopVar).append(" <= ").append(hiVar).append("; ");
+        sb.append(loopVar).append("++) ");
+        sb.append(statement);
+        
+        return sb.toString();
     }
     
     protected String makeBinaryExpression(int type,

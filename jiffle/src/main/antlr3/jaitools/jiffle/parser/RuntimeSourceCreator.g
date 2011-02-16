@@ -202,21 +202,16 @@ conditionalLoop returns [String src]
                 ;
 
 foreachLoop returns [String src]
-                : ^(FOREACH ID loopSet statement)
+                : ^(FOREACH ID ^(DECLARED_LIST expressionList) statement)
                 {
-                    $src = makeForEachLoop($ID.text, $loopSet.pair, $loopSet.size,
+                    $src = makeForEachListLoop($ID.text, $expressionList.list,
                             $statement.src, $statement.isBlock);
                 }
-                ;
 
-
-loopSet returns [ExprSrcPair pair, int size]
-                : ^(SEQUENCE lo=expression hi=expression)
-
-                | expressionList
+                | ^(FOREACH ID ^(SEQUENCE lo=expression hi=expression) statement)
                 {
-                    $size = $expressionList.list.size();
-                    $pair = makeLoopSet($expressionList.list);
+                    $src = makeForEachSequenceLoop($ID.text, $lo.priorSrc, $lo.src,
+                            $hi.priorSrc, $hi.src, $statement.src);
                 }
                 ;
 

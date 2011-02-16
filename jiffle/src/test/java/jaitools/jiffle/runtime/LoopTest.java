@@ -32,6 +32,27 @@ import org.junit.Test;
 public class LoopTest extends StatementsTestBase {
 
     @Test
+    public void whileLoopWithSimpleStatement() throws Exception {
+        System.out.println("   while loop with simple statement");
+        String script = 
+                  "n = 0; \n"
+                + "while (n < x()) n++; \n"
+                + "dest = n;" ;
+        
+        Evaluator e = new Evaluator() {
+            int x = 0;
+            
+            public double eval(double val) {
+                int xx = x;
+                x = (x + 1) % WIDTH;
+                return xx;
+            }
+        };
+        
+        testScript(script, e);
+    }
+    
+    @Test
     public void whileLoopWithBlock() throws Exception {
         System.out.println("   while loop with block");
         String script = 
@@ -47,6 +68,27 @@ public class LoopTest extends StatementsTestBase {
                 for (int i = 0; i < x; i++) n += i;
                 x = (x + 1) % WIDTH;
                 return n;
+            }
+        };
+        
+        testScript(script, e);
+    }
+    
+    @Test
+    public void untilLoopWithSimpleStatement() throws Exception {
+        System.out.println("   until loop with simple statement");
+        String script = 
+                  "n = 0; \n"
+                + "until (n > x()) n++; \n"
+                + "dest = n;" ;
+        
+        Evaluator e = new Evaluator() {
+            int x = 0;
+            
+            public double eval(double val) {
+                int xx = x;
+                x = (x + 1) % WIDTH;
+                return xx + 1;
             }
         };
         
@@ -76,50 +118,8 @@ public class LoopTest extends StatementsTestBase {
     }
     
     @Test
-    public void whileLoopWithSimpleStatement() throws Exception {
-        System.out.println("   while loop with simple statement");
-        String script = 
-                  "n = 0; \n"
-                + "while (n < x()) n++; \n"
-                + "dest = n;" ;
-        
-        Evaluator e = new Evaluator() {
-            int x = 0;
-            
-            public double eval(double val) {
-                int xx = x;
-                x = (x + 1) % WIDTH;
-                return xx;
-            }
-        };
-        
-        testScript(script, e);
-    }
-    
-    @Test
-    public void untilLoopWithSimpleStatement() throws Exception {
-        System.out.println("   until loop with simple statement");
-        String script = 
-                  "n = 0; \n"
-                + "until (n > x()) n++; \n"
-                + "dest = n;" ;
-        
-        Evaluator e = new Evaluator() {
-            int x = 0;
-            
-            public double eval(double val) {
-                int xx = x;
-                x = (x + 1) % WIDTH;
-                return xx + 1;
-            }
-        };
-        
-        testScript(script, e);
-    }
-    
-    @Test
-    public void foreachLoopWithSimpleStatement() throws Exception {
-        System.out.println("   foreach loop with simple statement");
+    public void foreachListLoopWithSimpleStatement() throws Exception {
+        System.out.println("   foreach (i in {x(), y(), 3}) simple statement");
         String script =
                   "z = 0;"
                 + "foreach (i in {x(), y(), 3}) z += i;"
@@ -141,8 +141,8 @@ public class LoopTest extends StatementsTestBase {
     }
     
     @Test
-    public void foreachLoopWithBlock() throws Exception {
-        System.out.println("   foreach loop with block");
+    public void foreachListLoopWithBlock() throws Exception {
+        System.out.println("   foreach (i in {x(), y(), 3}) block");
         String script =
                   "z = 0;"
                 + "foreach (i in {x(), y(), 3}) \n"
@@ -160,6 +160,53 @@ public class LoopTest extends StatementsTestBase {
                 double z = 2*(x + y + 3);
                 x = (x + 1) % WIDTH;
                 if (x == 0) y++ ;
+                return z;
+            }
+        };
+        
+        testScript(script, e);
+    }
+
+    @Test
+    public void foreachSequenceLoopWithSimpleStatement() throws Exception {
+        System.out.println("   foreach (i in -1:5) simple statement");
+        String script =
+                  "z = 0; \n"
+                + "foreach (i in -1:5) z += i*src; \n"
+                + "dest = z;" ;
+        
+        Evaluator e = new Evaluator() {
+            int x = 0;
+
+            public double eval(double val) {
+                double z = 0;
+                for (int i = -1; i <= 5; i++) z += val * i;
+                x = (x + 1) % WIDTH;
+                return z;
+            }
+        };
+        
+        testScript(script, e);
+    }
+    
+    @Test
+    public void foreachSequenceLoopWithBlock() throws Exception {
+        System.out.println("   foreach (i in -1:5) block");
+        String script =
+                  "z = 0; \n"
+                + "foreach (i in -1:5) { \n"
+                + "    temp = i * src; \n"
+                + "    z += temp; \n"
+                + "} \n"
+                + "dest = z;" ;
+        
+        Evaluator e = new Evaluator() {
+            int x = 0;
+
+            public double eval(double val) {
+                double z = 0;
+                for (int i = -1; i <= 5; i++) z += val * i;
+                x = (x + 1) % WIDTH;
                 return z;
             }
         };

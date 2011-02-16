@@ -77,7 +77,7 @@ statement       : block
                 | assignmentExpression
                 | ^(WHILE loopCondition statement)
                 | ^(UNTIL loopCondition statement)
-                | ^(FOREACH ID loopSet statement)
+                | ^(FOREACH ID loopTarget statement)
                 | expression
                 ;
 
@@ -86,8 +86,8 @@ loopCondition   : expression
                 ;
 
 
-loopSet         : ^(SEQUENCE expression expression)
-                | expressionList
+loopTarget      : ^(SEQUENCE expression expression)
+                | ^(DECLARED_LIST expressionList)
                 ;
 
 

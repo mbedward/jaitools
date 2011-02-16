@@ -120,7 +120,7 @@ foreachLoop
 scope {
     String loopVar;
 }
-                : ^(FOREACH ID {$foreachLoop::loopVar = $ID.text;} loopSet statement)
+                : ^(FOREACH ID {$foreachLoop::loopVar = $ID.text;} loopTarget statement)
                 ;
 
 
@@ -128,8 +128,8 @@ loopCondition   : expression
                 ;
 
 
-loopSet         : ^(SEQUENCE expression expression)
-                | expressionList
+loopTarget      : ^(SEQUENCE expression expression)
+                | ^(DECLARED_LIST expressionList)
                 ;
 
 
