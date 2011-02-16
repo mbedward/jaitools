@@ -69,7 +69,12 @@ varDeclaration  : ^(IMAGE_SCOPE_VAR_DECL VAR_IMAGE_SCOPE .)
                 ;
 
 
-block           : ^(BLOCK statement*)
+block           : ^(BLOCK blockStatement*)
+                ;
+
+
+blockStatement  : statement
+                | ^(BREAKIF expression)
                 ;
 
 

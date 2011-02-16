@@ -112,7 +112,12 @@ varDeclaration  : ID EQ expression SEMI -> ^(IMAGE_SCOPE_VAR_DECL ID expression)
                 ;
 
 
-block           : LCURLY statement* RCURLY -> ^(BLOCK statement*)
+block           : LCURLY blockStatement* RCURLY -> ^(BLOCK blockStatement*)
+                ;
+
+
+blockStatement  : statement
+                | BREAKIF LPAR expression RPAR -> ^(BREAKIF expression)
                 ;
 
 
@@ -329,6 +334,7 @@ WHILE   : 'while' ;
 UNTIL   : 'until' ;
 FOREACH : 'foreach' ;
 IN      : 'in' ;
+BREAKIF : 'breakif' ;
 
 /* Operators sorted and grouped by precedence order */
 

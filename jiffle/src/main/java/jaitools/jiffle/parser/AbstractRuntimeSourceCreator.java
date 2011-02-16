@@ -557,6 +557,20 @@ public abstract class AbstractRuntimeSourceCreator extends ErrorHandlingTreePars
         return sb.toString();
     }
     
+    protected String makeBreakIf(String prior, String src) {
+        StringBuilder sb = new StringBuilder();
+        
+        if (prior != null && prior.length() > 0) {
+            sb.append(prior);
+        }
+        
+        String signFn = getRuntimeExpr("sign", 1);
+        sb.append("if (").append(signFn).append("(").append(src);
+        sb.append(") != 0) ").append("break");
+        
+        return sb.toString();
+    }
+    
     private String makeArgList(String ...args) {
         StringBuilder sb = new StringBuilder("(");
         final int n = args.length;

@@ -93,12 +93,22 @@ block returns [String src]
     sb.append("} \n");
     $src = sb.toString();
 }
-                : ^(BLOCK (s=statement 
+                : ^(BLOCK (s=blockStatement 
                         {
-                            sb.append(s.src);
-                            String eol = s.isBlock ? "\n" : ";\n" ;
+                            sb.append($s.src);
+                            String eol = $s.isBlock ? "\n" : ";\n" ;
                             sb.append(eol);
                         } )* )
+                ;
+
+
+blockStatement returns [String src, boolean isBlock]
+                : statement { $src = $statement.src; $isBlock = $statement.isBlock; }
+
+                | ^(BREAKIF expression) 
+                {
+                    $src = makeBreakIf($expression.priorSrc, $expression.src);
+                }
                 ;
 
 

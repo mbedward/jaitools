@@ -213,4 +213,31 @@ public class LoopTest extends StatementsTestBase {
         
         testScript(script, e);
     }
+    
+    @Test
+    public void breakif() throws Exception {
+        System.out.println("   breakif");
+        String script = 
+                  "n = 0; \n"
+                + "i = 0; \n"
+                + "while (i < x()) { \n"
+                + "  n += i; \n"
+                + "  breakif(n >= 10); \n"
+                + "  i++ ; \n"
+                + "} \n"
+                + "dest = n;" ;
+        
+        Evaluator e = new Evaluator() {
+            int x = 0;
+            public double eval(double val) {
+                int n = 0;
+                for (int i = 0; i < x; i++) n += i;
+                x = (x + 1) % WIDTH;
+                return (n < 10 ? n : 10);
+            }
+        };
+        
+        testScript(script, e);
+    }
+    
 }
