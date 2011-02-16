@@ -111,8 +111,16 @@ statement       : block
                 | assignmentExpression
                 | ^(WHILE loopCondition statement)
                 | ^(UNTIL loopCondition statement)
-                | ^(FOREACH ID loopSet statement)
+                | foreachLoop
                 | expression
+                ;
+
+
+foreachLoop
+scope {
+    String loopVar;
+}
+                : ^(FOREACH ID {$foreachLoop::loopVar = $ID.text;} loopSet statement)
                 ;
 
 
@@ -162,6 +170,7 @@ expression
 
 
 identifier      : ID
+                  -> {!($foreachLoop.empty()) && $foreachLoop::loopVar.equals($ID.text)}? VAR_LOOP[$ID.text]
                   -> {isSourceImage($ID.text)}? VAR_SOURCE[$ID.text]
                   -> {isDestImage($ID.text)}? VAR_DEST[$ID.text]
                   -> {imageScopeVars.contains($ID.text)}? VAR_IMAGE_SCOPE[$ID.text]

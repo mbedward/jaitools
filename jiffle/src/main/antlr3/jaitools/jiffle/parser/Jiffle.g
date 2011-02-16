@@ -34,19 +34,17 @@ options {
 
 tokens {
     JIFFLE_OPTION;
-
+    IMAGE_SCOPE_VAR_DECL;
     EXPR_LIST;
     PAR;
     FUNC_CALL;
     IF_CALL;
     BLOCK;
-
     IMAGE_POS;
     BAND_REF;
     PIXEL_REF;
     ABS_POS;
     REL_POS;
-
     PREFIX;
     POSTFIX;
 
@@ -58,9 +56,8 @@ tokens {
     VAR_IMAGE_SCOPE;
     VAR_PIXEL_SCOPE;
     VAR_PROVIDED;
+    VAR_LOOP;
 
-    // New bits
-    IMAGE_SCOPE_VAR_DECL;
 }
 
 @header {
@@ -136,12 +133,24 @@ loopCondition   : orExpression
                 ;
 
 
+/* 
+ * A foreach block can have the following forms:
+ * 
+ * Integer sequence: e.g.  foreach (i in -1..1) { ...
+ *
+ * Expression list: e.g.   foreach (i in {x(), y(), 10.0, sin(z)}) { ...
+ *
+ */
 loopSet         : (expression SEQUENCE expression) => (expression SEQUENCE^ expression)
-                | expressionList
+                | declaredList
                 ;
 
 
 expressionList  : (expression (COMMA expression)* )? -> ^(EXPR_LIST expression*)
+                ;
+
+
+declaredList    : LCURLY! expressionList RCURLY!
                 ;
 
 

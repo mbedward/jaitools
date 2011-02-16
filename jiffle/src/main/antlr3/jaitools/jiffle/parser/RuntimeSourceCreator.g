@@ -183,7 +183,7 @@ assignableVar returns [String src]
 
 loop returns [String src]
                 : conditionalLoop { $src = $conditionalLoop.src; }
-                | sequenceLoop { $src = $sequenceLoop.src; }
+                | foreachLoop { $src = $foreachLoop.src; }
                 ;
 
 
@@ -201,40 +201,22 @@ conditionalLoop returns [String src]
                 }
                 ;
 
-sequenceLoop returns [String src]
-@init {
-    StringBuilder sb = new StringBuilder();
-}
-@after {
-    $src = sb.toString();
-}
+foreachLoop returns [String src]
                 : ^(FOREACH ID loopSet statement)
+                {
+                    $src = makeForEachLoop($ID.text, $loopSet.pair, $loopSet.size,
+                            $statement.src, $statement.isBlock);
+                }
                 ;
 
 
-loopSet returns [String src, String priorSrc]
-@init {
-    StringBuilder sb = new StringBuilder();
-}
-@after {
-    $src = sb.toString();
-}
+loopSet returns [ExprSrcPair pair, int size]
                 : ^(SEQUENCE lo=expression hi=expression)
 
                 | expressionList
                 {
-                /*
-                    String var = makeLocalVar("loopset");
-                    sb.append("Double[] ").append(var).append(" = { \n");
-                    final int n = $expressionList.list.size();
-                    int k = 0;
-                    for (String esrc : $expressionList.list) {
-                        sb.append(esrc);
-                        if (++k < n) sb.append(", \n");
-                    }
-                    sb.append("\n}; \n);
-                    $priorSrc = sb.toString();
-                */
+                    $size = $expressionList.list.size();
+                    $pair = makeLoopSet($expressionList.list);
                 }
                 ;
 
@@ -277,6 +259,9 @@ expression returns [String src, String priorSrc ]
 
                 | VAR_PROVIDED
                   { $src = $VAR_PROVIDED.text; }
+
+                | VAR_LOOP
+                  { $src = $VAR_LOOP.text; }
 
                 | VAR_SOURCE
                   { $src = "readFromImage(\"" + $VAR_SOURCE.text + "\", _x, _y, 0)"; }

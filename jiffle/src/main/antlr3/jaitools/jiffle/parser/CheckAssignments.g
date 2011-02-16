@@ -99,22 +99,32 @@ assignmentExpression
                 : ^(assignmentOp identifier expression)
                 { 
                     String varName = $identifier.start.getText();
-                    if ($identifier.start.getType() == CONSTANT) {
-                        msgTable.add(varName, Message.CONSTANT_LHS);
+                    int idtype = $identifier.start.getType();
+                    switch (idtype) {
+                        case CONSTANT:
+                            msgTable.add(varName, Message.CONSTANT_LHS);
+                            break;
 
-                    } else if ($identifier.start.getType() == VAR_SOURCE) {
-                        msgTable.add(varName, Message.ASSIGNMENT_TO_SRC_IMAGE); 
+                        case VAR_SOURCE:
+                            msgTable.add(varName, Message.ASSIGNMENT_TO_SRC_IMAGE); 
+                            break;
 
-                    } else if ($assignmentOp.start.getType() == EQ) {
-                        initializedVars.add(varName);
+                        default:
+                            if ($assignmentOp.start.getType() == EQ) {
+                                initializedVars.add(varName);
 
-                    } else {
-                        if ($identifier.start.getType() == VAR_DEST) {
-                            msgTable.add(varName, Message.INVALID_ASSIGNMENT_OP_WITH_DEST_IMAGE);
+                            } else {
+                                switch (idtype) {
+                                    case VAR_DEST:
+                                        msgTable.add(varName, Message.INVALID_ASSIGNMENT_OP_WITH_DEST_IMAGE);
+                                        break;
 
-                        } else if (!initializedVars.contains(varName)) {
-                            msgTable.add(varName, Message.UNINIT_VAR);
-                        }
+                                    default:
+                                        if (!initializedVars.contains(varName)) {
+                                            msgTable.add(varName, Message.UNINIT_VAR);
+                                        }
+                                }
+                            }
                     }
                 }
                 ;
@@ -137,6 +147,7 @@ identifier      : imageVar
 
 imageVar        : VAR_SOURCE
                 | VAR_DEST
+                | VAR_LOOP
                 ;
 
 userVar         : VAR_IMAGE_SCOPE
@@ -162,7 +173,8 @@ expression      : ^(FUNC_CALL ID expressionList)
                 | userVar
                 {
                     String varName = $userVar.start.getText();
-                    if (!initializedVars.contains(varName)) {
+                    int varType = $userVar.start.getType();
+                    if (varType != VAR_LOOP && !initializedVars.contains(varName)) {
                         msgTable.add(varName, Message.UNINIT_VAR);
                     }
                 }

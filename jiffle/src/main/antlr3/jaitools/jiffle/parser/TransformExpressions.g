@@ -130,6 +130,7 @@ identifier      : VAR_SOURCE
                 | VAR_DEST
                 | VAR_IMAGE_SCOPE
                 | VAR_PIXEL_SCOPE
+                | VAR_LOOP
                 | CONSTANT
                 ;
 

@@ -408,6 +408,53 @@ public abstract class AbstractRuntimeSourceCreator extends ErrorHandlingTreePars
         return sb.toString();
     }
     
+    protected String makeForEachLoop(String loopVar, 
+            ExprSrcPair loopSet, int loopSetSize,
+            String statement, boolean isBlockStatement) {
+    
+        StringBuilder sb = new StringBuilder();
+        sb.append(loopSet.priorSrc);
+        
+        String counterVar = makeLocalVar("index");
+        sb.append("for (int ").append(counterVar).append("=0; ");
+        sb.append(counterVar).append("<").append(loopSetSize).append("; ");
+        sb.append(counterVar).append("++ )");
+        
+        StringBuilder loopVarSB = new StringBuilder();
+        loopVarSB.append("double ").append(loopVar).append("=").append(loopSet.src);
+        loopVarSB.append("[").append(counterVar).append("];\n");
+        
+        if (isBlockStatement) {
+            String insert = "{\n" + loopVarSB.toString();
+            sb.append(statement.replaceFirst("\\{\\s*", insert));
+            
+        } else {
+            sb.append("{ \n");
+            sb.append(loopVarSB.toString());
+            sb.append(statement).append(";\n");
+            sb.append("}");
+        }
+        
+        return sb.toString();
+    }
+    
+    protected ExprSrcPair makeLoopSet(List<String> exprList) {
+        StringBuilder sb = new StringBuilder();
+        
+        String var = makeLocalVar("loopset");
+        sb.append("Double[] ").append(var).append(" = { \n");
+        
+        final int n = exprList.size();
+        int k = 0;
+        for (String expr : exprList) {
+            sb.append(expr);
+            if (++k < n) sb.append(", \n");
+        }
+        sb.append("\n}; \n");
+        
+        return new ExprSrcPair(sb.toString(), var);
+    }
+    
     protected String makeBinaryExpression(int type,
             String prior1, String expr1, String prior2, String expr2) {
     
