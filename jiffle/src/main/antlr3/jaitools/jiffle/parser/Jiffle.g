@@ -122,6 +122,7 @@ statement       : block
                 | assignmentExpression SEMI!
                 | WHILE LPAR loopCondition RPAR statement -> ^(WHILE loopCondition statement)
                 | UNTIL LPAR loopCondition RPAR statement -> ^(UNTIL loopCondition statement)
+                | FOREACH LPAR ID IN loopSet RPAR statement -> ^(FOREACH ID loopSet statement)
                 | SEMI!
                 ;
 
@@ -135,11 +136,22 @@ loopCondition   : orExpression
                 ;
 
 
-ifCall          : IF LPAR expressionList RPAR -> ^(IF_CALL expressionList)
+loopSet         : (expression SEQUENCE expression) => (expression SEQUENCE^ expression)
+                | expressionList
                 ;
 
 
 expressionList  : (expression (COMMA expression)* )? -> ^(EXPR_LIST expression*)
+                ;
+
+
+/*
+ * If statements are function calls in Jiffle. This form is inherited
+ * from the r.mapcalc language. They are treated separately from general
+ * functions during compilation because we want to ensure lazy evaluation
+ * of the alternatives.
+ */
+ifCall          : IF LPAR expressionList RPAR -> ^(IF_CALL expressionList)
                 ;
 
 
@@ -300,11 +312,16 @@ INIT    : 'init' ;
 IF      : 'if' ;
 WHILE   : 'while' ;
 UNTIL   : 'until' ;
+FOREACH : 'foreach' ;
+IN      : 'in' ;
 
 /* Operators sorted and grouped by precedence order */
 
 ABS_POS_PREFIX
         : '$'  ;
+
+SEQUENCE
+        : '..' ;
 
 INCR    : '++' ;
 DECR    : '--' ;

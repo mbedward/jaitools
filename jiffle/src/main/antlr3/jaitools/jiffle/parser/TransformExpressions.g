@@ -60,11 +60,17 @@ statement       : block
                 | assignmentExpression
                 | ^(WHILE loopCondition statement)
                 | ^(UNTIL loopCondition statement)
+                | ^(FOREACH ID loopSet statement)
                 | expression
                 ;
 
 
 loopCondition   : expression
+                ;
+
+
+loopSet         : ^(SEQUENCE expression expression)
+                | expressionList
                 ;
 
 
