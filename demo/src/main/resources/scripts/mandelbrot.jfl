@@ -36,10 +36,13 @@ outside = 0;
 n = 0;
 
 /* Jiffle has an 'until' loop construct */
-until (n >= MaxIter || outside) {
+until (n >= MaxIter) {
     Z_re2 = Z_re*Z_re;
     Z_im2 = Z_im*Z_im;
+
     outside = if (Z_re2 + Z_im2 > 4);
+    breakif( outside );
+
     Z_im = 2*Z_re*Z_im + c_im;
     Z_re = Z_re2 - Z_im2 + c_re;
     n++ ;
