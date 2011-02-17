@@ -20,6 +20,7 @@
 
 package jaitools.jiffle.runtime;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -240,4 +241,31 @@ public class LoopTest extends StatementsTestBase {
         testScript(script, e);
     }
     
+    @Ignore("Pending fix for variable checking in ANTLR grammars")
+    @Test
+    public void nestedForEachLoops() throws Exception {
+        System.out.println("   nested foreach loops");
+        String script = 
+                  "n = 0;"
+                + "foreach (i in 1:5) { \n"
+                + "  foreach (j in i:(i+5)) { \n"
+                + "    n += i + j; \n"
+                + "  } \n"
+                + "} \n"
+                + "dest = src + n;" ;
+        
+        Evaluator e = new Evaluator() {
+            public double eval(double val) {
+                double z = val;
+                for (int i = 1; i <= 5; i++) {
+                    for (int j = i; j <= i+5; j++) {
+                        z += i + j;
+                    }
+                }
+                return z;
+            }
+        };
+        
+        testScript(script, e);
+    }
 }

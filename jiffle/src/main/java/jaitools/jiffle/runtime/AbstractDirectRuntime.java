@@ -67,6 +67,12 @@ public abstract class AbstractDirectRuntime extends AbstractJiffleRuntime implem
 
     /** Processing bounds min Y ordinate */
     protected int _miny;
+    
+    /** Processing bounds max X ordinate */
+    protected int _maxx;
+    
+    /** Processing bounds max Y ordinate */
+    protected int _maxy;
 
     /** Processing bounds width */
     protected int _width;
@@ -90,6 +96,8 @@ public abstract class AbstractDirectRuntime extends AbstractJiffleRuntime implem
         _miny = miny;
         _width = width;
         _height = height;
+        _maxx = _minx + _width - 1;
+        _maxy = _miny + _height - 1;
 
         initImageScopeVars();
     }
