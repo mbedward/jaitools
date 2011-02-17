@@ -29,6 +29,7 @@
                         <configuration>
                             <artifactSet>
                                 <excludes>
+                                    <exclude>com.googlecode.jaitools:jt-demo</exclude>
                                     <exclude>com.vividsolutions:jts</exclude>
                                     <exclude>junit:junit</exclude>
                                     <exclude>org.antlr:antlr</exclude>
@@ -37,6 +38,14 @@
                                     <exclude>xerces:xercesImpl</exclude>
                                 </excludes>
                             </artifactSet>
+                            <filters>
+                                <filter>
+                                    <artifact>com.googlecode.jaitools:jt-rangelookup</artifact>
+                                    <excludes>
+                                        <exclude>**/*.tif</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
@@ -54,11 +63,6 @@
         <!--                                              -->
         <!-- JAI-tools modules to include in the uber-jar -->
         <!--                                              -->
-        <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
-            <artifactId>jt-demo</artifactId>
-            <version>${project.version}</version>
-        </dependency>
         <dependency>
             <groupId>com.googlecode.jaitools</groupId>
             <artifactId>jt-utils</artifactId>
