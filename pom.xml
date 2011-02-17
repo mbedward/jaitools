@@ -85,26 +85,6 @@
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
-            <plugin>
-                <artifactId>maven-source-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 
@@ -217,6 +197,67 @@
 
     <profiles>
         <profile>
+            <id>build-javadocs</id>
+            <activation>
+                <property>
+                    <name>javadocs</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>build-javadocs</id>
+            <activation>
+                <property>
+                    <name>sources</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        
+        <profile>
+            <id>build-uber-jar</id>
+            <activation>
+                <property>
+                    <name>uberJar</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <modules>
+                <module>jt-all</module>
+            </modules>
+        </profile>
+        
+        <profile>
             <id>release-signed-artifacts</id>
             <activation>
                 <property>
@@ -250,7 +291,6 @@
         <module>jiffle</module>
         <module>kernel</module>
         <module>operator</module>
-        <module>jt-all</module>
     </modules>
 
 </project>
