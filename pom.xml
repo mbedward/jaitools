@@ -221,7 +221,7 @@
         </profile>
 
         <profile>
-            <id>build-javadocs</id>
+            <id>build-sources</id>
             <activation>
                 <property>
                     <name>sources</name>
