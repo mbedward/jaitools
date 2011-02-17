@@ -238,4 +238,93 @@ public class FunctionsTest extends StatementsTestBase {
         
         testScript(script, e);
     }
+    
+    @Test
+    public void radToDeg() throws Exception {
+        String script = "dest = radToDeg(src / 10);" ;
+        System.out.println("   " + script);
+        
+        Evaluator e = new Evaluator() {
+            public double eval(double val) {
+                return (val / 10) * 180 / Math.PI;
+            }
+        };
+        
+        testScript(script, e);
+    }
+    
+    @Test
+    public void round1Arg() throws Exception {
+        String script = "dest = round(src / (width() - 1));" ;
+        System.out.println("   " + script);
+        
+        Evaluator e = new Evaluator() {
+            public double eval(double val) {
+                return Math.round(val / (WIDTH - 1));
+            }
+        };
+        
+        testScript(script, e);
+    }
+    
+    @Test
+    public void round2Arg() throws Exception {
+        String script = "dest = round(src / (width() - 1), 2);" ;
+        System.out.println("   " + script);
+        
+        Evaluator e = new Evaluator() {
+            public double eval(double val) {
+                double z = val / (WIDTH - 1);
+                return Math.round(z / 2) * 2;
+            }
+        };
+        
+        testScript(script, e);
+    }
+    
+    @Test
+    public void sin() throws Exception {
+        String script = "dest = sin(src);" ;
+        System.out.println("   " + script);
+        
+        Evaluator e = new Evaluator() {
+
+            public double eval(double val) {
+                return Math.sin(val);
+            }
+        };
+        
+        testScript(script, e);
+    }
+
+    @Test
+    public void sqrt() throws Exception {
+        String script = "dest = sqrt(src);" ;
+        System.out.println("   " + script);
+        
+        Evaluator e = new Evaluator() {
+
+            public double eval(double val) {
+                return Math.sqrt(val);
+            }
+        };
+        
+        testScript(script, e);
+    }
+
+    @Test
+    public void tan() throws Exception {
+        String script = "dest = tan(src);" ;
+        System.out.println("   " + script);
+        
+        Evaluator e = new Evaluator() {
+
+            public double eval(double val) {
+                return Math.tan(val);
+            }
+        };
+        
+        testScript(script, e);
+    }
+
 }
