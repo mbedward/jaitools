@@ -8,7 +8,7 @@
         <version>1.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>utils</artifactId>
+    <artifactId>jt-utils</artifactId>
     <name>Support and utility classes</name>
 
     <description>Support and utility classes used by other JAI-tools components and

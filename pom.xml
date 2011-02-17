@@ -51,6 +51,17 @@
                 <version>1.0-beta-2</version>
             </extension>
         </extensions>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>1.4</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        
         <plugins>
             <plugin>
                 <artifactId>maven-release-plugin</artifactId>
@@ -239,6 +250,7 @@
         <module>jiffle</module>
         <module>kernel</module>
         <module>operator</module>
+        <module>jt-all</module>
     </modules>
 
 </project>

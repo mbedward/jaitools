@@ -8,7 +8,7 @@
         <version>1.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>zonalstats</artifactId>
+    <artifactId>jt-zonalstats</artifactId>
     <packaging>jar</packaging>
     <name>ZonalStats operator</name>
     <description>Calculates summary statistics, optionally within zones defined by
@@ -18,7 +18,7 @@ a zone image, for values in a data image
     <dependencies>
         <dependency>
             <groupId>com.googlecode.jaitools</groupId>
-            <artifactId>utils</artifactId>
+            <artifactId>jt-utils</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

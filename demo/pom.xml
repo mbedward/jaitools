@@ -6,7 +6,7 @@
         <artifactId>jaitools</artifactId>
         <version>1.1-SNAPSHOT</version>
     </parent>
-    <artifactId>demo</artifactId>
+    <artifactId>jt-demo</artifactId>
     <packaging>jar</packaging>
     <name>Demo programs</name>
     <description>Small apps to demonstrate use of JAI-tools components</description>
@@ -15,61 +15,61 @@
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>utils</artifactId>
+            <artifactId>jt-utils</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>contour</artifactId>
+            <artifactId>jt-contour</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>kernel</artifactId>
+            <artifactId>jt-kernel</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>kernelstats</artifactId>
+            <artifactId>jt-kernelstats</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>maskedconvolve</artifactId>
+            <artifactId>jt-maskedconvolve</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>jiffle</artifactId>
+            <artifactId>jt-jiffle</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>regionalize</artifactId>
+            <artifactId>jt-regionalize</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>rangelookup</artifactId>
+            <artifactId>jt-rangelookup</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>vectorize</artifactId>
+            <artifactId>jt-vectorize</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>zonalstats</artifactId>
+            <artifactId>jt-zonalstats</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>

@@ -8,7 +8,7 @@
         <version>1.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>regionalize</artifactId>
+    <artifactId>jt-regionalize</artifactId>
     <name>Regionalize operator</name>
 
     <description>Identifies (sufficiently) uniform regions in the source image, allocates
@@ -19,7 +19,7 @@ as pixel values
     <dependencies>
         <dependency>
             <groupId>com.googlecode.jaitools</groupId>
-            <artifactId>utils</artifactId>
+            <artifactId>jt-utils</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

@@ -9,7 +9,7 @@
         <version>1.1-SNAPSHOT</version>
     </parent>
   
-    <artifactId>attributeop</artifactId>
+    <artifactId>jt-attributeop</artifactId>
     <name>AttributeOpImage</name>
     <description>An OpImage class that derives one or more attributes from a source image. 
   Source image pixels are passed through to the destination image unchanged (similar to JAI's 

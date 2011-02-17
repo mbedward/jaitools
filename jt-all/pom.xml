@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>jaitools</artifactId>
+        <groupId>com.googlecode.jaitools</groupId>
+        <version>1.1-SNAPSHOT</version>
+    </parent>
+    <groupId>com.googlecode.jaitools</groupId>
+    <artifactId>jt-all</artifactId>
+    <packaging>jar</packaging>
+    <name>jt-all</name>
+    <description>
+        Provides a single jar containing all JAI-tools modules which you can
+        use instead of including individual modules in your project.
+    </description>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <artifactSet>
+                                <excludes>
+                                    <exclude>com.vividsolutions:jts</exclude>
+                                    <exclude>junit:junit</exclude>
+                                    <exclude>org.antlr:antlr</exclude>
+                                    <exclude>org.antlr:antlr-runtime</exclude>
+                                    <exclude>org.codehaus.janino:janino</exclude>
+                                    <exclude>xerces:xercesImpl</exclude>
+                                </excludes>
+                            </artifactSet>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/registryFile.jai</resource>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+    
+    <dependencies>
+        <!--                                              -->
+        <!-- JAI-tools modules to include in the uber-jar -->
+        <!--                                              -->
+        <dependency>
+            <groupId>com.googlecode.jaitools</groupId>
+            <artifactId>jt-demo</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.jaitools</groupId>
+            <artifactId>jt-utils</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.jaitools</groupId>
+            <artifactId>jt-jiffle</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.jaitools</groupId>
+            <artifactId>jt-kernel</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.jaitools</groupId>
+            <artifactId>jt-attributeop</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.jaitools</groupId>
+            <artifactId>jt-contour</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.jaitools</groupId>
+            <artifactId>jt-kernelstats</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.jaitools</groupId>
+            <artifactId>jt-maskedconvolve</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.jaitools</groupId>
+            <artifactId>jt-rangelookup</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.jaitools</groupId>
+            <artifactId>jt-regionalize</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.jaitools</groupId>
+            <artifactId>jt-vectorbinarize</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.jaitools</groupId>
+            <artifactId>jt-vectorize</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.jaitools</groupId>
+            <artifactId>jt-zonalstats</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+        <!--                                              -->
+        <!--           3rd party dependencies             -->
+        <!--                                              -->
+        <dependency>
+            <groupId>com.vividsolutions</groupId>
+            <artifactId>jts</artifactId>
+            <!-- version is specified in parent jai-tools pom -->
+        </dependency>
+        
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr</artifactId>
+            <version>3.3</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.antlr</groupId>
+                    <artifactId>stringtemplate</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.codehaus.janino</groupId>
+            <artifactId>janino</artifactId>
+            <version>2.5.16</version>
+        </dependency>
+    </dependencies>
+  
+</project>
