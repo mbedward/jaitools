@@ -49,30 +49,32 @@ public class FunctionLookup {
             
             Enumeration<?> names = properties.propertyNames();
             while (names.hasMoreElements()) {
-                String jiffleName = (String) names.nextElement();
-                String value = properties.getProperty(jiffleName);
+                String name = (String) names.nextElement();
+                String value = properties.getProperty(name);
 
                 String[] attr = value.split("[,\\s]+");
-                if (attr.length != 4) {
+                if (attr.length != 5) {
                     throw new IllegalArgumentException(
                             "Error reading Jiffle function definitions from " + PROPERTIES_FILE);
                 }
+                
+                String jiffleName = attr[0];
 
-                String runtimeName = attr[0];
+                String runtimeName = attr[1];
                 int numArgs = 0;
-                if (attr[1].toUpperCase().contains("VARARG")) {
+                if (attr[2].toUpperCase().contains("VARARG")) {
                     numArgs = FunctionInfo.VARARG;
                 } else {
-                    numArgs = Integer.parseInt(attr[1]);
+                    numArgs = Integer.parseInt(attr[2]);
                 }
 
-                FunctionInfo.Provider provider = FunctionInfo.Provider.get( attr[2] );
+                FunctionInfo.Provider provider = FunctionInfo.Provider.get( attr[3] );
                 if (provider == null) {
                     throw new IllegalArgumentException(
-                            "Unrecognized Jiffle function provider (" + attr[2] + ") in " + PROPERTIES_FILE);
+                            "Unrecognized Jiffle function provider (" + attr[3] + ") in " + PROPERTIES_FILE);
                 }
 
-                boolean isVolatile = Boolean.parseBoolean(attr[3]);
+                boolean isVolatile = Boolean.parseBoolean(attr[4]);
 
                 lookup.add( new FunctionInfo(
                         jiffleName, runtimeName, numArgs, provider, isVolatile) );
@@ -133,7 +135,7 @@ public class FunctionLookup {
         }
         
         // should never get here
-        throw new IllegalStateException("Internal compiler error");
+        throw new UndefinedFunctionException("Unrecognized function: " + jiffleName);
     }
     
     /**

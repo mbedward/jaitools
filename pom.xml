@@ -4,7 +4,7 @@
 
     <groupId>com.googlecode.jaitools</groupId>
     <artifactId>jaitools</artifactId>
-    <version>1.1-M3</version>
+    <version>1.1-SNAPSHOT</version>
 
     <packaging>pom</packaging>
     <name>JAI-tools</name>
@@ -73,6 +73,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
                 <configuration>
                     <source>1.5</source>
                     <target>1.5</target>
@@ -81,6 +82,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
+                <version>2.4.3</version>
                 <configuration>
                     <encoding>UTF-8</encoding>
                 </configuration>
