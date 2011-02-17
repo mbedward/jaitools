@@ -38,15 +38,15 @@ options {
 package jaitools.jiffle.parser;
 
 import java.util.Map;
-import java.util.Set;
+import java.util.Stack;
 import jaitools.CollectionFactory;
 import jaitools.jiffle.Jiffle;
 }
 
+
 @members {
 
 private Map<String, Jiffle.ImageRole> imageParams;
-private Set<String> imageScopeVars = CollectionFactory.set();
 private MessageTable msgTable;
 
 public TagVars( TreeNodeStream nodes, Map<String, Jiffle.ImageRole> params, MessageTable msgTable ) {
@@ -74,10 +74,55 @@ private boolean isDestImage( String varName ) {
     return role == Jiffle.ImageRole.DEST;
 }
 
+
+enum SymbolType {
+    IMAGE_SCOPE,
+    PIXEL_SCOPE,
+    LOOP;
 }
 
+private class Symbol {
+    String name;
+    SymbolType type;
 
-start           : jiffleOption* varDeclaration* statement+
+    Symbol(String name, SymbolType type) {
+        this.name = name;
+        this.type = type;
+    }
+};
+
+private Stack<List<Symbol>> varScope = new Stack<List<Symbol>>();
+
+private Symbol find(String varName) {
+    for (int i = varScope.size()-1; i >= 0; i--) {
+        List<Symbol> symbols = varScope.elementAt(i);
+        for (Symbol s : symbols) {
+            if (s.name.equals(varName)) {
+                return s;
+            }
+        }
+    }
+    return null;
+}
+
+private boolean isDefined(String varName) {
+    return find(varName) != null;
+}
+
+private boolean isType(String varName, SymbolType type) {
+    Symbol s = find(varName);
+    if (s == null) return false;
+
+    return s.type == type;
+}
+
+}
+
+start 
+@init {
+    varScope.push( new ArrayList<Symbol>() );
+}
+                : jiffleOption* varDeclaration* statement+
                 ;
 
 
@@ -93,17 +138,27 @@ optionValue     : ID
 varDeclaration  : ^(IMAGE_SCOPE_VAR_DECL ID expression)
                 {
                     String varName = $ID.text;
+
                     if (isSourceImage(varName) || isDestImage(varName)) {
                         msgTable.add( varName, Message.IMAGE_VAR_INIT_LHS );
+
                     } else {
-                        imageScopeVars.add(varName); 
+                        Symbol s = new Symbol(varName, SymbolType.IMAGE_SCOPE);
+                        varScope.peek().add(s);
                     }
                 }
                   -> ^(IMAGE_SCOPE_VAR_DECL VAR_IMAGE_SCOPE[varName] expression)
                 ;
 
 
-block           : ^(BLOCK blockStatement*)
+block
+@init {
+    varScope.push( new ArrayList<Symbol>() );
+}
+@after {
+    varScope.pop();
+}
+                : ^(BLOCK blockStatement*)
                 ;
 
 
@@ -121,11 +176,13 @@ statement       : block
                 ;
 
 
-foreachLoop
-scope {
-    String loopVar;
-}
-                : ^(FOREACH ID {$foreachLoop::loopVar = $ID.text;} loopTarget statement)
+foreachLoop     : ^(FOREACH ID 
+                        {
+                            // record the loop variable as being in scope
+                            Symbol s = new Symbol($ID.text, SymbolType.LOOP);
+                            varScope.peek().add(s);
+                        } 
+                    loopTarget statement)
                 ;
 
 
@@ -174,12 +231,12 @@ expression
                 ;
 
 
-identifier      : ID
-                  -> {!($foreachLoop.empty()) && $foreachLoop::loopVar.equals($ID.text)}? VAR_LOOP[$ID.text]
+identifier      : ID 
                   -> {isSourceImage($ID.text)}? VAR_SOURCE[$ID.text]
                   -> {isDestImage($ID.text)}? VAR_DEST[$ID.text]
-                  -> {imageScopeVars.contains($ID.text)}? VAR_IMAGE_SCOPE[$ID.text]
                   -> {ConstantLookup.isDefined($ID.text)}? CONSTANT[$ID.text]
+                  -> {isType($ID.text, SymbolType.LOOP)}? VAR_LOOP[$ID.text]
+                  -> {isType($ID.text, SymbolType.IMAGE_SCOPE)}? VAR_IMAGE_SCOPE[$ID.text]
                   -> VAR_PIXEL_SCOPE[$ID.text]
                 ;
 
