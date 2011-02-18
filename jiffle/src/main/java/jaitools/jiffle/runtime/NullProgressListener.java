@@ -31,7 +31,6 @@ package jaitools.jiffle.runtime;
  */
 public class NullProgressListener extends AbstractProgressListener {
 
-    @Override
     public void start() {}
 
     public void update(long numPixels) {}
