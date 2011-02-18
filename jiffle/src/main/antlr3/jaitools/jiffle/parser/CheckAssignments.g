@@ -41,7 +41,7 @@ import jaitools.CollectionFactory;
 @members {
 
 private MessageTable msgTable;
-private Set<String> initializedVars = CollectionFactory.set();
+private SymbolScopeStack varScope;
 
 public CheckAssignments(TreeNodeStream input, MessageTable msgTable) {
     this(input);
@@ -49,12 +49,17 @@ public CheckAssignments(TreeNodeStream input, MessageTable msgTable) {
         throw new IllegalArgumentException( "msgTable should not be null" );
     }
     this.msgTable = msgTable;
+
+    varScope = new SymbolScopeStack();
 }
 
 }
 
 
-start           : jiffleOption* varDeclaration* statement+
+start
+@init {
+    varScope.addLevel("top");
+}               : jiffleOption* varDeclaration* statement+
                 ;
 
 
@@ -64,7 +69,7 @@ jiffleOption    : ^(JIFFLE_OPTION ID .)
 
 varDeclaration  : ^(IMAGE_SCOPE_VAR_DECL VAR_IMAGE_SCOPE .)
                 { 
-                    initializedVars.add($VAR_IMAGE_SCOPE.text);
+                    varScope.addSymbol($VAR_IMAGE_SCOPE.text, SymbolType.IMAGE_SCOPE);
                 }
                 ;
 
@@ -82,8 +87,18 @@ statement       : block
                 | assignmentExpression
                 | ^(WHILE loopCondition statement)
                 | ^(UNTIL loopCondition statement)
-                | ^(FOREACH ID loopTarget statement)
+                | foreachLoop
                 | expression
+                ;
+
+foreachLoop
+@init {
+    varScope.addLevel("foreach");
+}
+@after {
+    varScope.dropLevel();
+}
+                : ^(FOREACH ID {varScope.addSymbol($ID.text, SymbolType.LOOP_VAR);} loopTarget statement)
                 ;
 
 
@@ -116,7 +131,9 @@ assignmentExpression
 
                         default:
                             if ($assignmentOp.start.getType() == EQ) {
-                                initializedVars.add(varName);
+                                if (!varScope.isType(varName, SymbolType.IMAGE_SCOPE)) {
+                                    varScope.addSymbol(varName, SymbolType.PIXEL_SCOPE);
+                                }
 
                             } else {
                                 switch (idtype) {
@@ -125,7 +142,7 @@ assignmentExpression
                                         break;
 
                                     default:
-                                        if (!initializedVars.contains(varName)) {
+                                        if (!varScope.isDefined(varName)) {
                                             msgTable.add(varName, Message.UNINIT_VAR);
                                         }
                                 }
@@ -179,7 +196,7 @@ expression      : ^(FUNC_CALL ID expressionList)
                 {
                     String varName = $userVar.start.getText();
                     int varType = $userVar.start.getType();
-                    if (varType != VAR_LOOP && !initializedVars.contains(varName)) {
+                    if (!varScope.isDefined(varName)) {
                         msgTable.add(varName, Message.UNINIT_VAR);
                     }
                 }
