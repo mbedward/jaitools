@@ -112,13 +112,22 @@ public abstract class AbstractDirectRuntime extends AbstractJiffleRuntime implem
 
         final long numPixels = (long)_width * _height;
         listener.setTaskSize(numPixels);
+        
         long count = 0;
+        long sinceLastUpdate = 0;
+        final long updateInterval = listener.getUpdateInterval();
         
         listener.start();
         for (int y = _miny, iy = 0; iy < _height; y++, iy++) {
             for (int x = _minx, ix = 0; ix < _width; x++, ix++) {
                 evaluate(x, y);
-                listener.update( ++count );
+                
+                count++ ;
+                sinceLastUpdate++;
+                if (sinceLastUpdate >= updateInterval) {
+                    listener.update( count );
+                    sinceLastUpdate = 0;
+                }
             }
         }
         listener.finish();
