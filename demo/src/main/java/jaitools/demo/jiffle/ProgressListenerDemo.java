@@ -43,8 +43,10 @@ import javax.swing.JProgressBar;
  * Demonstrates using a JiffleProgressListener with JiffleExecutor.
  * <p>
  * Rather than running a real Jiffle task that will take long enough to 
- * be worth using a progress listener, we cheat and use fake Jiffle and
- * JiffleRuntime classes (see bottom of source code).
+ * be worth using a progress listener, we cheat and use mock Jiffle and
+ * JiffleRuntime classes (see bottom of source code). The runtime class
+ * pretends process pixels by just having a little sleep each time its
+ * {@code evaluate()} method is called.
  * 
  * @author Michael Bedward
  * @since 1.1
@@ -52,27 +54,51 @@ import javax.swing.JProgressBar;
  */
 public class ProgressListenerDemo {
 
+    // Number of pixels in the pretend task
     private static final int NUM_PIXELS = 500;
+    
+    // Milliseconds to spend pretending to process a pixel
     private static final long PIXEL_TIME = 10;
 
+    /**
+     * Runs the demo.
+     */
     public static void main(String[] args) throws Exception {
         ProgressListenerDemo me = new ProgressListenerDemo();
         me.demo();
     }
 
+    /**
+     * This method shows how you might use a progress listener with
+     * JiffleExecutor.
+     * 
+     * @throws JiffleExecutorException 
+     */
     private void demo() throws JiffleExecutorException {
-
         MyProgressListener listener = new MyProgressListener();
+        
+        /* 
+         * The update interval can be set as number of pixels or 
+         * a proportion of total task size. Here we use the latter
+         * method to request that the listener is notified after
+         * each 10% of the task has been completed.
+         */
         listener.setUpdateInterval(0.1);
         
         JiffleExecutor executor = new JiffleExecutor();
 
         PretendJiffle jiffle = new PretendJiffle();
         Map<String, RenderedImage> emptyImageMap = CollectionFactory.map();
+        
         executor.submit(jiffle, emptyImageMap, listener);
     }
     
 
+    /**
+     * Our progress listener class extends {@link AbstractProgressListener}
+     * and provides start, update and finish methods which we will use to
+     * display and update a Swing widget.
+     */
     class MyProgressListener extends AbstractProgressListener {
         ProgressMeter meter;
 
@@ -100,6 +126,10 @@ public class ProgressListenerDemo {
     }
     
 
+    /**
+     * Simple Swing widget with a progress bar and a button
+     * that is enabled when the task is finished.
+     */
     class ProgressMeter extends JDialog {
         private JProgressBar bar;
         private JButton btn;
@@ -160,6 +190,10 @@ public class ProgressListenerDemo {
     }
 
     
+    /**
+     * The mock Jiffle used in this demo. It delivers our mock runtime
+     * object to the executor.
+     */
     class PretendJiffle extends Jiffle {
         @Override
         public boolean isCompiled() {
@@ -179,6 +213,10 @@ public class ProgressListenerDemo {
     }
 
     
+    /**
+     * Mock runtime object that pretends to process pixels by
+     * having a little sleep each time.
+     */
     class PretendJiffleRuntime extends AbstractDirectRuntime {
 
         public PretendJiffleRuntime() {
