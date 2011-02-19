@@ -163,15 +163,6 @@ public class JiffleFunctions {
     }
     
     /**
-     * Returns Double.NaN.
-     * 
-     * @return Double.NaN
-     */
-    public static double nullValue() {
-        return Double.NaN;
-    }
-
-    /**
      * Converts an angle in radians to degrees.
      * 
      * @param x input angle in radians
