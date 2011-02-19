@@ -37,7 +37,7 @@ import jaitools.CollectionFactory;
  */
 public class FunctionLookup {
 
-    private static final String PROPERTIES_FILE = "META-INF/FunctionLookup.properties";
+    private static final String PROPERTIES_FILE = "META-INF/jiffle/FunctionLookup.properties";
     private static final List<FunctionInfo> lookup = CollectionFactory.list();
 
     static {

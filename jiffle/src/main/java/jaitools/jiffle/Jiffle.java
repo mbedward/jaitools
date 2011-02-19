@@ -34,7 +34,6 @@ import java.util.Properties;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
-import org.antlr.runtime.Token;
 import org.antlr.runtime.tree.CommonTree;
 import org.antlr.runtime.tree.CommonTreeNodeStream;
 
@@ -47,10 +46,8 @@ import jaitools.jiffle.parser.CheckFunctionCalls;
 import jaitools.jiffle.parser.DeferredErrorReporter;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
-import jaitools.jiffle.parser.MapcalcScriptReformatter;
 import jaitools.jiffle.parser.Message;
 import jaitools.jiffle.parser.MessageTable;
-import jaitools.jiffle.parser.OptionsLexer;
 import jaitools.jiffle.parser.ParsingErrorReporter;
 import jaitools.jiffle.parser.RuntimeSourceCreator;
 import jaitools.jiffle.parser.TagVars;
@@ -184,7 +181,7 @@ public class Jiffle {
     
     private static int refCount = 0;
     
-    private static final String PROPERTIES_FILE = "META-INF/jiffle.properties";
+    private static final String PROPERTIES_FILE = "META-INF/jiffle/Jiffle.properties";
 
     private static final Properties properties = new Properties();
     
@@ -336,28 +333,10 @@ public class Jiffle {
             clearCompiledObjects();
         }
         
-        // Check for a mapcalc format script
-        Map<String, String> options = getOptions(script);
-        if (options.containsKey("format") && options.get("format").equals("mapcalc")) {
-            theScript = MapcalcScriptReformatter.reformat(script);
-        } else {
-            // add extra new line just in case last statement hits EOF
-            theScript = script + "\n";
-        }
+        // add extra new line just in case last statement hits EOF
+        theScript = script + "\n";
     }
 
-    private Map<String, String> getOptions(String script) throws JiffleException {
-        ANTLRStringStream input = new ANTLRStringStream(script);
-        OptionsLexer lexer = new OptionsLexer(input);
-        
-        Token t = null;
-        do {
-            t = lexer.nextToken();
-        } while (t.getType() != Token.EOF);
-        
-        return lexer.getOptions();
-    }
-    
     /**
      * Sets the script. Calling this method will clear any previous script
      * and runtime objects.
