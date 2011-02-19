@@ -48,7 +48,7 @@ public class OptionsBlockReaderTest {
 
         Map<String, String> options = parseOptions(script);
         assertEquals(1, options.size());
-        assertTrue(options.containsKey("format"));
+        assertTrue(options.containsKey("outside"));
     }
     
     @Test
@@ -61,8 +61,7 @@ public class OptionsBlockReaderTest {
                 + "dest = 42;" ;
 
         Map<String, String> options = parseOptions(script);
-        assertEquals(2, options.size());
-        assertTrue(options.containsKey("format"));
+        assertEquals(1, options.size());
         assertTrue(options.containsKey("outside"));
     }
     
