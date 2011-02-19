@@ -43,7 +43,7 @@ public class OptionsBlockReaderTest {
     public void simpleBlock() throws Exception {
         System.out.println("   simple block");
         String script =
-                  "options { format = jiffle; } \n"
+                  "options { outside = 0; } \n"
                 + "dest = 42;" ;
 
         Map<String, String> options = parseOptions(script);
@@ -56,8 +56,7 @@ public class OptionsBlockReaderTest {
         System.out.println("   block with newlines");
         String script =
                   "options { \n"
-                + "  format = jiffle; \n"
-                + "  outside = 0;"
+                + "  outside = 0; \n"
                 + "} \n"
                 + "dest = 42;" ;
 
