@@ -58,6 +58,18 @@ public Map<String, String> getOptions() {
     return options;
 }
 
+public void addOption(String name, String value) {
+    try {
+        if (OptionLookup.isValidValue(name, value)) {
+            options.put(name, value);
+        } else {
+            msgTable.add(value, Message.INVALID_OPTION_VALUE);
+        }
+    } catch (UndefinedOptionException ex) {
+        msgTable.add(name, Message.INVALID_OPTION);
+    }
+}
+
 }
 
 
@@ -66,11 +78,19 @@ topdown         : jiffleOption
 
 
 jiffleOption    : ^(JIFFLE_OPTION ID optionValue)
-                { options.put($ID.text, $optionValue.str); }
+                { addOption($ID.text, $optionValue.start.getText()); }
                 ;
 
 
 optionValue returns [String str]
                 : ID { $str = $ID.text; }
-                | INT_LITERAL { $str = $INT_LITERAL.text; }
+                | literal { $str = $literal.start.getText(); }
+                ;
+
+
+literal         : INT_LITERAL
+                | FLOAT_LITERAL
+                | TRUE
+                | FALSE
+                | NULL
                 ;

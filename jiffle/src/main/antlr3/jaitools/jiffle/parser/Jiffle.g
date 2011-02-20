@@ -100,7 +100,7 @@ option          : ID EQ optionValue SEMI -> ^(JIFFLE_OPTION ID optionValue)
 
 
 optionValue     : ID
-                | INT_LITERAL
+                | literal
                 ;
 
 

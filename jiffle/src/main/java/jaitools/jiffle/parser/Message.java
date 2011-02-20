@@ -65,6 +65,18 @@ public enum Message {
             "Invalid assignment op with destination image"),
     
     /**
+     * Warning: script option not recognized.
+     */
+    INVALID_OPTION(Level.WARNING,
+            "Unrecognized option"),
+    
+    /**
+     * Warning: invalid script option value is ignored.
+     */
+    INVALID_OPTION_VALUE(Level.WARNING,
+            "Invalid option value ignored"),
+    
+    /**
      * Error: Image position syntax cannot be used with a destination image
      * variable.
      */

@@ -48,6 +48,7 @@ import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
 import jaitools.jiffle.parser.Message;
 import jaitools.jiffle.parser.MessageTable;
+import jaitools.jiffle.parser.OptionsBlockReader;
 import jaitools.jiffle.parser.ParsingErrorReporter;
 import jaitools.jiffle.parser.RuntimeSourceCreator;
 import jaitools.jiffle.parser.TagVars;
@@ -103,7 +104,6 @@ import jaitools.jiffle.runtime.JiffleRuntime;
  * @version $Id$
  */
 public class Jiffle {
-    
     /** Constants for runtime classes. */
     public static enum EvaluationModel {
         /** The runtime class implements {@link JiffleDirectRuntime} */
@@ -250,6 +250,7 @@ public class Jiffle {
 
     private String theScript;
     private CommonTree primaryAST;
+    private Map<String, String> scriptOptions;
     private CommonTree finalAST;
     private CommonTokenStream tokens;
     private ParsingErrorReporter errorReporter;
@@ -447,8 +448,12 @@ public class Jiffle {
         
         clearCompiledObjects();
         buildPrimaryAST();
+        
+        checkOptions();
+        reportMessages();
+        
         if (!checkFunctionCalls() || !transformAndCheckVars()) {
-            throw new JiffleException(getErrorString());
+            throw new JiffleException(messagesToString());
         }
     }
     
@@ -575,10 +580,21 @@ public class Jiffle {
         msgTable = new MessageTable();
     }
     
+    private void reportMessages() throws JiffleException {
+        if (msgTable.hasErrors()) {
+            throw new JiffleException(messagesToString());
+        }
+        
+        if (msgTable.hasWarnings()) {
+            Map<String, List<Message>> messages = msgTable.getMessages();
+            System.err.println(messagesToString());
+        }
+    }
+    
     /**
      * Write error messages to a string
      */
-    private String getErrorString() {
+    private String messagesToString() {
         StringBuilder sb = new StringBuilder();
         if (msgTable != null) {
             Map<String, List<Message>> messages = msgTable.getMessages();
@@ -593,7 +609,7 @@ public class Jiffle {
         }
         return sb.toString();
     }
-
+    
     /**
      * Build a preliminary AST from the jiffle script. Basic syntax and grammar
      * checks are done at this stage.
@@ -614,6 +630,13 @@ public class Jiffle {
                     "error in script at or around line:" +
                     ex.line + " col:" + ex.charPositionInLine);
         }
+    }
+
+    private void checkOptions() {
+        CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
+        nodes.setTokenStream(tokens);
+        OptionsBlockReader reader = new OptionsBlockReader(nodes, msgTable);
+        reader.downup(primaryAST);
     }
 
     /**

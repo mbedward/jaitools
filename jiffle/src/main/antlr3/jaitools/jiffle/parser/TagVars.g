@@ -91,7 +91,7 @@ jiffleOption    : ^(JIFFLE_OPTION ID optionValue)
 
 
 optionValue     : ID
-                | INT_LITERAL
+                | literal
                 ;
 
 

@@ -134,6 +134,29 @@ public abstract class AbstractDirectRuntime extends AbstractJiffleRuntime implem
     }
     
     public double readFromImage(String imageName, int x, int y, int band) {
+        boolean inside = true;
+        RenderedImage img = (RenderedImage) images.get(imageName);
+        
+        int xx = x - img.getMinX();
+        if (xx < 0 || xx >= img.getWidth()) {
+            inside = false;
+        } else {
+            int yy = y - img.getMinY();
+            if (yy < 0 || yy >= img.getHeight()) {
+                inside = false;
+            }
+        }
+        
+        if (!inside) {
+            if (_outsideValueSet) {
+                return _outsideValue;
+            } else {
+                throw new JiffleRuntimeException( String.format(
+                        "Position %d %d is outside bounds of image: %s", 
+                        x, y, imageName));
+            }
+        }
+        
         RandomIter iter = (RandomIter) readers.get(imageName);
         return iter.getSampleDouble(x, y, band);
     }
@@ -142,13 +165,5 @@ public abstract class AbstractDirectRuntime extends AbstractJiffleRuntime implem
         WritableRandomIter iter = (WritableRandomIter) writers.get(imageName);
         iter.setSample(x, y, band, value);
     }
-
-    /**
-     * Initializes image-scope variables. These are fields in the runtime class.
-     * They are initialized in a separate method rather than the constructor
-     * because they may depend on expressions involving values that are not
-     * known until the processing area is set (e.g. Jiffle's width() function).
-     */
-    protected abstract void initImageScopeVars();
 
 }
