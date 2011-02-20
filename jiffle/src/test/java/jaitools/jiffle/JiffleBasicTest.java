@@ -212,7 +212,7 @@ public class JiffleBasicTest {
     public void fileWithParamsConstructor() throws Exception {
         System.out.println("   Jiffle(scriptFile, imageParams)");
         
-        URL url = JiffleBasicTest.class.getResource("script1.txt");
+        URL url = JiffleBasicTest.class.getResource("constant.jfl");
         File file = new File(url.toURI());
         
         imageParams.put("dest", Jiffle.ImageRole.DEST);
