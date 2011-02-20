@@ -19,8 +19,13 @@
  */
 package jaitools.jiffle.runtime;
 
+import java.awt.Rectangle;
+import java.awt.image.RenderedImage;
 import java.util.Map;
+
 import javax.media.jai.TiledImage;
+import javax.media.jai.iterator.RectIter;
+import javax.media.jai.iterator.RectIterFactory;
 
 import jaitools.CollectionFactory;
 import jaitools.imageutils.ImageUtils;
@@ -82,19 +87,42 @@ public abstract class StatementsTestBase {
         runtime.setSourceImage("src", srcImg);
 
         TiledImage destImg = ImageUtils.createConstantImage(
-                srcImg.getMinX(), srcImg.getMinY(), WIDTH, WIDTH, 0.0);
+                srcImg.getMinX(), srcImg.getMinY(), srcImg.getWidth(), srcImg.getHeight(), 0.0);
         runtime.setDestinationImage("dest", destImg);
 
         runtime.evaluateAll(nullListener);
         assertImage(srcImg, destImg, evaluator);
     }
 
-    protected void assertImage(TiledImage srcImg, TiledImage destImg, Evaluator evaluator) {
-        for (int y = srcImg.getMinY(), iy=0; iy < WIDTH; y++, iy++) {
-            for (int x = srcImg.getMinX(), ix = 0; ix < WIDTH; x++, ix++) {
-                assertEquals(evaluator.eval(srcImg.getSampleDouble(x, y, 0)), destImg.getSampleDouble(x, y, 0), TOL);
-            }
+    protected void assertImage(RenderedImage srcImg, RenderedImage destImg, Evaluator evaluator) {
+        RectIter destIter = RectIterFactory.create(destImg, null);
+        
+        if (srcImg != null) {
+            RectIter srcIter = RectIterFactory.create(srcImg, null);
+            
+            do {
+                do {
+                    assertEquals(evaluator.eval(srcIter.getSampleDouble()), destIter.getSampleDouble(), TOL);
+                    destIter.nextPixelDone();
+                } while (!srcIter.nextPixelDone());
+                
+                srcIter.startPixels();
+                destIter.startPixels();
+                destIter.nextLineDone();
+                
+            } while (!srcIter.nextLineDone());
+            
+        } else {
+            do {
+                do {
+                    assertEquals(evaluator.eval(0), destIter.getSampleDouble(), TOL);
+                } while (!destIter.nextPixelDone());
+                
+                destIter.startPixels();
+                
+            } while (!destIter.nextLineDone());
         }
     }
 
 }
+
