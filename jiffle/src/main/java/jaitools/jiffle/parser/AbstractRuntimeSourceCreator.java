@@ -21,12 +21,16 @@
 package jaitools.jiffle.parser;
 
 import java.util.List;
+import java.util.Map;
 
 import org.antlr.runtime.RecognitionException;
-import org.antlr.runtime.RecognizerSharedState;
 import org.antlr.runtime.tree.TreeNodeStream;
 
+import jaitools.CollectionFactory;
 import jaitools.jiffle.Jiffle;
+import jaitools.jiffle.JiffleProperties;
+import java.util.Arrays;
+import org.antlr.runtime.RecognizerSharedState;
 
 /**
  * Base class for runtime source creation tree parsers.
@@ -41,26 +45,38 @@ import jaitools.jiffle.Jiffle;
  */
 public abstract class AbstractRuntimeSourceCreator extends ErrorHandlingTreeParser {
     
+    private class SourceElement {
+        final StringBuilder sb = new StringBuilder();
+
+        public StringBuilder append(String src) {
+            sb.append(src);
+            return sb;
+        }
+        
+        public String getSource() {
+            return sb.toString();
+        }
+    }
+    
+    private final SourceElement VARS;
+    private final SourceElement CTOR;
+    private final SourceElement INIT;
+    private final SourceElement OPTION_INIT;
+    private final SourceElement EVAL;
+    private final SourceElement GETTER;
+        
+    
     /** Evaluation model of the runtime class being generated */
     Jiffle.EvaluationModel model;
     
-    /** Runtime class name */
-    String className;
+    /** Runtime base class name */
+    String baseClassName;
 
-    /** StringBuilder for constructor source */
-    protected StringBuilder ctorSB;
-    /** StringBuilder for init method source */
-    protected StringBuilder initSB;
-    /** StringBuilder for evaluate method source */
-    protected StringBuilder evalSB;
-    /** StringBuilder for runtime class field delcarations */
-    protected StringBuilder varSB;
-    /** StringBuilder for class field (image scope variable) getter method source */
-    protected StringBuilder getterSB;
-    
     protected int numLocalVars = 0;
     protected int numImageScopeVars = 0;
-
+    
+    protected Map<String, String> options;
+    
     /**
      * String pair used to pass source elements between rules in
      * the source creation parser.
@@ -82,123 +98,217 @@ public abstract class AbstractRuntimeSourceCreator extends ErrorHandlingTreePars
      * @param input AST node stream
      * @param state parser state (not used by Jiffle directly)
      */
-    public AbstractRuntimeSourceCreator(TreeNodeStream input, RecognizerSharedState state) {
-        super(input, state);
+    public AbstractRuntimeSourceCreator(TreeNodeStream input,
+            Jiffle.EvaluationModel model, String baseClassName) {
+        super(input);
+        
+        this.model = model;
+        this.baseClassName = baseClassName;
+        
+        options = CollectionFactory.map();
+        
+        VARS = new SourceElement();
+        CTOR = new SourceElement();
+        INIT = new SourceElement();
+        OPTION_INIT = new SourceElement();
+        EVAL = new SourceElement();
+        GETTER = new SourceElement();
     }
     
+    /**
+     * This constructor is only defined to appease the compiler and should not be used.
+     */
+    protected AbstractRuntimeSourceCreator(TreeNodeStream input, RecognizerSharedState state) {
+        super(input, state);
+        throw new IllegalStateException("Incorrect constructor used");
+    }
+    
+    public synchronized String getSource(String jiffleScript) {
+        StringBuilder sb  = new StringBuilder();
+
+        sb.append("package ");
+        sb.append(JiffleProperties.get(JiffleProperties.RUNTIME_PACKAGE_KEY)).append("; \n\n");
+        
+        String value = JiffleProperties.get(JiffleProperties.IMPORTS_KEY);
+        if (value != null && !(value.trim().length() == 0)) {
+            String[] importNames = value.split(JiffleProperties.RUNTIME_IMPORTS_DELIM);
+            for (String importName : importNames) {
+                sb.append("import ").append(importName).append("; \n");
+            }
+            sb.append("\n");
+        }
+        
+        if (jiffleScript != null && jiffleScript.length() > 0) {
+            sb.append(formatAsJavadoc(jiffleScript));
+        }
+        
+        sb.append("public class ");
+        String className = null;
+        
+        switch (model) {
+            case DIRECT:
+                className = JiffleProperties.get(JiffleProperties.DIRECT_CLASS_KEY);
+                break;
+                
+            case INDIRECT:
+                className = JiffleProperties.get(JiffleProperties.INDIRECT_CLASS_KEY);
+                break;
+                
+            default:
+                throw new IllegalArgumentException("Internal compiler error");
+        }
+        sb.append(className);
+
+        sb.append(" extends ").append(baseClassName).append(" { \n");
+
+        SourceElement[] elements = {VARS, CTOR, INIT, OPTION_INIT, EVAL, GETTER};
+        for (SourceElement element : elements) {
+            String src = element.getSource();
+            sb.append(formatSource(src, 4));
+            sb.append("\n");
+        }
+
+        sb.append("} \n");
+        return sb.toString();
+    }
+    
+    
+    /**
+     * Formats the input text as a javadoc block.
+     * 
+     * @param text the text to format
+     * 
+     * @return the javadoc block
+     */
+    private String formatAsJavadoc(String text) {
+        StringBuilder sb = new StringBuilder();
+        
+        sb.append("/** \n");
+        for (String line : text.split("\n")) {
+            line = line.trim();
+            if (line.length() > 0) {
+                sb.append(" * ").append(line).append("\n");
+            }
+        }
+        sb.append(" */ \n");
+        return sb.toString();
+    }
+    
+    /**
+     * A simple code formatter.
+     * 
+     * @param source source code to format
+     * @param baseIndent initial indentation level (number of spaces)
+     * 
+     * @return formatted code
+     */
+    private String formatSource(String source, int baseIndent) {
+        StringBuilder sb = new StringBuilder();
+        int indent = baseIndent;
+        
+        char[] spaces = new char[100];
+        Arrays.fill(spaces, ' ');
+        
+        String[] lines = source.split("\n");
+        
+        for (String line : lines) {
+            line = line.trim();
+            if (line.startsWith("}")) indent -= 4;
+            
+            sb.append(spaces, 0, indent);
+            sb.append(line.trim()).append("\n");
+            
+            if (line.endsWith("{")) indent += 4;
+        }
+        
+        return sb.toString();
+    }
+
     /**
      * Call the start rule of the source creation parser.
      *
-     * @param model evaluation model for the runtime class being created
-     * @param runtimeClassName runtime class name
      * @throws RecognitionException on errors walking the input AST
      */
-    public abstract void start(Jiffle.EvaluationModel model, String runtimeClassName) throws RecognitionException;
+    public abstract void start() throws RecognitionException;
 
-    /**
-     * Gets the source for the runtime class constructor.
-     *
-     * @return constructor source
-     */
-    public String getCtorSource() {
-        return ctorSB.toString();
-    }
-
-    /**
-     * Gets the source for the method that initializes runtime class fields
-     * (Jiffle image-scope variables).
-     *
-     * @return init method source
-     */
-    public String getInitSource() {
-        return initSB.toString();
-    }
-
-    /**
-     * Gets the source for the evaluate method.
-     *
-     * @return evaluate method source
-     */
-    public String getEvalSource() {
-        return evalSB.toString();
-    }
     
-    /**
-     * Gets the source for the runtime class field declarations
-     * (Jiffle image scope variables).
-     *
-     * @return runtime class field source
-     */
-    public String getVarSource() {
-        return varSB.toString();
-    }
-
-    /**
-     * Gets the source for the field variable getter method.
-     *
-     * @return getter method source
-     */
-    public String getGetterSource() {
-        return getterSB.toString();
-    }
-    
-    protected void initializeSources(Jiffle.EvaluationModel model, String className) {
-        this.model = model;
-        this.className = className;
-        
-        ctorSB = new StringBuilder();
-        ctorSB.append("public ").append(className).append("() { \n");
-
-        initSB = new StringBuilder();
-        initSB.append("protected void initImageScopeVars() { \n");
-
-        evalSB = new StringBuilder();
+    protected void initializeSources() {
+        String className = null;
         switch (model) {
             case DIRECT:
-                evalSB.append("public void evaluate(int _x, int _y) { \n");
+                className = JiffleProperties.get(JiffleProperties.DIRECT_CLASS_KEY);
+                break;
+                
+            case INDIRECT:
+                className = JiffleProperties.get(JiffleProperties.INDIRECT_CLASS_KEY);
+                break;
+        }
+        
+        CTOR.append("public ").append(className).append("() { \n");
+
+        INIT.append("protected void initImageScopeVars() { \n");
+        
+        GETTER.append("public Double getVar(String varName) { \n");
+
+        switch (model) {
+            case DIRECT:
+                EVAL.append("public void evaluate(int _x, int _y) { \n");
                 break;
 
             case INDIRECT:
-                evalSB.append("public double evaluate(int _x, int _y) { \n");
+                EVAL.append("public double evaluate(int _x, int _y) { \n");
                 break;
 
             default:
                 throw new IllegalArgumentException("Invalid evaluation model parameter");
         }
-
-        varSB = new StringBuilder();
-        getterSB = new StringBuilder();
     }
     
     protected void finalizeSources() {
-        ctorSB.append("} \n");
-        evalSB.append("} \n");
-        initSB.append("} \n");
+        CTOR.append("} \n");
+        EVAL.append("} \n");
+        INIT.append("} \n");
         
-        if (numImageScopeVars > 0) {
-            getterSB.append("return null; \n");
-            getterSB.append("} \n");
+        GETTER.append("return null; \n} \n");
+        
+        OPTION_INIT.append("protected void initOptionVars() { \n");
+        String src;
+        for (String name : OptionLookup.getNames()) {
+            if (options.containsKey(name)) {
+                src = OptionLookup.getActiveRuntimExpr(name, options.get(name));
+            } else {
+                src = OptionLookup.getDefaultRuntimeExpr(name);
+            }
+            
+            OPTION_INIT.append(src).append("\n");
         }
+        OPTION_INIT.append("} \n");
+    }
+    
+    protected void setOption(String name, String value) {
+        options.put(name, value);
+    }
+    
+    protected void addStatement(String src, boolean isBlock) {
+        EVAL.append(src);
+        String eol = isBlock ? "\n" : ";\n";
+        EVAL.append(eol);
     }
     
     protected void addImageScopeVar(String varName, ExprSrcPair pair) {
-        if (numImageScopeVars == 0) {
-            getterSB.append("public Double getVar(String varName) { \n");
-        }
-
-        varSB.append("double ").append(varName).append("; \n");
+        VARS.append("double ").append(varName).append("; \n");
 
         if (pair != null) {
-            if (pair.priorSrc != null) initSB.append(pair.priorSrc);
-            initSB.append(varName).append(" = ").append(pair.src).append("; \n");
+            if (pair.priorSrc != null) INIT.append(pair.priorSrc);
+            INIT.append(varName).append(" = ").append(pair.src).append("; \n");
         }
 
         if (numImageScopeVars > 0) {
-            getterSB.append(" else ");
+            GETTER.append(" else ");
         }
-        getterSB.append("if (\"").append(varName).append("\".equals(varName)) { \n");
-        getterSB.append("return ").append(varName).append("; \n");
-        getterSB.append("} \n");
+        GETTER.append("if (\"").append(varName).append("\".equals(varName)) { \n");
+        GETTER.append("return ").append(varName).append("; \n");
+        GETTER.append("} \n");
         
         numImageScopeVars++ ;
     }

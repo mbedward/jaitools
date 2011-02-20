@@ -24,12 +24,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
@@ -104,7 +101,8 @@ import jaitools.jiffle.runtime.JiffleRuntime;
  * @version $Id$
  */
 public class Jiffle {
-    /** Constants for runtime classes. */
+    
+    /** Constants for runtime model. */
     public static enum EvaluationModel {
         /** The runtime class implements {@link JiffleDirectRuntime} */
         DIRECT(JiffleDirectRuntime.class),
@@ -146,90 +144,10 @@ public class Jiffle {
         }
     }
 
-    /**
-     * Identifies the runtime source elements produced by {@link #createRuntimeSource}.
-     * The constants are defined in the order that we want the elements to appear
-     * in the runtime class.
-     */
-    private static enum SourceElement {
-        /**
-         * Identifies source for declaration of image-scope variables (fields
-         * in the runtime class).
-         */
-        VARS,
-
-        /**
-         * Identifies source for the constructor.
-         */
-        CTOR,
-
-        /**
-         * Identifies source for the image-scope variable initializing method.
-         */
-        INIT,
-
-        /**
-         * Identifies source for the the evaluate method body.
-         */
-        EVAL,
-
-        /**
-         * Identifies source for the image-scope variable getter method.
-         */
-        GETTER;
-    }
     
+    /** Number of Jiffle instances */
     private static int refCount = 0;
     
-    private static final String PROPERTIES_FILE = "META-INF/jiffle/Jiffle.properties";
-
-    private static final Properties properties = new Properties();
-    
-    private static final String NAME_KEY = "root.name";
-    private static final String RUNTIME_PACKAGE_KEY = "runtime.package";
-    
-    private static final String DIRECT_CLASS_KEY = "direct.class";
-    private static final String DIRECT_BASE_CLASS_KEY = "direct.base.class";
-    
-    private static final String INDIRECT_CLASS_KEY = "indirect.class";
-    private static final String INDIRECT_BASE_CLASS_KEY = "indirect.base.class";
-    
-    private static final String IMPORTS_KEY = "runtime.imports";
-    
-    /** Delimiter used to separate multiple import entries */
-    private static final String RUNTIME_IMPORTS_DELIM = ";";
-    
-    private static final Class<? extends JiffleRuntime> DEFAULT_DIRECT_BASE_CLASS;
-    private static final Class<? extends JiffleRuntime> DEFAULT_INDIRECT_BASE_CLASS;
-    
-    static {
-        InputStream in = null;
-        try {
-            in = Jiffle.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE);
-            properties.load(in);
-            
-            String className = properties.getProperty(RUNTIME_PACKAGE_KEY) + "." +
-                    properties.getProperty(DIRECT_BASE_CLASS_KEY);
-            
-            DEFAULT_DIRECT_BASE_CLASS = (Class<? extends JiffleRuntime>) Class.forName(className);
-            
-            className = properties.getProperty(RUNTIME_PACKAGE_KEY) + "." +
-                    properties.getProperty(INDIRECT_BASE_CLASS_KEY);
-            
-            DEFAULT_INDIRECT_BASE_CLASS = (Class<? extends JiffleRuntime>) Class.forName(className);
-            
-        } catch (Exception ex) {
-            throw new IllegalArgumentException("Internal compiler error", ex);
-            
-        } finally {
-            try {
-                if (in != null) in.close();
-            } catch (Exception ex) {
-                // ignore
-            }
-        }
-
-    }
 
     /**
      * Used to specify the roles of images referenced in
@@ -486,7 +404,7 @@ public class Jiffle {
     public JiffleDirectRuntime getRuntimeInstance() throws JiffleException {
         return (JiffleDirectRuntime) createRuntimeInstance(
                 EvaluationModel.DIRECT, 
-                DEFAULT_DIRECT_BASE_CLASS);
+                JiffleProperties.DEFAULT_DIRECT_BASE_CLASS);
     }
     
     /**
@@ -501,10 +419,12 @@ public class Jiffle {
     public JiffleRuntime getRuntimeInstance(EvaluationModel model) throws JiffleException {
         switch (model) {
             case DIRECT:
-                return createRuntimeInstance(model, DEFAULT_DIRECT_BASE_CLASS);
+                return createRuntimeInstance(model, 
+                        JiffleProperties.DEFAULT_DIRECT_BASE_CLASS);
                 
             case INDIRECT:
-                return createRuntimeInstance(model, DEFAULT_INDIRECT_BASE_CLASS);
+                return createRuntimeInstance(model, 
+                        JiffleProperties.DEFAULT_INDIRECT_BASE_CLASS);
                 
             default:
                 throw new IllegalArgumentException("Invalid runtime class type: " + model);
@@ -550,14 +470,14 @@ public class Jiffle {
         Class<? extends JiffleRuntime> baseClass = null;
         switch (model) {
             case DIRECT:
-                baseClass = DEFAULT_DIRECT_BASE_CLASS;
+                baseClass = JiffleProperties.DEFAULT_DIRECT_BASE_CLASS;
                 break;
                 
             case INDIRECT:
-                baseClass = DEFAULT_INDIRECT_BASE_CLASS;
+                baseClass = JiffleProperties.DEFAULT_INDIRECT_BASE_CLASS;
                 break;
         }
-        return createRuntimeSource(model, baseClass, scriptInDocs);
+        return createRuntimeSource(model, baseClass.getName(), scriptInDocs);
     }
 
     /**
@@ -565,7 +485,7 @@ public class Jiffle {
      */
     private void init() {
         Jiffle.refCount++ ;
-        name = properties.getProperty(NAME_KEY) + refCount;
+        name = JiffleProperties.get( JiffleProperties.NAME_KEY ) + refCount;
         imageParams = CollectionFactory.map();
     }
     
@@ -705,22 +625,22 @@ public class Jiffle {
             throw new JiffleException("The script has not been compiled");
         }
 
-        String runtimeSource = createRuntimeSource(model, baseClass, false);
+        String runtimeSource = createRuntimeSource(model, baseClass.getName(), false);
 
         try {
             SimpleCompiler compiler = new SimpleCompiler();
             compiler.cook(runtimeSource);
             
             StringBuilder sb = new StringBuilder();
-            sb.append(properties.getProperty(RUNTIME_PACKAGE_KEY)).append(".");
+            sb.append(JiffleProperties.get(JiffleProperties.RUNTIME_PACKAGE_KEY)).append(".");
             
             switch (model) {
                 case DIRECT:
-                    sb.append(properties.getProperty(DIRECT_CLASS_KEY));
+                    sb.append(JiffleProperties.get(JiffleProperties.DIRECT_CLASS_KEY));
                     break;
                     
                 case INDIRECT:
-                    sb.append(properties.getProperty(INDIRECT_CLASS_KEY));
+                    sb.append(JiffleProperties.get(JiffleProperties.INDIRECT_CLASS_KEY));
                     break;
                     
                 default:
@@ -745,140 +665,28 @@ public class Jiffle {
      * @throws JiffleException if an error occurs generating the source 
      */
     private String createRuntimeSource(EvaluationModel model,
-            Class<? extends JiffleRuntime> baseClass, boolean scriptInDocs) throws JiffleException {
-        
-        StringBuilder sb  = new StringBuilder();
-
-        sb.append("package ").append(properties.getProperty(RUNTIME_PACKAGE_KEY)).append("; \n\n");
-        
-        String value = properties.getProperty(IMPORTS_KEY);
-        if (value != null && !(value.trim().length() == 0)) {
-            String[] importNames = value.split(RUNTIME_IMPORTS_DELIM);
-            for (String importName : importNames) {
-                sb.append("import ").append(importName).append("; \n");
-            }
-            sb.append("\n");
-        }
-        
-        if (scriptInDocs) {
-            sb.append(formatAsJavadoc(theScript));
-        }
-        
-        sb.append("public class ");
-        String className = null;
-        
-        switch (model) {
-            case DIRECT:
-                className = properties.getProperty(DIRECT_CLASS_KEY);
-                break;
-                
-            case INDIRECT:
-                className = properties.getProperty(INDIRECT_CLASS_KEY);
-                break;
-                
-            default:
-                throw new IllegalArgumentException("Internal compiler error");
-        }
-        sb.append(className);
-
-        sb.append(" extends ").append(baseClass.getName()).append(" { \n");
-
-        //sb.append(formatSource(astToJava(type), 4));
-        Map<SourceElement, String> sources = astToJava(model, className);
-
-        for (SourceElement element : SourceElement.values()) {
-            String src = sources.get(element);
-            if (src.trim().length() > 0) {
-                sb.append(formatSource(src, 4));
-                sb.append("\n");
-            }
-        }
-
-        sb.append("} \n");
-        return sb.toString();
-    }
-    
-    /**
-     * Converts the AST to Java source for runtime class elements.
-     * 
-     * @return Java source code
-     * 
-     * @throws JiffleException if an error occurs parsing the AST
-     */
-    private Map<SourceElement, String> astToJava(EvaluationModel model, String className)
-            throws JiffleException {
+            String baseClassName, boolean scriptInDocs) throws JiffleException {
 
         CommonTreeNodeStream nodes = new CommonTreeNodeStream(finalAST);
         nodes.setTokenStream(tokens);
-        AbstractRuntimeSourceCreator creator = new RuntimeSourceCreator(nodes);
+        
+        AbstractRuntimeSourceCreator creator = 
+                new RuntimeSourceCreator(nodes, model, baseClassName);
+        
         ParsingErrorReporter er = new DeferredErrorReporter();
         creator.setErrorReporter(er);
         
         try {
-            creator.start(model, className);
-
-            Map<SourceElement, String> sources = CollectionFactory.map();
-            sources.put(SourceElement.VARS, creator.getVarSource());
-            sources.put(SourceElement.CTOR, creator.getCtorSource());
-            sources.put(SourceElement.INIT, creator.getInitSource());
-            sources.put(SourceElement.EVAL, creator.getEvalSource());
-            sources.put(SourceElement.GETTER, creator.getGetterSource());
-            return sources;
+            creator.start();
+            
+            if (scriptInDocs) {
+                return creator.getSource(theScript);
+            } else {
+                return creator.getSource(null);
+            }
             
         } catch (RecognitionException ex) {
             throw new JiffleException(er.getErrors());
         }
     }
-    
-    /**
-     * Formats the input text as a javadoc block.
-     * 
-     * @param text the text to format
-     * 
-     * @return the javadoc block
-     */
-    private String formatAsJavadoc(String text) {
-        StringBuilder sb = new StringBuilder();
-        
-        sb.append("/** \n");
-        for (String line : text.split("\n")) {
-            line = line.trim();
-            if (line.length() > 0) {
-                sb.append(" * ").append(line).append("\n");
-            }
-        }
-        sb.append(" */ \n");
-        return sb.toString();
-    }
-    
-    /**
-     * A mind-numbingly dumb code formatter.
-     * 
-     * @param source source code to format
-     * @param baseIndent initial indentation level (number of spaces)
-     * 
-     * @return formatted code
-     */
-    private String formatSource(String source, int baseIndent) {
-        StringBuilder sb = new StringBuilder();
-        int indent = baseIndent;
-        
-        char[] spaces = new char[100];
-        Arrays.fill(spaces, ' ');
-        
-        String[] lines = source.split("\n");
-        
-        for (String line : lines) {
-            line = line.trim();
-            if (line.startsWith("}")) indent -= 4;
-            
-            sb.append(spaces, 0, indent);
-            sb.append(line.trim()).append("\n");
-            
-            if (line.endsWith("{")) indent += 4;
-        }
-        
-        return sb.toString();
-    }
-
 }

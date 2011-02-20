@@ -37,8 +37,8 @@ class OptionInfo {
     public static final String NULL_KEYWORD = "NULL_KEYWORD";
 
     private final String name;
-    private List<String> validValues;
-
+    private final List<String> validValues;
+    
     public OptionInfo(String name, String[] validValues) {
         this.name = name;
         this.validValues = Arrays.asList(validValues);

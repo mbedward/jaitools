@@ -28,15 +28,11 @@ package jaitools.jiffle.runtime;
  * @version $Id$
  */
 public abstract class AbstractJiffleRuntime implements JiffleRuntime {
-    /**
-     * Value to return for out of bounds image data requests
-     */
-    protected double _outsideValue;
-    /**
-     * Whether the {@code outsideValueSet} option is set
-     */
+    
     protected boolean _outsideValueSet;
     
+    protected double _outsideValue;
+
     /**
      * {@inheritDoc}
      */
@@ -52,4 +48,8 @@ public abstract class AbstractJiffleRuntime implements JiffleRuntime {
      */
     protected abstract void initImageScopeVars();
 
+    /**
+     * Initializes runtime class fields related to Jiffle script options.
+     */
+    protected abstract void initOptionVars();
 }

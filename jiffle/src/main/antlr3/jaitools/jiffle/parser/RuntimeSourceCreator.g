@@ -46,31 +46,37 @@ import jaitools.jiffle.Jiffle;
 
 private Set<String> declaredVars = CollectionFactory.set();
 
+public RuntimeSourceCreator(TreeNodeStream input, 
+        Jiffle.EvaluationModel model, String baseClass) {
+
+    super(input, model, baseClass);
+}
+
 }
 
 
-start[Jiffle.EvaluationModel model, String className]
+start
 @init {
-    initializeSources(model, className);
+    initializeSources();
 }
 @after {
     finalizeSources();
 }
                 : jiffleOption* varDeclaration* (s=statement 
                         {
-                            evalSB.append(s.src); 
-                            String eol = s.isBlock ? "\n" : ";\n" ;
-                            evalSB.append(eol);
+                            addStatement(s.src, s.isBlock);
                         })+
                 ;
 
 
 jiffleOption    : ^(JIFFLE_OPTION ID optionValue)
+                  { setOption($ID.text, $optionValue.src); }
                 ;
 
 
-optionValue     : ID
-                | INT_LITERAL
+optionValue returns [String src]
+                : ID { $src = $ID.text; }
+                | literal {$src = $literal.src; }
                 ;
 
 

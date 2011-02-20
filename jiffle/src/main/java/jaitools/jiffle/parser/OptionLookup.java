@@ -20,8 +20,11 @@
 
 package jaitools.jiffle.parser;
 
-import jaitools.CollectionFactory;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+
+import jaitools.CollectionFactory;
 
 /**
  * A lookup service used by the Jiffle compiler when parsing script options.
@@ -33,15 +36,32 @@ import java.util.List;
 public class OptionLookup {
 
     private static final List<OptionInfo> options;
+    private static final Map<String, String> activeRuntimeExpr;
+    private static final Map<String, String> inactiveRuntimeExpr;
+    private static final List<String> names;
     
     static {
         options = CollectionFactory.list();
+        names = CollectionFactory.list();
+        activeRuntimeExpr = CollectionFactory.map();
+        inactiveRuntimeExpr = CollectionFactory.map();
         
         OptionInfo info;
+        String name;
         
-        info = new OptionInfo("outside", 
-                new String[] { OptionInfo.ANY_NUMBER, OptionInfo.NULL_KEYWORD } );
+        name = "outside";
+        
+        info = new OptionInfo(name,
+                new String[] { OptionInfo.ANY_NUMBER, OptionInfo.NULL_KEYWORD });
+        
         options.add(info);
+        names.add(name);
+        
+        activeRuntimeExpr.put(name, 
+                "_outsideValueSet = true;\n"
+                + "_outsideValue = _VALUE_;");
+        
+        inactiveRuntimeExpr.put(name, "_outsideValueSet = false;");
     }
     
     public static boolean isDefined(String optionName) {
@@ -60,6 +80,10 @@ public class OptionLookup {
         return getInfo(optionName).isValidValue(value);
     }
     
+    public static Iterable<String> getNames() {
+        return Collections.unmodifiableList(names);
+    }
+    
     private static OptionInfo getInfo(String optionName) throws UndefinedOptionException {
         for (OptionInfo info : options) {
             if (info.getName().equalsIgnoreCase(optionName)) {
@@ -69,5 +93,23 @@ public class OptionLookup {
         
         throw new UndefinedOptionException(optionName);
     }
-    
+
+    public static String getActiveRuntimExpr(String name, String value) {
+        String key = name.toLowerCase();
+        String expr = activeRuntimeExpr.get(key);
+        if (expr == null) {
+            throw new IllegalArgumentException("Option name not recognized: " + name);
+        }
+        return expr.replace("_VALUE_", value);
+    }
+
+    public static String getDefaultRuntimeExpr(String name) {
+        String key = name.toLowerCase();
+        String expr = inactiveRuntimeExpr.get(key);
+        if (expr == null) {
+            throw new IllegalArgumentException("Option name not recognized: " + name);
+        }
+        return expr;
+    }
+
 }
