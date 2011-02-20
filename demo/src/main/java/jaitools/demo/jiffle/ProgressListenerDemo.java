@@ -230,6 +230,9 @@ public class ProgressListenerDemo {
         @Override
         protected void initImageScopeVars() {}
 
+        @Override
+        protected void initOptionVars() {}
+
         /**
          * Pretends to process a pixel (very slowly).
          */
