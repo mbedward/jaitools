@@ -222,7 +222,7 @@ public class GameOfLife extends JFrame {
     }
 
     public GameOfLife() {
-        super("Jiffle plays the Game of Life");
+        super("Jiffle demo: Conway's Game of Life");
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(500, 500);
