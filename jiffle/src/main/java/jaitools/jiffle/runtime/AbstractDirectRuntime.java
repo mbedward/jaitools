@@ -80,6 +80,11 @@ public abstract class AbstractDirectRuntime extends AbstractJiffleRuntime implem
     /** Processing bounds height */
     protected int _height;
     
+
+    public AbstractDirectRuntime() {
+        initOptionVars();
+    }
+
     public void setDestinationImage(String imageName, WritableRenderedImage image) {
         images.put(imageName, image);
         

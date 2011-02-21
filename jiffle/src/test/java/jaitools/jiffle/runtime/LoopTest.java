@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 Michael Bedward
+ * Copyright 2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -26,7 +26,7 @@ import org.junit.Test;
  * Unit tests for Jiffle's loop statements.
  * 
  * @author Michael Bedward
- * @since 1.0
+ * @since 1.1
  * @version $Id$
  */
 public class LoopTest extends StatementsTestBase {
