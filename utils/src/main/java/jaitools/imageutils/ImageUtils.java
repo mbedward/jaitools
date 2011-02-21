@@ -230,6 +230,78 @@ public class ImageUtils {
         
         return tImg;
     }
+    
+    public static TiledImage createImageFromArray(Number[] array, int width, int height) {
+        Number val = array[0];
+        TiledImage img = createConstantImage(width, height, val);
+
+        if (array[0] instanceof Double) {
+            fillImageAsDouble(img, array, width, height);
+
+        } else if (array[0] instanceof Float) {
+            fillImageAsFloat(img, array, width, height);
+
+        } else if (array[0] instanceof Integer) {
+            fillImageAsInt(img, array, width, height);
+
+        } else if (array[0] instanceof Short) {
+            fillImageAsShort(img, array, width, height);
+
+        } else if (array[0] instanceof Byte) {
+            fillImageAsByte(img, array, width, height);
+
+        } else {
+            throw new UnsupportedOperationException("Unsupported data type: " +
+                    array[0].getClass().getName());
+        }
+        
+        return img;
+    }
+    
+    private static void fillImageAsDouble(TiledImage img, Number[] array, int width, int height) {
+        int k = 0;
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                img.setSample(x, y, 0, array[k++].doubleValue());
+            }
+        }
+    }
+
+    private static void fillImageAsFloat(TiledImage img, Number[] array, int width, int height) {
+        int k = 0;
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                img.setSample(x, y, 0, array[k++].floatValue());
+            }
+        }
+    }
+
+    private static void fillImageAsInt(TiledImage img, Number[] array, int width, int height) {
+        int k = 0;
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                img.setSample(x, y, 0, array[k++].intValue());
+            }
+        }
+    }
+
+    private static void fillImageAsShort(TiledImage img, Number[] array, int width, int height) {
+        int k = 0;
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                img.setSample(x, y, 0, array[k++].shortValue());
+            }
+        }
+    }
+
+    private static void fillImageAsByte(TiledImage img, Number[] array, int width, int height) {
+        int k = 0;
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                img.setSample(x, y, 0, array[k++].byteValue());
+            }
+        }
+    }
 
     /**
      * Create a set of colours using a simple colour ramp algorithm in the HSB colour space.
@@ -287,47 +359,6 @@ public class ImageUtils {
         }
 
         return colors;
-    }
-
-    /**
-     * A helper method that creates a 3-band colour image, using a colour ramp,
-     * for a data image with integral data type and pixel values between 1 and
-     * {@code ncol-1}.
-     * <p>
-     * This method is only preliminary and, presently, very limited in the
-     * input images that it will deal with.
-     *
-     * @param dataImg the data image: presently assumed to be single-band with
-     * an integral data type
-     *
-     * @param ncol number of colours to be created using a colour ramp
-     *
-     * @return a three band image with an RGB ColorModel
-     * 
-     * @deprecated This method will be removed in version 1.1.
-     *             Please use {@linkplain #createDisplayImage(RenderedImage, Map)} instead.
-     *             Colour ramp colours can be generated with
-     *             {@linkplain #createRampColours(int)}.
-     */
-    public static RenderedImage createDisplayImage(RenderedImage dataImg, int ncol) {
-
-        byte[][] lookup = new byte[3][ncol];
-
-        float hue = 0f;
-        float hueIncr = 1f / (float)ncol;
-        for (int i = 0; i < ncol; i++) {
-            int colour = Color.HSBtoRGB(hue, 0.7f, 0.7f);
-            lookup[0][i] = (byte) ((colour & 0x00ff0000) >> 16);
-            lookup[1][i] = (byte) ((colour & 0x0000ff00) >> 8);
-            lookup[2][i] = (byte) (colour & 0x000000ff);
-            hue += hueIncr;
-        }
-
-        ParameterBlockJAI pb = new ParameterBlockJAI("lookup");
-        pb.setSource("source0", dataImg);
-        pb.setParameter("table", new LookupTableJAI(lookup, 1));
-        RenderedOp displayImg = JAI.create("lookup", pb);
-        return displayImg;
     }
 
     /**
@@ -524,4 +555,5 @@ public class ImageUtils {
             }
         }
     }
+
 }
