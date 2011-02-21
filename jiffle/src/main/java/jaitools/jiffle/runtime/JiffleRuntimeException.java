@@ -27,7 +27,7 @@ package jaitools.jiffle.runtime;
  * @since 1.1
  * @version $Id$
  */
-class JiffleRuntimeException extends RuntimeException {
+public class JiffleRuntimeException extends RuntimeException {
 
     public JiffleRuntimeException(String msg) {
         super(msg);
