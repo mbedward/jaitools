@@ -19,6 +19,8 @@
  */
 package jaitools.demo.regionalize;
 
+import jaitools.CollectionFactory;
+import java.awt.Color;
 import java.awt.image.RenderedImage;
 import java.util.List;
 
@@ -32,6 +34,7 @@ import jaitools.imageutils.ImageUtils;
 import jaitools.media.jai.regionalize.Region;
 import jaitools.media.jai.regionalize.RegionalizeDescriptor;
 import jaitools.swing.ImageFrame;
+import java.util.Map;
 
 /**
  * Demonstrates using the Regionalize operation to identify regions
@@ -106,13 +109,19 @@ public class RegionalizeDemo {
         for (Region r : regions) {
             System.out.println(r);
         }
-
+        
         /*
          * We use an ImageUtils method to make a nice colour image
          * of the regions to display
          */
-        RenderedImage displayImg = ImageUtils.createDisplayImage(orthoImg, regions.size());
-
+        Color[] colors = ImageUtils.createRampColours(regions.size());
+        Map<Integer, Color> colorMap = CollectionFactory.map();
+        int k = 0;
+        for (Region r : regions) {
+            colorMap.put(r.getId(), colors[k++]);
+        }
+        
+        RenderedImage displayImg = ImageUtils.createDisplayImage(orthoImg, colorMap);
         frame = new ImageFrame(displayImg, orthoImg, "Regions with orthogonal connection");
         frame.setVisible(true);
 
@@ -126,8 +135,10 @@ public class RegionalizeDemo {
         pb.setParameter("diagonal", true);
         RenderedOp diagImg = JAI.create("regionalize", pb);
 
-        // there will only be two regions
-        RenderedImage diagDisplayImg = ImageUtils.createDisplayImage(diagImg, 2);
+        colorMap.clear();
+        colorMap.put(1, Color.CYAN);
+        colorMap.put(2, Color.ORANGE);
+        RenderedImage diagDisplayImg = ImageUtils.createDisplayImage(diagImg, colorMap);
 
         frame = new ImageFrame(diagDisplayImg, diagImg, "Regions with diagonal connection");
         frame.setVisible(true);
