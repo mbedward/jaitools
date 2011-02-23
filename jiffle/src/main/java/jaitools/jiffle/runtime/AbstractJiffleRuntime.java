@@ -20,6 +20,8 @@
 
 package jaitools.jiffle.runtime;
 
+import java.util.Stack;
+
 /**
  * Provides default implementations of {@link JiffleRuntime} methods.
  *
@@ -32,6 +34,8 @@ public abstract class AbstractJiffleRuntime implements JiffleRuntime {
     protected boolean _outsideValueSet;
     
     protected double _outsideValue;
+    
+    protected Stack _stk;
 
     /**
      * {@inheritDoc}
