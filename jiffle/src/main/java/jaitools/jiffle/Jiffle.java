@@ -37,17 +37,16 @@ import org.antlr.runtime.tree.CommonTreeNodeStream;
 import org.codehaus.janino.SimpleCompiler;
 
 import jaitools.CollectionFactory;
-import jaitools.jiffle.parser.AbstractRuntimeSourceCreator;
 import jaitools.jiffle.parser.CheckAssignments;
 import jaitools.jiffle.parser.CheckFunctionCalls;
-import jaitools.jiffle.parser.DeferredErrorReporter;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
 import jaitools.jiffle.parser.Message;
 import jaitools.jiffle.parser.MessageTable;
 import jaitools.jiffle.parser.OptionsBlockReader;
 import jaitools.jiffle.parser.ParsingErrorReporter;
-import jaitools.jiffle.parser.RuntimeSourceCreator;
+import jaitools.jiffle.parser.RuntimeSourceGenerator;
+import jaitools.jiffle.parser.SourceGenerator;
 import jaitools.jiffle.parser.TagVars;
 import jaitools.jiffle.parser.TransformExpressions;
 import jaitools.jiffle.runtime.JiffleDirectRuntime;
@@ -103,7 +102,7 @@ import jaitools.jiffle.runtime.JiffleRuntime;
 public class Jiffle {
     
     /** Constants for runtime model. */
-    public static enum EvaluationModel {
+    public static enum RuntimeModel {
         /** The runtime class implements {@link JiffleDirectRuntime} */
         DIRECT(JiffleDirectRuntime.class),
         
@@ -112,7 +111,7 @@ public class Jiffle {
         
         private Class<? extends JiffleRuntime> runtimeClass;
         
-        private EvaluationModel(Class<? extends JiffleRuntime> clazz) {
+        private RuntimeModel(Class<? extends JiffleRuntime> clazz) {
             this.runtimeClass = clazz;
         }
 
@@ -133,8 +132,8 @@ public class Jiffle {
          * @return the contant or {@code null} if the class does not derive
          *         from a supported base class
          */
-        public static EvaluationModel get(Class<? extends JiffleRuntime> clazz) {
-            for (EvaluationModel t : EvaluationModel.values()) {
+        public static RuntimeModel get(Class<? extends JiffleRuntime> clazz) {
+            for (RuntimeModel t : RuntimeModel.values()) {
                 if (t.runtimeClass.isAssignableFrom(clazz)) {
                     return t;
                 }
@@ -403,7 +402,7 @@ public class Jiffle {
      */
     public JiffleDirectRuntime getRuntimeInstance() throws JiffleException {
         return (JiffleDirectRuntime) createRuntimeInstance(
-                EvaluationModel.DIRECT, 
+                RuntimeModel.DIRECT, 
                 JiffleProperties.DEFAULT_DIRECT_BASE_CLASS);
     }
     
@@ -412,11 +411,11 @@ public class Jiffle {
      * <p>
      * The {@code Jiffle} object must be compiled before calling this method.
      * 
-     * @param model the {@link Jiffle.EvaluationModel}
+     * @param model the {@link Jiffle.RuntimeModel}
      * @return the runtime object
      * @throws JiffleException if the runtime object could not be created
      */
-    public JiffleRuntime getRuntimeInstance(EvaluationModel model) throws JiffleException {
+    public JiffleRuntime getRuntimeInstance(RuntimeModel model) throws JiffleException {
         switch (model) {
             case DIRECT:
                 return createRuntimeInstance(model, 
@@ -445,7 +444,7 @@ public class Jiffle {
      * @throws JiffleException if the runtime object could not be created
      */
     public <T extends JiffleRuntime> T getRuntimeInstance(Class<T> baseClass) throws JiffleException {
-        EvaluationModel model = EvaluationModel.get(baseClass);
+        RuntimeModel model = RuntimeModel.get(baseClass);
         if (model == null) {
             throw new JiffleException(baseClass.getName() + 
                     " does not implement a required Jiffle runtime interface");
@@ -457,14 +456,14 @@ public class Jiffle {
     /**
      * Gets a copy of the Java source for the runtime class.
      * 
-     * @param model the {@link Jiffle.EvaluationModel}
+     * @param model the {@link Jiffle.RuntimeModel}
      * @param scriptInDocs whether to include the original Jiffle script
      *        in the class javadocs
      * 
      * @return source for the runtime class
      * @throws JiffleException on error creating the runtime source
      */
-    public String getRuntimeSource(EvaluationModel model, boolean scriptInDocs)
+    public String getRuntimeSource(RuntimeModel model, boolean scriptInDocs)
             throws JiffleException {
         
         Class<? extends JiffleRuntime> baseClass = null;
@@ -601,7 +600,7 @@ public class Jiffle {
             nodes = new CommonTreeNodeStream(tree);
             TransformExpressions trexpr = new TransformExpressions(nodes);
             tree = (CommonTree) trexpr.start().getTree();
-
+            
             finalAST = tree;
             return true;
 
@@ -619,7 +618,7 @@ public class Jiffle {
      * 
      * @throws Exception 
      */
-    private JiffleRuntime createRuntimeInstance(EvaluationModel model,
+    private JiffleRuntime createRuntimeInstance(RuntimeModel model,
             Class<? extends JiffleRuntime> baseClass) throws JiffleException {
         if (!isCompiled()) {
             throw new JiffleException("The script has not been compiled");
@@ -664,29 +663,15 @@ public class Jiffle {
      * 
      * @throws JiffleException if an error occurs generating the source 
      */
-    private String createRuntimeSource(EvaluationModel model,
+    private String createRuntimeSource(RuntimeModel model,
             String baseClassName, boolean scriptInDocs) throws JiffleException {
 
         CommonTreeNodeStream nodes = new CommonTreeNodeStream(finalAST);
         nodes.setTokenStream(tokens);
         
-        AbstractRuntimeSourceCreator creator = 
-                new RuntimeSourceCreator(nodes, model, baseClassName);
-        
-        ParsingErrorReporter er = new DeferredErrorReporter();
-        creator.setErrorReporter(er);
-        
-        try {
-            creator.start();
-            
-            if (scriptInDocs) {
-                return creator.getSource(theScript);
-            } else {
-                return creator.getSource(null);
-            }
-            
-        } catch (RecognitionException ex) {
-            throw new JiffleException(er.getErrors());
-        }
+        SourceGenerator generator = new RuntimeSourceGenerator(nodes);
+        generator.setBaseClassName(baseClassName);
+        generator.setRuntimeModel(model);
+        return generator.getSource();
     }
 }

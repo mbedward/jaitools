@@ -1,0 +1,68 @@
+/*
+ * Copyright 2011 Michael Bedward
+ *
+ * This file is part of jai-tools.
+ *
+ * jai-tools is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * jai-tools is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+group DirectRuntime : Runtime;
+
+/*
+ * This file contains templates for direct runtime class source code generation.
+ * It depends on the shared templates in Runtime.stg.
+ *
+ * The templates are formatted for the ANTLR StringTemplate libary and are
+ * called from the source generator class built from the RuntimeSourceCreator.g
+ * grammar file.
+ *
+ * @author Michael Bedward
+ * @since 1.1
+ * @version $Id$
+ */
+
+////////////////////////////////////////////////////////////
+// Runtime template.
+// This is the root template for source generation.
+
+runtime(pkgname, imports, name, base, opts, fields, eval) ::= <<
+package <pkgname>;
+
+<imports: {imp |import <imp>;}; separator="\n">
+
+public class <name> extends <base> {
+    <declarefields(fields)>
+
+    <initfields(fields)>
+
+    <initoptions(opts)>
+    
+    public void evaluate(int _x, int _y) {
+        _stk.clear();
+
+        <eval; separator="\n">
+    }
+
+    <getter(vars=fields)>
+}
+>>
+
+
+////////////////////////////////////////////////////////////
+// Write to destination image
+
+setdestvalue(var, expr) ::= <<
+writeToImage("<var>", _x, _y, 0, <expr>)
+>>

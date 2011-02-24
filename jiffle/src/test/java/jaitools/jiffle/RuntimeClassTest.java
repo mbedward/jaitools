@@ -34,7 +34,7 @@ import jaitools.jiffle.runtime.JiffleIndirectRuntime;
  * Unit tests for basic Jiffle object creation, setting attributes and compiling.
  * 
  * @author Michael Bedward
- * @since 1.0
+ * @since 1.1
  * @version $Id$
  */
 public class RuntimeClassTest {
@@ -51,14 +51,14 @@ public class RuntimeClassTest {
     @Test
     public void getDirectRuntime() throws Exception {
         setupSingleDestScript();
-        Object runtime = jiffle.getRuntimeInstance(Jiffle.EvaluationModel.DIRECT);
+        Object runtime = jiffle.getRuntimeInstance(Jiffle.RuntimeModel.DIRECT);
         assertTrue(runtime instanceof JiffleDirectRuntime);
     }
 
     @Test
     public void getIndirectRuntime() throws Exception {
         setupSingleDestScript();
-        Object runtime = jiffle.getRuntimeInstance(Jiffle.EvaluationModel.INDIRECT);
+        Object runtime = jiffle.getRuntimeInstance(Jiffle.RuntimeModel.INDIRECT);
         assertTrue(runtime instanceof JiffleIndirectRuntime);
     }
 

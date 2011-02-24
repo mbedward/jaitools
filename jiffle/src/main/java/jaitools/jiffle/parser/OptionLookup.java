@@ -37,14 +37,12 @@ public class OptionLookup {
 
     private static final List<OptionInfo> options;
     private static final Map<String, String> activeRuntimeExpr;
-    private static final Map<String, String> inactiveRuntimeExpr;
     private static final List<String> names;
     
     static {
         options = CollectionFactory.list();
         names = CollectionFactory.list();
         activeRuntimeExpr = CollectionFactory.map();
-        inactiveRuntimeExpr = CollectionFactory.map();
         
         OptionInfo info;
         String name;
@@ -60,8 +58,6 @@ public class OptionLookup {
         activeRuntimeExpr.put(name, 
                 "_outsideValueSet = true;\n"
                 + "_outsideValue = _VALUE_;");
-        
-        inactiveRuntimeExpr.put(name, "_outsideValueSet = false;");
     }
     
     public static boolean isDefined(String optionName) {
@@ -101,15 +97,6 @@ public class OptionLookup {
             throw new IllegalArgumentException("Option name not recognized: " + name);
         }
         return expr.replace("_VALUE_", value);
-    }
-
-    public static String getDefaultRuntimeExpr(String name) {
-        String key = name.toLowerCase();
-        String expr = inactiveRuntimeExpr.get(key);
-        if (expr == null) {
-            throw new IllegalArgumentException("Option name not recognized: " + name);
-        }
-        return expr;
     }
 
 }

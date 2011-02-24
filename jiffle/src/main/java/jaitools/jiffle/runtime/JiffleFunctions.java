@@ -27,7 +27,8 @@ import static jaitools.numeric.DoubleComparison.dzero;
 import jaitools.numeric.SampleStats;
 
 /**
- * Provides static functions than can be called by Jiffle runtime objects.
+ * Provides functions for Jiffle runtime objects. An instance of this class
+ * is created by {@link AbstractJiffleRuntime}.
  * 
  * @author Michael Bedward
  * @since 1.1
@@ -35,7 +36,7 @@ import jaitools.numeric.SampleStats;
  */
 public class JiffleFunctions {
     
-    private static Random rr = new Random();
+    private Random rr = new Random();
     
     /**
      * Converts an angle in degrees to radians.
@@ -43,7 +44,7 @@ public class JiffleFunctions {
      * @param x input angle in degrees
      * @return angle in radians
      */
-    public static double degToRad(double x) {
+    public double degToRad(double x) {
         return Math.PI * x / 180d;
     }
 
@@ -57,7 +58,7 @@ public class JiffleFunctions {
      * @return -1 if x is negative; 0 if x is 0; 1 if x is positive; 
      *         or {@code null} if x is NaN
      */
-    public static Integer sign(double x) {
+    public Integer sign(double x) {
         if (!Double.isNaN(x)) {
             return dcomp(x, 0);
         }
@@ -72,7 +73,7 @@ public class JiffleFunctions {
      * @return 1 if x is infinite; 0 if finite; or {@code Double.Nan}
      *         if x is {@code Double.Nan}
      */
-    public static double isinf(double x) {
+    public double isinf(double x) {
         return (Double.isNaN(x) ? Double.NaN : (Double.isInfinite(x) ? 1d : 0d));
     }
     
@@ -82,7 +83,7 @@ public class JiffleFunctions {
      * @param x test value
      * @return 1 if x is NaN; 0 otherwise
      */
-    public static double isnan(double x) {
+    public double isnan(double x) {
         return Double.isNaN(x) ? 1d : 0d;
     }
     
@@ -92,7 +93,7 @@ public class JiffleFunctions {
      * @param x the test value
      * @return 1 if x is null; 0 otherwise
      */
-    public static double isnull(double x) {
+    public double isnull(double x) {
         return Double.isNaN(x) ? 1d : 0d;
     }
 
@@ -103,7 +104,7 @@ public class JiffleFunctions {
      * @param b the base
      * @return log to base b
      */
-    public static double log2Arg(double x, double b) {
+    public double log2Arg(double x, double b) {
         return Math.log(x) / Math.log(b);
     }
     
@@ -114,7 +115,7 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the maximum value
      */
-    public static double max(Double[] values) {
+    public double max(Double[] values) {
         return SampleStats.max(values, true);
     }
     
@@ -125,7 +126,7 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the mean value
      */
-    public static double mean(Double[] values) {
+    public double mean(Double[] values) {
         return SampleStats.mean(values, true);
     }
     
@@ -136,7 +137,7 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the median value
      */
-    public static double median(Double[] values) {
+    public double median(Double[] values) {
         return SampleStats.median(values, true);
     }
     
@@ -147,7 +148,7 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the minimum value
      */
-    public static double min(Double[] values) {
+    public double min(Double[] values) {
         return SampleStats.min(values, true);
     }
     
@@ -158,7 +159,7 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the modal value
      */
-    public static double mode(Double[] values) {
+    public double mode(Double[] values) {
         return SampleStats.mode(values, true);
     }
     
@@ -168,7 +169,7 @@ public class JiffleFunctions {
      * @param x input angle in radians
      * @return angle in degrees
      */
-    public static double radToDeg(double x) {
+    public double radToDeg(double x) {
         return x / Math.PI * 180d;
     }
     
@@ -178,7 +179,7 @@ public class JiffleFunctions {
      * @param x upper limit
      * @return the random value
      */
-    public static double rand(double x) {
+    public double rand(double x) {
         return rr.nextDouble() * x;
     }
     
@@ -189,7 +190,7 @@ public class JiffleFunctions {
      * @param x upper limit
      * @return the random value
      */
-    public static double randInt(double x) {
+    public double randInt(double x) {
         return rr.nextInt((int) x);
     }
     
@@ -200,7 +201,7 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the range of the input values
      */
-    public static double range(Double[] values) {
+    public double range(Double[] values) {
         return SampleStats.range(values, true);
     }
     
@@ -211,7 +212,7 @@ public class JiffleFunctions {
      * @param prec the desired precision
      * @return the rounded value
      */
-    public static double round2Arg(double x, double prec) {
+    public double round2Arg(double x, double prec) {
         int ifac = (int) (prec + 0.5);
         return Math.round(x / ifac) * ifac;
     }
@@ -223,7 +224,7 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the standard deviation of the input values
      */
-    public static double sdev(Double[] values) {
+    public double sdev(Double[] values) {
         return SampleStats.range(values, true);
     }
 
@@ -234,7 +235,7 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the variance of the input values
      */
-    public static double variance(Double[] values) {
+    public double variance(Double[] values) {
         return SampleStats.variance(values, true);
     }
     
@@ -246,7 +247,7 @@ public class JiffleFunctions {
      * @return 1 if either x or y is non-zero; 0 if this is not the case;
      *         or {@code Double.Nan} if either x or y is {@code Double.Nan}
      */
-    public static double OR(double x, double y) {
+    public double OR(double x, double y) {
         if (Double.isNaN(x) || Double.isNaN(y)) {
             return Double.NaN;
         }
@@ -262,7 +263,7 @@ public class JiffleFunctions {
      * @return 1 if both x and y are non-zero; 0 if this is not the case;
      *         or {@code Double.Nan} if either x or y is {@code Double.Nan}
      */
-    public static double AND(double x, double y) {
+    public double AND(double x, double y) {
         if (Double.isNaN(x) || Double.isNaN(y)) {
             return Double.NaN;
         }
@@ -278,7 +279,7 @@ public class JiffleFunctions {
      * @return 1 if just one of x or y is non-zero; 0 if this is not the case;
      *         or {@code Double.Nan} if either x or y is {@code Double.Nan}
      */
-    public static double XOR(double x, double y) {
+    public double XOR(double x, double y) {
         if (Double.isNaN(x) || Double.isNaN(y)) {
             return Double.NaN;
         }
@@ -294,7 +295,7 @@ public class JiffleFunctions {
      * @return 1 if x is greater than y; 0 if this is not the case;
      *         or {@code Double.Nan} if either x or y is {@code Double.Nan}
      */
-    public static double GT(double x, double y) {
+    public double GT(double x, double y) {
         if (Double.isNaN(x) || Double.isNaN(y)) {
             return Double.NaN;
         }
@@ -310,7 +311,7 @@ public class JiffleFunctions {
      * @return 1 if x is greater than or equal to y; 0 if this is not the case;
      *         or {@code Double.Nan} if either x or y is {@code Double.Nan}
      */
-    public static double GE(double x, double y) {
+    public double GE(double x, double y) {
         if (Double.isNaN(x) || Double.isNaN(y)) {
             return Double.NaN;
         }
@@ -326,7 +327,7 @@ public class JiffleFunctions {
      * @return 1 if x is less than y; 0 if this is not the case;
      *         or {@code Double.Nan} if either x or y is {@code Double.Nan}
      */
-    public static double LT(double x, double y) {
+    public double LT(double x, double y) {
         if (Double.isNaN(x) || Double.isNaN(y)) {
             return Double.NaN;
         }
@@ -342,7 +343,7 @@ public class JiffleFunctions {
      * @return 1 if x is less than or equal to y; 0 if this is not the case;
      *         or {@code Double.Nan} if either x or y is {@code Double.Nan}
      */
-    public static double LE(double x, double y) {
+    public double LE(double x, double y) {
         if (Double.isNaN(x) || Double.isNaN(y)) {
             return Double.NaN;
         }
@@ -358,7 +359,7 @@ public class JiffleFunctions {
      * @return 1 if x is equal to y; 0 if this is not the case;
      *         or {@code Double.Nan} if either x or y is {@code Double.Nan}
      */
-    public static double EQ(double x, double y) {
+    public double EQ(double x, double y) {
         if (Double.isNaN(x) || Double.isNaN(y)) {
             return Double.NaN;
         }
@@ -374,7 +375,7 @@ public class JiffleFunctions {
      * @return 1 if x is not equal to y; 0 if this is not the case;
      *         or {@code Double.Nan} if either x or y is {@code Double.Nan}
      */
-    public static double NE(double x, double y) {
+    public double NE(double x, double y) {
         if (Double.isNaN(x) || Double.isNaN(y)) {
             return Double.NaN;
         }
@@ -390,7 +391,7 @@ public class JiffleFunctions {
      * @return 1 if x is zero; 0 if x is non-zero; 
      * or {@code Double.Nan} if x is {@code Double.Nan}
      */
-    public static double NOT(double x) {
+    public double NOT(double x) {
         if (Double.isNaN(x)) {
             return Double.NaN;
         }

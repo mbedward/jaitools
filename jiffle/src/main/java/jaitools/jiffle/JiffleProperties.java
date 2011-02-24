@@ -54,6 +54,10 @@ public class JiffleProperties {
     /** Delimiter used to separate multiple import entries */
     public static final String RUNTIME_IMPORTS_DELIM = ";";
     
+    public static final String COMMON_SOURCE_TEMPLATES_KEY = "common.source.templates";
+    public static final String DIRECT_SOURCE_TEMPLATES_KEY = "direct.source.templates";
+    public static final String INDIRECT_SOURCE_TEMPLATES_KEY = "indirect.source.templates";
+    
     public static final Class<? extends JiffleRuntime> DEFAULT_DIRECT_BASE_CLASS;
     public static final Class<? extends JiffleRuntime> DEFAULT_INDIRECT_BASE_CLASS;
     

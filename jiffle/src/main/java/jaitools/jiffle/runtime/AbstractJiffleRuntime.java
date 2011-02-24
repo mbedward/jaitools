@@ -20,10 +20,10 @@
 
 package jaitools.jiffle.runtime;
 
-import java.util.Stack;
 
 /**
- * Provides default implementations of {@link JiffleRuntime} methods.
+ * Provides default implementations of {@link JiffleRuntime} methods plus 
+ * some common fields.
  *
  * @author Michael Bedward
  * @since 1.1
@@ -31,11 +31,22 @@ import java.util.Stack;
  */
 public abstract class AbstractJiffleRuntime implements JiffleRuntime {
     
-    protected boolean _outsideValueSet;
+    protected boolean _outsideValueSet = false;
     
     protected double _outsideValue;
     
-    protected Stack _stk;
+    protected IntegerStack _stk;
+    
+    protected final JiffleFunctions _FN;
+
+    /**
+     * Creates a new instance of this class and initializes its 
+     * {@link JiffleFunctions} and {@link IntegerStack} objects.
+     */
+    public AbstractJiffleRuntime() {
+        _FN = new JiffleFunctions();
+        _stk = new IntegerStack();
+    }
 
     /**
      * {@inheritDoc}

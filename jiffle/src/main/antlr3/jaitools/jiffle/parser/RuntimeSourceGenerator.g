@@ -24,9 +24,10 @@
   * @author Michael Bedward
   */
 
-tree grammar RuntimeSourceCreator2;
+tree grammar RuntimeSourceGenerator;
 
 options {
+    superClass = AbstractSourceGenerator;
     tokenVocab = Jiffle;
     ASTLabelType = CommonTree;
     output = template;
@@ -46,38 +47,25 @@ import jaitools.jiffle.Jiffle;
 
 private Set<String> declaredVars = CollectionFactory.set();
 
-private String className;
-private String baseClassName;
-
-public RuntimeSourceCreator2(TreeNodeStream input, String className, String baseClassName) {
-    this(input);
-    this.className = className;
-    this.baseClassName = baseClassName;
-}
-
-private String getRuntimeExpr(String name, int numArgs) {
-    try {
-        return FunctionLookup.getRuntimeExpr(name, numArgs);
-    } catch (UndefinedFunctionException ex) {
-        throw new IllegalArgumentException(ex);
-    }
 }
 
 
-}
+start           : (o+=jiffleOption)* (v+=varDeclaration)* (s+=statement)+
 
-
-start           : (jiffleOption)* (el+=varDeclaration)* (el+=statement)+
-                -> class(name={className}, base={baseClassName}, members={$el})
+                -> runtime(pkgname={pkgName}, imports={imports}, 
+                           name={className}, base={baseClassName}, 
+                           opts={$o}, fields={$v}, eval={$s})
                 ;
 
 
 jiffleOption    : ^(JIFFLE_OPTION ID optionValue)
+                -> {%{getOptionExpr($ID.text, $optionValue.src)}}
                 ;
 
 
-optionValue     : ID -> {%{$ID.text}}
-                | literal -> {$literal.st}
+optionValue returns [String src]
+                : ID { $src = $ID.text; }
+                | literal { $src = $literal.start.getText(); }
                 ;
 
 
@@ -91,7 +79,7 @@ block           : ^(BLOCK s+=blockStatement*)
                 ;
 
 
-blockStatement  : statement -> statement(stmt={$statement.st})
+blockStatement  : statement -> {$statement.st}
                 | ^(BREAKIF expression) -> breakif(cond={$expression.st})
                 ;
 
@@ -109,7 +97,7 @@ simpleStatement : imageWrite -> {$imageWrite.st}
 
 
 imageWrite      : ^(IMAGE_WRITE VAR_DEST expression)
-                -> imagewrite(var={$VAR_DEST.text}, expr={$expression.st})
+                -> setdestvalue(var={$VAR_DEST.text}, expr={$expression.st})
                 ;
 
 
@@ -119,27 +107,16 @@ assignmentExpression
                 ;
 
 
-assignmentOp
-@after { $st = %{$text}; }
-                : EQ
-                | TIMESEQ
-                | DIVEQ
-                | MODEQ
-                | PLUSEQ
-                | MINUSEQ
-                ;
-
-
-assignableVar
-scope { boolean addType; }
+assignableVar returns [boolean newVar]
 @init { 
-    $assignableVar::addType = false; 
+    $newVar = false;
 }
 @after { 
-    if ($assignableVar::addType) {
-        $st = %{"double " + $text};
+    String varName = $start.getText();
+    if ($newVar) {
+        $st = %{"double " + varName};
     } else {
-        $st = %{$text};
+        $st = %{varName};
     }
 }
                 : VAR_IMAGE_SCOPE 
@@ -147,7 +124,7 @@ scope { boolean addType; }
                 { 
                     if (!declaredVars.contains($VAR_PIXEL_SCOPE.text)) {
                         declaredVars.add($VAR_PIXEL_SCOPE.text);
-                        $assignableVar::addType = true;
+                        $newVar = true;
                     }
                 }
                 ;
@@ -164,10 +141,10 @@ conditionalLoop
                 ;
 
 foreachLoop     : ^(FOREACH ID ^(DECLARED_LIST e=expressionList) s=statement)
-                -> foreachlist(var={$ID.text}, list={$e.st}, stmt={$s.st})
+                -> foreachlist(n={++varIndex}, var={$ID.text}, list={$e.list}, stmt={$s.st})
 
                 | ^(FOREACH ID ^(SEQUENCE lo=expression hi=expression) s=statement)
-                -> foreachseq(var={$ID.text}, lo={$lo.st}, hi={$hi.st}, stmt={$s.st})
+                -> foreachseq(n={++varIndex}, var={$ID.text}, lo={$lo.st}, hi={$hi.st}, stmt={$s.st})
                 ;
 
 
@@ -194,7 +171,7 @@ expression returns [String src]
 
                 | var -> {$var.st}
 
-                | VAR_SOURCE -> readimage(var={$VAR_SOURCE.text})
+                | VAR_SOURCE -> getsourcevalue(var={$VAR_SOURCE.text})
 
                 | CONSTANT
                   {
@@ -209,7 +186,7 @@ expression returns [String src]
                 ;
 
 var
-@after { $st = %{$text}; }
+@after { $st = %{$start.getText()}; }
                 : VAR_IMAGE_SCOPE
                 | VAR_PIXEL_SCOPE
                 | VAR_PROVIDED
@@ -252,10 +229,21 @@ binaryExpression returns [String src]
                 ;
 
 
+assignmentOp
+@after { $st = %{$start.getText()}; }
+                : EQ
+                | TIMESEQ
+                | DIVEQ
+                | MODEQ
+                | PLUSEQ
+                | MINUSEQ
+                ;
+
+
 arithmeticOp
-@after { $st = %{$text}; }
+@after { $st = %{$start.getText()}; }
                 : TIMES
-                | DIVIDE
+                | DIV
                 | MOD
                 | PLUS
                 | MINUS
@@ -269,12 +257,12 @@ literal         : INT_LITERAL -> {%{$INT_LITERAL.text + ".0"}}
 
 expressionList returns [List list]
 @init { $list = new ArrayList(); }
-                : ^(EXPR_LIST (e=expression {$list.add($e.st);})* )
+                : ^(EXPR_LIST (expression {$list.add($expression.st);})* )
                 ;
 
 
 imagePos        : ^(IMAGE_POS VAR_SOURCE b=bandSpecifier? p=pixelSpecifier?)
-                -> imageread(var={$VAR_SOURCE.text}, pixel={$p.st}, band={$b.st})
+                -> getsourcevalue(var={$VAR_SOURCE.text}, pixel={$p.st}, band={$b.st})
                 ;
 
 
@@ -282,7 +270,7 @@ bandSpecifier   : ^(BAND_REF expression) -> {$expression.st}
                 ;
 
 
-pixelSpecifier  : ^(PIXEL_REF xpos=pixelPos["x"] ypos=pixelPos["y"]) -> pixel(x={xpos.st}, y={ypos.st})
+pixelSpecifier  : ^(PIXEL_REF xpos=pixelPos["_x"] ypos=pixelPos["_y"]) -> pixel(x={xpos.st}, y={ypos.st})
                 ;
 
 

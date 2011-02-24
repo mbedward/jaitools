@@ -110,7 +110,8 @@ public class FunctionInfo {
             case MATH:
                 return "Math." + runtimeName;
             case JIFFLE:
-                return "JiffleFunctions." + runtimeName;
+                // _FN is the instance of JiffleFunctions in AbstractJiffleRuntime
+                return "_FN." + runtimeName;
             case PROXY:
                 return runtimeName;
             default:

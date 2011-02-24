@@ -1,0 +1,259 @@
+/*
+ * Copyright 2011 Michael Bedward
+ *
+ * This file is part of jai-tools.
+ *
+ * jai-tools is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * jai-tools is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+group Runtime;
+
+/*
+ * This file contains templates used for both direct and indirect runtime class 
+ * source code generation.
+ *
+ * The templates are formatted for the ANTLR StringTemplate libary and are
+ * called from the source generator class built from the RuntimeSourceCreator.g
+ * grammar file.
+ *
+ * @author Michael Bedward
+ * @since 1.1
+ * @version $Id$
+ */
+
+////////////////////////////////////////////////////////////
+// Field declaration
+//
+// This template defines no output. It is used as a
+// data structure by other templates.
+
+field(name, type, mods, init) ::= << >>
+
+
+////////////////////////////////////////////////////////////
+// Script option
+//
+// This template defines no output. It is used as a
+// data structure by other templates.
+
+scriptoption(name, value) ::= << >>
+
+
+////////////////////////////////////////////////////////////
+// Helper templates for the runtime template
+// 
+
+// Formats fields for image-scope variables
+declarefields(vars) ::= <<
+<vars: {var |<var.mods; separator=" "> <var.type> <var.name>;}; separator="\n">
+>>
+
+
+// Formats initializing expressions for image-scope variables
+initfields(vars) ::= <<
+protected void initImageScopeVars() {
+    <vars: {var |<var.name> = <var.init>;}; separator="\n">
+}
+>>
+
+
+// Formats initializing expressions for option-related fields.
+initoptions(opts) ::= <<
+protected void initOptionVars() {
+    <opts: {opt |<opt>;}; separator="\n">
+}
+>>
+
+
+// Formats the getter method for image-scope variables.
+getter(vars) ::= <<
+public Double getVar(String varName) {
+    <first(vars): {var |<vargetter(var=var)>;}>
+    <rest(vars):  {var |else <vargetter(var=var)>;}>
+    return null;
+}
+>>
+
+// Formats an individual case in the getter method
+vargetter(var) ::= <<
+if ("<var.name>".equals(varName)) return <var.name>
+>>
+
+
+////////////////////////////////////////////////////////////
+// Read from source image
+
+getsourcevalue(var, pixel, band) ::= <<
+readFromImage("<var>", <if(pixel)><pixel><else>_x, _y<endif>, <if(band)>(int)(<band>)<else>0<endif>)
+>>
+
+pixel(x, y) ::= <<
+(int)(<x>), (int)(<y>)
+>>
+
+
+////////////////////////////////////////////////////////////
+// Code block
+
+block(stmts) ::= <<
+{
+    <stmts; separator="\n">
+}
+>>
+
+
+////////////////////////////////////////////////////////////
+// Delimited statement
+
+delimstmt(stmt) ::= "<stmt>;"
+
+
+////////////////////////////////////////////////////////////
+// Loop: while
+
+while(cond, stmt) ::= <<
+while (true) {
+    if (_FN.sign(<cond>) != 1) break;
+    <stmt>
+}
+>>
+
+
+////////////////////////////////////////////////////////////
+// Loop: until
+
+until(cond, stmt) ::= <<
+while (true) {
+    if (_FN.sign(<cond>) == 1) break;
+    <stmt>
+}
+>>
+
+
+////////////////////////////////////////////////////////////
+// Loop: foreach with list
+
+foreachlist(n, var, list, stmt) ::= <<
+
+Double[] _loopset<n> = {
+    <list; separator=",\n">
+};
+int _index<n>=0;
+while (_index<n> \< _loopset<n>.length) {
+    double <var> = _loopset<n>[_index<n>];
+    <stmt>
+    _index<n>++ ;
+}
+>>
+
+
+////////////////////////////////////////////////////////////
+// Loop: foreach with sequence
+
+foreachseq(n, var, lo, hi, stmt) ::= <<
+
+int _lo<n> = (int)(<lo>);
+int _hi<n> = (int)(<hi>);
+for (int <var> = _lo<n>; <var> \<= _hi<n>; <var>++) <stmt>
+>>
+
+
+////////////////////////////////////////////////////////////
+// Loop exit - breakif
+
+breakif(cond) ::= <<
+if (_FN.sign(<cond>) == 1) break;
+>>
+
+
+////////////////////////////////////////////////////////////
+// If-calls
+//
+// These are treated separately from general functions to 
+// ensure lazy evaluation of the alternatives
+
+
+// This template is called from the grammar
+ifcall(args) ::= <<
+<({if<length(args)>})(args)>
+>>
+
+
+////////////////////////////////////////////////////////////
+// Helper templates called by ifcall
+
+if1(cond) ::= <<
+(_stk.push(_FN.sign(<first(args)>)) == null ? Double.NaN :
+    _stk.peek() != 0 ? 1.0 : 0.0)
+>>
+
+if2(args) ::= <<
+(_stk.push(_FN.sign(<first(args)>)) == null ? Double.NaN : 
+    _stk.peek() != 0 ? <last(args)> : 0.0)
+>>
+
+if3(args) ::= <<
+(_stk.push(_FN.sign(<first(args)>)) == null ? Double.NaN : 
+    _stk.peek() != 0 ? <first(rest(args))> : <last(args)>)
+>>
+
+if4(args) ::= <<
+(_stk.push(_FN.sign(<first(args)>)) == null ? Double.NaN : 
+    _stk.peek() == 1 ? <first(rest(args))> : 
+        _stk.peek() == 0 ? <first(rest(rest(args)))> : <last(args)>)
+>>
+
+
+////////////////////////////////////////////////////////////
+// General function call
+
+call(name, args) ::= <<
+<name>(<args; separator=", ">)
+>>
+
+
+////////////////////////////////////////////////////////////
+// Simple binary expressions
+
+
+binaryexpr(lhs, op, rhs) ::= <<
+<lhs> <op> <rhs>
+>>
+
+pow(x, y) ::= <<
+Math.pow(<x>, <y>)
+>>
+
+
+////////////////////////////////////////////////////////////
+// Parenthesised expression
+
+par(expr) ::= "(<expr>)"
+
+
+////////////////////////////////////////////////////////////
+// Prefix operator
+
+preop(op, expr) ::= <<
+<op><expr>
+>>
+
+
+////////////////////////////////////////////////////////////
+// Postfix operator
+
+postop(op, expr) ::= <<
+<expr><op>
+>>

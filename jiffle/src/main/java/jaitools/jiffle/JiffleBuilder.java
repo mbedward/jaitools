@@ -335,7 +335,7 @@ public class JiffleBuilder {
      */
     public JiffleDirectRuntime getRuntime() throws JiffleException {
         if (script == null) {
-            throw new IllegalStateException("Jiffle script has not be set yet");
+            throw new IllegalStateException("Jiffle script has not been set yet");
         }
 
         Jiffle jiffle = new Jiffle(script, imageParams);
