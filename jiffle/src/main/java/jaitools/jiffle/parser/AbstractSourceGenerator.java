@@ -115,7 +115,6 @@ public abstract class AbstractSourceGenerator extends ErrorHandlingTreeParser im
      * @see #setRuntimeModel(jaitools.jiffle.Jiffle.RuntimeModel) 
      * @see #setBaseClassName(java.lang.String) 
      */
-    @Override
     public String getSource() throws JiffleException {
         if (model == null) {
             throw new RuntimeException("Runtime model has not been set");
