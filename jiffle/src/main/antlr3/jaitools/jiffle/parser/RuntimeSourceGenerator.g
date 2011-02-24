@@ -37,20 +37,21 @@ options {
 @header {
 package jaitools.jiffle.parser;
 
-import java.util.Map;
-import java.util.Set;
-import jaitools.CollectionFactory;
 import jaitools.jiffle.Jiffle;
 }
 
 @members {
 
-private Set<String> declaredVars = CollectionFactory.set();
+private SymbolScopeStack varScope = new SymbolScopeStack();
 
 }
 
 
-start           : (o+=jiffleOption)* (v+=varDeclaration)* (s+=statement)+
+start
+@init {
+    varScope.addLevel("top");
+}
+                : (o+=jiffleOption)* (v+=varDeclaration)* (s+=statement)+
 
                 -> runtime(pkgname={pkgName}, imports={imports}, 
                            name={className}, base={baseClassName}, 
@@ -70,11 +71,21 @@ optionValue returns [String src]
 
 
 varDeclaration  : ^(IMAGE_SCOPE_VAR_DECL VAR_IMAGE_SCOPE e=expression)
+                {
+                    varScope.addSymbol($VAR_IMAGE_SCOPE.text, SymbolType.IMAGE_SCOPE);
+                }
                 -> field(name={$VAR_IMAGE_SCOPE.text}, type={%{"double"}}, mods={%{"private"}}, init={$e.st})
                 ;
 
 
-block           : ^(BLOCK s+=blockStatement*)
+block
+@init {
+    varScope.addLevel("block");
+}
+@after {
+    varScope.dropLevel();
+}
+                : ^(BLOCK s+=blockStatement*)
                 -> block(stmts={$s})
                 ;
 
@@ -122,8 +133,8 @@ assignableVar returns [boolean newVar]
                 : VAR_IMAGE_SCOPE 
                 | VAR_PIXEL_SCOPE 
                 { 
-                    if (!declaredVars.contains($VAR_PIXEL_SCOPE.text)) {
-                        declaredVars.add($VAR_PIXEL_SCOPE.text);
+                    if (!varScope.isDefined($VAR_PIXEL_SCOPE.text)) {
+                        varScope.addSymbol($VAR_PIXEL_SCOPE.text, SymbolType.PIXEL_SCOPE);
                         $newVar = true;
                     }
                 }
@@ -140,10 +151,23 @@ conditionalLoop
                 | ^(UNTIL e=expression s=statement) -> until(cond={$e.st}, stmt={$s.st})
                 ;
 
-foreachLoop     : ^(FOREACH ID ^(DECLARED_LIST e=expressionList) s=statement)
+foreachLoop
+@init {
+    varScope.addLevel("foreach");
+}
+@after {
+    varScope.dropLevel();
+}
+                : ^(FOREACH ID
+                    {varScope.addSymbol($ID.text, SymbolType.LOOP_VAR);}
+                     ^(DECLARED_LIST e=expressionList) s=statement)
+
                 -> foreachlist(n={++varIndex}, var={$ID.text}, list={$e.list}, stmt={$s.st})
 
-                | ^(FOREACH ID ^(SEQUENCE lo=expression hi=expression) s=statement)
+                | ^(FOREACH ID
+                    {varScope.addSymbol($ID.text, SymbolType.LOOP_VAR);}
+                     ^(SEQUENCE lo=expression hi=expression) s=statement)
+
                 -> foreachseq(n={++varIndex}, var={$ID.text}, lo={$lo.st}, hi={$hi.st}, stmt={$s.st})
                 ;
 
