@@ -19,8 +19,8 @@ init {
  * The functions x() and y() return current
  * pixel coordinates.
  */
-dx = 2 * M_PI * (0.5 - x() / w);
-dy = 2 * M_PI * (0.5 - y() / h); 
+dx = 4 * M_PI * (0.5 - x() / w);
+dy = 4 * M_PI * (0.5 - y() / h); 
 
 /* The variable 'result' represents the
  * destination image (you can use any name
