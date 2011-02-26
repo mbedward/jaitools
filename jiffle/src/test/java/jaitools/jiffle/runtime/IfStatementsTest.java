@@ -20,6 +20,10 @@
 
 package jaitools.jiffle.runtime;
 
+import jaitools.imageutils.ImageUtils;
+import jaitools.jiffle.JiffleBuilder;
+import java.awt.image.RenderedImage;
+import javax.media.jai.TiledImage;
 import org.junit.Test;
 
 /**
@@ -100,6 +104,31 @@ public class IfStatementsTest extends StatementsTestBase {
                         return val <= NUM_PIXELS / 2 ? -1.0 : 1.0;
                     }
                 });
+    }
+    
+    @Test
+    public void nestedIfProblem1() throws Exception {
+        // A statement that was reported not to work
+        String script = "dest = if(src1, if(src1 > src2, 1, null), null);" ;
+        
+        System.out.println("   " + script);
+        
+        final double threshold = WIDTH * WIDTH / 2;
+        TiledImage src1 = createSequenceImage();
+        TiledImage src2 = ImageUtils.createConstantImage(WIDTH, WIDTH, threshold);
+        
+        Evaluator e = new Evaluator() {
+            public double eval(double val) {
+                return val > threshold ? 1 : Double.NaN;
+            }
+        };
+                
+        JiffleBuilder builder = new JiffleBuilder();
+        builder.script(script).source("src1", src1).source("src2", src2);
+        builder.dest("dest", WIDTH, WIDTH);
+        RenderedImage dest = builder.run().getImage("dest");
+        
+        assertImage(src1, dest, e);
     }
     
 }
