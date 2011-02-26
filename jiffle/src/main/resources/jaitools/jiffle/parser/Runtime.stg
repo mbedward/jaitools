@@ -219,8 +219,8 @@ if4(args) ::= <<
 ////////////////////////////////////////////////////////////
 // General function call
 
-call(name, args) ::= <<
-<name>(<args; separator=", ">)
+call(name, args, vararg) ::= <<
+<name>(<if(vararg)>new Double[]{<endif><args; separator=", "><if(vararg)>}<endif>)
 >>
 
 

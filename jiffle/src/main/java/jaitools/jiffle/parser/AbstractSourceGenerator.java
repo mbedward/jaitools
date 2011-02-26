@@ -200,6 +200,20 @@ public abstract class AbstractSourceGenerator extends ErrorHandlingTreeParser im
         }
     }
     
+    /**
+     * Checks if a function takes variable argument list.
+     * 
+     * @param name function name
+     * @return {@code true} if the function is vararg; {@code false} otherwise
+     */
+    protected boolean isVarArgFunction(String name) {
+        try {
+            FunctionInfo info = FunctionLookup.getInfo(name, 1);
+            return info.isVarArg();
+        } catch (UndefinedFunctionException ex) {
+            throw new IllegalArgumentException(ex);
+        }
+    }
     
     protected String getOptionExpr(String name, String value) {
         return OptionLookup.getActiveRuntimExpr(name, value);

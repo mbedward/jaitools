@@ -183,8 +183,7 @@ foreachLoop
 
 expression returns [String src]
                 : ^(FUNC_CALL ID el=expressionList)
-                { $src = getRuntimeExpr($ID.text, $el.list.size()); }
-                -> call(name={$src}, args={$el.list})
+                -> call(name={getRuntimeExpr($ID.text, $el.list.size())}, args={$el.list}, vararg={isVarArgFunction($ID.text)})
 
                 | ^(IF_CALL el=expressionList) -> ifcall(args={$el.list})
 
