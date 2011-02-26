@@ -54,6 +54,11 @@ class OptionInfo {
             return validValues.contains(NULL_KEYWORD);
         }
         
+        // Is it a named constant ?
+        if (ConstantLookup.isDefined(value)) {
+            return validValues.contains(ANY_NUMBER);
+        }
+        
         // Is it a number ?
         boolean numeric = true;
         try {

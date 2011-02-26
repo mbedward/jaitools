@@ -44,6 +44,14 @@ import jaitools.jiffle.Jiffle;
 
 private SymbolScopeStack varScope = new SymbolScopeStack();
 
+private String getConstantString(String name) {
+    String s = String.valueOf(ConstantLookup.getValue(name));
+    if ("NaN".equals(s)) {
+        return "Double.NaN";
+    }
+    return s;
+}
+
 }
 
 
@@ -67,6 +75,7 @@ jiffleOption    : ^(JIFFLE_OPTION ID optionValue)
 optionValue returns [String src]
                 : ID { $src = $ID.text; }
                 | literal { $src = $literal.start.getText(); }
+                | CONSTANT { $src = getConstantString($CONSTANT.text); }
                 ;
 
 
@@ -197,14 +206,7 @@ expression returns [String src]
 
                 | VAR_SOURCE -> getsourcevalue(var={$VAR_SOURCE.text})
 
-                | CONSTANT
-                  {
-                    $src = String.valueOf(ConstantLookup.getValue($CONSTANT.text));
-                    if ("NaN".equals($src)) {
-                        $src = "Double.NaN";
-                    }
-                  }
-                  -> {%{$src}}
+                | CONSTANT -> {%{getConstantString($CONSTANT.text)}}
 
                 | literal -> {$literal.st}
                 ;

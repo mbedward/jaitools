@@ -39,7 +39,7 @@ import org.junit.Test;
  * @since 1.1
  * @version $Id$
  */
-public class OptionsTest {
+public class OptionsTest extends StatementsTestBase {
     
     private JiffleBuilder builder;
     
@@ -100,5 +100,39 @@ public class OptionsTest {
         
         builder.script(script).source("src", srcImg).dest("dest", 4, 4).run();
     }
+    
+    @Test
+    public void outsideEqualsNull() throws Exception {
+        System.out.println("   outside = null");
+        assertOutsideEqualsValue("null", Double.NaN);
+    }
 
+    @Test
+    public void outsideEqualsNaN() throws Exception {
+        System.out.println("   outside = NaN");
+        assertOutsideEqualsValue("NaN", Double.NaN);
+    }
+
+    @Test
+    public void outsideEqualsNamedConstant() throws Exception {
+        System.out.println("   outside = M_PI");
+        assertOutsideEqualsValue("M_PI", Math.PI);
+    }
+    
+    private void assertOutsideEqualsValue(String stringValue, final Double expectedValue) 
+            throws Exception {
+        String script = "options { outside = " + stringValue + "; } dest = src[-1, 0];" ;
+        TiledImage srcImg = ImageUtils.createConstantImage(WIDTH, WIDTH, 1);
+        
+        Evaluator e = new Evaluator() {
+            int x = 0;
+            public double eval(double val) {
+                double z = x == 0 ? expectedValue : 1;
+                x = (x + 1) % WIDTH;
+                return z;
+            }
+        };
+        
+        testScript(script, srcImg, e);
+    }
 }

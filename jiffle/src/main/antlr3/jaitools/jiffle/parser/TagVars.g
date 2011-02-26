@@ -90,7 +90,7 @@ jiffleOption    : ^(JIFFLE_OPTION ID optionValue)
                 ;
 
 
-optionValue     : ID
+optionValue     : identifier
                 | literal
                 ;
 
