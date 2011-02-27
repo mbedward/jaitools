@@ -181,7 +181,11 @@ ifCall          : IF LPAR expressionList RPAR -> ^(IF_CALL expressionList)
  * requiring backtracking.
  */
 assignmentExpression
-                : ID assignmentOp^ expression 
+                : ID assignmentOp^ assignmentRHS
+                ;
+
+assignmentRHS   : expression
+                | declaredList
                 ;
 
 

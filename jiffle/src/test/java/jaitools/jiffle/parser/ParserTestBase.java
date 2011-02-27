@@ -22,8 +22,11 @@ package jaitools.jiffle.parser;
 
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
+import org.antlr.runtime.Token;
 import org.antlr.runtime.tree.CommonTree;
 import org.antlr.runtime.tree.CommonTreeNodeStream;
+
+import static org.junit.Assert.*;
 
 /**
  * Lexes and parses Jiffle scripts for unit tests.
@@ -57,4 +60,12 @@ public abstract class ParserTestBase {
         return nodes;
     }
     
+    protected void assertAST(CommonTreeNodeStream ast, int[] expected) {
+        int ttype;
+        int k = 0;
+        while ((ttype = ast.LA(1)) != Token.EOF) {
+            assertEquals(ttype, expected[k++]);
+            ast.consume();
+        }
+    }
 }
