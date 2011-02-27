@@ -161,7 +161,7 @@ sequence        : lo=expression COLON hi=expression -> ^(SEQUENCE $lo $hi)
                 ;
 
 
-declaredList    : LCURLY expressionList RCURLY -> ^(DECLARED_LIST expressionList)
+declaredList    : LSQUARE expressionList RSQUARE -> ^(DECLARED_LIST expressionList)
                 ;
 
 

@@ -119,10 +119,10 @@ public class LoopTest extends StatementsTestBase {
     
     @Test
     public void foreachListLoopWithSimpleStatement() throws Exception {
-        System.out.println("   foreach (i in {x(), y(), 3}) simple statement");
+        System.out.println("   foreach (i in [x(), y(), 3]) simple statement");
         String script =
                   "z = 0;"
-                + "foreach (i in {x(), y(), 3}) z += i;"
+                + "foreach (i in [x(), y(), 3]) z += i;"
                 + "dest = z;" ;
         
         Evaluator e = new Evaluator() {
@@ -142,10 +142,10 @@ public class LoopTest extends StatementsTestBase {
     
     @Test
     public void foreachListLoopWithBlock() throws Exception {
-        System.out.println("   foreach (i in {x(), y(), 3}) block");
+        System.out.println("   foreach (i in [x(), y(), 3]) block");
         String script =
                   "z = 0;"
-                + "foreach (i in {x(), y(), 3}) \n"
+                + "foreach (i in [x(), y(), 3]) \n"
                 + "{ \n"
                 + "    temp = i * 2; \n"
                 + "    z += temp; \n"
