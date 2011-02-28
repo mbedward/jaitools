@@ -39,6 +39,24 @@ public enum Message {
             "Cannot assign a value to a non-destination image"),
     
     /**
+     * Error: attempting to assign a value to a loop variable.
+     */
+    ASSIGNMENT_TO_LOOP_VAR(Level.ERROR,
+            "Cannot assign a new value to a loop variable"),
+    
+    /**
+     * Error: attempting to assign a list to a scalar variable.
+     */
+    ASSIGNMENT_LIST_TO_SCALAR(Level.ERROR,
+            "Cannot assign a list to a scalar variable"),
+    
+    /**
+     * Error: attempting to assign a scalar to a list variable.
+     */
+    ASSIGNMENT_SCALAR_TO_LIST(Level.ERROR,
+            "Cannot assign a scalar to a list variable"),
+    
+    /**
      * Error: constant on the left hand side of an assignment.
      */
     CONSTANT_LHS(Level.ERROR,
@@ -63,6 +81,12 @@ public enum Message {
      */
     INVALID_ASSIGNMENT_OP_WITH_DEST_IMAGE(Level.ERROR,
             "Invalid assignment op with destination image"),
+    
+    /**
+     * Error: invalid operation for a list variable.
+     */
+    INVALID_OPERATION_FOR_LIST(Level.ERROR,
+            "Invalid operation for list variable"),
     
     /**
      * Warning: script option not recognized.

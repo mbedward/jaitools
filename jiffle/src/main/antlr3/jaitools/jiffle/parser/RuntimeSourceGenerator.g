@@ -110,7 +110,8 @@ statement       : simpleStatement -> delimstmt(stmt={$simpleStatement.st})
 
 
 simpleStatement : imageWrite -> {$imageWrite.st}
-                | assignmentExpression -> {$assignmentExpression.st}
+                | scalarAssignment -> {$scalarAssignment.st}
+                | listAssignment -> {$listAssignment.st}
                 | listDeclaration -> {$listDeclaration.st}
                 | loop -> {$loop.st}
                 | expression -> {$expression.st}
@@ -140,19 +141,36 @@ declaredList returns [List list]
                 ;
 
 
-assignmentExpression
-                : ^(op=assignmentOp id=assignableVar expression)
+scalarAssignment
+                : ^(op=assignmentOp id=scalar expression)
                 -> binaryexpr(lhs={$id.st}, op={$op.st}, rhs={$expression.st})
                 ;
 
 
+listAssignment
+scope { boolean isNew; }
+                : ^(EQ VAR_LIST expression)
+                { 
+                    $listAssignment::isNew = !varScope.isDefined($VAR_LIST.text, SymbolType.LIST); 
+                    if ($listAssignment::isNew) {
+                        varScope.addSymbol($VAR_LIST.text, SymbolType.LIST, ScopeType.PIXEL);
+                    }
+                }
+
+                -> listassign(isnew={$listAssignment::isNew}, var={$VAR_LIST.text}, expr={$expression.st})
+                ;
+
+
 listDeclaration : ^(LIST_NEW VAR_LIST declaredList)
-                { addImport("java.util.List", "java.util.ArrayList"); }
+                { 
+                    addImport("java.util.List", "java.util.ArrayList"); 
+                    varScope.addSymbol($VAR_LIST.text, SymbolType.LIST, ScopeType.PIXEL);
+                }
                 -> listnew(var={%{$VAR_LIST.text}}, init={$declaredList.list})
                 ;
 
 
-assignableVar returns [boolean newVar]
+scalar returns [boolean newVar]
 @init { 
     $newVar = false;
 }

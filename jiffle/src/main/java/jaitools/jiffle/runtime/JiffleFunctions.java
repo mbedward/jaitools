@@ -20,12 +20,13 @@
 
 package jaitools.jiffle.runtime;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import static jaitools.numeric.DoubleComparison.dcomp;
 import static jaitools.numeric.DoubleComparison.dzero;
 import jaitools.numeric.SampleStats;
-import java.util.List;
 
 /**
  * Provides functions for Jiffle runtime objects. An instance of this class
@@ -411,7 +412,52 @@ public class JiffleFunctions {
 
         return (dzero(x) ? 1d : 0d);
     }
-
+    
+    /**
+     * Creates a new list by concatenating {2code x} and {@code list}.
+     * 
+     * @param x the value
+     * @param list the list
+     * @return a new list
+     */
+    public List concatDL(double x, List list) {
+        List copy = new ArrayList(list);
+        copy.add(x);
+        return copy;
+    }
+    
+    /**
+     * Creates a new list by concatenating {@code list} and {2code x}.
+     * 
+     * @param list the list
+     * @param x the value
+     * @return a new list
+     */
+    public List concatLD(List list, double x) {
+        List copy = new ArrayList(list);
+        copy.add(x);
+        return copy;
+    }
+    
+    /**
+     * Creates a new list by concatenating two existing lists.
+     * 
+     * @param list1 the first list
+     * @param list2 the second list
+     * @return a new list
+     */
+    public List concatLL(List list1, List list2) {
+        List copy = new ArrayList(list1);
+        copy.addAll(list2);
+        return copy;
+    }
+    
+    /**
+     * Convert a list to a double array.
+     * 
+     * @param values input list
+     * @return a new array
+     */
     private Double[] listToArray(List values) {
         final int N = values.size();
         Double[] dvalues = new Double[values.size()];
@@ -420,5 +466,6 @@ public class JiffleFunctions {
         }
         return dvalues;
     }
+    
 }
 

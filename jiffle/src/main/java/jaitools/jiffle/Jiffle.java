@@ -41,6 +41,7 @@ import jaitools.jiffle.parser.CheckAssignments;
 import jaitools.jiffle.parser.CheckFunctionCalls;
 import jaitools.jiffle.parser.JiffleLexer;
 import jaitools.jiffle.parser.JiffleParser;
+import jaitools.jiffle.parser.JiffleParserException;
 import jaitools.jiffle.parser.Message;
 import jaitools.jiffle.parser.MessageTable;
 import jaitools.jiffle.parser.OptionsBlockReader;
@@ -600,6 +601,9 @@ public class Jiffle {
             throw new JiffleException(
                     "error in script at or around line:" +
                     ex.line + " col:" + ex.charPositionInLine);
+            
+        } catch (JiffleParserException ex) {
+            throw new JiffleException(ex);
         }
     }
 

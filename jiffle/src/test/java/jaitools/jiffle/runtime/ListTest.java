@@ -80,6 +80,57 @@ public class ListTest extends StatementsTestBase {
                 + "} \n"
                 + "dest = sum(values);";
         
+        assertListAppend(script);
+    }
+    
+    @Test
+    public void appendWithConcat() throws Exception {
+        System.out.println("   append to list with concat in loop");
+        String script = "options { outside=0; } \n"
+                + "values = []; \n"
+                + "foreach (dy in -1:1) { \n"
+                + "  foreach (dx in -1:1) { \n"
+                + "    values = concat(values, src[dx, dy]); \n"
+                + "  } \n"
+                + "} \n"
+                + "dest = sum(values);";
+        
+        assertListAppend(script);
+    }
+
+    @Test
+    public void prependWithConcat() throws Exception {
+        System.out.println("   prepend to list with concat in loop");
+        String script = "options { outside=0; } \n"
+                + "values = []; \n"
+                + "foreach (dy in -1:1) { \n"
+                + "  foreach (dx in -1:1) { \n"
+                + "    values = concat(src[dx, dy], values); \n"
+                + "  } \n"
+                + "} \n"
+                + "dest = sum(values);";
+        
+        assertListAppend(script);
+    }
+    
+    @Test
+    public void concatToNewVar() throws Exception {
+        System.out.println("   assign concat return to new var");
+        String script = 
+                  "foo = [1, 2, 3]; \n"
+                + "bar = concat(foo, 4); \n"
+                + "dest = src + sum(bar);" ;
+
+        Evaluator e = new Evaluator() {
+            public double eval(double val) {
+                return val + 10;
+            }
+        };
+        
+        testScript(script, e);
+    }
+
+    private void assertListAppend(String script) throws Exception {
         TiledImage srcImg = createRowValueImage();
         
         Evaluator e = new Evaluator() {
@@ -103,4 +154,5 @@ public class ListTest extends StatementsTestBase {
         
         testScript(script, srcImg, e);
     }
+
 }

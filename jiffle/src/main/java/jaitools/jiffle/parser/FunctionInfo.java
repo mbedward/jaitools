@@ -72,6 +72,7 @@ public class FunctionInfo {
     private final String runtimeName;
     private final Provider provider;
     private final boolean isVolatile;
+    private final String returnType;
     private final List<String> argTypes;
 
     /**
@@ -91,11 +92,13 @@ public class FunctionInfo {
      *        null or empty for no-arg functions
      */
     public FunctionInfo(String jiffleName, String runtimeName, Provider provider, 
-            boolean isVolatile, String ...argTypes) {
+            boolean isVolatile, String returnType, String ...argTypes) {
+        
         this.jiffleName = jiffleName;
         this.runtimeName = runtimeName;
         this.provider = provider;
         this.isVolatile = isVolatile;
+        this.returnType = returnType;
         
         this.argTypes = CollectionFactory.list();
         if (argTypes != null && argTypes.length > 0) {
@@ -161,6 +164,15 @@ public class FunctionInfo {
      */
     public boolean isProxy() {
         return provider == Provider.PROXY;
+    }
+    
+    /**
+     * Gets the function return type.
+     * 
+     * @return return type: "D" or "List"
+     */
+    public String getReturnType() {
+        return returnType;
     }
 
     /**

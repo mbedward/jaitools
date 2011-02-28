@@ -45,7 +45,8 @@ public class FunctionLookup {
     private static final int RUNTIME_NAME = 1;
     private static final int PROVIDER = 2;
     private static final int VOLATILE = 3;
-    private static final int FIRST_ARG = 4;
+    private static final int RETURN = 4;
+    private static final int FIRST_ARG = 5;
     
     private static final int MIN_ATTRIBUTES = FIRST_ARG + 1;
 
@@ -67,9 +68,6 @@ public class FunctionLookup {
                             "Error reading " + PROPERTIES_FILE + " record: " + name + "=" + value);
                 }
                 
-                String jiffleName = attr[JIFFLE_NAME];
-                String runtimeName = attr[RUNTIME_NAME];
-                
                 FunctionInfo.Provider provider = FunctionInfo.Provider.get( attr[PROVIDER] );
                 if (provider == null) {
                     throw new IllegalArgumentException(
@@ -88,7 +86,8 @@ public class FunctionLookup {
                 }
 
                 lookup.add( new FunctionInfo(
-                        jiffleName, runtimeName, provider, isVolatile, argTypes) );
+                        attr[JIFFLE_NAME], attr[RUNTIME_NAME], 
+                        provider, isVolatile, attr[RETURN], argTypes) );
             }
 
         } catch (Exception ex) {
@@ -159,6 +158,26 @@ public class FunctionLookup {
             throws UndefinedFunctionException {
         
         return getInfo(jiffleName, argTypes).getRuntimeExpr();
+    }
+    
+    /**
+     * Searches for a function with a script name that matches {@code jiffleName}
+     * and gets its return type. This method relies on the fact that Jiffle 
+     * has the same return type for all functions with the same root name.
+     * 
+     * @param jiffleName name to match
+     * @return the return type: D or List
+     * 
+     * @throws UndefinedFunctionException if the name is not matched 
+     */
+    public static String getReturnType(String jiffleName) throws UndefinedFunctionException {
+        for (FunctionInfo info : lookup) {
+            if (info.getJiffleName().equals(jiffleName)) {
+                return info.getReturnType();
+            }
+        }
+        
+        throw new UndefinedFunctionException(jiffleName);
     }
     
 }

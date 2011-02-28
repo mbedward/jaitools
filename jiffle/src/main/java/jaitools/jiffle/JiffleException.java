@@ -32,6 +32,15 @@ import java.util.List;
 public class JiffleException extends Exception {
 
     /**
+     * Create a new instance from an incoming exception.
+     * 
+     * @param thrwbl incoming exception
+     */
+    public JiffleException(Throwable thrwbl) {
+        super(thrwbl);
+    }
+
+    /**
      * Creates a new instance with the given message.
      * 
      * @param msg error message

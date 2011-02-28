@@ -76,6 +76,17 @@ private boolean isDestImage( String varName ) {
 
 private SymbolScopeStack varScope = new SymbolScopeStack();
 
+
+private String getReturnType( String funcName ) {
+    try {
+        return FunctionLookup.getReturnType(funcName);
+
+    } catch (UndefinedFunctionException ex) {
+        // We can't really let undefined function exceptions pass here
+        throw new JiffleParserException(ex);
+    }
+}
+
 }
 
 start 
@@ -166,7 +177,51 @@ declaredList    : ^(DECLARED_LIST expressionList)
 
 assignmentExpression
                 : ^(assignmentOp identifier expression)
+                { 
+                    String varName = $identifier.start.getText();
+
+                    SymbolType symbolType = null;
+                    boolean ok = true;
+                    if (!varScope.isDefined(varName)) {
+                        if ($expression.rtnType.equals("List")) {
+                            symbolType = SymbolType.LIST;
+                        } else {
+                            symbolType = SymbolType.SCALAR;
+                        }
+                        varScope.addSymbol(varName, symbolType, ScopeType.PIXEL);
+
+                    } else {
+                        symbolType = varScope.findSymbol(varName).getType();
+                        if (symbolType == SymbolType.LOOP_VAR) {
+                            msgTable.add(varName, Message.ASSIGNMENT_TO_LOOP_VAR);
+                            ok = false;
+
+                        } else if ($expression.rtnType.equals("List")) {
+                            if (symbolType != SymbolType.LIST) {
+                                msgTable.add(varName, Message.ASSIGNMENT_LIST_TO_SCALAR);
+                                ok = false;
+                            } else if ($assignmentOp.start.getType() != EQ) {
+                                msgTable.add(varName + " " + $assignmentOp.start.getText(), 
+                                        Message.INVALID_OPERATION_FOR_LIST);
+                                ok = false;
+                            }
+
+                        } else {
+                            if (symbolType != SymbolType.SCALAR) {
+                                msgTable.add(varName, Message.ASSIGNMENT_SCALAR_TO_LIST);
+                                ok = false;
+                            }
+                        }
+                    }
+
+                    if (!ok) throw new JiffleParserException("Cancelling script compilation");
+                }
+
                   -> {isDestImage($identifier.text)}? ^(IMAGE_WRITE identifier expression)
+
+                  -> {$expression.rtnType.equals("List")}? 
+                     ^(EQ VAR_LIST[$identifier.start.getText()] expression)
+
                   -> ^(assignmentOp identifier expression)
                 ;
 
@@ -184,9 +239,16 @@ assignmentOp    : EQ
                 ;
 
 
-expression
-                : ^(FUNC_CALL ID args)
-                | ^(IF_CALL expressionList)
+expression returns [String rtnType]
+                : ^(FUNC_CALL ID args) { $rtnType = getReturnType($ID.text); }
+                | listOperation { $rtnType = "List"; }
+                | scalarExpression { $rtnType = "D"; }
+                | identifier { $rtnType = $identifier.isList ? "List" : "D"; }
+                ;
+
+
+scalarExpression
+                : ^(IF_CALL expressionList)
                 | ^(QUESTION expression expression expression)
                 | ^(IMAGE_POS identifier bandSpecifier? pixelSpecifier?)
                 | ^(logicalOp expression expression)
@@ -195,9 +257,7 @@ expression
                 | ^(PREFIX prefixOp expression)
                 | ^(POSTFIX incdecOp expression)
                 | ^(PAR expression)
-                | listOperation
                 | literal
-                | identifier
                 ;
 
 
@@ -210,12 +270,14 @@ listOperation   : ^(APPEND identifier expression)
                 ;
 
 
-identifier      : ID 
+identifier returns [boolean isList]
+                : ID 
+                { $isList = varScope.isDefined($ID.text, SymbolType.LIST); }
                   -> {isSourceImage($ID.text)}? VAR_SOURCE[$ID.text]
                   -> {isDestImage($ID.text)}? VAR_DEST[$ID.text]
                   -> {ConstantLookup.isDefined($ID.text)}? CONSTANT[$ID.text]
                   -> {varScope.isDefined($ID.text, SymbolType.LOOP_VAR)}? VAR_LOOP[$ID.text]
-                  -> {varScope.isDefined($ID.text, SymbolType.LIST)}? VAR_LIST[$ID.text]
+                  -> {$isList}? VAR_LIST[$ID.text]
                   -> {varScope.isDefined($ID.text, ScopeType.IMAGE)}? VAR_IMAGE_SCOPE[$ID.text]
                   -> VAR_PIXEL_SCOPE[$ID.text]
                 ;

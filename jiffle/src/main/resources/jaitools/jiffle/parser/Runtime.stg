@@ -270,3 +270,7 @@ List <var> = new ArrayList();
 listappend(var, expr) ::= <<
 <var>.add(<expr>)
 >>
+
+listassign(isnew, var, expr) ::= <<
+<if(isnew)>List <endif><var> = <expr>
+>>
