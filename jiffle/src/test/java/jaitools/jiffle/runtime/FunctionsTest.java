@@ -20,8 +20,18 @@
 
 package jaitools.jiffle.runtime;
 
+import javax.media.jai.TiledImage;
+
+import jaitools.CollectionFactory;
+import jaitools.imageutils.ImageUtils;
+import jaitools.jiffle.Jiffle;
 import jaitools.jiffle.JiffleException;
+import jaitools.numeric.DoubleComparison;
+import static jaitools.numeric.DoubleComparison.*;
+
+import static org.junit.Assert.*;
 import org.junit.Test;
+
 
 /**
  * Unit tests for general functions
@@ -251,6 +261,63 @@ public class FunctionsTest extends StatementsTestBase {
         };
         
         testScript(script, e);
+    }
+    
+    @Test
+    public void rand() throws Exception {
+        String script = "dest = src + rand(src);" ;
+        System.out.println("   " + script);
+        
+        imageParams = CollectionFactory.map();
+        imageParams.put("dest", Jiffle.ImageRole.DEST);
+        imageParams.put("src", Jiffle.ImageRole.SOURCE);
+        Jiffle jiffle = new Jiffle(script, imageParams);
+        JiffleDirectRuntime runtime = jiffle.getRuntimeInstance();
+        
+        TiledImage src = createRowValueImage();
+        TiledImage dest = ImageUtils.createConstantImage(WIDTH, WIDTH, 0d);
+        
+        runtime.setSourceImage("src", src);
+        runtime.setDestinationImage("dest", dest);
+        runtime.evaluateAll(null);
+
+        for (int y = 0; y < WIDTH; y++) {
+            for (int x = 0; x < WIDTH; x++) {
+                double val = src.getSample(x, y, 0);
+                double z = dest.getSample(x, y, 0);
+                assertTrue(dcomp(z, val) >= 0);
+                assertTrue(dcomp(z, 2*val) <= 0);
+            }
+        }
+    }
+    
+    @Test
+    public void randInt() throws Exception {
+        String script = "dest = src + randInt(src + 1);" ;
+        System.out.println("   " + script);
+        
+        imageParams = CollectionFactory.map();
+        imageParams.put("dest", Jiffle.ImageRole.DEST);
+        imageParams.put("src", Jiffle.ImageRole.SOURCE);
+        Jiffle jiffle = new Jiffle(script, imageParams);
+        JiffleDirectRuntime runtime = jiffle.getRuntimeInstance();
+        
+        TiledImage src = createRowValueImage();
+        TiledImage dest = ImageUtils.createConstantImage(WIDTH, WIDTH, 0d);
+        
+        runtime.setSourceImage("src", src);
+        runtime.setDestinationImage("dest", dest);
+        runtime.evaluateAll(null);
+
+        for (int y = 0; y < WIDTH; y++) {
+            for (int x = 0; x < WIDTH; x++) {
+                double val = src.getSample(x, y, 0);
+                double z = dest.getSample(x, y, 0);
+                assertEquals(Math.round(z), z, DoubleComparison.TOL);
+                assertTrue(dcomp(z, val) >= 0);
+                assertTrue(dcomp(z, 2*val + 1) <= 0);
+            }
+        }
     }
     
     @Test
