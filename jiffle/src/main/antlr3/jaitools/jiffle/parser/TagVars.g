@@ -103,7 +103,7 @@ varDeclaration  : ^(IMAGE_SCOPE_VAR_DECL ID expression)
                         msgTable.add( varName, Message.IMAGE_VAR_INIT_LHS );
 
                     } else {
-                        varScope.addSymbol(varName, SymbolType.IMAGE_SCOPE);
+                        varScope.addSymbol(varName, SymbolType.SCALAR, ScopeType.IMAGE);
                     }
                 }
                   -> ^(IMAGE_SCOPE_VAR_DECL VAR_IMAGE_SCOPE[varName] expression)
@@ -128,6 +128,7 @@ blockStatement  : statement
 
 statement       : block
                 | assignmentExpression
+                | listDeclaration
                 | ^(WHILE loopCondition statement)
                 | ^(UNTIL loopCondition statement)
                 | foreachLoop
@@ -142,7 +143,7 @@ foreachLoop
 @after {
     varScope.dropLevel();
 }
-                : ^(FOREACH ID {varScope.addSymbol($ID.text, SymbolType.LOOP_VAR);} loopTarget statement)
+                : ^(FOREACH ID {varScope.addSymbol($ID.text, SymbolType.LOOP_VAR, ScopeType.PIXEL);} loopTarget statement)
                 ;
 
 
@@ -159,12 +160,20 @@ expressionList  : ^(EXPR_LIST expression*)
                 ;
 
 
+declaredList    : ^(DECLARED_LIST expressionList)
+                ;
+
+
 assignmentExpression
                 : ^(assignmentOp identifier expression)
                   -> {isDestImage($identifier.text)}? ^(IMAGE_WRITE identifier expression)
                   -> ^(assignmentOp identifier expression)
                 ;
 
+
+listDeclaration : ^(EQ ID {varScope.addSymbol($ID.text, SymbolType.LIST, ScopeType.PIXEL);} declaredList)
+                -> ^(LIST_NEW VAR_LIST[$ID.text] declaredList)
+                ;
 
 assignmentOp    : EQ
                 | TIMESEQ
@@ -176,7 +185,7 @@ assignmentOp    : EQ
 
 
 expression
-                : ^(FUNC_CALL ID expressionList)
+                : ^(FUNC_CALL ID args)
                 | ^(IF_CALL expressionList)
                 | ^(QUESTION expression expression expression)
                 | ^(IMAGE_POS identifier bandSpecifier? pixelSpecifier?)
@@ -191,12 +200,18 @@ expression
                 ;
 
 
+args            : expressionList
+                | declaredList
+                ;
+
+
 identifier      : ID 
                   -> {isSourceImage($ID.text)}? VAR_SOURCE[$ID.text]
                   -> {isDestImage($ID.text)}? VAR_DEST[$ID.text]
                   -> {ConstantLookup.isDefined($ID.text)}? CONSTANT[$ID.text]
-                  -> {varScope.isType($ID.text, SymbolType.LOOP_VAR)}? VAR_LOOP[$ID.text]
-                  -> {varScope.isType($ID.text, SymbolType.IMAGE_SCOPE)}? VAR_IMAGE_SCOPE[$ID.text]
+                  -> {varScope.isDefined($ID.text, SymbolType.LOOP_VAR)}? VAR_LOOP[$ID.text]
+                  -> {varScope.isDefined($ID.text, SymbolType.LIST)}? VAR_LIST[$ID.text]
+                  -> {varScope.isDefined($ID.text, ScopeType.IMAGE)}? VAR_IMAGE_SCOPE[$ID.text]
                   -> VAR_PIXEL_SCOPE[$ID.text]
                 ;
 

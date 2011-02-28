@@ -32,8 +32,8 @@ import org.junit.Test;
 public class StatsFunctionsTest extends StatementsTestBase {
 
     @Test
-    public void max() throws Exception {
-        System.out.println("   max");
+    public void max2Arg() throws Exception {
+        System.out.println("   max(D, D)");
         
         int z = WIDTH * WIDTH / 2;
         String script = String.format("init { z = %d; } dest = max(src, z);", z);
@@ -48,8 +48,8 @@ public class StatsFunctionsTest extends StatementsTestBase {
     }
 
     @Test
-    public void min() throws Exception {
-        System.out.println("   min");
+    public void min2Arg() throws Exception {
+        System.out.println("   min(D, D)");
         
         int z = WIDTH * WIDTH / 2;
         String script = String.format("init { z = %d; } dest = min(src, z);", z);
@@ -62,4 +62,51 @@ public class StatsFunctionsTest extends StatementsTestBase {
         
         testScript(script, e);
     }
+
+    @Test
+    public void maxListArg() throws Exception {
+        System.out.println("   max(List)");
+        
+        String script = "options { outside = 0; } \n"
+                + "z = [ src[0,-1], src, src[0,1] ]; \n"
+                + "dest = max(z);";
+        
+        Evaluator e = new Evaluator() {
+            final int MAXY = WIDTH - 1;
+            int x = 0;
+            int y = 0;
+            public double eval(double val) {
+                double z = Math.min(MAXY, y + 1);
+                x = (x + 1) % WIDTH;
+                if (x == 0) y++ ;
+                return z;
+            }
+        };
+        
+        testScript(script, createRowValueImage(), e);
+    }
+
+    @Test
+    public void minListArg() throws Exception {
+        System.out.println("   min(List)");
+        
+        String script = "options { outside = 0; } \n"
+                + "z = [ src[0,-1], src, src[0,1] ]; \n"
+                + "dest = min(z);";
+        
+        Evaluator e = new Evaluator() {
+            final int MAXY = WIDTH - 1;
+            int x = 0;
+            int y = 0;
+            public double eval(double val) {
+                double z = y == MAXY ? 0 : Math.max(0, y-1);
+                x = (x + 1) % WIDTH;
+                if (x == 0) y++ ;
+                return z;
+            }
+        };
+        
+        testScript(script, createRowValueImage(), e);
+    }
+
 }

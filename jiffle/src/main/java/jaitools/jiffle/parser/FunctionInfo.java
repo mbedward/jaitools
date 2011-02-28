@@ -20,6 +20,12 @@
 
 package jaitools.jiffle.parser;
 
+import java.util.Arrays;
+import java.util.List;
+
+import jaitools.CollectionFactory;
+
+
 /**
  * Used by the {@link FunctionLookup} class when servicing lookup requests
  * from the Jiffle compiler.
@@ -62,32 +68,39 @@ public class FunctionInfo {
         }
     }
     
-    /** Flag value used with variable argument functions */
-    public static final int VARARG = -1;
-    
     private final String jiffleName;
     private final String runtimeName;
-    private final int numArgs; // value of -1 indicates var args
     private final Provider provider;
     private final boolean isVolatile;
+    private final List<String> argTypes;
 
     /**
      * Creates a function info object.
      *
      * @param jiffleName name of the function used in Jiffle scripts
+     * 
      * @param runtimeName Java name used in runtime class source
-     * @param numArgs number of arguments or {@link #VARARG}
+     * 
      * @param provider the provider: one of {@link #JIFFLE}, {@link #MATH} or {@link #PROXY}
+     * 
      * @param isVolatile {@code true} if the function returns a new value on each
      *        invocation regardless of pixel position (e.g. rand()); {@code false}
      *        otherwise
+     * 
+     * @param argTypes optional array of Strings specifying argument types; 
+     *        null or empty for no-arg functions
      */
-    public FunctionInfo(String jiffleName, String runtimeName, int numArgs, Provider provider, boolean isVolatile) {
+    public FunctionInfo(String jiffleName, String runtimeName, Provider provider, 
+            boolean isVolatile, String ...argTypes) {
         this.jiffleName = jiffleName;
         this.runtimeName = runtimeName;
-        this.numArgs = numArgs;
         this.provider = provider;
         this.isVolatile = isVolatile;
+        
+        this.argTypes = CollectionFactory.list();
+        if (argTypes != null && argTypes.length > 0) {
+            this.argTypes.addAll(Arrays.asList(argTypes));
+        }
     }
 
     /**
@@ -136,27 +149,46 @@ public class FunctionInfo {
      * @return number of arguments
      */
     public int getNumArgs() {
-        return numArgs;
+        return argTypes.size();
     }
 
-    /**
-     * Convenience function, equivalent to {@code getNumArgs() == FunctionInfo.VARARG}.
-     *
-     * @return {@code true} ir a variable argument function; {@code false} otherwise
-     */
-    public boolean isVarArg() {
-        return numArgs == VARARG;
-    }
-    
     /**
      * Tests if this is a proxy function, ie. one that is translated to a
      * runtime class field defined by Jiffle. Examples are {@code x()} and
      * {@code width()}.
      *
-     * @return {@code true} ir a proxy function; {@code false} otherwise
+     * @return {@code true} is a proxy function; {@code false} otherwise
      */
     public boolean isProxy() {
         return provider == Provider.PROXY;
     }
 
+    /**
+     * Tests if this object matches the given name and argument types.
+     * 
+     * @param name function name used in scripts
+     * @param argTypes argument type names; null or empty for no-arg functions
+     * 
+     * @return {@code true} if this object matches; {@code false} otherwise
+     */
+    public boolean matches(String name, List<String> argTypes) {
+        if (!this.jiffleName.equals(name)) {
+            return false;
+        }
+        if ((argTypes == null || argTypes.isEmpty()) && !this.argTypes.isEmpty()) {
+            return false;
+        }
+        if (argTypes != null && (argTypes.size() != this.argTypes.size())) {
+            return false;
+        }
+        
+        int k = 0;
+        for (String argType : this.argTypes) {
+            if (!argType.equals(argTypes.get(k++))) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
 }

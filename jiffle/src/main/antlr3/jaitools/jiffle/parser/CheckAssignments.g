@@ -69,7 +69,7 @@ jiffleOption    : ^(JIFFLE_OPTION ID .)
 
 varDeclaration  : ^(IMAGE_SCOPE_VAR_DECL VAR_IMAGE_SCOPE .)
                 { 
-                    varScope.addSymbol($VAR_IMAGE_SCOPE.text, SymbolType.IMAGE_SCOPE);
+                    varScope.addSymbol($VAR_IMAGE_SCOPE.text, SymbolType.SCALAR, ScopeType.IMAGE);
                 }
                 ;
 
@@ -85,6 +85,7 @@ blockStatement  : statement
 
 statement       : block
                 | assignmentExpression
+                | listDeclaration
                 | ^(WHILE loopCondition statement)
                 | ^(UNTIL loopCondition statement)
                 | foreachLoop
@@ -98,7 +99,7 @@ foreachLoop
 @after {
     varScope.dropLevel();
 }
-                : ^(FOREACH ID {varScope.addSymbol($ID.text, SymbolType.LOOP_VAR);} loopTarget statement)
+                : ^(FOREACH ID {varScope.addSymbol($ID.text, SymbolType.LOOP_VAR, ScopeType.PIXEL);} loopTarget statement)
                 ;
 
 
@@ -107,11 +108,15 @@ loopCondition   : expression
 
 
 loopTarget      : ^(SEQUENCE expression expression)
-                | ^(DECLARED_LIST expressionList)
+                | declaredList
                 ;
 
 
 expressionList  : ^(EXPR_LIST expression*)
+                ;
+
+
+declaredList    : ^(DECLARED_LIST expressionList)
                 ;
 
 
@@ -131,8 +136,8 @@ assignmentExpression
 
                         default:
                             if ($assignmentOp.start.getType() == EQ) {
-                                if (!varScope.isType(varName, SymbolType.IMAGE_SCOPE)) {
-                                    varScope.addSymbol(varName, SymbolType.PIXEL_SCOPE);
+                                if (!varScope.isDefined(varName)) {
+                                    varScope.addSymbol(varName, SymbolType.SCALAR, ScopeType.PIXEL);
                                 }
 
                             } else {
@@ -149,6 +154,11 @@ assignmentExpression
                             }
                     }
                 }
+                ;
+
+
+listDeclaration : ^(LIST_NEW VAR_LIST declaredList)
+                { varScope.addSymbol($VAR_LIST.text, SymbolType.LIST, ScopeType.PIXEL); }
                 ;
 
 
@@ -169,11 +179,12 @@ identifier      : imageVar
 
 imageVar        : VAR_SOURCE
                 | VAR_DEST
-                | VAR_LOOP
                 ;
 
 userVar         : VAR_IMAGE_SCOPE
                 | VAR_PIXEL_SCOPE
+                | VAR_LOOP
+                | VAR_LIST
                 ;
 
 

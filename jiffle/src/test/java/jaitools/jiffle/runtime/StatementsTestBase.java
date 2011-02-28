@@ -66,6 +66,16 @@ public abstract class StatementsTestBase {
         }
         return img;
     }
+    
+    protected TiledImage createRowValueImage() {
+        TiledImage img = ImageUtils.createConstantImage(WIDTH, WIDTH, 0.0);
+        for (int y = 0; y < WIDTH; y++) {
+            for (int x = 0; x < WIDTH; x++) {
+                img.setSample(x, y, 0, y);
+            }
+        }
+        return img;
+    }
 
     protected void testScript(String script, Evaluator evaluator) throws Exception {
         TiledImage srcImg = createSequenceImage();

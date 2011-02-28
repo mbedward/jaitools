@@ -82,18 +82,19 @@ public class SymbolScopeStack {
     }
     
     /**
-     * Adds a new symbol to the top level scope.
+     * Adds a new symbol to the current scope level.
      * 
      * @param name symbol name
      * @param type symbol type
+     * @param scopeType symbol scope 
      * @throws IllegalArgumentException if no scope levels have been added
      */
-    public void addSymbol(String name, SymbolType type) {
+    public void addSymbol(String name, SymbolType type, ScopeType scopeType) {
         if (scopes.isEmpty()) {
             throw new IllegalStateException("Called addSymbol before adding any scope levels");
         }
         
-        getTop().add(new Symbol(name, type));
+        getTop().add(new Symbol(name, type, scopeType));
     }
 
     /**
@@ -126,21 +127,37 @@ public class SymbolScopeStack {
     }
     
     /**
-     * Tests if a symbol wiht the given name and type is defined within
+     * Tests if a symbol with the given name and type is defined within
      * the top scope or any enclosing scopes.
      * 
      * @param name symbol name
      * @param type symbol type
      * @return {@code true} if the symbol is found; {@code false} otherwise
      */
-    public boolean isType(String name, SymbolType type) {
-        Symbol s = findSymbol(name);
-        if (s != null) {
-            return s.isType(type);
+    public boolean isDefined(String name, SymbolType type) {
+        Symbol symbol = findSymbol(name);
+        if (symbol == null) {
+            return false;
         }
-        return false;
+        return symbol.getType() == type;
     }
-
+    
+    /**
+     * Tests if a symbol with the given name and scope type is defined within
+     * the top scope or any enclosing scopes.
+     * 
+     * @param name symbol name
+     * @param type symbol scope type
+     * @return {@code true} if the symbol is found; {@code false} otherwise
+     */
+    public boolean isDefined(String name, ScopeType scopeType) {
+        Symbol symbol = findSymbol(name);
+        if (symbol == null) {
+            return false;
+        }
+        return symbol.getScopeType() == scopeType;
+    }
+    
     /**
      * Gets the first symbol found with the given name. The search begins
      * at the top scope and moves through any enclosing scopes.

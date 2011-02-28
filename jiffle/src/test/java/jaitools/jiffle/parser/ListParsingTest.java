@@ -32,7 +32,7 @@ import org.junit.Test;
  * @since 1.0
  * @version $Id$
  */
-public class ListTest extends ParserTestBase {
+public class ListParsingTest extends ParserTestBase {
 
     @Test
     public void createEmptyList() throws Exception {

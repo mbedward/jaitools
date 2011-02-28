@@ -58,14 +58,14 @@ public class SymbolScopeStackTest {
     @Test
     public void testAddSymbol() {
         stack.addLevel();
-        stack.addSymbol("foo", SymbolType.PIXEL_SCOPE);
+        stack.addSymbol("foo", SymbolType.SCALAR, ScopeType.PIXEL);
         
         assertTrue(stack.isDefined("foo"));
     }
 
     @Test(expected=IllegalStateException.class)
     public void testAddSymbolToEmptyStack() {
-        stack.addSymbol("foo", SymbolType.PIXEL_SCOPE);
+        stack.addSymbol("foo", SymbolType.SCALAR, ScopeType.PIXEL);
     }
 
     @Test
@@ -82,7 +82,7 @@ public class SymbolScopeStackTest {
     @Test
     public void testIsDefinedAtTopLevel() {
         stack.addLevel();
-        stack.addSymbol("foo", SymbolType.PIXEL_SCOPE);
+        stack.addSymbol("foo", SymbolType.SCALAR, ScopeType.PIXEL);
         
         assertTrue(stack.isDefined("foo"));
         assertFalse(stack.isDefined("bar"));
@@ -92,36 +92,13 @@ public class SymbolScopeStackTest {
     public void testIsDefinedAtEnclosingLevel() {
         stack.addLevel();
         stack.addLevel();
-        stack.addSymbol("foo", SymbolType.PIXEL_SCOPE);
+        stack.addSymbol("foo", SymbolType.SCALAR, ScopeType.PIXEL);
         stack.addLevel();
         stack.addLevel();
         
         
         assertTrue(stack.isDefined("foo"));
         assertFalse(stack.isDefined("bar"));
-    }
-
-    @Test
-    public void testIsTypeAtTopLevel() {
-        stack.addLevel();
-        stack.addSymbol("foo", SymbolType.PIXEL_SCOPE);
-
-        assertTrue(stack.isType("foo", SymbolType.PIXEL_SCOPE));
-        assertFalse(stack.isType("foo", SymbolType.LOOP_VAR));
-        assertFalse(stack.isType("bar", SymbolType.PIXEL_SCOPE));
-    }
-
-    @Test
-    public void testIsTypeAtEnclosingLevel() {
-        stack.addLevel();
-        stack.addLevel();
-        stack.addSymbol("foo", SymbolType.PIXEL_SCOPE);
-        stack.addLevel();
-        stack.addLevel();
-
-        assertTrue(stack.isType("foo", SymbolType.PIXEL_SCOPE));
-        assertFalse(stack.isType("foo", SymbolType.LOOP_VAR));
-        assertFalse(stack.isType("bar", SymbolType.PIXEL_SCOPE));
     }
 
 }

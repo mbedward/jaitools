@@ -219,8 +219,8 @@ if4(args) ::= <<
 ////////////////////////////////////////////////////////////
 // General function call
 
-call(name, args, vararg) ::= <<
-<name>(<if(vararg)>new Double[]{<endif><args; separator=", "><if(vararg)>}<endif>)
+call(name, args) ::= <<
+<name>(<args; separator=", ">)
 >>
 
 
@@ -256,4 +256,13 @@ preop(op, expr) ::= <<
 
 postop(op, expr) ::= <<
 <expr><op>
+>>
+
+
+////////////////////////////////////////////////////////////
+// List expressions
+
+listnew(var, init) ::= <<
+List <var> = new ArrayList();
+<init: {element |<var>.add(<element>); }; separator="\n">
 >>

@@ -55,14 +55,30 @@ topdown : functionCall
 
 
 functionCall    : ^(FUNC_CALL ID expressionList)
-                  { 
-                      if (!FunctionLookup.isDefined($ID.text, $expressionList.size)) {
-                          msgTable.add($ID.text, Message.UNDEFINED_FUNCTION);
-                      }
-                  }
+                {
+                    if (!FunctionLookup.isDefined($ID.text, $expressionList.argTypes)) {
+                        StringBuilder sb = new StringBuilder();
+                        sb.append($ID.text);
+                        sb.append("(");
+                        int k = 0;
+                        for (String s : $expressionList.argTypes) {
+                            sb.append(s);
+                            if (++k < $expressionList.argTypes.size()) {
+                                sb.append(", ");
+                            }
+                        }
+                        sb.append(")");
+                        msgTable.add(sb.toString(), Message.UNDEFINED_FUNCTION);
+                    }
+                }
                 ;
 
-expressionList returns [int size]
-@init{ $size = 0; }
-                : ^(EXPR_LIST (. {$size++;} )* )
+
+expressionList returns [List<String> argTypes]
+@init{ $argTypes = new ArrayList<String>(); }
+                : ^(EXPR_LIST (e=. 
+                    { 
+                        $argTypes.add($e.getToken().getType() == VAR_LIST ? "List" : "D");
+                    } )* )
                 ;
+

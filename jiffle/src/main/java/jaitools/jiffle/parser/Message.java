@@ -90,6 +90,12 @@ public enum Message {
             "Image position specifier(s) used with a non-image variable"),
     
     /**
+     * Error: list arg invalid for this function
+     */
+    NON_LIST_FUNCTION(Level.ERROR,
+            "List argument cannot be used with this function"),
+    
+    /**
      * Error: trying to read from a destination image.
      */
     READING_FROM_DEST_IMAGE(Level.ERROR, 

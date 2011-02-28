@@ -25,6 +25,7 @@ import java.util.Random;
 import static jaitools.numeric.DoubleComparison.dcomp;
 import static jaitools.numeric.DoubleComparison.dzero;
 import jaitools.numeric.SampleStats;
+import java.util.List;
 
 /**
  * Provides functions for Jiffle runtime objects. An instance of this class
@@ -115,8 +116,8 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the maximum value
      */
-    public double max(Double[] values) {
-        return SampleStats.max(values, true);
+    public double max(List values) {
+        return SampleStats.max(listToArray(values), true);
     }
     
     /**
@@ -126,8 +127,8 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the mean value
      */
-    public double mean(Double[] values) {
-        return SampleStats.mean(values, true);
+    public double mean(List values) {
+        return SampleStats.mean(listToArray(values), true);
     }
     
     /**
@@ -137,8 +138,8 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the median value
      */
-    public double median(Double[] values) {
-        return SampleStats.median(values, true);
+    public double median(List values) {
+        return SampleStats.median(listToArray(values), true);
     }
     
     /**
@@ -148,8 +149,8 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the minimum value
      */
-    public double min(Double[] values) {
-        return SampleStats.min(values, true);
+    public double min(List values) {
+        return SampleStats.min(listToArray(values), true);
     }
     
     /**
@@ -159,8 +160,8 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the modal value
      */
-    public double mode(Double[] values) {
-        return SampleStats.mode(values, true);
+    public double mode(List values) {
+        return SampleStats.mode(listToArray(values), true);
     }
     
     /**
@@ -201,8 +202,8 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the range of the input values
      */
-    public double range(Double[] values) {
-        return SampleStats.range(values, true);
+    public double range(List values) {
+        return SampleStats.range(listToArray(values), true);
     }
     
     /**
@@ -224,8 +225,8 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the standard deviation of the input values
      */
-    public double sdev(Double[] values) {
-        return SampleStats.range(values, true);
+    public double sdev(List values) {
+        return SampleStats.range(listToArray(values), true);
     }
 
     /**
@@ -235,8 +236,8 @@ public class JiffleFunctions {
      * @param values the input values
      * @return the variance of the input values
      */
-    public double variance(Double[] values) {
-        return SampleStats.variance(values, true);
+    public double variance(List values) {
+        return SampleStats.variance(listToArray(values), true);
     }
     
     /**
@@ -397,6 +398,15 @@ public class JiffleFunctions {
         }
 
         return (dzero(x) ? 1d : 0d);
+    }
+
+    private Double[] listToArray(List values) {
+        final int N = values.size();
+        Double[] dvalues = new Double[values.size()];
+        for (int i = 0; i < N; i++) {
+            dvalues[i] = ((Number)values.get(i)).doubleValue();
+        }
+        return dvalues;
     }
 }
 

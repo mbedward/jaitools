@@ -59,7 +59,8 @@ tokens {
     VAR_PIXEL_SCOPE;
     VAR_PROVIDED;
     VAR_LOOP;
-
+    VAR_LIST;
+    LIST_NEW;
 }
 
 @header {

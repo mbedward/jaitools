@@ -55,11 +55,11 @@ private String getConstantString(String name) {
 }
 
 
-start
+generate
 @init {
     varScope.addLevel("top");
 }
-                : (o+=jiffleOption)* (v+=varDeclaration)* (s+=statement)+
+                : o+=jiffleOption* v+=varDeclaration* s+=statement+
 
                 -> runtime(pkgname={pkgName}, imports={imports}, 
                            name={className}, base={baseClassName}, 
@@ -81,7 +81,7 @@ optionValue returns [String src]
 
 varDeclaration  : ^(IMAGE_SCOPE_VAR_DECL VAR_IMAGE_SCOPE e=expression)
                 {
-                    varScope.addSymbol($VAR_IMAGE_SCOPE.text, SymbolType.IMAGE_SCOPE);
+                    varScope.addSymbol($VAR_IMAGE_SCOPE.text, SymbolType.SCALAR, ScopeType.IMAGE);
                 }
                 -> field(name={$VAR_IMAGE_SCOPE.text}, type={%{"double"}}, mods={%{"private"}}, init={$e.st})
                 ;
@@ -111,6 +111,7 @@ statement       : simpleStatement -> delimstmt(stmt={$simpleStatement.st})
 
 simpleStatement : imageWrite -> {$imageWrite.st}
                 | assignmentExpression -> {$assignmentExpression.st}
+                | listDeclaration -> {$listDeclaration.st}
                 | loop -> {$loop.st}
                 | expression -> {$expression.st}
                 ;
@@ -121,9 +122,33 @@ imageWrite      : ^(IMAGE_WRITE VAR_DEST expression)
                 ;
 
 
+expressionList returns [List<String> argTypes, List<StringTemplate> templates]
+@init { 
+    $argTypes = new ArrayList<String>();
+    $templates = new ArrayList<StringTemplate>();
+}
+                : ^(EXPR_LIST (expression 
+                    {
+                        $argTypes.add($expression.start.getType() == VAR_LIST ? "List" : "D");
+                        $templates.add($expression.st);
+                    })* )
+                ;
+
+
+declaredList returns [List list]
+                : ^(DECLARED_LIST expressionList) { $list = $expressionList.templates; }
+                ;
+
+
 assignmentExpression
-                : ^(op=assignmentOp id=assignableVar e=expression)
-                -> binaryexpr(lhs={$id.st}, op={$op.st}, rhs={$e.st})
+                : ^(op=assignmentOp id=assignableVar expression)
+                -> binaryexpr(lhs={$id.st}, op={$op.st}, rhs={$expression.st})
+                ;
+
+
+listDeclaration : ^(LIST_NEW VAR_LIST declaredList)
+                { addImport("java.util.List", "java.util.ArrayList"); }
+                -> listnew(var={%{$VAR_LIST.text}}, init={$declaredList.list})
                 ;
 
 
@@ -143,7 +168,7 @@ assignableVar returns [boolean newVar]
                 | VAR_PIXEL_SCOPE 
                 { 
                     if (!varScope.isDefined($VAR_PIXEL_SCOPE.text)) {
-                        varScope.addSymbol($VAR_PIXEL_SCOPE.text, SymbolType.PIXEL_SCOPE);
+                        varScope.addSymbol($VAR_PIXEL_SCOPE.text, SymbolType.SCALAR, ScopeType.PIXEL);
                         $newVar = true;
                     }
                 }
@@ -168,13 +193,13 @@ foreachLoop
     varScope.dropLevel();
 }
                 : ^(FOREACH ID
-                    {varScope.addSymbol($ID.text, SymbolType.LOOP_VAR);}
+                    {varScope.addSymbol($ID.text, SymbolType.LOOP_VAR, ScopeType.PIXEL);}
                      ^(DECLARED_LIST e=expressionList) s=statement)
 
-                -> foreachlist(n={++varIndex}, var={$ID.text}, list={$e.list}, stmt={$s.st})
+                -> foreachlist(n={++varIndex}, var={$ID.text}, list={$e.templates}, stmt={$s.st})
 
                 | ^(FOREACH ID
-                    {varScope.addSymbol($ID.text, SymbolType.LOOP_VAR);}
+                    {varScope.addSymbol($ID.text, SymbolType.LOOP_VAR, ScopeType.PIXEL);}
                      ^(SEQUENCE lo=expression hi=expression) s=statement)
 
                 -> foreachseq(n={++varIndex}, var={$ID.text}, lo={$lo.st}, hi={$hi.st}, stmt={$s.st})
@@ -182,17 +207,20 @@ foreachLoop
 
 
 expression returns [String src]
-                : ^(FUNC_CALL ID el=expressionList)
-                -> call(name={getRuntimeExpr($ID.text, $el.list.size())}, args={$el.list}, vararg={isVarArgFunction($ID.text)})
+                : ^(FUNC_CALL ID el=expressionList) 
+                { $src = getRuntimeExpr($ID.text, $el.argTypes); }
 
-                | ^(IF_CALL el=expressionList) -> ifcall(args={$el.list})
+                -> call(name={$src}, args={$el.templates})
+                        
+
+                | ^(IF_CALL el=expressionList) -> ifcall(args={$el.templates})
 
                 | imagePos -> {$imagePos.st}
 
                 | binaryExpression -> {$binaryExpression.st}
 
                 | ^(PREFIX NOT e=expression) 
-                {$src = getRuntimeExpr("NOT", 1);}
+                {$src = getRuntimeExpr("NOT", "D");}
                 -> call(name={$src}, args={$e.st})
 
                 | ^(PREFIX prefixOp e=expression) -> preop(op={$prefixOp.st}, expr={$e.st})
@@ -210,12 +238,14 @@ expression returns [String src]
                 | literal -> {$literal.st}
                 ;
 
+
 var
-@after { $st = %{$start.getText()}; }
+@after { $st = $start.getType() == VAR_LIST ? %{"(List)" + $start.getText()} : %{$start.getText()}; }
                 : VAR_IMAGE_SCOPE
                 | VAR_PIXEL_SCOPE
                 | VAR_PROVIDED
                 | VAR_LOOP
+                | VAR_LIST
                 ;
 
 
@@ -223,31 +253,31 @@ binaryExpression returns [String src]
                 : ^(POW x=expression y=expression) -> pow(x={x.st}, y={y.st})
 
                 | ^(OR e+=expression e+=expression) 
-                { $src = getRuntimeExpr("OR", 2); } -> call(name={$src}, args={$e})
+                { $src = getRuntimeExpr("OR", "D", "D"); } -> call(name={$src}, args={$e})
 
                 | ^(XOR e+=expression e+=expression) 
-                { $src = getRuntimeExpr("XOR", 2); } -> call(name={$src}, args={$e})
+                { $src = getRuntimeExpr("XOR", "D", "D"); } -> call(name={$src}, args={$e})
 
                 | ^(AND e+=expression e+=expression) 
-                { $src = getRuntimeExpr("AND", 2); } -> call(name={$src}, args={$e})
+                { $src = getRuntimeExpr("AND", "D", "D"); } -> call(name={$src}, args={$e})
 
                 | ^(LOGICALEQ e+=expression e+=expression) 
-                { $src = getRuntimeExpr("EQ", 2); } -> call(name={$src}, args={$e})
+                { $src = getRuntimeExpr("EQ", "D", "D"); } -> call(name={$src}, args={$e})
 
                 | ^(NE e+=expression e+=expression) 
-                { $src = getRuntimeExpr("NE", 2); } -> call(name={$src}, args={$e})
+                { $src = getRuntimeExpr("NE", "D", "D"); } -> call(name={$src}, args={$e})
 
                 | ^(GT e+=expression e+=expression) 
-                { $src = getRuntimeExpr("GT", 2); } -> call(name={$src}, args={$e})
+                { $src = getRuntimeExpr("GT", "D", "D"); } -> call(name={$src}, args={$e})
 
                 | ^(GE e+=expression e+=expression) 
-                { $src = getRuntimeExpr("GE", 2); } -> call(name={$src}, args={$e})
+                { $src = getRuntimeExpr("GE", "D", "D"); } -> call(name={$src}, args={$e})
 
                 | ^(LT e+=expression e+=expression) 
-                { $src = getRuntimeExpr("LT", 2); } -> call(name={$src}, args={$e})
+                { $src = getRuntimeExpr("LT", "D", "D"); } -> call(name={$src}, args={$e})
 
                 | ^(LE e+=expression e+=expression) 
-                { $src = getRuntimeExpr("LE", 2); } -> call(name={$src}, args={$e})
+                { $src = getRuntimeExpr("LE", "D", "D"); } -> call(name={$src}, args={$e})
 
                 | ^(arithmeticOp x=expression y=expression) 
                 -> binaryexpr(lhs={x.st}, op={$arithmeticOp.st}, rhs={y.st})
@@ -277,12 +307,6 @@ arithmeticOp
 
 literal         : INT_LITERAL -> {%{$INT_LITERAL.text + ".0"}}
                 | FLOAT_LITERAL -> {%{$FLOAT_LITERAL.text}}
-                ;
-
-
-expressionList returns [List list]
-@init { $list = new ArrayList(); }
-                : ^(EXPR_LIST (expression {$list.add($expression.st);})* )
                 ;
 
 

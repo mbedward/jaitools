@@ -29,46 +29,31 @@ package jaitools.jiffle.parser;
  * @version $Id$
  */
 public enum SymbolType {
+
+    /** General scalar user variable. */
+    SCALAR("scalar", "General scalar user var"),
     
-    /** A user variable with image scope. */
-    IMAGE_SCOPE(null, "Image scope var"),
+    /** A foreach loop variable. */
+    LOOP_VAR("loopvar", "Loop var"),
     
-    /** A user variable with pixel scope. */
-    PIXEL_SCOPE(null, "Pixel scope var"),
+    /** A list variable. */
+    LIST("list", "List var");
     
-    /** A foreach loop variable (type of pixel scope variable). */
-    LOOP_VAR(PIXEL_SCOPE, "Loop var");
-    
-    private final SymbolType parent;
+    private final String name;
     private final String desc;
     
-    private SymbolType(SymbolType parent, String desc) {
-        this.parent = parent;
+    private SymbolType(String name, String desc) {
+        this.name = name;
         this.desc = desc;
     }
     
-    /**
-     * Tests if this type is, or is descended from
-     * the given type.
-     * 
-     * @param type type for comparison
-     * @return {@code true} if type matches; {@code false otherwise}
-     */
-    public boolean isType(SymbolType type) {
-        if (this == type) {
-            return true;
-        }
-        
-        if (parent != null) {
-            return parent.isType(type);
-        }
-        
-        return false;
+    public String getDesc() {
+        return desc;
     }
-
+    
     @Override
     public String toString() {
-        return "SymbolType{" + desc + '}';
+        return "SymbolType{" + name + '}';
     }
     
 }

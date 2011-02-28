@@ -369,7 +369,7 @@ public class Jiffle {
         checkOptions();
         reportMessages();
         
-        if (!checkFunctionCalls() || !transformAndCheckVars()) {
+        if (!transformAndCheckVars()) {
             throw new JiffleException(messagesToString());
         }
     }
@@ -559,21 +559,6 @@ public class Jiffle {
     }
 
     /**
-     * Checks that function calls in the AST built by {@link #buildAST()}
-     * are valid.
-     *
-     * @return {@code true} if no errors; {@code false} otherwise
-     */
-    private boolean checkFunctionCalls() {
-        CommonTreeNodeStream nodes = new CommonTreeNodeStream(primaryAST);
-        nodes.setTokenStream(tokens);
-        CheckFunctionCalls check = new CheckFunctionCalls(nodes, msgTable);
-
-        check.downup(primaryAST);
-        return !msgTable.hasErrors();
-    }
-
-    /**
      * Transforms variable tokens to specific types and does some basic
      * error checking.
      *  
@@ -593,13 +578,20 @@ public class Jiffle {
             nodes = new CommonTreeNodeStream(tree);
             nodes.setTokenStream(tokens);
 
-            CheckAssignments check = new CheckAssignments(nodes, msgTable);
-            check.start();
+            CheckAssignments assignments = new CheckAssignments(nodes, msgTable);
+            assignments.start();
             if (msgTable.hasErrors()) return false;
 
             nodes = new CommonTreeNodeStream(tree);
+            nodes.setTokenStream(tokens);
             TransformExpressions trexpr = new TransformExpressions(nodes);
             tree = (CommonTree) trexpr.start().getTree();
+            
+            nodes = new CommonTreeNodeStream(tree);
+            nodes.setTokenStream(tokens);
+            CheckFunctionCalls calls = new CheckFunctionCalls(nodes, msgTable);
+            calls.downup(tree);
+            if (msgTable.hasErrors()) return false;
             
             finalAST = tree;
             return true;
@@ -623,7 +615,7 @@ public class Jiffle {
         if (!isCompiled()) {
             throw new JiffleException("The script has not been compiled");
         }
-
+        
         String runtimeSource = createRuntimeSource(model, baseClass.getName(), false);
 
         try {

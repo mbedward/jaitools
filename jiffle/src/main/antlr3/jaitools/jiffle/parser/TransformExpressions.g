@@ -39,6 +39,31 @@ options {
 package jaitools.jiffle.parser;
 }
 
+@members {
+
+private boolean isProxy(String name) {
+    try {
+        return FunctionLookup.getInfo(name, null).isProxy(); 
+
+    } catch (UndefinedFunctionException ex) {
+        // If the function is not defined we let it pass here. It
+        // will be picked up later by the function checking parser.
+        return false;
+    }
+}
+
+private String getRuntimeExpr(String name) {
+    try {
+        return FunctionLookup.getInfo(name, null).getRuntimeExpr();
+
+    } catch (UndefinedFunctionException ex) {
+        // getting here means a mistake in the grammar action code
+        throw new RuntimeException(ex);
+    }
+}
+
+}
+
 
 start           : jiffleOption* varDeclaration* statement+
                 ;
@@ -63,6 +88,7 @@ blockStatement  : statement
 
 statement       : block
                 | assignmentExpression
+                | listDeclaration
                 | ^(WHILE loopCondition statement)
                 | ^(UNTIL loopCondition statement)
                 | ^(FOREACH ID loopTarget statement)
@@ -79,14 +105,25 @@ loopTarget      : ^(SEQUENCE expression expression)
                 ;
 
 
-expressionList returns [int size]
-@init { $size = 0; }
-                : ^(EXPR_LIST (expression {$size++;} )* )
+expressionList returns [List<String> argTypes]
+@init{ $argTypes = new ArrayList<String>(); }
+                : ^(EXPR_LIST (e=expression
+                    { 
+                        $argTypes.add($e.start.getType() == VAR_LIST ? "List" : "D");
+                    } )* )
+                ;
+
+
+declaredList    : ^(DECLARED_LIST expressionList)
                 ;
 
 
 assignmentExpression
                 : ^(assignmentOp identifier expression)
+                ;
+
+
+listDeclaration : ^(LIST_NEW VAR_LIST declaredList)
                 ;
 
 
@@ -102,14 +139,8 @@ assignmentOp    : EQ
 expression
                 : ^(FUNC_CALL ID expressionList)
                 { 
-                    FunctionInfo info = null;
-                    try {
-                        info = FunctionLookup.getInfo($ID.text, $expressionList.size); 
-                    } catch (UndefinedFunctionException ex) {
-                        throw new RuntimeException("Internal parser error: undefined function in TagProxyFunctions");
-                    }
                 }
-                  -> {info.isProxy()}? VAR_PROVIDED[ info.getRuntimeExpr() ]
+                  -> {isProxy($ID.text)}? VAR_PROVIDED[ getRuntimeExpr($ID.text) ]
                   -> ^(FUNC_CALL ID expressionList)
                     
 
@@ -136,6 +167,7 @@ identifier      : VAR_SOURCE
                 | VAR_IMAGE_SCOPE
                 | VAR_PIXEL_SCOPE
                 | VAR_LOOP
+                | VAR_LIST
                 | CONSTANT
                 ;
 

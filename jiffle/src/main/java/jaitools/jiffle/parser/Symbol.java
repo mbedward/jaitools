@@ -31,6 +31,7 @@ package jaitools.jiffle.parser;
 public class Symbol {
     private final String name;
     private final SymbolType type;
+    private final ScopeType scopeType;
 
     /**
      * Creates a new symbol.
@@ -38,9 +39,10 @@ public class Symbol {
      * @param name name as used in the Jiffle script
      * @param type type of symbol
      */
-    public Symbol(String name, SymbolType type) {
+    public Symbol(String name, SymbolType type, ScopeType scopeType) {
         this.name = name;
         this.type = type;
+        this.scopeType = scopeType;
     }
 
     /**
@@ -62,16 +64,14 @@ public class Symbol {
     }
     
     /**
-     * Tests if this symbol's type is, or is descended from
-     * the given type.
+     * Gets this symbol's scope type.
      * 
-     * @param t a symbol type
-     * @return {@code true} if type matches; {@code false otherwise}
+     * @return  symbol scope type
      */
-    public boolean isType(SymbolType t) {
-        return type.isType(t);
+    public ScopeType getScopeType() {
+        return scopeType;
     }
-
+    
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {
@@ -87,6 +87,9 @@ public class Symbol {
         if (this.type != other.type) {
             return false;
         }
+        if (this.scopeType != other.scopeType) {
+            return false;
+        }
         return true;
     }
 
@@ -95,6 +98,7 @@ public class Symbol {
         int hash = 3;
         hash = 59 * hash + (this.name != null ? this.name.hashCode() : 0);
         hash = 59 * hash + (this.type != null ? this.type.hashCode() : 0);
+        hash = 59 * hash + (this.scopeType != null ? this.scopeType.hashCode() : 0);
         return hash;
     }
 

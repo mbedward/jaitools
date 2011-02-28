@@ -22,6 +22,8 @@ package jaitools.jiffle.parser;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.List;
 
 import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.RecognizerSharedState;
@@ -29,6 +31,7 @@ import org.antlr.runtime.RuleReturnScope;
 import org.antlr.runtime.tree.TreeNodeStream;
 import org.antlr.stringtemplate.StringTemplateGroup;
 
+import jaitools.CollectionFactory;
 import jaitools.jiffle.Jiffle;
 import jaitools.jiffle.JiffleException;
 import jaitools.jiffle.JiffleProperties;
@@ -48,7 +51,7 @@ public abstract class AbstractSourceGenerator extends ErrorHandlingTreeParser im
     
     protected Jiffle.RuntimeModel model;
     protected String pkgName;
-    protected String[] imports;
+    protected List<String> imports;
     protected String className;
     protected String baseClassName;
     
@@ -95,11 +98,11 @@ public abstract class AbstractSourceGenerator extends ErrorHandlingTreeParser im
 
         this.pkgName = JiffleProperties.get(JiffleProperties.RUNTIME_PACKAGE_KEY);
         
+        this.imports = CollectionFactory.list();
         String value = JiffleProperties.get(JiffleProperties.IMPORTS_KEY);
         if (value != null && !(value.trim().length() == 0)) {
-            this.imports = value.split(JiffleProperties.RUNTIME_IMPORTS_DELIM);
-        } else {
-            this.imports = new String[0];
+            this.imports.addAll( Arrays.asList( 
+                    value.split(JiffleProperties.RUNTIME_IMPORTS_DELIM) ) );
         }
     }
     
@@ -153,7 +156,7 @@ public abstract class AbstractSourceGenerator extends ErrorHandlingTreeParser im
         
         try {
             setErrorReporter(new DeferredErrorReporter());
-            return start().getTemplate().toString();
+            return generate().getTemplate().toString();
 
         } catch (RecognitionException ex) {
             if (errorReporter != null && errorReporter.getNumErrors() > 0) {
@@ -174,7 +177,7 @@ public abstract class AbstractSourceGenerator extends ErrorHandlingTreeParser im
      * 
      * @throws RecognitionException on errors processing the AST
      */
-    protected abstract RuleReturnScope start() throws RecognitionException;
+    protected abstract RuleReturnScope generate() throws RecognitionException;
 
     /**
      * Used internally to set the string templates for source generation.
@@ -188,35 +191,51 @@ public abstract class AbstractSourceGenerator extends ErrorHandlingTreeParser im
      * Looks up the runtime source for a Jiffle function.
      *
      * @param name function name
-     * @param numArgs number of arguments
+     * @param argTypes argument type names; null or empty for no-arg functions
      *
      * @return runtime source
      */
-    protected String getRuntimeExpr(String name, int numArgs) {
+    protected String getRuntimeExpr(String name, List<String> argTypes) {
         try {
-            return FunctionLookup.getRuntimeExpr(name, numArgs);
+            return FunctionLookup.getRuntimeExpr(name, argTypes);
         } catch (UndefinedFunctionException ex) {
             throw new IllegalArgumentException(ex);
         }
     }
     
+    
     /**
-     * Checks if a function takes variable argument list.
-     * 
+     * Looks up the runtime source for a Jiffle function.
+     *
      * @param name function name
-     * @return {@code true} if the function is vararg; {@code false} otherwise
+     * @param argTypes argument type names; null or empty for no-arg functions
+     *
+     * @return runtime source
      */
-    protected boolean isVarArgFunction(String name) {
-        try {
-            FunctionInfo info = FunctionLookup.getInfo(name, 1);
-            return info.isVarArg();
-        } catch (UndefinedFunctionException ex) {
-            throw new IllegalArgumentException(ex);
-        }
+    protected String getRuntimeExpr(String name, String ...argTypes) {
+        return getRuntimeExpr(name, Arrays.asList(argTypes));
     }
+    
     
     protected String getOptionExpr(String name, String value) {
         return OptionLookup.getActiveRuntimExpr(name, value);
+    }
+    
+    
+    protected void addImport(String ...importNames) {
+        for (String name : importNames) {
+            boolean found = false;
+            for (String imp : imports) {
+                if (imp.equals(name)) {
+                    found = true;
+                    break;
+                }
+            }
+            
+            if (!found) {
+                imports.add(name);
+            }
+        }
     }
 
 }

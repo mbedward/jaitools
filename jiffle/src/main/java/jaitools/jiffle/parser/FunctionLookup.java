@@ -39,6 +39,15 @@ public class FunctionLookup {
 
     private static final String PROPERTIES_FILE = "META-INF/jiffle/FunctionLookup.properties";
     private static final List<FunctionInfo> lookup = CollectionFactory.list();
+    
+    // Indices of attributes in properties file record
+    private static final int JIFFLE_NAME = 0;
+    private static final int RUNTIME_NAME = 1;
+    private static final int PROVIDER = 2;
+    private static final int VOLATILE = 3;
+    private static final int FIRST_ARG = 4;
+    
+    private static final int MIN_ATTRIBUTES = FIRST_ARG + 1;
 
     static {
         InputStream in = null;
@@ -53,31 +62,33 @@ public class FunctionLookup {
                 String value = properties.getProperty(name);
 
                 String[] attr = value.split("[,\\s]+");
-                if (attr.length != 5) {
+                if (attr.length < MIN_ATTRIBUTES) {
                     throw new IllegalArgumentException(
-                            "Error reading Jiffle function definitions from " + PROPERTIES_FILE);
+                            "Error reading " + PROPERTIES_FILE + " record: " + name + "=" + value);
                 }
                 
-                String jiffleName = attr[0];
-
-                String runtimeName = attr[1];
-                int numArgs = 0;
-                if (attr[2].toUpperCase().contains("VARARG")) {
-                    numArgs = FunctionInfo.VARARG;
-                } else {
-                    numArgs = Integer.parseInt(attr[2]);
-                }
-
-                FunctionInfo.Provider provider = FunctionInfo.Provider.get( attr[3] );
+                String jiffleName = attr[JIFFLE_NAME];
+                String runtimeName = attr[RUNTIME_NAME];
+                
+                FunctionInfo.Provider provider = FunctionInfo.Provider.get( attr[PROVIDER] );
                 if (provider == null) {
                     throw new IllegalArgumentException(
-                            "Unrecognized Jiffle function provider (" + attr[3] + ") in " + PROPERTIES_FILE);
+                            "Unrecognized Jiffle function provider (" 
+                            + attr[PROVIDER] + ") in " + PROPERTIES_FILE);
                 }
 
-                boolean isVolatile = Boolean.parseBoolean(attr[4]);
+                boolean isVolatile = Boolean.parseBoolean(attr[VOLATILE]);
+                
+                final int numArgs = "0".equals(attr[FIRST_ARG]) ? 
+                        0 : attr.length - FIRST_ARG;
+                
+                String[] argTypes = new String[numArgs];
+                for (int i = 0, k = FIRST_ARG; i < numArgs; i++, k++) {
+                    argTypes[i] = attr[k];
+                }
 
                 lookup.add( new FunctionInfo(
-                        jiffleName, runtimeName, numArgs, provider, isVolatile) );
+                        jiffleName, runtimeName, provider, isVolatile, argTypes) );
             }
 
         } catch (Exception ex) {
@@ -96,15 +107,13 @@ public class FunctionLookup {
      * Checks if a function is defined.
      *
      * @param jiffleName the name of the function used in a Jiffle script
-     *
-     * @param numArgs number of arguments or {@link FunctionInfo#VARARG} (-1)
-     *        for a variable argument function
+     * @param argTypes argument type names; null or empty for no-arg functions
      *
      * @return {@code true} if defined; {@code false} otherwise
      */
-    public static boolean isDefined(String jiffleName, int numArgs) {
+    public static boolean isDefined(String jiffleName, List<String> argTypes) {
         try {
-            getInfo(jiffleName, numArgs);
+            getInfo(jiffleName, argTypes);
         } catch (UndefinedFunctionException ex) {
             return false;
         }
@@ -116,20 +125,16 @@ public class FunctionLookup {
      * Gets the info for a function.
      *
      * @param jiffleName the name of the function used in a Jiffle script
-     *
-     * @param numArgs number of arguments or {@link FunctionInfo#VARARG} (-1)
-     *        for a variable argument function
+     * @param argTypes argument type names; null or empty for no-arg functions
      *
      * @return function info
      * @throws UndefinedFunctionException if {@code jiffleName} is not recognized
      */
-    public static FunctionInfo getInfo(String jiffleName, int numArgs)
+    public static FunctionInfo getInfo(String jiffleName, List<String> argTypes)
             throws UndefinedFunctionException {
 
-        List<FunctionInfo> list = getByName(jiffleName);
-        for (FunctionInfo info : list) {
-            if (info.getJiffleName().equals(jiffleName)
-                    && (info.isVarArg() || info.getNumArgs() == numArgs)) {
+        for (FunctionInfo info : lookup) {
+            if (info.matches(jiffleName, argTypes)) {
                 return info;
             }
         }
@@ -145,30 +150,15 @@ public class FunctionLookup {
      * case of proxy (image info) functions.
      *
      * @param jiffleName the name of the function used in a Jiffle script
-     *
-     * @param numArgs number of arguments or {@link FunctionInfo#VARARG} (-1)
-     *        for a variable argument function
+     * @param argTypes argument type names; null or empty for no-arg functions
      *
      * @return the runtime source
      * @throws UndefinedFunctionException if {@code jiffleName} is not recognized
      */
-    public static String getRuntimeExpr(String jiffleName, int numArgs) throws UndefinedFunctionException {
-        return getInfo(jiffleName, numArgs).getRuntimeExpr();
+    public static String getRuntimeExpr(String jiffleName, List<String> argTypes)
+            throws UndefinedFunctionException {
+        
+        return getInfo(jiffleName, argTypes).getRuntimeExpr();
     }
     
-    private static List<FunctionInfo> getByName(String jiffleName) throws UndefinedFunctionException {
-        List<FunctionInfo> list = CollectionFactory.list();
-        for (FunctionInfo info : lookup) {
-            if (info.getJiffleName().equals(jiffleName)) {
-                list.add(info);
-            }
-        }
-
-        if (list.isEmpty()) {
-            throw new UndefinedFunctionException(jiffleName);
-        }
-        
-        return list;
-    }
-
 }
