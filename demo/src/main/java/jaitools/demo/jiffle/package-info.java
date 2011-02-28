@@ -34,9 +34,16 @@
  * directly, compiling a script, retrieving a runtime object and
  * the using this to process images.
  * <p>
- * {@code JiffleExecutorDemo} show how to run Jiffle objects using
+ * {@code JiffleExecutorDemo} shows how to run Jiffle objects using
  * a multi-threaded, event-driven executor service. This is especially
  * useful for computationally intensive tasks.
+ * <p>
+ * {@code ProgressListenerDemo} shows how to use a progress listener
+ * with {@code JiffleExecutor} when running long tasks.
+ * <p>
+ * {@code GameOfLife} is a more advanced example which uses Jiffle
+ * runtime objects to drive a simulation where the output image of each
+ * step becomes the input image of the next step.
  */
 
 package jaitools.demo.jiffle;
