@@ -228,6 +228,18 @@ public class JiffleFunctions {
     public double sdev(List values) {
         return SampleStats.range(listToArray(values), true);
     }
+    
+    
+    /**
+     * Gets the sum of the input values. Double.Nan (null)
+     * values are ignored.
+     * 
+     * @param values the input values
+     * @return the sum of the input values
+     */
+    public double sum(List values) {
+        return SampleStats.sum(listToArray(values), true);
+    }
 
     /**
      * Gets the sample variance of the input values. Double.Nan (null)
