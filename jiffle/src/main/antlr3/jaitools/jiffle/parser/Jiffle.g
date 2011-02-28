@@ -191,6 +191,7 @@ assignmentRHS   : expression
 
 
 expression      : conditionalExpression
+                | ID APPEND^ expression
                 ;
 
 
@@ -345,6 +346,8 @@ BREAKIF : 'breakif' ;
 
 ABS_POS_PREFIX
         : '$'  ;
+
+APPEND  : '<<' ;
 
 INCR    : '++' ;
 DECR    : '--' ;

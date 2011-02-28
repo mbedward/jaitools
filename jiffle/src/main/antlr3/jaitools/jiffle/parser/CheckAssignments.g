@@ -199,6 +199,7 @@ expression      : ^(FUNC_CALL ID expressionList)
                 | ^(PREFIX prefixOp expression)
                 | ^(POSTFIX incdecOp expression)
                 | ^(PAR expression)
+                | listOperation
                 | literal
                 | imageVar
                 | CONSTANT
@@ -209,6 +210,15 @@ expression      : ^(FUNC_CALL ID expressionList)
                     int varType = $userVar.start.getType();
                     if (!varScope.isDefined(varName)) {
                         msgTable.add(varName, Message.UNINIT_VAR);
+                    }
+                }
+                ;
+
+
+listOperation   : ^(APPEND VAR_LIST expression)
+                {
+                    if (!varScope.isDefined($VAR_LIST.text)) {
+                        msgTable.add($VAR_LIST.text, Message.UNDECLARED_LIST_VAR);
                     }
                 }
                 ;

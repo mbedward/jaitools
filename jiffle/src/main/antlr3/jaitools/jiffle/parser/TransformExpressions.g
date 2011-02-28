@@ -157,8 +157,13 @@ expression
                 | ^(PREFIX prefixOp expression)
                 | ^(POSTFIX incdecOp expression)
                 | ^(PAR expression)
+                | listOperation
                 | literal
                 | identifier
+                ;
+
+
+listOperation   : ^(APPEND VAR_LIST expression)
                 ;
 
 

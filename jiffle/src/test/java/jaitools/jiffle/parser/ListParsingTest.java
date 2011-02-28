@@ -80,5 +80,37 @@ public class ListParsingTest extends ParserTestBase {
         
         assertAST(ast, expected);
     }
+    
+    @Test
+    public void appendWithOperator() throws Exception {
+        String script = "foo = []; foo << 1; foo << bar;" ;
+
+        CommonTreeNodeStream ast = getAST(script);
+        
+        int[] expected = {
+            JiffleParser.EQ,
+            Token.DOWN,
+            JiffleParser.ID,
+            JiffleParser.DECLARED_LIST,
+            Token.DOWN,
+            JiffleParser.EXPR_LIST,
+            Token.UP,
+            Token.UP,
+            
+            JiffleParser.APPEND,
+            Token.DOWN,
+            JiffleParser.ID,
+            JiffleParser.INT_LITERAL,
+            Token.UP,
+            
+            JiffleParser.APPEND,
+            Token.DOWN,
+            JiffleParser.ID,
+            JiffleParser.ID,
+            Token.UP
+        };
+        
+        assertAST(ast, expected);
+    }
 
 }

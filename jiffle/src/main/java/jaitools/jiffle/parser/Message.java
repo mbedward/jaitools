@@ -108,6 +108,12 @@ public enum Message {
             "Source images cannot be referenced in an init block"),
     
     /**
+     * Error: list operation with an undeclared list variable.
+     */
+    UNDECLARED_LIST_VAR(Level.ERROR,
+            "List variable has not been declared"),
+    
+    /**
      * Error: call to an undefined function.
      */
     UNDEFINED_FUNCTION(Level.ERROR,

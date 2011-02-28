@@ -20,6 +20,7 @@
 
 package jaitools.jiffle.runtime;
 
+import javax.media.jai.TiledImage;
 import org.junit.Test;
 
 /**
@@ -33,6 +34,7 @@ public class ListTest extends StatementsTestBase {
 
     @Test
     public void createEmptyList() throws Exception {
+        System.out.println("   create empty list with []");
         String script = "foo = []; dest = 42;" ;
         Evaluator e = new Evaluator() {
             public double eval(double val) {
@@ -44,6 +46,7 @@ public class ListTest extends StatementsTestBase {
 
     @Test
     public void createInitList() throws Exception {
+        System.out.println("   create list with initial values");
         String script = "foo = [1, 2, 3]; dest = 42;" ;
         Evaluator e = new Evaluator() {
             public double eval(double val) {
@@ -55,6 +58,7 @@ public class ListTest extends StatementsTestBase {
     
     @Test
     public void passListAsFunctionArg() throws Exception {
+        System.out.println("   pass list as function arg");
         String script = "foo = [1, 3, 2]; dest = max(foo);" ;
         Evaluator e = new Evaluator() {
             public double eval(double val) {
@@ -64,4 +68,39 @@ public class ListTest extends StatementsTestBase {
         testScript(script, e);
     }
 
+    @Test
+    public void appendWithOperator() throws Exception {
+        System.out.println("   append to list with << operator in loop");
+        String script = "options { outside=0; } \n"
+                + "values = []; \n"
+                + "foreach (dy in -1:1) { \n"
+                + "  foreach (dx in -1:1) { \n"
+                + "    values << src[dx, dy]; \n"
+                + "  } \n"
+                + "} \n"
+                + "dest = sum(values);";
+        
+        TiledImage srcImg = createRowValueImage();
+        
+        Evaluator e = new Evaluator() {
+            int x = 0;
+            int y = 0;
+            final int MAX = WIDTH - 1;
+            
+            public double eval(double val) {
+                int sum = 0;
+                int n = x == 0 || x == MAX ? 2 : 3;
+                if (y > 0) sum += n*(y-1);
+                sum += n*y;
+                if (y < MAX) sum += n*(y+1);
+                
+                x = (x + 1) % WIDTH;
+                if (x == 0) y++ ;
+                
+                return sum;
+            }
+        };
+        
+        testScript(script, srcImg, e);
+    }
 }

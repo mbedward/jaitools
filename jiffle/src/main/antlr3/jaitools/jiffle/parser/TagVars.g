@@ -195,6 +195,7 @@ expression
                 | ^(PREFIX prefixOp expression)
                 | ^(POSTFIX incdecOp expression)
                 | ^(PAR expression)
+                | listOperation
                 | literal
                 | identifier
                 ;
@@ -202,6 +203,10 @@ expression
 
 args            : expressionList
                 | declaredList
+                ;
+
+
+listOperation   : ^(APPEND identifier expression)
                 ;
 
 

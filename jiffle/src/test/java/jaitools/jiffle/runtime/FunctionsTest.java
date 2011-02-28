@@ -378,7 +378,7 @@ public class FunctionsTest extends StatementsTestBase {
         
         testScript(script, e);
     }
-
+    
     @Test
     public void tan() throws Exception {
         String script = "dest = tan(src);" ;

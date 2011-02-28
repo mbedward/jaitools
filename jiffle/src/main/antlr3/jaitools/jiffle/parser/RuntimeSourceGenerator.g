@@ -229,6 +229,8 @@ expression returns [String src]
 
                 | ^(PAR e=expression) -> par(expr={$e.st})
 
+                | listOperation -> {$listOperation.st}
+
                 | var -> {$var.st}
 
                 | VAR_SOURCE -> getsourcevalue(var={$VAR_SOURCE.text})
@@ -236,6 +238,11 @@ expression returns [String src]
                 | CONSTANT -> {%{getConstantString($CONSTANT.text)}}
 
                 | literal -> {$literal.st}
+                ;
+
+
+listOperation   : ^(APPEND VAR_LIST expression) 
+                -> listappend(var={$VAR_LIST.text}, expr={$expression.st})
                 ;
 
 
