@@ -266,4 +266,29 @@ public class LoopTest extends StatementsTestBase {
         
         testScript(script, e);
     }
+
+    @Test
+    public void foreachLoopWithListVar() throws Exception {
+        System.out.println("   using list var in foreach loop");
+        String script = 
+                  "options {outside = 0;} \n"
+                + "foo = [-1, 0, 1]; \n"
+                + "z = 0; \n"
+                + "foreach (dx in foo) z += src[dx, 0]; \n"
+                + "dest = z;";
+        
+        Evaluator e = new Evaluator() {
+            int x = 0;
+            public double eval(double val) {
+                double z = val;
+                if (x > 0) z += val - 1;
+                if (x < WIDTH-1) z += val + 1;
+                
+                x = (x + 1) % WIDTH;
+                return z;
+            }
+        };
+        
+        testScript(script, e);
+    }
 }

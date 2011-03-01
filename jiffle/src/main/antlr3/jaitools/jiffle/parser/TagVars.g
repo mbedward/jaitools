@@ -163,6 +163,7 @@ loopCondition   : expression
 
 loopSet         : ^(SEQUENCE expression expression)
                 | listLiteral
+                | identifier
                 ;
 
 

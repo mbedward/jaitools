@@ -145,6 +145,7 @@ loopSet
 options {backtrack = true; }
                 : listLiteral
                 | sequence
+                | ID
                 ;
 
 

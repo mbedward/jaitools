@@ -206,6 +206,13 @@ foreachLoop
 
                 | ^(FOREACH ID
                     {varScope.addSymbol($ID.text, SymbolType.LOOP_VAR, ScopeType.PIXEL);}
+                     VAR_LIST s=statement)
+                { addImport("java.util.Iterator"); }
+
+                -> foreachlistvar(n={++varIndex}, var={$ID.text}, listvar={%{$VAR_LIST.text}}, stmt={$s.st})
+                
+                | ^(FOREACH ID
+                    {varScope.addSymbol($ID.text, SymbolType.LOOP_VAR, ScopeType.PIXEL);}
                      ^(SEQUENCE lo=expression hi=expression) s=statement)
 
                 -> foreachseq(n={++varIndex}, var={$ID.text}, lo={$lo.st}, hi={$hi.st}, stmt={$s.st})

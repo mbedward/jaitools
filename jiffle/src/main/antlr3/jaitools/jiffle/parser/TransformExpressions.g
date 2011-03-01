@@ -101,6 +101,7 @@ loopCondition   : expression
 
 loopSet         : ^(SEQUENCE expression expression)
                 | listLiteral
+                | VAR_LIST
                 ;
 
 
