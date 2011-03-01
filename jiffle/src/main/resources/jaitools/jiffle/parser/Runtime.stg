@@ -262,15 +262,19 @@ postop(op, expr) ::= <<
 ////////////////////////////////////////////////////////////
 // List expressions
 
-listnew(var, init) ::= <<
-List <var> = new ArrayList();
-<init: {element |<var>.add(<element>); }; separator="\n">
->>
-
 listappend(var, expr) ::= <<
 <var>.add(<expr>)
 >>
 
 listassign(isnew, var, expr) ::= <<
 <if(isnew)>List <endif><var> = <expr>
+>>
+
+listliteral(exprs) ::= <<
+new ArrayList(<listinits(exprs=exprs)>)
+>>
+
+// helper for listliteral
+listinits(exprs) ::= <<
+<first(exprs): {Arrays.asList(new Object[]\{}><exprs; separator=", "><last(exprs): {\})}>
 >>

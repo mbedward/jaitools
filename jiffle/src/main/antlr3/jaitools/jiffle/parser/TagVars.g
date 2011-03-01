@@ -139,7 +139,6 @@ blockStatement  : statement
 
 statement       : block
                 | assignmentExpression
-                | listDeclaration
                 | ^(WHILE loopCondition statement)
                 | ^(UNTIL loopCondition statement)
                 | foreachLoop
@@ -154,7 +153,7 @@ foreachLoop
 @after {
     varScope.dropLevel();
 }
-                : ^(FOREACH ID {varScope.addSymbol($ID.text, SymbolType.LOOP_VAR, ScopeType.PIXEL);} loopTarget statement)
+                : ^(FOREACH ID {varScope.addSymbol($ID.text, SymbolType.LOOP_VAR, ScopeType.PIXEL);} loopSet statement)
                 ;
 
 
@@ -162,16 +161,12 @@ loopCondition   : expression
                 ;
 
 
-loopTarget      : ^(SEQUENCE expression expression)
-                | ^(DECLARED_LIST expressionList)
+loopSet         : ^(SEQUENCE expression expression)
+                | listLiteral
                 ;
 
 
 expressionList  : ^(EXPR_LIST expression*)
-                ;
-
-
-declaredList    : ^(DECLARED_LIST expressionList)
                 ;
 
 
@@ -226,10 +221,6 @@ assignmentExpression
                 ;
 
 
-listDeclaration : ^(EQ ID {varScope.addSymbol($ID.text, SymbolType.LIST, ScopeType.PIXEL);} declaredList)
-                -> ^(LIST_NEW VAR_LIST[$ID.text] declaredList)
-                ;
-
 assignmentOp    : EQ
                 | TIMESEQ
                 | DIVEQ
@@ -242,6 +233,7 @@ assignmentOp    : EQ
 expression returns [String rtnType]
                 : ^(FUNC_CALL ID args) { $rtnType = getReturnType($ID.text); }
                 | listOperation { $rtnType = "List"; }
+                | listLiteral { $rtnType = "List"; }
                 | scalarExpression { $rtnType = "D"; }
                 | identifier { $rtnType = $identifier.isList ? "List" : "D"; }
                 ;
@@ -262,11 +254,14 @@ scalarExpression
 
 
 args            : expressionList
-                | declaredList
                 ;
 
 
 listOperation   : ^(APPEND identifier expression)
+                ;
+
+
+listLiteral     : ^(DECLARED_LIST expressionList)
                 ;
 
 

@@ -47,22 +47,58 @@ public class ListTest extends StatementsTestBase {
     @Test
     public void createInitList() throws Exception {
         System.out.println("   create list with initial values");
-        String script = "foo = [1, 2, 3]; dest = 42;" ;
+        String script = "foo = [1, 2, 3]; dest = sum(foo);" ;
         Evaluator e = new Evaluator() {
             public double eval(double val) {
-                return 42;
+                return 6;
             }
         };
         testScript(script, e);
     }
     
     @Test
-    public void passListAsFunctionArg() throws Exception {
-        System.out.println("   pass list as function arg");
-        String script = "foo = [1, 3, 2]; dest = max(foo);" ;
+    public void reassignListVar() throws Exception {
+        System.out.println("   reassign list var");
+        String script = "foo = [1, 2, 3]; foo = [4, 5, 6]; dest = sum(foo);";
         Evaluator e = new Evaluator() {
             public double eval(double val) {
-                return 3;
+                return 15;
+            }
+        };
+        testScript(script, e);
+    }
+    
+    @Test
+    public void intermediateListVar() throws Exception {
+        System.out.println("   intermediate list var");
+        String script = "foo = [1, 2, 3, 4]; bar=foo; dest = sum(bar);";
+        Evaluator e = new Evaluator() {
+            public double eval(double val) {
+                return 10;
+            }
+        };
+        testScript(script, e);
+    }
+    
+    @Test
+    public void listVarAsFunctionArg() throws Exception {
+        System.out.println("   list var as function arg");
+        String script = "foo = [1, 2, 3, 4]; dest = src + sum(foo);" ;
+        Evaluator e = new Evaluator() {
+            public double eval(double val) {
+                return val + 10;
+            }
+        };
+        testScript(script, e);
+    }
+    
+    @Test
+    public void listLiteralAsFunctionArg() throws Exception {
+        System.out.println("   list literal as function arg");
+        String script = "dest = src + sum([1, 2, 3, 4]);" ;
+        Evaluator e = new Evaluator() {
+            public double eval(double val) {
+                return val + 10;
             }
         };
         testScript(script, e);

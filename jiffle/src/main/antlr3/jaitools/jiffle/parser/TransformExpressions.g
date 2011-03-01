@@ -88,10 +88,9 @@ blockStatement  : statement
 
 statement       : block
                 | assignmentExpression
-                | listDeclaration
                 | ^(WHILE loopCondition statement)
                 | ^(UNTIL loopCondition statement)
-                | ^(FOREACH ID loopTarget statement)
+                | ^(FOREACH ID loopSet statement)
                 | expression
                 ;
 
@@ -100,8 +99,8 @@ loopCondition   : expression
                 ;
 
 
-loopTarget      : ^(SEQUENCE expression expression)
-                | ^(DECLARED_LIST expressionList)
+loopSet         : ^(SEQUENCE expression expression)
+                | listLiteral
                 ;
 
 
@@ -114,16 +113,8 @@ expressionList returns [List<String> argTypes]
                 ;
 
 
-declaredList    : ^(DECLARED_LIST expressionList)
-                ;
-
-
 assignmentExpression
                 : ^(assignmentOp identifier expression)
-                ;
-
-
-listDeclaration : ^(LIST_NEW VAR_LIST declaredList)
                 ;
 
 
@@ -158,12 +149,17 @@ expression
                 | ^(POSTFIX incdecOp expression)
                 | ^(PAR expression)
                 | listOperation
+                | listLiteral
                 | literal
                 | identifier
                 ;
 
 
 listOperation   : ^(APPEND VAR_LIST expression)
+                ;
+
+
+listLiteral     : ^(DECLARED_LIST expressionList)
                 ;
 
 

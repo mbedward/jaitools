@@ -85,7 +85,6 @@ blockStatement  : statement
 
 statement       : block
                 | assignmentExpression
-                | listDeclaration
                 | ^(WHILE loopCondition statement)
                 | ^(UNTIL loopCondition statement)
                 | foreachLoop
@@ -99,7 +98,7 @@ foreachLoop
 @after {
     varScope.dropLevel();
 }
-                : ^(FOREACH ID {varScope.addSymbol($ID.text, SymbolType.LOOP_VAR, ScopeType.PIXEL);} loopTarget statement)
+                : ^(FOREACH ID {varScope.addSymbol($ID.text, SymbolType.LOOP_VAR, ScopeType.PIXEL);} loopSet statement)
                 ;
 
 
@@ -107,16 +106,12 @@ loopCondition   : expression
                 ;
 
 
-loopTarget      : ^(SEQUENCE expression expression)
-                | declaredList
+loopSet         : ^(SEQUENCE expression expression)
+                | listLiteral
                 ;
 
 
 expressionList  : ^(EXPR_LIST expression*)
-                ;
-
-
-declaredList    : ^(DECLARED_LIST expressionList)
                 ;
 
 
@@ -154,11 +149,6 @@ assignmentExpression
                             }
                     }
                 }
-                ;
-
-
-listDeclaration : ^(LIST_NEW VAR_LIST declaredList)
-                { varScope.addSymbol($VAR_LIST.text, SymbolType.LIST, ScopeType.PIXEL); }
                 ;
 
 
@@ -200,6 +190,7 @@ expression      : ^(FUNC_CALL ID expressionList)
                 | ^(POSTFIX incdecOp expression)
                 | ^(PAR expression)
                 | listOperation
+                | listLiteral
                 | literal
                 | imageVar
                 | CONSTANT
@@ -221,6 +212,10 @@ listOperation   : ^(APPEND VAR_LIST expression)
                         msgTable.add($VAR_LIST.text, Message.UNDECLARED_LIST_VAR);
                     }
                 }
+                ;
+
+
+listLiteral     : ^(DECLARED_LIST expressionList)
                 ;
 
 

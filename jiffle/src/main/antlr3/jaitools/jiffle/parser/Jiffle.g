@@ -141,16 +141,10 @@ loopCondition   : orExpression
                 ;
 
 
-/* 
- * A foreach block can have the following forms:
- * 
- * Integer sequence: e.g.  foreach (i in -1..1) { ...
- *
- * Expression list: e.g.   foreach (i in {x(), y(), 10.0, sin(z)}) { ...
- *
- */
-loopSet         : sequence
-                | declaredList
+loopSet
+options {backtrack = true; }
+                : listLiteral
+                | sequence
                 ;
 
 
@@ -159,10 +153,6 @@ expressionList  : (expression (COMMA expression)* )? -> ^(EXPR_LIST expression*)
 
 
 sequence        : lo=expression COLON hi=expression -> ^(SEQUENCE $lo $hi)
-                ;
-
-
-declaredList    : LSQUARE expressionList RSQUARE -> ^(DECLARED_LIST expressionList)
                 ;
 
 
@@ -182,13 +172,8 @@ ifCall          : IF LPAR expressionList RPAR -> ^(IF_CALL expressionList)
  * requiring backtracking.
  */
 assignmentExpression
-                : ID assignmentOp^ assignmentRHS
+                : ID assignmentOp^ expression
                 ;
-
-assignmentRHS   : expression
-                | declaredList
-                ;
-
 
 expression      : conditionalExpression
                 | ID APPEND^ expression
@@ -268,6 +253,7 @@ primaryExpression
 
 atom            : LPAR expression RPAR -> ^(PAR expression)
                 | literal
+                | listLiteral
                 | ifCall
                 | identifiedAtom
                 ;
@@ -309,6 +295,10 @@ literal         : INT_LITERAL
                 | TRUE
                 | FALSE
                 | NULL
+                ;
+
+
+listLiteral     : LSQUARE expressionList RSQUARE -> ^(DECLARED_LIST expressionList)
                 ;
 
 

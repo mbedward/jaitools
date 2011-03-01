@@ -112,7 +112,6 @@ statement       : simpleStatement -> delimstmt(stmt={$simpleStatement.st})
 simpleStatement : imageWrite -> {$imageWrite.st}
                 | scalarAssignment -> {$scalarAssignment.st}
                 | listAssignment -> {$listAssignment.st}
-                | listDeclaration -> {$listDeclaration.st}
                 | loop -> {$loop.st}
                 | expression -> {$expression.st}
                 ;
@@ -123,21 +122,17 @@ imageWrite      : ^(IMAGE_WRITE VAR_DEST expression)
                 ;
 
 
-expressionList returns [List<String> argTypes, List<StringTemplate> templates]
+expressionList returns [List argTypes, List templates]
 @init { 
-    $argTypes = new ArrayList<String>();
-    $templates = new ArrayList<StringTemplate>();
+    $argTypes = new ArrayList();
+    $templates = new ArrayList();
 }
                 : ^(EXPR_LIST (expression 
-                    {
-                        $argTypes.add($expression.start.getType() == VAR_LIST ? "List" : "D");
+                    {   
+                        int ttype = $expression.start.getType();
+                        $argTypes.add(ttype == VAR_LIST || ttype == DECLARED_LIST ? "List" : "D");
                         $templates.add($expression.st);
                     })* )
-                ;
-
-
-declaredList returns [List list]
-                : ^(DECLARED_LIST expressionList) { $list = $expressionList.templates; }
                 ;
 
 
@@ -149,24 +144,17 @@ scalarAssignment
 
 listAssignment
 scope { boolean isNew; }
-                : ^(EQ VAR_LIST expression)
+                : ^(EQ VAR_LIST e=expression)
                 { 
                     $listAssignment::isNew = !varScope.isDefined($VAR_LIST.text, SymbolType.LIST); 
                     if ($listAssignment::isNew) {
+                        addImport("java.util.List", "java.util.ArrayList"); 
                         varScope.addSymbol($VAR_LIST.text, SymbolType.LIST, ScopeType.PIXEL);
                     }
                 }
 
                 -> listassign(isnew={$listAssignment::isNew}, var={$VAR_LIST.text}, expr={$expression.st})
-                ;
 
-
-listDeclaration : ^(LIST_NEW VAR_LIST declaredList)
-                { 
-                    addImport("java.util.List", "java.util.ArrayList"); 
-                    varScope.addSymbol($VAR_LIST.text, SymbolType.LIST, ScopeType.PIXEL);
-                }
-                -> listnew(var={%{$VAR_LIST.text}}, init={$declaredList.list})
                 ;
 
 
@@ -224,12 +212,8 @@ foreachLoop
                 ;
 
 
-expression returns [String src]
-                : ^(FUNC_CALL ID el=expressionList) 
-                { $src = getRuntimeExpr($ID.text, $el.argTypes); }
-
-                -> call(name={$src}, args={$el.templates})
-                        
+expression      : ^(FUNC_CALL ID el=expressionList) 
+                -> call(name={getRuntimeExpr($ID.text, $el.argTypes)}, args={$el.templates})
 
                 | ^(IF_CALL el=expressionList) -> ifcall(args={$el.templates})
 
@@ -238,8 +222,7 @@ expression returns [String src]
                 | binaryExpression -> {$binaryExpression.st}
 
                 | ^(PREFIX NOT e=expression) 
-                {$src = getRuntimeExpr("NOT", "D");}
-                -> call(name={$src}, args={$e.st})
+                -> call(name={getRuntimeExpr("NOT", "D")}, args={$e.st})
 
                 | ^(PREFIX prefixOp e=expression) -> preop(op={$prefixOp.st}, expr={$e.st})
 
@@ -248,6 +231,8 @@ expression returns [String src]
                 | ^(PAR e=expression) -> par(expr={$e.st})
 
                 | listOperation -> {$listOperation.st}
+
+                | listLiteral -> {$listLiteral.st}
 
                 | var -> {$var.st}
 
@@ -261,6 +246,12 @@ expression returns [String src]
 
 listOperation   : ^(APPEND VAR_LIST expression) 
                 -> listappend(var={$VAR_LIST.text}, expr={$expression.st})
+                ;
+
+
+listLiteral     : ^(DECLARED_LIST e=expressionList)
+                { addImport("java.util.Arrays", "java.util.ArrayList"); }
+                -> listliteral(empty={$e.templates.isEmpty()}, exprs={$e.templates}) 
                 ;
 
 

@@ -78,7 +78,8 @@ expressionList returns [List<String> argTypes]
 @init{ $argTypes = new ArrayList<String>(); }
                 : ^(EXPR_LIST (e=. 
                     { 
-                        $argTypes.add($e.getToken().getType() == VAR_LIST ? "List" : "D");
+                        int ttype = $e.getToken().getType();
+                        $argTypes.add(ttype == VAR_LIST || ttype == DECLARED_LIST ? "List" : "D");
                     } )* )
                 ;
 
