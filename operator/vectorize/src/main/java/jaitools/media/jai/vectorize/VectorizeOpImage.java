@@ -20,9 +20,6 @@
 
 package jaitools.media.jai.vectorize;
 
-import jaitools.jts.Utils;
-import jaitools.media.jai.AttributeOpImage;
-
 import java.awt.image.RenderedImage;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
@@ -52,8 +49,11 @@ import com.vividsolutions.jts.geom.PrecisionModel;
 import com.vividsolutions.jts.geom.impl.PackedCoordinateSequenceFactory;
 import com.vividsolutions.jts.operation.polygonize.Polygonizer;
 
+import jaitools.jts.Utils;
+import jaitools.media.jai.AttributeOpImage;
+
 /**
- * Vectorize regions of uniform value in an image
+ * Vectorize regions of uniform value in an image.
  *
  * @author Michael Bedward
  * @author Simone Giannecchini, GeoSolutions
@@ -141,31 +141,22 @@ public class VectorizeOpImage extends AttributeOpImage {
     // (ie. insideEdges == false)
     private Double inside = null;
 
-    /**
-     * Array of Coor objects that store end-points of vertical lines under construction
-     */
+    // Segments of vertical boundary under construction
     private Map<Integer, LineSegment> vertLines;
 
-    /**
-     * End-points of horizontal line under construction
-     */
+    // Segments of horizontal boundary under construction
     private LineSegment horizLine;
 
-    /**
-     * Collection of line strings on the boundary of raster regions
-     */
+    // Holds lines, constructed from boundary segments, to be polygonized
     private List<LineString> lines;
     
-    /**
-     * Factory for construction of JTS Geometry objects
-     */
+    // Factory for construction of JTS Geometry objects
     private final static GeometryFactory GEOMETRY_FACTORY= new GeometryFactory(new PrecisionModel(10));
 
+    // Polygons cached for subsequent requests
     SoftReference<List<Geometry>> cachedVectors;
     
-    /**
-     * Tells us whether or not we should remove collinear points in the final polygons.
-     */
+    // Whether to remove collinear points from polygons.
     private final  boolean removeCollinear;
     
 
@@ -184,8 +175,7 @@ public class VectorizeOpImage extends AttributeOpImage {
      * @param insideEdges flag controlling whether boundaries between adjacent
      *        "inside" regions should be vectorized
      *
-     *  @param removeCollinear indicates whether or not we should remove collinear points
-     *         from the resulting geometries
+     *  @param removeCollinear whether to remove collinear points from polygons
      */
     public VectorizeOpImage(RenderedImage source,
             ROI roi,
@@ -345,7 +335,7 @@ public class VectorizeOpImage extends AttributeOpImage {
                 // now get the value and save it for future usage
                 //
                 double val = imgIter.getSampleDouble((int) c.x, (int) c.y, band);
-                if (roi.contains(c.x, c.y) && !isOutside(val)) {
+                if ((roi == null || roi.contains(c.x, c.y)) && !isOutside(val)) {
                     // if we don't clone the polygon the results will share coordinate objects
                     // which will backfire if any c.s. visitor is used later
                     // since all geometries end up in the heap also better use packed c.s.
@@ -371,12 +361,11 @@ public class VectorizeOpImage extends AttributeOpImage {
      * Vectorize the boundaries of regions of uniform value in the source image.
      */
     private void vectorizeBoundaries() {
-
         // array treated as a 2x2 matrix of double values used as a moving window
         double[] sample = new double[4];
 
         // array treated as a 2x2 matrix of boolean flags used to indicate which
-        // sampling window pixels are within the source image and ROI
+        // sampling window pixels are within the source image and ROI (if used)
         boolean[] flag = new boolean[4];
 
         RandomIter imageIter = RandomIterFactory.create(getSourceImage(0), null);
@@ -401,8 +390,11 @@ public class VectorizeOpImage extends AttributeOpImage {
                     sample[BL] = sample[BR];
                     flag[BL] = flag[BR];
 
-                    flag[TR] = yFlag && srcBounds.contains(x + 1, y) && roi.contains(x + 1, y);
-                    flag[BR] = yNextFlag && srcBounds.contains(x + 1, y + 1) && roi.contains(x + 1, y + 1);
+                    flag[TR] = yFlag && srcBounds.contains(x + 1, y) && 
+                            (roi == null || roi.contains(x + 1, y));
+                    
+                    flag[BR] = yNextFlag && srcBounds.contains(x + 1, y + 1) && 
+                            (roi == null || roi.contains(x + 1, y + 1));
 
                     sample[TR] = (flag[TR] ? imageIter.getSampleDouble(x + 1, y, band) : OUT);
                     if (isOutside(sample[TR])) {
@@ -423,7 +415,6 @@ public class VectorizeOpImage extends AttributeOpImage {
         } finally {
             imageIter.done();
         }
-
     }
     
 
