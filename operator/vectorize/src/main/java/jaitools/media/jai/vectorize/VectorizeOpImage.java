@@ -808,12 +808,14 @@ public class VectorizeOpImage extends AttributeOpImage {
         List<Geometry> toFilter = CollectionFactory.list();
         List<Geometry> holdOver = CollectionFactory.list();
         
-        ListIterator<Geometry> iter = polys.listIterator();
-        while (iter.hasNext()) {
-            Geometry poly = iter.next();
+        ListIterator<Geometry> polysIter = polys.listIterator();
+        while (polysIter.hasNext()) {
+            Geometry poly = polysIter.next();
             if (poly.getArea() < filterThreshold) {
-                toFilter.add(poly);
-                iter.remove();
+                polysIter.remove();
+                if (filterMethod != VectorizeDescriptor.FILTER_DELETE) {
+                    toFilter.add(poly);
+                }
             }
         }
         
@@ -839,7 +841,7 @@ public class VectorizeOpImage extends AttributeOpImage {
             foundMergers = false;
             
             ListIterator<Geometry> filterIter = toFilter.listIterator();
-            while (iter.hasNext()) {
+            while (filterIter.hasNext()) {
                 Geometry smallPoly = filterIter.next();
                 filterIter.remove();
 
@@ -861,10 +863,14 @@ public class VectorizeOpImage extends AttributeOpImage {
                 }
 
                 if (selectedNbr != null) {
+                    foundMergers = true;
                     spIndex.remove(selectedNbr.getEnvelopeInternal(), selectedNbr);
                     removePolygon(polys, selectedNbr);
+                    
                     Geometry merged = selectedNbr.union(smallPoly);
+                    merged.setUserData(selectedNbr.getUserData());
                     spIndex.insert(merged.getEnvelopeInternal(), merged);
+                    polys.add(merged);
 
                 } else {
                     // no merger was possible but it might be later when other

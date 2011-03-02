@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Michael Bedward
+ * Copyright 2010-2011 Michael Bedward
  * 
  * This file is part of jai-tools.
 
@@ -17,59 +17,45 @@
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
+
 package jaitools.media.jai.vectorize;
 
 import java.awt.Rectangle;
-import jaitools.numeric.NumberOperations;
 import java.awt.image.RenderedImage;
 import java.util.Set;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.io.WKTReader;
-
-import jaitools.imageutils.ImageUtils;
-
 import javax.media.jai.JAI;
 import javax.media.jai.ROI;
 import javax.media.jai.OperationRegistry;
-import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.ROIShape;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.TiledImage;
 import javax.media.jai.registry.RenderedRegistryMode;
 
+import com.vividsolutions.jts.geom.Polygon;
+
+import jaitools.imageutils.ImageUtils;
+
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
- * Unit tests for the Vectorize operator.
+ * General unit tests for the Vectorize operator.
  * 
  * @author Michael Bedward
  * @since 1.1
  * @version $Id$
  */
-public class VectorizeTest {
-
-    private static final GeometryFactory gf = new GeometryFactory();
-    private static final WKTReader reader = new WKTReader(gf);
+public class VectorizeTest extends TestBase {
+    
     private Map<String, Object> args;
-
-    @BeforeClass
-    public static void setupClass() {
-        ensureRegistered();
-    }
-
+    
     @Before
     public void setup() {
         args = new HashMap<String, Object>();
@@ -474,101 +460,6 @@ public class VectorizeTest {
         return src;
     }
 
-    /**
-     * Helper function. Builds parameter block and runs the operation.
-     * 
-     * @param sourceImg source image
-     * @param args optional {@code Map} of arguments
-     * 
-     * @return the destination image
-     */
-    private RenderedOp doOp(RenderedImage sourceImg, Map<String, Object> args) {
-        ParameterBlockJAI pb = new ParameterBlockJAI("Vectorize");
-        pb.setSource("source0", sourceImg);
-
-        if (args != null) {
-            ROI roi = (ROI) args.get("roi");
-            if (roi != null) {
-                pb.setParameter("roi", roi);
-            }
-
-            Integer band = (Integer) args.get("band");
-            if (band != null) {
-                pb.setParameter("band", band);
-            }
-
-            Collection<? extends Number> outsideValues = (Collection<? extends Number>) args.get("outsideValues");
-            if (outsideValues != null) {
-                pb.setParameter("outsideValues", outsideValues);
-            }
-
-            Boolean insideEdges = (Boolean) args.get("insideEdges");
-            if (insideEdges != null) {
-                pb.setParameter("insideEdges", insideEdges);
-            }
-        }
-
-        return JAI.create("Vectorize", pb);
-    }
-
-    /**
-     * Helper function. Gets the vectors property from a destination
-     * image and checks the following:
-     * <ol type="1">
-     * <li> The property is a {@code Collection} </li>
-     * <li> Its size equals {@code expectedN} </li>
-     * <li> It contains {@code Polygons}
-     * </ol>
-     * If these checks are satisfied, the {@code Polygons} are returned.
-     * 
-     * @param dest property from the destination image
-     * @param expectedN expected number of polygons
-     * 
-     * @return the polygons
-     */
-    private List<Polygon> getPolygons(RenderedOp dest, int expectedN) {
-        Object prop = dest.getProperty(VectorizeDescriptor.VECTOR_PROPERTY_NAME);
-        assertTrue(prop != null && prop instanceof Collection);
-
-        Collection coll = (Collection) prop;
-        assertEquals(expectedN, coll.size());
-
-        List<Polygon> polys = new ArrayList<Polygon>();
-        if (expectedN > 0) {
-            Object obj = coll.iterator().next();
-            assertTrue(obj instanceof Polygon);
-
-            polys.addAll(coll);
-        }
-
-
-        return polys;
-    }
-
-    private void assertPolygons(ExpectedPoly expected, List<Polygon> observed) throws Exception {
-        assertPolygons(new ExpectedPoly[]{expected}, observed);
-    }
-
-    /**
-     * Assert equality of expected and observed polygons.
-     * 
-     * @param expectedWKT WKT string for expected polygon
-     * @param observed observed polygon
-     */
-    private void assertPolygons(ExpectedPoly[] expected, List<Polygon> observed) throws Exception {
-        PolyList pl = new PolyList(observed);
-
-        for (ExpectedPoly ep : expected) {
-            Polygon poly = (Polygon) reader.read(ep.wkt);
-            int index = pl.indexOf(poly);
-            assertTrue("Polygon not found", index >= 0);
-            
-            Polygon matchPoly = pl.get(index);
-            Number value = (Number) matchPoly.getUserData();
-            assertEquals("User data does not match",
-                    0, NumberOperations.compare(value, ep.value));
-        }
-    }
 
     /**
      * Register the operator with JAI if it is not already registered
@@ -588,53 +479,4 @@ public class VectorizeTest {
         spi.updateRegistry(reg);
     }
 
-    /**
-     * Class to hold WKT String and a numeric value for
-     * an expected polygon.
-     */
-    private static final class ExpectedPoly {
-
-        String wkt;
-        Number value;
-
-        ExpectedPoly(String wkt, Number value) {
-            this.wkt = wkt;
-            this.value = value;
-        }
-    }
-
-    /**
-     * A {@code List} class that normalizes {@code Polygons} added to it
-     * and overrides the {@code indexOf} method to use {@code Polygon.equalsExact}.
-     */
-    private static final class PolyList extends ArrayList<Polygon> {
-
-        private static final double TOL = 0.5d;
-
-        PolyList(List<Polygon> polys) {
-            for (Polygon p : polys) {
-                add(p);
-            }
-        }
-
-        @Override
-        public boolean add(Polygon p) {
-            p.normalize();
-            return super.add(p);
-        }
-
-        @Override
-        public int indexOf(Object o) {
-            Polygon op = (Polygon) o;
-            op.normalize();
-            for (int i = 0; i < size(); i++) {
-                if (get(i).equalsExact(op, TOL)) {
-                    return i;
-                }
-            }
-            return -1;
-        }
-    }
-    
-    
 }
