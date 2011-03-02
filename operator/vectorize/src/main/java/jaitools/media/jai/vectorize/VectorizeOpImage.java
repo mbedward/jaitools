@@ -22,9 +22,7 @@ package jaitools.media.jai.vectorize;
 
 import java.awt.image.RenderedImage;
 import java.lang.ref.SoftReference;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -33,7 +31,6 @@ import java.util.Random;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 import javax.media.jai.ROI;
 import javax.media.jai.iterator.RandomIter;
@@ -49,7 +46,6 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.PrecisionModel;
 import com.vividsolutions.jts.geom.impl.PackedCoordinateSequenceFactory;
-import com.vividsolutions.jts.index.SpatialIndex;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 import com.vividsolutions.jts.operation.polygonize.Polygonizer;
 
@@ -213,7 +209,7 @@ public class VectorizeOpImage extends AttributeOpImage {
                 
         this.band = band;
         
-        this.outsideValues = new TreeSet<Double>();
+        this.outsideValues = CollectionFactory.sortedSet();
         if (outsideValues == null || outsideValues.isEmpty()) {
             this.outsideValues.add(Double.NaN);
         } else {
@@ -253,8 +249,8 @@ public class VectorizeOpImage extends AttributeOpImage {
      * Runs the polygon creation and filtering steps.
      */
     private void doVectorize() {
-        lines = new ArrayList<LineString>();
-        vertLines = new HashMap<Integer, LineSegment>();
+        lines = CollectionFactory.list();
+        vertLines = CollectionFactory.map();
         
         vectorizeBoundaries();
         List<Geometry> polys = assemblePolygons();
@@ -273,7 +269,7 @@ public class VectorizeOpImage extends AttributeOpImage {
      */
     private List<Geometry> assemblePolygons() {
 
-        List<Geometry> polygons = new ArrayList<Geometry>();
+        List<Geometry> polygons = CollectionFactory.list();
         RandomIter imgIter = RandomIterFactory.create(getSourceImage(0), null);
         Polygonizer polygonizer = new Polygonizer();
         
@@ -802,11 +798,15 @@ public class VectorizeOpImage extends AttributeOpImage {
     /**
      * Filters small polygons from the list of initial polygons using either
      * deletion or merging as specified by the filterMethod parameter.
+     * <p>
+     * The list of small polygons is processed repeatedly until empty or
+     * no more can be removed by merging to neighbouring polygons.
      * 
      * @param polys initial polygons
      */
     private void filterSmallPolygons(List<Geometry> polys) {
         List<Geometry> toFilter = CollectionFactory.list();
+        List<Geometry> holdOver = CollectionFactory.list();
         
         ListIterator<Geometry> iter = polys.listIterator();
         while (iter.hasNext()) {
@@ -831,35 +831,67 @@ public class VectorizeOpImage extends AttributeOpImage {
             spIndex.insert(poly.getEnvelopeInternal(), poly);
         }
 
-        ListIterator<Geometry> filterIter = toFilter.listIterator();
-        while (iter.hasNext()) {
-            Geometry smallPoly = filterIter.next();
-            filterIter.remove();
+        /*
+         * 
+         */
+        boolean foundMergers;
+        do {
+            foundMergers = false;
+            
+            ListIterator<Geometry> filterIter = toFilter.listIterator();
+            while (iter.hasNext()) {
+                Geometry smallPoly = filterIter.next();
+                filterIter.remove();
 
-            List nbrs = spIndex.query(smallPoly.getEnvelopeInternal());
-            if (!nbrs.isEmpty()) {
-                switch (filterMethod) {
-                    case VectorizeDescriptor.FILTER_MERGE_LARGEST:
-                        mergeToLargest(polys, smallPoly, nbrs, spIndex);
-                        break;
+                List nbrs = spIndex.query(smallPoly.getEnvelopeInternal());
+                Geometry selectedNbr = null;
+                if (!nbrs.isEmpty()) {
+                    switch (filterMethod) {
+                        case VectorizeDescriptor.FILTER_MERGE_LARGEST:
+                            selectedNbr = getLargestNbr(smallPoly, nbrs);
+                            break;
 
-                    case VectorizeDescriptor.FILTER_MERGE_RANDOM:
-                        mergeToRandom(polys, smallPoly, nbrs, spIndex);
-                        break;
+                        case VectorizeDescriptor.FILTER_MERGE_RANDOM:
+                            selectedNbr = getRandomNbr(smallPoly, nbrs);
+                            break;
 
-                    default:
-                        throw new IllegalArgumentException("Invalid filterMethod value");
+                        default:
+                            throw new IllegalArgumentException("Invalid filterMethod value");
+                    }
+                }
+
+                if (selectedNbr != null) {
+                    spIndex.remove(selectedNbr.getEnvelopeInternal(), selectedNbr);
+                    removePolygon(polys, selectedNbr);
+                    Geometry merged = selectedNbr.union(smallPoly);
+                    spIndex.insert(merged.getEnvelopeInternal(), merged);
+
+                } else {
+                    // no merger was possible but it might be later when other
+                    // polys have been merged, so hold over
+                    holdOver.add(smallPoly);
                 }
             }
-        }
+            
+            toFilter.addAll(holdOver);
+            
+        } while (foundMergers && !toFilter.isEmpty());
     }
 
-    private void mergeToLargest(List<Geometry> polys, Geometry smallPoly, 
-            List nbrs, SpatialIndex spIndex) {
-        
+    /**
+     * Gets the largest neighbour of the given small polygon.
+     * 
+     * @param smallPoly the small polygon
+     * @param nbrs list of potential neighbours
+     * 
+     * @return the largest neighbouring polygon; or {@code null} if
+     *         no neighbour could be found
+     */
+    private Geometry getLargestNbr(Geometry smallPoly, List nbrs) {
+        Geometry largestNbr = null;
         ListIterator nbrsIter = nbrs.listIterator();
         double maxArea = 0;
-        Geometry largestNbr = null;
+
         while (nbrsIter.hasNext()) {
             Geometry g = (Geometry) nbrsIter.next();
             // Check that boundaries have lineal intersection
@@ -874,18 +906,22 @@ public class VectorizeOpImage extends AttributeOpImage {
             }
         }
 
-        if (!nbrs.isEmpty()) {
-            spIndex.remove(largestNbr.getEnvelopeInternal(), largestNbr);
-            removePolygon(polys, largestNbr);
-            Geometry merged = largestNbr.union(smallPoly);
-            spIndex.insert(merged.getEnvelopeInternal(), merged);
-        }
+        return largestNbr;
     }
 
-    private void mergeToRandom(List<Geometry> polys, Geometry smallPoly, 
-            List nbrs, Quadtree spIndex) {
-        
+    /**
+     * Selects a random neighbour of the given small polygon.
+     * 
+     * @param smallPoly the small polygon
+     * @param nbrs list of potential neighbours
+     * 
+     * @return the selected neighbouring polygon; or {@code null} if
+     *         no neighbour could be found
+     */
+    private Geometry getRandomNbr(Geometry smallPoly, List nbrs) {
+        Geometry selected = null;
         ListIterator nbrsIter = nbrs.listIterator();
+
         while (nbrsIter.hasNext()) {
             Geometry g = (Geometry) nbrsIter.next();
             // Check that boundaries have lineal intersection
@@ -897,13 +933,10 @@ public class VectorizeOpImage extends AttributeOpImage {
         if (!nbrs.isEmpty()) {
             if (rr == null) rr = new Random();
             int index = rr.nextInt(nbrs.size());
-            Geometry selected = (Geometry) nbrs.get(index);
-            
-            spIndex.remove(selected.getEnvelopeInternal(), selected);
-            removePolygon(polys, selected);
-            Geometry merged = selected.union(smallPoly);
-            spIndex.insert(merged.getEnvelopeInternal(), merged);
+            selected = (Geometry) nbrs.get(index);
         }
+        
+        return selected;
     }
 
     
