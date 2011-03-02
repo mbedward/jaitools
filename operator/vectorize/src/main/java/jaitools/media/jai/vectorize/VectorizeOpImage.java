@@ -874,6 +874,7 @@ public class VectorizeOpImage extends AttributeOpImage {
             }
             
             toFilter.addAll(holdOver);
+            holdOver.clear();
             
         } while (foundMergers && !toFilter.isEmpty());
     }
