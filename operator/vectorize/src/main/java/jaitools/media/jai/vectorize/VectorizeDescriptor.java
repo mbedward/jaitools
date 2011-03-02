@@ -20,16 +20,12 @@
 
 package jaitools.media.jai.vectorize;
 
-import java.awt.RenderingHints;
-import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
 import java.util.Collection;
 import java.util.Collections;
-import javax.media.jai.JAI;
+
 import javax.media.jai.OperationDescriptorImpl;
-import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.ROI;
-import javax.media.jai.RenderedOp;
 import javax.media.jai.registry.RenderedRegistryMode;
 
 /**
@@ -46,19 +42,37 @@ public class VectorizeDescriptor extends OperationDescriptorImpl {
      * a destination image property.
      */
     public static final String VECTOR_PROPERTY_NAME = "vectors";
+    
+    /**
+     * Filter small polygons by merging each with its largest (area) neighbour.
+     * This is the default.
+     */
+    public static final int FILTER_MERGE_LARGEST = 0;
+    /**
+     * Filter small polygons by merging each with a randomly chosen neighbour.
+     */
+    public static final int FILTER_MERGE_RANDOM = 1;
+    /**
+     * Filter small polygons by simple deletion.
+     */
+    public static final int FILTER_DELETE = 2;
 
     static final int ROI_ARG = 0;
     static final int BAND_ARG = 1;
     static final int OUTSIDE_VALUES_ARG = 2;
     static final int INSIDE_EDGES_ARG = 3;
     static final int REMOVE_COLLINEAR_ARG = 4;
+    static final int FILTER_SMALL_POLYS_ARG = 5;
+    static final int FILTER_METHOD_ARG = 6;
 
     private static final String[] paramNames = {
         "roi",
         "band",
         "outsideValues",
         "insideEdges",
-        "removeCollinear"
+        "removeCollinear",
+        "filterThreshold",
+        "filterMethod"
     };
 
     private static final Class[] paramClasses = {
@@ -67,6 +81,8 @@ public class VectorizeDescriptor extends OperationDescriptorImpl {
          Collection.class,
          Boolean.class,
          Boolean.class,
+         Double.class,
+         Integer.class
     };
 
     private static final Object[] paramDefaults = {
@@ -74,7 +90,9 @@ public class VectorizeDescriptor extends OperationDescriptorImpl {
          Integer.valueOf(0),
          Collections.EMPTY_LIST,
          Boolean.TRUE,
-         Boolean.TRUE
+         Boolean.TRUE,
+         Double.valueOf(0.0),
+         FILTER_MERGE_LARGEST
     };
 
     /** Constructor. */
@@ -98,8 +116,12 @@ public class VectorizeDescriptor extends OperationDescriptorImpl {
                     {"arg3Desc", paramNames[3] + " (Boolean, default=true) " +
                               "whether to vectorize boundaries between adjacent" +
                               "regions with non-outside values"},
-	                {"arg4Desc", paramNames[4] + " (Boolean, default=false) " +
-	                          "whether to reduce collinear points in the resulting polygons"}
+                    {"arg4Desc", paramNames[4] + " (Boolean, default=false) " +
+                              "whether to reduce collinear points in the resulting polygons"},
+                    {"arg5Desc", paramNames[5] + " (Double, default=0) " +
+                              "area (fractional pixels) below which polygons will be filtered"},
+                    {"arg6Desc", paramNames[6] + " (Integer, default=FILTER_MERGE_LARGEST) " +
+                              "filter method to use for polygons smaller than threshold area"}
                 },
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
                 
@@ -113,62 +135,18 @@ public class VectorizeDescriptor extends OperationDescriptorImpl {
                 );
     }
 
-    /**
-     * Constructs a {@link ParameterBlockJAI} and
-     * invokes {@code JAI.create("Vectorize", params) }.
-     * <p>
-     * 
-     * @param source0 the source image
-     *
-     * @param roi an optional {@link ROI} defining the bounds of the area to
-     *        be vectorized
-     * 
-     * @param band source image band to process
-     * 
-     * @param outsideValues an optional collection of image values to treat as
-     *        "outside" (ie. not data regions); may be {@code null} or empty
-     * 
-     * @param insideEdges whether to vectorize boundaries between adjacent
-     *        data (ie. non-outside) regions
-     *  
-     *  @param removeCollinear indicates whether or not we should remove collinear points
-     *         from the resulting geometries
-     *
-     * @param hints rendering hints (ignored)
-     *
-     * @return the RenderedOp destination
-     * 
-     * @throws IllegalArgumentException if any args are null
-     */
-    public static RenderedOp create(
-            RenderedImage source0,
-            ROI roi,
-            int band,
-            Collection<Number> outsideValues,
-            Boolean insideEdges,
-            Boolean removeCollinear,
-            RenderingHints hints) {
-                
-        ParameterBlockJAI pb =
-                new ParameterBlockJAI("Vectorize",
-                RenderedRegistryMode.MODE_NAME);
-
-        pb.setSource("source0", source0);
-        pb.setParameter(paramNames[ROI_ARG], roi);
-        pb.setParameter(paramNames[BAND_ARG], band);
-        pb.setParameter(paramNames[OUTSIDE_VALUES_ARG], outsideValues);
-        pb.setParameter(paramNames[INSIDE_EDGES_ARG], insideEdges);
-        pb.setParameter(paramNames[REMOVE_COLLINEAR_ARG], removeCollinear);
-
-        return JAI.create("Vectorize", pb, hints);
-    }
-
     @Override
     protected boolean validateParameters(String modeName, ParameterBlock pb, StringBuffer msg) {
 
         boolean ok = super.validateParameters(modeName, pb, msg);
         if (ok) {
-            // TODO: any checking required ?
+            int filterMethod = pb.getIntParameter(FILTER_METHOD_ARG);
+            if ( !(filterMethod == FILTER_MERGE_LARGEST ||
+                   filterMethod == FILTER_MERGE_RANDOM ||
+                   filterMethod == FILTER_DELETE) ) {
+                ok = false;
+                msg.append("Invalid filter method: ").append(filterMethod);
+            }
         }
         return ok;
     }

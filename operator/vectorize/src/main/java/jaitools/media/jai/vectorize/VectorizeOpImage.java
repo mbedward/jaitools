@@ -27,7 +27,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
+import java.util.Random;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
@@ -47,8 +49,11 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.PrecisionModel;
 import com.vividsolutions.jts.geom.impl.PackedCoordinateSequenceFactory;
+import com.vividsolutions.jts.index.SpatialIndex;
+import com.vividsolutions.jts.index.quadtree.Quadtree;
 import com.vividsolutions.jts.operation.polygonize.Polygonizer;
 
+import jaitools.CollectionFactory;
 import jaitools.jts.Utils;
 import jaitools.media.jai.AttributeOpImage;
 
@@ -159,9 +164,18 @@ public class VectorizeOpImage extends AttributeOpImage {
     // Whether to remove collinear points from polygons.
     private final  boolean removeCollinear;
     
+    // Threshold area (fractional pixels) below which polygons will 
+    // filtered from output
+    private final double filterThreshold;
+
+    // Filtering method for small polygons when filterThreshold > 0
+    private final int filterMethod;
+    
+    private Random rr;
+    
 
     /**
-     * Constructor.
+     * Creates a new instance of the operator.
      * 
      * @param source the source image to be vectorized
      * 
@@ -175,14 +189,25 @@ public class VectorizeOpImage extends AttributeOpImage {
      * @param insideEdges flag controlling whether boundaries between adjacent
      *        "inside" regions should be vectorized
      *
-     *  @param removeCollinear whether to remove collinear points from polygons
+     * @param removeCollinear whether to remove collinear points from polygons
+     * 
+     * @param filterThreshold the area (factional pixels) below which polygons will
+     *        be filtered from the output
+     * 
+     * @param filterMethod filtering method used if {@code filterThreshold > 0};
+     *        must be one of 
+     *        {@link VectorizeDescriptor#FILTER_MERGE_LARGEST},
+     *        {@link VectorizeDescriptor#FILTER_MERGE_RANDOM}, or
+     *        {@link VectorizeDescriptor#FILTER_DELETE}
      */
     public VectorizeOpImage(RenderedImage source,
             ROI roi,
             int band,
             List<Double> outsideValues,
             boolean insideEdges,
-            boolean removeCollinear) {
+            boolean removeCollinear,
+            double filterThreshold,
+            int filterMethod) {
             
         super(source, roi);
                 
@@ -197,6 +222,8 @@ public class VectorizeOpImage extends AttributeOpImage {
         
         this.insideEdges = insideEdges;
         this.removeCollinear=removeCollinear;
+        this.filterThreshold = filterThreshold;
+        this.filterMethod = filterMethod;
     }
 
     /**
@@ -206,7 +233,7 @@ public class VectorizeOpImage extends AttributeOpImage {
     public List<Geometry> getAttribute(String name) {
         if (cachedVectors == null || cachedVectors.get() == null) {
             synchronized(this) {
-                cachedVectors = new SoftReference<List<Geometry>>(doVectorize());
+                doVectorize();
             }
         }
         
@@ -222,18 +249,26 @@ public class VectorizeOpImage extends AttributeOpImage {
     }
     
 
-    private List<Geometry> doVectorize() {
+    /**
+     * Runs the polygon creation and filtering steps.
+     */
+    private void doVectorize() {
         lines = new ArrayList<LineString>();
         vertLines = new HashMap<Integer, LineSegment>();
         
         vectorizeBoundaries();
-        return assemblePolygons();
+        List<Geometry> polys = assemblePolygons();
+        
+        if (filterThreshold > 0) {
+            filterSmallPolygons(polys);
+        }
+        cachedVectors = new SoftReference<List<Geometry>>(polys);
     }
         
     /**
-     * Polygonize the boundary segments that have been collected by the 
+     * Polygonizess the boundary segments that have been collected by the 
      * vectorizing algorithm and, if the field {@code insideEdges} is TRUE,
-     * assign the value of the source image band to each polygon's user data
+     * assigns the value of the source image band to each polygon's user data
      * field.
      */
     private List<Geometry> assemblePolygons() {
@@ -356,9 +391,8 @@ public class VectorizeOpImage extends AttributeOpImage {
     }
 
 
-
     /**
-     * Vectorize the boundaries of regions of uniform value in the source image.
+     * Vectorizes the boundaries of regions of uniform value in the source image.
      */
     private void vectorizeBoundaries() {
         // array treated as a 2x2 matrix of double values used as a moving window
@@ -440,7 +474,7 @@ public class VectorizeOpImage extends AttributeOpImage {
 
 
     /**
-     * This method controls the construction of line segments that border regions of uniform data
+     * Controls the construction of line segments that border regions of uniform data
      * in the raster. See the {@linkplain #nbrConfig} method for more details.
      *
      * @param xpixel index of the image col in the top left cell of the 2x2 data window
@@ -685,7 +719,7 @@ public class VectorizeOpImage extends AttributeOpImage {
     }
 
     /**
-     * Examine the values in the 2x2 sample window and return
+     * Examines the values in the 2x2 sample window and returns
      * the integer id of the configuration (0 - 14) based on
      * the NBR_CONFIG_LOOKUP {@code Map}.
      * 
@@ -708,7 +742,7 @@ public class VectorizeOpImage extends AttributeOpImage {
     }
 
     /**
-     * Create a LineString for a newly constructed horizontal border segment
+     * Creates a LineString for a newly constructed horizontal border segment
      * @param y y ordinate of the line
      */
     private void addHorizLine(int y) {
@@ -721,7 +755,7 @@ public class VectorizeOpImage extends AttributeOpImage {
     }
 
     /**
-     * Create a LineString for a newly constructed vertical border segment
+     * Creates a LineString for a newly constructed vertical border segment
      * @param x x ordinate of the line
      */
     private void addVertLine(int x) {
@@ -744,7 +778,7 @@ public class VectorizeOpImage extends AttributeOpImage {
     }
 
     /**
-     * Test if two double values are different. Uses an absolute tolerance and
+     * Tests if two double values are different. Uses an absolute tolerance and
      * checks for NaN values.
      *
      * @param a first value
@@ -765,5 +799,136 @@ public class VectorizeOpImage extends AttributeOpImage {
         }
     }
 
+    /**
+     * Filters small polygons from the list of initial polygons using either
+     * deletion or merging as specified by the filterMethod parameter.
+     * 
+     * @param polys initial polygons
+     */
+    private void filterSmallPolygons(List<Geometry> polys) {
+        List<Geometry> toFilter = CollectionFactory.list();
+        
+        ListIterator<Geometry> iter = polys.listIterator();
+        while (iter.hasNext()) {
+            Geometry poly = iter.next();
+            if (poly.getArea() < filterThreshold) {
+                toFilter.add(poly);
+                iter.remove();
+            }
+        }
+        
+        if (toFilter.isEmpty()) {
+            return;
+        }
+        
+        /*
+         * TODO: set some threshold number of small polygons to 
+         * create a spatial index ?
+         */
+        
+        Quadtree spIndex = new Quadtree();
+        for (Geometry poly : polys) {
+            spIndex.insert(poly.getEnvelopeInternal(), poly);
+        }
+
+        ListIterator<Geometry> filterIter = toFilter.listIterator();
+        while (iter.hasNext()) {
+            Geometry smallPoly = filterIter.next();
+            filterIter.remove();
+
+            List nbrs = spIndex.query(smallPoly.getEnvelopeInternal());
+            if (!nbrs.isEmpty()) {
+                switch (filterMethod) {
+                    case VectorizeDescriptor.FILTER_MERGE_LARGEST:
+                        mergeToLargest(polys, smallPoly, nbrs, spIndex);
+                        break;
+
+                    case VectorizeDescriptor.FILTER_MERGE_RANDOM:
+                        mergeToRandom(polys, smallPoly, nbrs, spIndex);
+                        break;
+
+                    default:
+                        throw new IllegalArgumentException("Invalid filterMethod value");
+                }
+            }
+        }
+    }
+
+    private void mergeToLargest(List<Geometry> polys, Geometry smallPoly, 
+            List nbrs, SpatialIndex spIndex) {
+        
+        ListIterator nbrsIter = nbrs.listIterator();
+        double maxArea = 0;
+        Geometry largestNbr = null;
+        while (nbrsIter.hasNext()) {
+            Geometry g = (Geometry) nbrsIter.next();
+            // Check that boundaries have lineal intersection
+            if (smallPoly.relate(g, "****1****")) {
+                double area = g.getArea();
+                if (area > maxArea) {
+                    maxArea = area;
+                    largestNbr = g;
+                }
+            } else {
+                nbrsIter.remove();
+            }
+        }
+
+        if (!nbrs.isEmpty()) {
+            spIndex.remove(largestNbr.getEnvelopeInternal(), largestNbr);
+            removePolygon(polys, largestNbr);
+            Geometry merged = largestNbr.union(smallPoly);
+            spIndex.insert(merged.getEnvelopeInternal(), merged);
+        }
+    }
+
+    private void mergeToRandom(List<Geometry> polys, Geometry smallPoly, 
+            List nbrs, Quadtree spIndex) {
+        
+        ListIterator nbrsIter = nbrs.listIterator();
+        while (nbrsIter.hasNext()) {
+            Geometry g = (Geometry) nbrsIter.next();
+            // Check that boundaries have lineal intersection
+            if (!smallPoly.relate(g, "****1****")) {
+                nbrsIter.remove();
+            }
+        }
+
+        if (!nbrs.isEmpty()) {
+            if (rr == null) rr = new Random();
+            int index = rr.nextInt(nbrs.size());
+            Geometry selected = (Geometry) nbrs.get(index);
+            
+            spIndex.remove(selected.getEnvelopeInternal(), selected);
+            removePolygon(polys, selected);
+            Geometry merged = selected.union(smallPoly);
+            spIndex.insert(merged.getEnvelopeInternal(), merged);
+        }
+    }
+
+    
+    /**
+     * Remove a polygon from the list of polygons. 
+     * 
+     * TODO: remove this method when JTS 1.12 is released with its fix for
+     * Geometry.equals(Object o)
+     * 
+     * @param polys list of current polygons
+     * @param toRemove polygon to remove
+     * 
+     * @throws RuntimeException if the polygon is not found
+     */
+    private void removePolygon(List<Geometry> polys, Geometry toRemove) {
+        int k = 0;
+        for (Geometry p : polys) {
+            if (p.equalsExact(toRemove, EPSILON)) {
+                polys.remove(k);
+                return;
+            }
+            k++ ;
+        }
+        
+        throw new RuntimeException("Failed to remove polygon");
+    }
 
 }
