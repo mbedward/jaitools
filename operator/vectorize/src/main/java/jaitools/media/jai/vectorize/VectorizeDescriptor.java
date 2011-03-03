@@ -29,7 +29,132 @@ import javax.media.jai.ROI;
 import javax.media.jai.registry.RenderedRegistryMode;
 
 /**
- * Vectorize regions of uniform data within a source image.
+ * Traces the boundaries of regions with uniform data and returns them as
+ * vector polygons. The source image passes through to thedestination unchanged, 
+ * similar to a JAI statistics operator, while the vectors are returned as
+ * an image property.
+ * <pre><code>
+ * // Vectorize regions using default parameter settings
+ * RenderedImage image = ...
+ * ParameterBlockJAI pb = new ParameterBlockJAI("Vectorize");
+ * pb.setSource("source0", image);
+ * RenderedOp dest = JAI.create("Vectorize", pb);
+ * 
+ * // retrieve the vectors
+ * Collection&lt;Polygon&gt; polys = (Collection&lt;Polygon&gt;) dest.getProperty(
+ *         VectorizeDescriptor.VECTOR_PROPERTY_NAME);
+ * </code></pre>
+ * 
+ * The vectors are JTS Polygon objects. Each polygon holds the value of its source image
+ * region as a Double (regardless of the source image data type) as a <i>user data</>
+ * attribute.
+ * 
+ * <pre><code>
+ * // report source image region value and area (expressed as pixel units)
+ * Collection&lt;Polygon&gt; polys = (Collection&lt;Polygon&gt;) dest.getProperty(
+ *         VectorizeDescriptor.VECTOR_PROPERTY_NAME);
+ * 
+ * System.out.println("Region value  Perimeter       Area");
+ * for (Polygon poly : polys) {
+ *     Double value = (Double) poly.getUserData();
+ *     double perimeter = poly.getLength();
+ *     double area = poly.getArea();
+ *     System.out.printf("%12.2f %10.2f %10.2f\n", value, perimeter, area);
+ * }
+ * </code></pre>
+ * 
+ * Optionally, polygons below a threshold area can be filtered from the output
+ * by simple deletion, or by merging with a neighbour (where possible).
+ * A neighbouring polygon is one that shares one or more boundary segments
+ * with the target polygon (ie. lineal intersection). Two polygons that only
+ * touch at a single vertex are not considered neighbours.
+ * 
+ * <pre><code>
+ * ParameterBlockJAI pb = new ParameterBlockJAI("Vectorize");
+ * pb.setSource("source0", myImage);
+ * 
+ * // Filter polygons with area up to 5 pixels by merging
+ * // them with the largest neighbouring polygon. Where no neighbour
+ * // exists (e.g. small region surrounded by NODATA) the polygon
+ * // will be discarded.
+ * pb.setParameter("filterThreshold", 5.1);
+ * pb.setParameter("filterMethod", VectorizeDescriptor.FILTER_MERGE_LARGEST);
+ * </code></pre>
+ * 
+ * 
+ * The following parameters control the vectorizing process:
+ * <table border="1" cellpadding="3">
+ * <tr>
+ * <th>Name</th>
+ * <th>Class</th>
+ * <th>Default</th>
+ * <th>Description</th>
+ * </tr>
+ * 
+ * <tr>
+ * <td>roi</td>
+ * <td>ROI</td>
+ * <td>null</td>
+ * <td>An optional ROI to define the vectorizing area.</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>band</td>
+ * <td>Integer</td>
+ * <td>0</td>
+ * <td>The source image band to process.</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>outsideValues</td>
+ * <td>Collection</td>
+ * <td>empty</td>
+ * <td>Values to treat as NODATA.</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>insideEdges</td>
+ * <td>Boolean</td>
+ * <td>Boolean.TRUE</td>
+ * <td>
+ * Whether to vectorize boundaries between data regions.
+ * Setting this to false results in only the boundaries between NODATA
+ * and data regions being returned.
+ * </td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>removeCollinear</td>
+ * <td>Boolean</td>
+ * <td>Boolean.TRUE</td>
+ * <td>Whether to simplify polygons by removing collinear vertices.</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>filterThreshold</td>
+ * <td>Double</td>
+ * <td>0</td>
+ * <td>
+ * The area (pixel units) below which a polygon will be filtered from 
+ * the output by merging or deletion. 
+ * </td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>filterMethod</td>
+ * <td>Integer</td>
+ * <td>{@link #FILTER_MERGE_LARGEST}</td>
+ * <td>The method used to filter small polygons when filterThreshold &gt; 0.
+ * Must be one of:<br>
+ * {@link #FILTER_MERGE_LARGEST}<br>
+ * {@link #FILTER_MERGE_RANDOM}<br>
+ * {@link #FILTER_DELETE}<br></td>
+ * </tr>
+ * </table>
+ * 
+ * @see com.vividsolutions.jts.geom.Polygon
+ * @see jaitools.media.jai.regionalizeRegionalizeDescriptor
+ * @see jaitools.media.jai.rangelookup.RangeLookupDescriptor
  * 
  * @author Michael Bedward
  * @since 1.1
