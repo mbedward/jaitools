@@ -92,6 +92,91 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * <a href="http://local.wasp.uwa.edu.au/~pbourke/papers/conrec/">
  * http://local.wasp.uwa.edu.au/~pbourke/papers/conrec/</a>
  * 
+ * <p>
+ * <b>Summary of parameters:</b>
+ * <table border="1", cellpadding="3">
+ * <tr>
+ * <th>Name</th>
+ * <th>Class</th>
+ * <th>Default</th>
+ * <th>Description</th>
+ * </tr>
+ * 
+ * <tr>
+ * <td>roi</td>
+ * <td>ROI</td>
+ * <td>null</td>
+ * <td>An optional ROI defining the area to contour.</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>band</td>
+ * <td>Integer</td>
+ * <td>0</td>
+ * <td>Source image band to process.</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>levels</td>
+ * <td>Collection</td>
+ * <td>null</td>
+ * <td>The values for which to generate contours.</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>interval</td>
+ * <td>Number</td>
+ * <td>null</td>
+ * <td>
+ * The interval between contour values. This parameter is ignored if the
+ * levels parameter has been supplied. With interval contouring the minimum
+ * and maximum contour values will be integer multiples of the interval 
+ * parameter value.
+ * </td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>nodata</td>
+ * <td>Collection</td>
+ * <td>
+ * The set: {Double.NaN, Double.POSITIVE_INFINITY, 
+    Double.NEGATIVE_INFINITY, Double.MAX_VALUE}
+ * </td>
+ * <td>
+ * Values to be treated as NO_DATA. A value can be either a Number or a 
+ * {@link jaitools.numeric.Range} (mixtures of both are permitted).
+ * </td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>strictNodata</td>
+ * <td>Boolean</td>
+ * <td>Boolean.TRUE</td>
+ * <td>
+ * If true, any NODATA values in the 2x2 cell moving window used by the 
+ * contouring algorithm will cause that part of the image to be skipped.
+ * If false, a single NODATA value will be permitted in the window. This
+ * probably only makes a noticeable difference with small images.
+ * </td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>simplify</td>
+ * <td>Boolean</td>
+ * <td>Boolean.TRUE</td>
+ * <td>Whether to simplify contour lines by removing collinear vertices.</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>smooth</td>
+ * <td>Boolean</td>
+ * <td>Boolean.FALSE</td>
+ * <td>
+ * Whether to smooth contour lines using Bezier interpolation. This probably
+ * only makes a noticeable difference with small images.
+ * </td>
+ * </tr>
+ * </table>
  * 
  * @author Michael Bedward
  * @since 1.1
@@ -167,7 +252,7 @@ public class ContourDescriptor extends OperationDescriptorImpl {
                               "interval between contour values (ignored if levels arg is supplied)"},
                     
                     {"arg4Desc", paramNames[4] + " (Collection) " +
-                              "values to treat as NO_DATA; elements can be Number and/or Range"},
+                              "values to be treated as NO_DATA; elements can be Number and/or Range"},
 
                     {"arg5Desc", paramNames[5] + " (Boolean, default=true) " +
                               "if true, use strict NODATA exclusion; if false use accept some NODATA"},
@@ -176,7 +261,7 @@ public class ContourDescriptor extends OperationDescriptorImpl {
                               "whether to simplify contour lines by removing colinear vertices"},
                     
                     {"arg7Desc", paramNames[7] + " (Boolean, default=false) " +
-                              "whether to smooth contour lines with Bezier interpolation"}
+                              "whether to smooth contour lines using Bezier interpolation"}
                 },
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
                 
