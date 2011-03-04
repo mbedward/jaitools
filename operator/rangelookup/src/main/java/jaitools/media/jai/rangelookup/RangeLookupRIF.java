@@ -17,7 +17,6 @@
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
 package jaitools.media.jai.rangelookup;
 
 import com.sun.media.jai.opimage.RIFUtil;
@@ -30,6 +29,7 @@ import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
 import java.awt.image.renderable.ParameterBlock;
 import java.awt.image.renderable.RenderedImageFactory;
+import java.util.List;
 
 import javax.media.jai.BorderExtender;
 import javax.media.jai.ImageLayout;
@@ -64,58 +64,62 @@ public class RangeLookupRIF implements RenderedImageFactory {
         ImageLayout layout = RIFUtil.getImageLayoutHint(renderHints);
         final RangeLookupTable table =
                 (RangeLookupTable) paramBlock.getObjectParameter(RangeLookupDescriptor.TABLE_ARG_INDEX);
-        
-        
-        // try to set the right destination type rather than the one of the input image
-        // Most part of the time we want to map float or double images
-        // to classified byte image, therefore we can create an output image as smaller as 8 times the input image
-        // if the set the right destination type
+
+
+        /*
+         * Set the destination type based on the
+         * type and range of lookup table return values.
+         */
         final Class<? extends Number> destClazz;
-        if(table.items.size()>0)
-        	destClazz=((RangeLookupTable.Item)table.items.get(0)).destValue.getClass();
-        else
-        	destClazz=table.getDefaultValue().getClass();
-        int dataType=-1;
-        if(destClazz.equals(Byte.class))
-        	dataType=DataBuffer.TYPE_BYTE;
-        else if(destClazz.equals(Short.class)){
-        	
-        	// if the values are positive we should go with USHORT
-        	for(int i=table.items.size()-1;i>=0;i--)
-        		if(((RangeLookupTable.Item)table.items.get(i)).destValue.shortValue()<0){
-        			dataType=DataBuffer.TYPE_SHORT;
-        			break;
-        		}
-        		
-        	// we did not find anyone what was negative
-        	if(dataType==-1)
-        		dataType=DataBuffer.TYPE_USHORT;
-        	
+        List<LookupItem> items = table.getItems();
+        if (items.size() > 0) {
+            destClazz = items.get(0).value.getClass();
+        } else {
+            destClazz = table.getDefaultValue().getClass();
         }
-        else if(destClazz.equals(Integer.class)){
-        	dataType=DataBuffer.TYPE_INT;
+        int dataType = -1;
+        if (destClazz.equals(Byte.class)) {
+            dataType = DataBuffer.TYPE_BYTE;
+        } else if (destClazz.equals(Short.class)) {
+
+            // if the values are positive we should go with USHORT
+            for (int i = items.size() - 1; i >= 0; i--) {
+                if (items.get(i).value.shortValue() < 0) {
+                    dataType = DataBuffer.TYPE_SHORT;
+                    break;
+                }
+            }
+
+            // No negative values so USHORT can be used
+            if (dataType == -1) {
+                dataType = DataBuffer.TYPE_USHORT;
+            }
+
+        } else if (destClazz.equals(Integer.class)) {
+            dataType = DataBuffer.TYPE_INT;
+        } else if (destClazz.equals(Float.class)) {
+            dataType = DataBuffer.TYPE_FLOAT;
+        } else if (destClazz.equals(Double.class)) {
+            dataType = DataBuffer.TYPE_DOUBLE;
+        } else {
+            throw new IllegalArgumentException("Illegal destination class for this rangelookuptable:" + destClazz.toString());
         }
-        else if(destClazz.equals(Float.class))
-        	dataType=DataBuffer.TYPE_FLOAT;
-        else if(destClazz.equals(Double.class))
-        	dataType=DataBuffer.TYPE_DOUBLE; 
-        else
-        	throw new IllegalArgumentException("Illegal destination class for this rangelookuptable:"+destClazz.toString());
-        
+
         final boolean isDataTypeChanged;
-        if(src.getSampleModel().getDataType()!=dataType)
-        	isDataTypeChanged=true;
-        else
-        	isDataTypeChanged=false;
-        
-        if(isDataTypeChanged){
+        if (src.getSampleModel().getDataType() != dataType) {
+            isDataTypeChanged = true;
+        } else {
+            isDataTypeChanged = false;
+        }
+
+        if (isDataTypeChanged) {
             // Create or clone the ImageLayout.
-            if(layout == null) {
+            if (layout == null) {
                 layout = new ImageLayout(src);
             } else {
-                layout = (ImageLayout)layout.clone();
+                layout = (ImageLayout) layout.clone();
             }
-            
+
             // Get prospective destination SampleModel.
             SampleModel sampleModel = layout.getSampleModel(src);
 
@@ -125,22 +129,22 @@ public class RangeLookupRIF implements RenderedImageFactory {
             int numBands = src.getSampleModel().getNumBands();
 
             SampleModel csm =
-                RasterFactory.createComponentSampleModel(sampleModel,
-                                                         dataType,
-                                                         tileWidth,
-                                                         tileHeight,
-                                                         numBands);
+                    RasterFactory.createComponentSampleModel(sampleModel,
+                    dataType,
+                    tileWidth,
+                    tileHeight,
+                    numBands);
 
-            layout.setSampleModel(csm);            
+            layout.setSampleModel(csm);
 
             // Check ColorModel.
             ColorModel colorModel = layout.getColorModel(null);
-            if(colorModel != null &&
-               !JDKWorkarounds.areCompatibleDataModels(layout.getSampleModel(null),
-                                                       colorModel)) {
+            if (colorModel != null
+                    && !JDKWorkarounds.areCompatibleDataModels(layout.getSampleModel(null),
+                    colorModel)) {
                 // Clear the mask bit if incompatible.
                 layout.unsetValid(ImageLayout.COLOR_MODEL_MASK);
-            }            
+            }
         }
 
         return new RangeLookupOpImage(src,
@@ -149,4 +153,3 @@ public class RangeLookupRIF implements RenderedImageFactory {
                 table);
     }
 }
-

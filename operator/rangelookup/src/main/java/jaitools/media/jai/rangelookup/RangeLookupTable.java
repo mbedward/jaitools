@@ -24,6 +24,7 @@ import java.util.List;
 import jaitools.CollectionFactory;
 import jaitools.numeric.Range;
 import jaitools.numeric.RangeUtils;
+import java.util.Collections;
 
 /**
  * Holds a collection of source image value ranges and their corresponding
@@ -41,71 +42,15 @@ public class RangeLookupTable<T extends Number & Comparable<? super T>, U extend
     
     /** Whether to allow overlapping lookup ranges to be added to the table. */
     private boolean overlapAllowed;
-
-    static class Item<T extends Number & Comparable<? super T>, U extends Number & Comparable<? super U>> {
-
-        Range<T> srcRange;
-        U destValue;
-
-        /**
-         * Constructor
-         * 
-         * @param srcRange a {@linkplain jaitools.media.jai.rangelookup.Range} object defining
-         * a range of source image values
-         *
-         * @param destValue the destination image value
-         */
-        public Item(Range<T> srcRange, U destValue) {
-            this.srcRange = srcRange;
-            this.destValue = destValue;
-        }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result
-                    + ((destValue == null) ? 0 : destValue.hashCode());
-            result = prime * result
-                    + ((srcRange == null) ? 0 : srcRange.hashCode());
-            return result;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            Item other = (Item) obj;
-            if (destValue == null) {
-                if (other.destValue != null) {
-                    return false;
-                }
-            } else if (!destValue.equals(other.destValue)) {
-                return false;
-            }
-            if (srcRange == null) {
-                if (other.srcRange != null) {
-                    return false;
-                }
-            } else if (!srcRange.equals(other.srcRange)) {
-                return false;
-            }
-            return true;
-        }
-
-        @Override
-        public String toString() {
-            return "Item<range=" + srcRange + " value=" + destValue + ">";
-        }
-    }
-    List<Item<T, U>> items;
+    
+    /** Lookup items */
+    private List<LookupItem<T, U>> items;
+    
+    /** 
+     * Records the last lookup item that matched a source value.
+     * Used to speed up lookups when source values are clustered.
+     */
+    private LookupItem<T, U> lastItem = null;
 
     /**
      * Creates a new table with no default value. The table 
@@ -240,14 +185,14 @@ public class RangeLookupTable<T extends Number & Comparable<? super T>, U extend
         }
         
         // Check for overlap with existing ranges
-        for (Item item : items) {
-            if (range.intersects(item.srcRange)) {
+        for (LookupItem item : items) {
+            if (range.intersects(item.range)) {
                 if (!overlapAllowed) {
                     throw new IllegalArgumentException(
                             "New range " + range + " overlaps existing lookup " + item);
                 }
                 
-                List<Range<T>> diffs = RangeUtils.subtract(item.srcRange, range);
+                List<Range<T>> diffs = RangeUtils.subtract(item.range, range);
                 for (Range<T> diff : diffs) {
                     add(diff, destValue);
                 }
@@ -255,7 +200,7 @@ public class RangeLookupTable<T extends Number & Comparable<? super T>, U extend
             }
         }
 
-        items.add(new Item<T, U>(range, destValue));
+        items.add(new LookupItem<T, U>(range, destValue));
     }
 
     /**
@@ -269,12 +214,21 @@ public class RangeLookupTable<T extends Number & Comparable<? super T>, U extend
      * destination image value
      */
     public U getDestValue(T srcValue) {
-        for (Item<T, U> item : items) {
-            if (item.srcRange.contains(srcValue)) {
-                return item.destValue;
+        if (lastItem != null) {
+            if (lastItem.range.contains(srcValue)) {
+                return lastItem.value;
             }
         }
-
+        
+        int k = 0;
+        for (LookupItem<T, U> item : items) {
+            if (item.range.contains(srcValue)) {
+                lastItem = item;
+                return item.value;
+            }
+            k++ ;
+        }
+        
         if (defaultValue != null) {
             return defaultValue;
         } else {
@@ -282,15 +236,24 @@ public class RangeLookupTable<T extends Number & Comparable<? super T>, U extend
         }
     }
 
-    @SuppressWarnings("rawtypes")
     @Override
     public String toString() {
         final StringBuilder buff = new StringBuilder("RangeLookupTable [defaultValue=" + defaultValue + ", items=");
-        for (Item item : items) {
+        for (LookupItem item : items) {
             buff.append("{").append(item.toString()).append("},");
         }
         buff.subSequence(0, buff.length() - 1);
         buff.append("]");
         return buff.toString();
+    }
+    
+    
+    /**
+     * Package private method called by {@link RangeLookupRIF}.
+     * 
+     * @return an unmodifiable view of the lookup table items
+     */
+    List<LookupItem<T, U>> getItems() {
+        return Collections.unmodifiableList(items);
     }
 }
