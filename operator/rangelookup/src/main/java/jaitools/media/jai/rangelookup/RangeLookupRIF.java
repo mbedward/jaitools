@@ -74,7 +74,7 @@ public class RangeLookupRIF implements RenderedImageFactory {
         if(table.items.size()>0)
         	destClazz=((RangeLookupTable.Item)table.items.get(0)).destValue.getClass();
         else
-        	destClazz=table.defaultValue.getClass();
+        	destClazz=table.getDefaultValue().getClass();
         int dataType=-1;
         if(destClazz.equals(Byte.class))
         	dataType=DataBuffer.TYPE_BYTE;

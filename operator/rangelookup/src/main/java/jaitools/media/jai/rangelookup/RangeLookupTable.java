@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -19,9 +19,11 @@
  */
 package jaitools.media.jai.rangelookup;
 
-import jaitools.numeric.Range;
-import java.util.ArrayList;
 import java.util.List;
+
+import jaitools.CollectionFactory;
+import jaitools.numeric.Range;
+import jaitools.numeric.RangeUtils;
 
 /**
  * Holds a collection of source image value ranges and their corresponding
@@ -34,7 +36,11 @@ import java.util.List;
  */
 public class RangeLookupTable<T extends Number & Comparable<? super T>, U extends Number & Comparable<? super U>> {
 
-    U defaultValue = null;
+    /** Value returned when lookup value is outside all ranges. */
+    private U defaultValue = null;
+    
+    /** Whether to allow overlapping lookup ranges to be added to the table. */
+    private boolean overlapAllowed;
 
     static class Item<T extends Number & Comparable<? super T>, U extends Number & Comparable<? super U>> {
 
@@ -96,34 +102,129 @@ public class RangeLookupTable<T extends Number & Comparable<? super T>, U extend
 
         @Override
         public String toString() {
-            return "Item [srcRange=" + srcRange + ", destValue=" + destValue
-                    + "]";
+            return "Item<range=" + srcRange + " value=" + destValue + ">";
         }
     }
     List<Item<T, U>> items;
 
     /**
-     * Constructor that provides for a default value which will be written
-     * to the destination image if a source image value is not contained
-     * in any of the ranges held by this table. The exepction is if the
-     * defaultValue is set to null, in which case the table will have the
-     * same behaviour as if it was created with the no-argument constructor.
-     *
-     * @param defaultValue the default destination value
+     * Creates a new table with no default value. The table 
+     * will throw an IllegalArgumentException if a lookup value cannot
+     * be matched. It will allow ranges to be added that overlap existing 
+     * ranges.
      */
-    public RangeLookupTable(U defaultValue) {
-        items = new ArrayList<Item<T, U>>();
-        this.defaultValue = defaultValue;
+    public RangeLookupTable() {
+        this(null);
     }
 
     /**
-     * Constructor with no default value. A table created with this
-     * constructor will throw a IllegalStateException if it is
-     * asked to lookup a source image value that is not contained
-     * within any of the ranges that it holds.
+     * Creates a new table with a default value. The table will allow
+     * ranges to be added that overlap existing ranges.
+     * <p>
+     * If {@code defaultValue} is not {@code null} it will be returned when a
+     * lookup value cannot be matched; otherwise an unmatched value results in
+     * an {@code IllegalArgumentException}.
+     * 
+     * @param defaultValue the default destination value or {@code null} to
+     *        disable the default
      */
-    public RangeLookupTable() {
-        items = new ArrayList<Item<T, U>>();
+    public RangeLookupTable(U defaultValue) {
+        this(defaultValue, true);
+    }
+    
+    /**
+     * Creates a new table with specified default value and overlapping range
+     * behaviour. 
+     * <p>
+     * If {@code defaultValue} is not {@code null} it will be returned when a
+     * lookup value cannot be matched; otherwise an unmatched value results in
+     * an {@code IllegalArgumentException}.
+     * <p>
+     * If {@code overlap} is {@code true}, adding a new lookup range that overlaps
+     * existing ranges will result in the new range being reduced to its
+     * non-overlapping intervals, if any; if {@code false} adding an overlapping
+     * range will result in an {@code IllegalArgumentException}.
+     * 
+     * @param defaultValue the default destination value or {@code null} to
+     *        disable the default
+     * 
+     * @param overlap whether to allow overlapping ranges to be added to the table
+     */
+    public RangeLookupTable(U defaultValue, boolean overlap) {
+        items = CollectionFactory.list();
+        this.defaultValue = defaultValue;
+        this.overlapAllowed = overlap;
+    }
+
+    /**
+     * Sets whether the table should allow a range to be added that overlaps
+     * with one or more ranges in the table.
+     * 
+     * If allowed, a new range that overlaps one or more existing 
+     * ranges will be truncated or split into non-overlapping intervals.
+     * For example, if the lookup [5, 10] => 1 is already present in the table
+     * and a new range [0, 20] => 2 is added, then the following lookups
+     * will result:
+     * <pre>
+     *     [0, 5) => 2
+     *     [5, 10] => 1
+     *     (10, 20] => 2
+     * </pre>
+     * Where a new range is completely overlapped by existing ranges it will
+     * be ignored.
+     * <p>
+     * If overlapping ranges are not allowed the table will throw an
+     * {@code IllegalArgumentException} when one is detected.
+     * <p>
+     * 
+     * Note that it is possible to end up with unintended <i>leaks</i> in the
+     * lookup table. If the first range in the above example had been
+     * (5, 10] rather than [5, 10] then the table would have been:
+     * <pre>
+     *     [0, 5) => 2
+     *     (5, 10] => 1
+     *     (10, 20] => 2
+     * </pre>
+     * In this case the value 5 will not match any range.
+     * 
+     * @param overlap whether to allow overlapping ranges to be added to the table
+     */
+    public void setOverlapAllowed(boolean b) {
+        overlapAllowed = b;
+    }
+    
+    /**
+     * Checks whether it is allowable to add a range that overlaps with ranges
+     * already in the table.
+     * 
+     * @return {@code true} if adding an overlapping range is allowed; 
+     *         {@code false} otherwise
+     */
+    public boolean getOverlapAllowed() {
+        return overlapAllowed;
+    }
+
+    /**
+     * Gets the default value which is returned when a lookup
+     * value is outside all ranges in the table.
+     * 
+     * @return the default value or {@code null} if none is set
+     */
+    public U getDefaultValue() {
+        return defaultValue;
+    }
+    
+    /**
+     * Sets the default value to return when a lookup value is
+     * outside all ranges in the table. Setting the value to 
+     * {@code null} disables the default and causes the table to 
+     * throw an exception when a lookup value cannot be matched.
+     * 
+     * @param value the default value or {@code null} to disable
+     *        the default
+     */
+    public void setDefaultValue(U value) {
+        defaultValue = value;
     }
 
     /**
@@ -136,6 +237,22 @@ public class RangeLookupTable<T extends Number & Comparable<? super T>, U extend
     public void add(Range<T> range, U destValue) {
         if (range == null || destValue == null) {
             throw new IllegalArgumentException("arguments must not be null");
+        }
+        
+        // Check for overlap with existing ranges
+        for (Item item : items) {
+            if (range.intersects(item.srcRange)) {
+                if (!overlapAllowed) {
+                    throw new IllegalArgumentException(
+                            "New range " + range + " overlaps existing lookup " + item);
+                }
+                
+                List<Range<T>> diffs = RangeUtils.subtract(item.srcRange, range);
+                for (Range<T> diff : diffs) {
+                    add(diff, destValue);
+                }
+                return;
+            }
         }
 
         items.add(new Item<T, U>(range, destValue));
@@ -161,7 +278,7 @@ public class RangeLookupTable<T extends Number & Comparable<? super T>, U extend
         if (defaultValue != null) {
             return defaultValue;
         } else {
-            throw new IllegalStateException("value outside all ranges: " + srcValue);
+            throw new IllegalArgumentException("Value cannot be matched: " + srcValue);
         }
     }
 

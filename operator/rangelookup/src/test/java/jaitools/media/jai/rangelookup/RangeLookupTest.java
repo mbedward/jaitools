@@ -17,6 +17,7 @@
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+
 package jaitools.media.jai.rangelookup;
 
 import java.awt.image.DataBuffer;
@@ -27,7 +28,6 @@ import javax.media.jai.ParameterBlockJAI;
 
 import jaitools.imageutils.ImageUtils;
 import jaitools.numeric.NumberOperations;
-import jaitools.numeric.Range;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
@@ -42,101 +42,279 @@ import org.junit.Test;
  * @since 1.0
  * @version $Id$
  */
-public class RangeLookupTest {
+public class RangeLookupTest extends TestBase {
 
     private static final int WIDTH = 10;
     
-    /**
-     * Tests lookup with different combinations of source and destination image
-     * data type. TYPE_USHORT is dealt with in a separate function.
-     */
     @Test
-    public <T extends Number & Comparable<? super T>> void simpleCombinations() throws Exception {
-        Byte[] byteBreaks = { 2, 4, 6, 8 };
-        Short[] shortBreaks = { 2, 4, 6, 8 };
-        Integer[] intBreaks = { 2, 4, 6, 8 };
-        Float[] floatBreaks = { 2f, 4f, 6f, 8f };
-        Double[] doubleBreaks = { 2d, 4d, 6d, 8d };
-        
-        Byte[] byteValues = { 0, 1, 2, 3, 4 };
-        Short[] shortValues = { -50, -10, 0, 10, 50 };
-        Integer[] intValues = { -50, -10, 0, 10, 50 };
-        Float[] floatValues = { -50f, -10f, 0f, 10f, 50f };
-        Double[] doubleValues = { -50d, -10d, 0d, 10d, 50d };
-        
-        int[] dataTypes = {
-            DataBuffer.TYPE_BYTE,
-            DataBuffer.TYPE_SHORT,
-            DataBuffer.TYPE_INT,
-            DataBuffer.TYPE_FLOAT,
-            DataBuffer.TYPE_DOUBLE
-        };
-        
-        final int signedStartVal = -WIDTH * WIDTH / 2;
-        RenderedImage srcImg = null;
-        T[] breaks = null;
-        
-        for (int srcDataType : dataTypes) {
-            switch (srcDataType) {
-                case DataBuffer.TYPE_BYTE:
-                    srcImg = createByteTestImage((byte) 0);
-                    breaks = (T[]) byteBreaks;
-                    break;
-                    
-                case DataBuffer.TYPE_SHORT:
-                    srcImg = createShortTestImage((short) signedStartVal);
-                    breaks = (T[]) shortBreaks;
-                    break;
-                    
-                case DataBuffer.TYPE_INT:
-                    srcImg = createIntTestImage(signedStartVal);
-                    breaks = (T[]) intBreaks;
-                    break;
-                    
-                case DataBuffer.TYPE_FLOAT:
-                    srcImg = createFloatTestImage(signedStartVal);
-                    breaks = (T[]) floatBreaks;
-                    break;
-                    
-                case DataBuffer.TYPE_DOUBLE:
-                    srcImg = createDoubleTestImage(signedStartVal);
-                    breaks = (T[]) doubleBreaks;
-                    break;
-            }
-            
-            String srcTypeName = breaks[0].getClass().getSimpleName().toLowerCase();
-            
-            for (int destDataType : dataTypes) {
-                T[] values = null;
-                switch (destDataType) {
-                    case DataBuffer.TYPE_BYTE:
-                        values = (T[]) byteValues;
-                        break;
-                        
-                    case DataBuffer.TYPE_SHORT:
-                        values = (T[]) shortValues;
-                        break;
-                        
-                    case DataBuffer.TYPE_INT:
-                        values = (T[]) intValues;
-                        break;
-                        
-                    case DataBuffer.TYPE_FLOAT:
-                        values = (T[]) floatValues;
-                        break;
-                        
-                    case DataBuffer.TYPE_DOUBLE:
-                        values = (T[]) doubleValues;
-                        break;
-                }
-                
-                String destTypeName = values[0].getClass().getSimpleName().toLowerCase();
-                System.out.println("   " + 
-                        srcTypeName + " source to " + destTypeName + " destination");
-                
-                assertLookup(breaks, values, srcImg, destDataType);
-            }
-        }
+    public void byteToByte() {
+        System.out.println("   byte source to byte destination");
+        Byte[] breaks = { 2, 4, 6, 8 };
+        Byte[] values = { 0, 1, 2, 3, 4 };
+        RenderedImage srcImg = createByteTestImage((byte)0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_BYTE);
+    }
+    
+    @Test
+    public void byteToShort() {
+        System.out.println("   byte source to short destination");
+        Byte[] breaks = { 2, 4, 6, 8 };
+        Short[] values = { -50, -10, 0, 10, 50 };
+        RenderedImage srcImg = createByteTestImage((byte)0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_SHORT);
+    }
+    
+    @Test
+    public void byteToInt() {
+        System.out.println("   byte source to int destination");
+        Byte[] breaks = { 2, 4, 6, 8 };
+        Integer[] values = { -50, -10, 0, 10, 50 };
+        RenderedImage srcImg = createByteTestImage((byte)0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_INT);
+    }
+    
+    @Test
+    public void byteToFloat() {
+        System.out.println("   byte source to float destination");
+        Byte[] breaks = { 2, 4, 6, 8 };
+        Float[] values = { -50f, -10f, 0f, 10f, 50f };
+        RenderedImage srcImg = createByteTestImage((byte)0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_FLOAT);
+    }
+    
+    @Test
+    public void byteToDouble() {
+        System.out.println("   byte source to double destination");
+        Byte[] breaks = { 2, 4, 6, 8 };
+        Double[] values = { -50d, -10d, 0d, 10d, 50d };
+        RenderedImage srcImg = createByteTestImage((byte)0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_DOUBLE);
+    }
+    
+    @Test
+    public void shortToByte() {
+        System.out.println("   short source to byte destination");
+        Short[] breaks = { 2, 4, 6, 8 };
+        Byte[] values = { 0, 1, 2, 3, 4 };
+        RenderedImage srcImg = createShortTestImage((short)0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_BYTE);
+    }
+    
+    @Test
+    public void shortToShort() {
+        System.out.println("   short source to short destination");
+        Short[] breaks = { 2, 4, 6, 8 };
+        Short[] values = { -50, -10, 0, 10, 50 };
+        RenderedImage srcImg = createShortTestImage((short)0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_SHORT);
+    }
+    
+    @Test
+    public void shortToInt() {
+        System.out.println("   short source to int destination");
+        Short[] breaks = { 2, 4, 6, 8 };
+        Integer[] values = { -50, -10, 0, 10, 50 };
+        RenderedImage srcImg = createShortTestImage((short)0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_INT);
+    }
+    
+    @Test
+    public void shortToFloat() {
+        System.out.println("   short source to float destination");
+        Short[] breaks = { 2, 4, 6, 8 };
+        Float[] values = { -50f, -10f, 0f, 10f, 50f };
+        RenderedImage srcImg = createShortTestImage((short)0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_FLOAT);
+    }
+    
+    @Test
+    public void shortToDouble() {
+        System.out.println("   short source to double destination");
+        Short[] breaks = { 2, 4, 6, 8 };
+        Double[] values = { -50d, -10d, 0d, 10d, 50d };
+        RenderedImage srcImg = createShortTestImage((short)0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_DOUBLE);
+    }
+    
+    @Test
+    public void ushortToByte() {
+        System.out.println("   ushort source to byte destination");
+        Short[] breaks = { 2, 4, 6, 8 };
+        Byte[] values = { 0, 1, 2, 3, 4 };
+        RenderedImage srcImg = createUShortTestImage((short)0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_BYTE);
+    }
+    
+    @Test
+    public void ushortToShort() {
+        System.out.println("   ushort source to short destination");
+        Short[] breaks = { 2, 4, 6, 8 };
+        Short[] values = { -50, -10, 0, 10, 50 };
+        RenderedImage srcImg = createUShortTestImage((short)0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_SHORT);
+    }
+    
+    @Test
+    public void ushortToInt() {
+        System.out.println("   ushort source to int destination");
+        Short[] breaks = { 2, 4, 6, 8 };
+        Integer[] values = { -50, -10, 0, 10, 50 };
+        RenderedImage srcImg = createUShortTestImage((short)0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_INT);
+    }
+    
+    @Test
+    public void ushortToFloat() {
+        System.out.println("   ushort source to float destination");
+        Short[] breaks = { 2, 4, 6, 8 };
+        Float[] values = { -50f, -10f, 0f, 10f, 50f };
+        RenderedImage srcImg = createUShortTestImage((short)0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_FLOAT);
+    }
+    
+    @Test
+    public void ushortToDouble() {
+        System.out.println("   ushort source to double destination");
+        Short[] breaks = { 2, 4, 6, 8 };
+        Double[] values = { -50d, -10d, 0d, 10d, 50d };
+        RenderedImage srcImg = createUShortTestImage((short)0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_DOUBLE);
+    }
+    
+    @Test
+    public void intToByte() {
+        System.out.println("   int source to byte destination");
+        Integer[] breaks = { 2, 4, 6, 8 };
+        Byte[] values = { 0, 1, 2, 3, 4 };
+        RenderedImage srcImg = createIntTestImage(0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_BYTE);
+    }
+    
+    @Test
+    public void intToShort() {
+        System.out.println("   int source to short destination");
+        Integer[] breaks = { 2, 4, 6, 8 };
+        Short[] values = { -50, -10, 0, 10, 50 };
+        RenderedImage srcImg = createIntTestImage(0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_SHORT);
+    }
+    
+    @Test
+    public void intToInt() {
+        System.out.println("   int source to int destination");
+        Integer[] breaks = { 2, 4, 6, 8 };
+        Integer[] values = { -50, -10, 0, 10, 50 };
+        RenderedImage srcImg = createIntTestImage(0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_INT);
+    }
+    
+    @Test
+    public void intToFloat() {
+        System.out.println("   int source to float destination");
+        Integer[] breaks = { 2, 4, 6, 8 };
+        Float[] values = { -50f, -10f, 0f, 10f, 50f };
+        RenderedImage srcImg = createIntTestImage(0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_FLOAT);
+    }
+    
+    @Test
+    public void intToDouble() {
+        System.out.println("   int source to double destination");
+        Integer[] breaks = { 2, 4, 6, 8 };
+        Double[] values = { -50d, -10d, 0d, 10d, 50d };
+        RenderedImage srcImg = createIntTestImage(0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_DOUBLE);
+    }
+    
+    
+    @Test
+    public void floatToByte() {
+        System.out.println("   float source to byte destination");
+        Float[] breaks = { 2f, 4f, 6f, 8f };
+        Byte[] values = { 0, 1, 2, 3, 4 };
+        RenderedImage srcImg = createFloatTestImage(0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_BYTE);
+    }
+    
+    @Test
+    public void floatToShort() {
+        System.out.println("   float source to short destination");
+        Float[] breaks = { 2f, 4f, 6f, 8f };
+        Short[] values = { -50, -10, 0, 10, 50 };
+        RenderedImage srcImg = createFloatTestImage(0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_SHORT);
+    }
+    
+    @Test
+    public void floatToInt() {
+        System.out.println("   float source to int destination");
+        Float[] breaks = { 2f, 4f, 6f, 8f };
+        Integer[] values = { -50, -10, 0, 10, 50 };
+        RenderedImage srcImg = createFloatTestImage(0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_INT);
+    }
+    
+    @Test
+    public void floatToFloat() {
+        System.out.println("   float source to float destination");
+        Float[] breaks = { 2f, 4f, 6f, 8f };
+        Float[] values = { -50f, -10f, 0f, 10f, 50f };
+        RenderedImage srcImg = createFloatTestImage(0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_FLOAT);
+    }
+    
+    @Test
+    public void floatToDouble() {
+        System.out.println("   float source to double destination");
+        Float[] breaks = { 2f, 4f, 6f, 8f };
+        Double[] values = { -50d, -10d, 0d, 10d, 50d };
+        RenderedImage srcImg = createFloatTestImage(0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_DOUBLE);
+    }
+    
+    @Test
+    public void doubleToByte() {
+        System.out.println("   double source to byte destination");
+        Double[] breaks = { 2d, 4d, 6d, 8d };
+        Byte[] values = { 0, 1, 2, 3, 4 };
+        RenderedImage srcImg = createDoubleTestImage(0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_BYTE);
+    }
+    
+    @Test
+    public void doubleToShort() {
+        System.out.println("   double source to short destination");
+        Double[] breaks = { 2d, 4d, 6d, 8d };
+        Short[] values = { -50, -10, 0, 10, 50 };
+        RenderedImage srcImg = createDoubleTestImage(0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_SHORT);
+    }
+    
+    @Test
+    public void doubleToInt() {
+        System.out.println("   double source to int destination");
+        Double[] breaks = { 2d, 4d, 6d, 8d };
+        Integer[] values = { -50, -10, 0, 10, 50 };
+        RenderedImage srcImg = createDoubleTestImage(0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_INT);
+    }
+    
+    @Test
+    public void doubleToFloat() {
+        System.out.println("   double source to float destination");
+        Double[] breaks = { 2d, 4d, 6d, 8d };
+        Float[] values = { -50f, -10f, 0f, 10f, 50f };
+        RenderedImage srcImg = createDoubleTestImage(0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_FLOAT);
+    }
+    
+    @Test
+    public void doubleToDouble() {
+        System.out.println("   double source to double destination");
+        Double[] breaks = { 2d, 4d, 6d, 8d };
+        Double[] values = { -50d, -10d, 0d, 10d, 50d };
+        RenderedImage srcImg = createDoubleTestImage(0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_DOUBLE);
     }
     
     @Test
@@ -173,6 +351,15 @@ public class RangeLookupTest {
         assertLookup(breaks, values, srcImg, DataBuffer.TYPE_SHORT);
     }
     
+    
+    /**
+     * Runs the lookup operation and tests destination image values.
+     *
+     * @param breaks source image breakpoints
+     * @param values lookup values
+     * @param srcImg source image
+     * @param destDataType expected destination image data type
+     */
     private <T extends Number & Comparable<? super T>, 
              U extends Number & Comparable<? super U>>
             void assertLookup(
@@ -296,40 +483,6 @@ public class RangeLookupTest {
         }
 
         return ImageUtils.createImageFromArray(data, WIDTH, WIDTH);
-    }
-
-    /**
-     * Creates a lookup table.
-     * @param breaks array of breakpoints for source image values
-     * @param values array of lookup values for destination image value
-     * 
-     * @return the lookup table
-     */
-    private <T extends Number & Comparable<? super T>, 
-             U extends Number & Comparable<? super U>> 
-            RangeLookupTable<T, U> createTable(T[] breaks, U[] values) {
-        
-        final int N = breaks.length;
-        if (values.length != N + 1) {
-            throw new IllegalArgumentException(
-                    "values array length should be breaks array length + 1");
-        }
-        
-        RangeLookupTable<T, U> table = new RangeLookupTable<T, U>();
-        Range<T> r;
-        
-        r = Range.create(null, false, breaks[0], false);
-        table.add(r, values[0]);
-        
-        for (int i = 1; i < N; i++) {
-            r = Range.create(breaks[i-1], true, breaks[i], false);
-            table.add(r, values[i]);
-        }
-        
-        r = Range.create(breaks[N-1], true, null, false);
-        table.add(r, values[N]);
-        
-        return table;
     }
 
     /**
