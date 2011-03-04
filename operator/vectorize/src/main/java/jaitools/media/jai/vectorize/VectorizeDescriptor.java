@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Michael Bedward
+ * Copyright 2010-2011 Michael Bedward
  * 
  * This file is part of jai-tools.
  *
