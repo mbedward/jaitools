@@ -21,21 +21,18 @@ package jaitools.media.jai.rangelookup;
 
 import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
-import java.util.Map;
 
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 
-import jaitools.CollectionFactory;
 import jaitools.imageutils.ImageUtils;
+import jaitools.numeric.NumberOperations;
 import jaitools.numeric.Range;
-import java.util.Arrays;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 
 import static org.junit.Assert.*;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -47,20 +44,16 @@ import org.junit.Test;
  */
 public class RangeLookupTest {
 
-    private Map<String, Object> args;
+    private static final int WIDTH = 10;
 
-    @Before
-    public void setup() {
-        args = CollectionFactory.map();
-    }
-    
     @Test
     public void byteToByte() throws Exception {
         System.out.println("   byte source to byte dest");
         
         Byte[] breaks = { 2, 4, 6, 8 };
         Byte[] values = { 0, 1, 2, 3, 4 };
-        assertLookup(breaks, values, DataBuffer.TYPE_BYTE, Byte.class);
+        RenderedImage srcImg = createByteTestImage((byte) 0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_BYTE);
     }
     
     @Test
@@ -68,12 +61,43 @@ public class RangeLookupTest {
         System.out.println("   short source to short dest");
         
         Short[] breaks = { 2, 4, 6, 8 };
-        
-        // Note: need -ve values to force destination image to be TYPE_SHORT
-        // otherwise it will be TYPE_USHORT
         Short[] values = { -50, -10, 0, 10, 50 };
+        RenderedImage srcImg = createShortTestImage((short) 0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_SHORT);
+    }
+    
+    @Test
+    public void shortToShortWithNoNegativeValues() throws Exception {
+        System.out.println("   short source to short dest");
         
-        assertLookup(breaks, values, DataBuffer.TYPE_SHORT, Short.class);
+        Short[] breaks = { 2, 4, 6, 8 };
+        Short[] values = { 0, 1, 2, 3, 4 };
+        RenderedImage srcImg = createShortTestImage((short) 0);
+        
+        // The destination image shoule be TYPE_USHORT
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_USHORT);
+    }
+    
+    @Test
+    public void ushortToUShort() throws Exception {
+        System.out.println("   ushort source to ushort dest");
+
+        Short[] breaks = { 2, 4, 6, 8 };
+        Short[] values = { 0, 1, 2, 3, 4 };
+        RenderedImage srcImg = createUShortTestImage((short) 0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_USHORT);
+    }
+    
+    @Test
+    public void ushortSourceWithNegativeDestValues() throws Exception {
+        System.out.println("   ushort source and negative lookup values");
+
+        Short[] breaks = { 2, 4, 6, 8 };
+        Short[] values = { -50, -10, 0, 10, 50 };
+        RenderedImage srcImg = createUShortTestImage((short) 0);
+        
+        // The destination image should be TYPE_SHORT
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_SHORT);
     }
     
     @Test
@@ -82,7 +106,8 @@ public class RangeLookupTest {
         
         Integer[] breaks = { 2, 4, 6, 8 };
         Integer[] values = { -50, -10, 0, 10, 50 };
-        assertLookup(breaks, values, DataBuffer.TYPE_INT, Integer.class);
+        RenderedImage srcImg = createIntTestImage(0);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_INT);
     }
     
     @Test
@@ -91,7 +116,8 @@ public class RangeLookupTest {
         
         Float[] breaks = { 2f, 4f, 6f, 8f };
         Float[] values = { -50f, -10f, 0f, 10f, 50f };
-        assertLookup(breaks, values, DataBuffer.TYPE_FLOAT, Float.class);
+        RenderedImage srcImg = createFloatTestImage(0f);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_FLOAT);
     }
     
     @Test
@@ -100,7 +126,8 @@ public class RangeLookupTest {
         
         Double[] breaks = { 2d, 4d, 6d, 8d };
         Double[] values = { -50d, -10d, 0d, 10d, 50d };
-        assertLookup(breaks, values, DataBuffer.TYPE_DOUBLE, Double.class);
+        RenderedImage srcImg = createDoubleTestImage(0d);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_DOUBLE);
     }
     
     @Test
@@ -109,7 +136,8 @@ public class RangeLookupTest {
         
         Float[] breaks = { 2f, 4f, 6f, 8f };
         Integer[] values = { -50, -10, 0, 10, 50 };
-        assertLookup(breaks, values, DataBuffer.TYPE_INT, Integer.class);
+        RenderedImage srcImg = createFloatTestImage(0f);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_INT);
     }
     
     @Test
@@ -118,7 +146,8 @@ public class RangeLookupTest {
         
         Float[] breaks = { 2f, 4f, 6f, 8f };
         Short[] values = { -50, -10, 0, 10, 50 };
-        assertLookup(breaks, values, DataBuffer.TYPE_SHORT, Short.class);
+        RenderedImage srcImg = createFloatTestImage(0f);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_SHORT);
     }
     
     @Test
@@ -127,7 +156,8 @@ public class RangeLookupTest {
         
         Float[] breaks = { 2f, 4f, 6f, 8f };
         Byte[] values = { 0, 1, 2, 3, 4 };
-        assertLookup(breaks, values, DataBuffer.TYPE_BYTE, Byte.class);
+        RenderedImage srcImg = createFloatTestImage(0f);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_BYTE);
     }
     
     @Test
@@ -136,7 +166,8 @@ public class RangeLookupTest {
         
         Double[] breaks = { 2d, 4d, 6d, 8d };
         Float[] values = { -50f, -10f, 0f, 10f, 50f };
-        assertLookup(breaks, values, DataBuffer.TYPE_FLOAT, Float.class);
+        RenderedImage srcImg = createDoubleTestImage(0d);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_FLOAT);
     }
     
     @Test
@@ -145,7 +176,8 @@ public class RangeLookupTest {
         
         Double[] breaks = { 2d, 4d, 6d, 8d };
         Integer[] values = { -50, -10, 0, 10, 50 };
-        assertLookup(breaks, values, DataBuffer.TYPE_INT, Integer.class);
+        RenderedImage srcImg = createDoubleTestImage(0d);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_INT);
     }
     
     @Test
@@ -154,7 +186,8 @@ public class RangeLookupTest {
         
         Double[] breaks = { 2d, 4d, 6d, 8d };
         Short[] values = { -50, -10, 0, 10, 50 };
-        assertLookup(breaks, values, DataBuffer.TYPE_SHORT, Short.class);
+        RenderedImage srcImg = createDoubleTestImage(0d);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_SHORT);
     }
     
     @Test
@@ -163,30 +196,23 @@ public class RangeLookupTest {
         
         Double[] breaks = { 2d, 4d, 6d, 8d };
         Byte[] values = { 0, 1, 2, 3, 4 };
-        assertLookup(breaks, values, DataBuffer.TYPE_BYTE, Byte.class);
+        RenderedImage srcImg = createDoubleTestImage(0d);
+        assertLookup(breaks, values, srcImg, DataBuffer.TYPE_BYTE);
     }
-    
     
     private <T extends Number & Comparable<? super T>, 
              U extends Number & Comparable<? super U>>
-            void assertLookup(T[] breaks, U[] values, 
-            int dataType, Class<? extends Number> dataClass) {
+            void assertLookup(
+                    T[] breaks, U[] values, 
+                    RenderedImage srcImg,
+                    int destDataType) {
         
         RangeLookupTable<T, U> table = createTable(breaks, values);
-
-        RenderedImage byteImg = createByteTestImage(10, 10);
-        RenderedImage srcImg = null;
-        if (dataType == DataBuffer.TYPE_BYTE) {
-            srcImg = byteImg;
-        } else {
-            srcImg = formatImage(byteImg, dataType);
-        }
-        
         RenderedOp destImg = doOp(srcImg, table);
 
         // check data type
-        assertEquals(dataType, destImg.getSampleModel().getDataType());
-        assertImageValues(srcImg, destImg, table, dataClass);
+        assertEquals(destDataType, destImg.getSampleModel().getDataType());
+        assertImageValues(srcImg, table, destImg);
     }
 
     /**
@@ -205,31 +231,107 @@ public class RangeLookupTest {
     }
 
     /**
-     * Changes the data type of the test image
+     * Creates a TYPE_BYTE test image with sequential values.
      * 
-     * @param srcImg the source image
-     * @param type the new data type
+     * @param startVal min image value
      * 
-     * @return the destination image
+     * @return the image
      */
-    private RenderedImage formatImage(RenderedImage srcImg, int type) {
+    private RenderedImage createByteTestImage(byte startVal) {
+        return createTestImage(startVal, new Byte[WIDTH * WIDTH]);
+    }
+
+    /**
+     * Creates a TYPE_SHORT test image with sequential values.
+     * 
+     * @param startVal min image value
+     * 
+     * @return the image
+     */
+    private RenderedImage createShortTestImage(short startVal) {
+        return createTestImage(startVal, new Short[WIDTH * WIDTH]);
+    }
+    
+    /**
+     * Creates a TYPE_USHORT test image with sequential values.
+     * 
+     * @param startVal min image value
+     * 
+     * @return the image
+     */
+    private RenderedImage createUShortTestImage(short startVal) {
+        if (startVal < 0) {
+            throw new IllegalArgumentException("startVal must be >= 0");
+        }
+        
+        RenderedImage img = createTestImage(startVal, new Short[WIDTH * WIDTH]);
         ParameterBlockJAI pb = new ParameterBlockJAI("format");
-        pb.setSource("source0", srcImg);
-        pb.setParameter("dataType", type);
+        pb.setSource("source0", img);
+        pb.setParameter("dataType", DataBuffer.TYPE_USHORT);
         return JAI.create("format", pb);
     }
-
-    private RenderedImage createByteTestImage(final int width, final int height) {
-        final int N = width * height;
-        Byte[] data = new Byte[N];
-        byte value = 0;
-        for (int pos = 0; pos < N; pos += width) {
-            Arrays.fill(data, pos, pos + width, value++);
+    
+    /**
+     * Creates a TYPE_INT test image with sequential values.
+     * 
+     * @param startVal min image value
+     * 
+     * @return the image
+     */
+    private RenderedImage createIntTestImage(int startVal) {
+        return createTestImage(startVal, new Integer[WIDTH * WIDTH]);
+    }
+    
+    /**
+     * Creates a TYPE_FLOAT test image with sequential values.
+     * 
+     * @param startVal min image value
+     * 
+     * @return the image
+     */
+    private RenderedImage createFloatTestImage(float startVal) {
+        return createTestImage(startVal, new Float[WIDTH * WIDTH]);
+    }
+    
+    /**
+     * Creates a TYPE_DOUBLE test image with sequential values.
+     * 
+     * @param startVal min image value
+     * 
+     * @return the image
+     */
+    private RenderedImage createDoubleTestImage(double startVal) {
+        return createTestImage(startVal, new Double[WIDTH * WIDTH]);
+    }
+    
+    
+    /**
+     * Creates a test image with sequential values.
+     * 
+     * @param startVal min image value
+     * @param data array to fill and use as pixel values
+     * 
+     * @return  the test image
+     */
+    private RenderedImage createTestImage(Number startVal, Number[] data) {
+        final int N = WIDTH * WIDTH;
+        Number value = startVal;
+        Number delta = NumberOperations.newInstance(1, startVal.getClass());
+        for (int i = 0; i < data.length; i++) {
+            data[i] = value;
+            value = NumberOperations.add(value, delta);
         }
 
-        return ImageUtils.createImageFromArray(data, width, height);
+        return ImageUtils.createImageFromArray(data, WIDTH, WIDTH);
     }
 
+    /**
+     * Creates a lookup table.
+     * @param breaks array of breakpoints for source image values
+     * @param values array of lookup values for destination image value
+     * 
+     * @return the lookup table
+     */
     private <T extends Number & Comparable<? super T>, 
              U extends Number & Comparable<? super U>> 
             RangeLookupTable<T, U> createTable(T[] breaks, U[] values) {
@@ -257,34 +359,100 @@ public class RangeLookupTest {
         return table;
     }
 
-    private void assertImageValues(RenderedImage srcImg, RenderedImage destImg,
-            RangeLookupTable table, Class<? extends Number> destClass) {
+    /**
+     * Tests that a destination image contains expected values given the
+     * source image and lookup table.
+     * 
+     * @param srcImg source image
+     * @param table lookup table
+     * @param destImg destination image
+     */
+    private void assertImageValues(RenderedImage srcImg, RangeLookupTable table, 
+            RenderedImage destImg) {
+        
+        final int srcImgType = srcImg.getSampleModel().getDataType();
+        final int destImgType = destImg.getSampleModel().getDataType();
+        
+        RectIter srcIter = RectIterFactory.create(srcImg, null);
+        RectIter destIter = RectIterFactory.create(destImg, null);
 
-        RectIter iter = RectIterFactory.create(destImg, null);
-        short line = 0;
         do {
             do {
-                if (destClass.equals(Short.class)) {
-                    assertEquals(table.getDestValue(line), (short) iter.getSample());
-                }
-                if (destClass.equals(Byte.class)) {
-                    assertEquals(table.getDestValue(line), (byte) iter.getSample());
-                }
-                if (destClass.equals(Integer.class)) {
-                    assertEquals(table.getDestValue(line), iter.getSample());
-                }
-                if (destClass.equals(Float.class)) {
-                    assertEquals(table.getDestValue(line), iter.getSampleFloat());
-                }
-                if (destClass.equals(Double.class)) {
-                    assertEquals(table.getDestValue(line), iter.getSampleDouble());
+                Number srcVal = getSourceImageValue(srcIter, srcImgType);
+                Number expectedVal = table.getDestValue(srcVal);
+                
+                switch (destImgType) {
+                    case DataBuffer.TYPE_BYTE:
+                        assertEquals(0, NumberOperations.compare(expectedVal, (byte) destIter.getSample()));
+                        break;
+                        
+                    case DataBuffer.TYPE_SHORT:
+                        assertEquals(0, NumberOperations.compare(expectedVal, (short) destIter.getSample()));
+                        break;
+                        
+                    case DataBuffer.TYPE_INT:
+                        assertEquals(0, NumberOperations.compare(expectedVal, destIter.getSample()));
+                        break;
+                        
+                    case DataBuffer.TYPE_FLOAT:
+                        assertEquals(0, NumberOperations.compare(expectedVal, destIter.getSampleFloat()));
+                        break;
+                        
+                    case DataBuffer.TYPE_DOUBLE:
+                        assertEquals(0, NumberOperations.compare(expectedVal, destIter.getSampleDouble()));
+                        break;
                 }
 
-            } while (!iter.nextPixelDone());
-            iter.startPixels();
-            line++;
+                srcIter.nextPixelDone();
+                
+            } while (!destIter.nextPixelDone());
+            
+            srcIter.nextLineDone();
+            srcIter.startPixels();
+            destIter.startPixels();
 
-        } while (!iter.nextLineDone());
+        } while (!destIter.nextLineDone());
+    }
+
+    /**
+     * Helper method for {@link #assertImageValues}.
+     * 
+     * @param srcIter source image iterator
+     * @param srcImgType source image data type
+     * 
+     * @return source image value as a Number
+     */
+    private Number getSourceImageValue(RectIter srcIter, final int srcImgType) {
+        Number val = null;
+        switch (srcImgType) {
+            case DataBuffer.TYPE_BYTE:
+                val = (byte) (srcIter.getSample() & 0xff);
+                break;
+                
+            case DataBuffer.TYPE_SHORT:
+                val = (short) srcIter.getSample();
+                break;
+                
+            case DataBuffer.TYPE_USHORT:
+                val = (short) (srcIter.getSample() & 0xffff);
+                break;
+                
+            case DataBuffer.TYPE_INT:
+                val = srcIter.getSample();
+                break;
+                
+            case DataBuffer.TYPE_FLOAT:
+                val = srcIter.getSampleFloat();
+                break;
+                
+            case DataBuffer.TYPE_DOUBLE:
+                val = (short) srcIter.getSampleDouble();
+                break;
+                
+            default:
+                throw new IllegalArgumentException("Unknown image type");
+        }
+        return val;
     }
 
 }

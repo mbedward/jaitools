@@ -206,7 +206,30 @@ public class RangeLookupOpImage extends PointOpImage {
     }
 
     private void lookupAsUShortData(RasterAccessor srcAcc, RasterAccessor destAcc) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        short srcData[][] = srcAcc.getShortDataArrays();
+        short destData[][] = destAcc.getShortDataArrays();
+
+        for (int k = 0; k < destBands; k++) {
+            int destY = destAcc.getY();
+            short destBandData[] = destData[k];
+            short srcBandData[] = srcData[k];
+            int srcScanlineOffset = srcBandOffsets[k];
+            int dstScanlineOffset = dstBandOffsets[k];
+            for (int j = 0; j < destHeight; j++, destY++) {
+                int destX = destAcc.getX();
+                int srcPixelOffset = srcScanlineOffset;
+                int dstPixelOffset = dstScanlineOffset;
+
+                for (int i = 0; i < destWidth; i++, destX++) {
+                    int val = srcBandData[srcPixelOffset]  & 0xffff;
+                    destBandData[dstPixelOffset] = table.getDestValue(val).shortValue();
+                    srcPixelOffset += srcPixelStride;
+                    dstPixelOffset += dstPixelStride;
+                }
+                srcScanlineOffset += srcScanlineStride;
+                dstScanlineOffset += dstScanlineStride;
+            }
+        }
     }
 
     private void lookupAsIntData(RasterAccessor srcAcc, RasterAccessor destAcc) {
