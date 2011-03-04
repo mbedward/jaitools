@@ -30,7 +30,6 @@ import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
 import java.awt.image.renderable.ParameterBlock;
 import java.awt.image.renderable.RenderedImageFactory;
-import java.sql.DatabaseMetaData;
 
 import javax.media.jai.BorderExtender;
 import javax.media.jai.ImageLayout;
