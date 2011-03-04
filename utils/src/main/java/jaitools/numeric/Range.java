@@ -636,7 +636,7 @@ public class Range<T extends Number & Comparable> {
      */
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("Range");
+        StringBuilder sb = new StringBuilder();
 
         if (isMinClosed()) {
             sb.append(isMinIncluded() ? '[' : '(');
