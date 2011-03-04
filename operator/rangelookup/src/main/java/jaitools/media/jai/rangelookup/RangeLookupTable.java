@@ -238,13 +238,11 @@ public class RangeLookupTable<T extends Number & Comparable<? super T>, U extend
 
     @Override
     public String toString() {
-        final StringBuilder buff = new StringBuilder("RangeLookupTable [defaultValue=" + defaultValue + ", items=");
+        final StringBuilder sb = new StringBuilder();
         for (LookupItem item : items) {
-            buff.append("{").append(item.toString()).append("},");
+            sb.append(item).append("; ");
         }
-        buff.subSequence(0, buff.length() - 1);
-        buff.append("]");
-        return buff.toString();
+        return sb.toString();
     }
     
     
