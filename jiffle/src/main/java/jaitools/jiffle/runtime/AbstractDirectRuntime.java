@@ -81,10 +81,16 @@ public abstract class AbstractDirectRuntime extends AbstractJiffleRuntime implem
     protected int _height;
     
 
+    /**
+     * Creates a new instance.
+     */
     public AbstractDirectRuntime() {
         initOptionVars();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void setDestinationImage(String imageName, WritableRenderedImage image) {
         images.put(imageName, image);
         
@@ -96,6 +102,9 @@ public abstract class AbstractDirectRuntime extends AbstractJiffleRuntime implem
         writers.put(imageName, RandomIterFactory.createWritable(image, null));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void setBounds(int minx, int miny, int width, int height) {
         _minx = minx;
         _miny = miny;
@@ -107,11 +116,17 @@ public abstract class AbstractDirectRuntime extends AbstractJiffleRuntime implem
         initImageScopeVars();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void setSourceImage(String imageName, RenderedImage image) {
         images.put(imageName, image);
         readers.put(imageName, RandomIterFactory.create(image, null));
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void evaluateAll(JiffleProgressListener pl) {
         JiffleProgressListener listener = pl == null ? new NullProgressListener() : pl;
 
@@ -138,6 +153,9 @@ public abstract class AbstractDirectRuntime extends AbstractJiffleRuntime implem
         listener.finish();
     }
     
+    /**
+     * {@inheritDoc}
+     */
     public double readFromImage(String imageName, int x, int y, int band) {
         boolean inside = true;
         RenderedImage img = (RenderedImage) images.get(imageName);
@@ -166,6 +184,9 @@ public abstract class AbstractDirectRuntime extends AbstractJiffleRuntime implem
         return iter.getSampleDouble(x, y, band);
     }
     
+    /**
+     * {@inheritDoc}
+     */
     public void writeToImage(String imageName, int x, int y, int band, double value) {
         WritableRandomIter iter = (WritableRandomIter) writers.get(imageName);
         iter.setSample(x, y, band, value);

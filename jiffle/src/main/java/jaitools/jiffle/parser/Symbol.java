@@ -38,6 +38,7 @@ public class Symbol {
      * 
      * @param name name as used in the Jiffle script
      * @param type type of symbol
+     * @param scopeType scope of symbol 
      */
     public Symbol(String name, SymbolType type, ScopeType scopeType) {
         this.name = name;

@@ -38,27 +38,46 @@ public class JiffleProperties {
     
     private static final Properties properties = new Properties();
     
+    /** Properties file name. */
     public static final String PROPERTIES_FILE = "META-INF/jiffle/Jiffle.properties";
     
+    /** Key: default toot name for a Jiffle instance. */
     public static final String NAME_KEY = "root.name";
+    
+    /** Key: runtime class package */
     public static final String RUNTIME_PACKAGE_KEY = "runtime.package";
     
+    /** Key: direct runtime class name. */
     public static final String DIRECT_CLASS_KEY = "direct.class";
+
+    /** Key: direct runtime base class name. */
     public static final String DIRECT_BASE_CLASS_KEY = "direct.base.class";
     
+    /** Key: indirect runtime class name. */
     public static final String INDIRECT_CLASS_KEY = "indirect.class";
+
+    /** Key: indirect runtime base class name. */
     public static final String INDIRECT_BASE_CLASS_KEY = "indirect.base.class";
     
+    /** Key: default runtime imports. */
     public static final String IMPORTS_KEY = "runtime.imports";
     
     /** Delimiter used to separate multiple import entries */
     public static final String RUNTIME_IMPORTS_DELIM = ";";
     
+    /** Key: common runtime source generation templates. */
     public static final String COMMON_SOURCE_TEMPLATES_KEY = "common.source.templates";
+
+    /** Key: direct runtime source generation templates. */
     public static final String DIRECT_SOURCE_TEMPLATES_KEY = "direct.source.templates";
+
+    /** Key: indirect runtime source generation templates. */
     public static final String INDIRECT_SOURCE_TEMPLATES_KEY = "indirect.source.templates";
-    
+
+    /** Default base class for direct runtime classes. */
     public static final Class<? extends JiffleRuntime> DEFAULT_DIRECT_BASE_CLASS;
+
+    /** Default base class for indirect runtime classes. */
     public static final Class<? extends JiffleRuntime> DEFAULT_INDIRECT_BASE_CLASS;
     
     static {
@@ -90,6 +109,13 @@ public class JiffleProperties {
 
     }
 
+    /**
+     * Gets a property.
+     * 
+     * @param key the property name (key)
+     * 
+     * @return property value
+     */
     public static String get(String key) {
         return properties.getProperty(key);
     }

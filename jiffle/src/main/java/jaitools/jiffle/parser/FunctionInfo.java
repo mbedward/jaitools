@@ -88,7 +88,9 @@ public class FunctionInfo {
      *        invocation regardless of pixel position (e.g. rand()); {@code false}
      *        otherwise
      * 
-     * @param argTypes optional array of Strings specifying argument types; 
+     * @param returnType function return type ("D", "List")
+     * 
+     * @param argTypes array of Strings specifying argument types; 
      *        null or empty for no-arg functions
      */
     public FunctionInfo(String jiffleName, String runtimeName, Provider provider, 

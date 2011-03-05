@@ -29,6 +29,11 @@ package jaitools.jiffle.runtime;
  */
 public class JiffleRuntimeException extends RuntimeException {
 
+    /**
+     * Creates a new instance.
+     * 
+     * @param msg error message
+     */
     public JiffleRuntimeException(String msg) {
         super(msg);
     }

@@ -31,12 +31,23 @@ package jaitools.jiffle.runtime;
  */
 public abstract class AbstractJiffleRuntime implements JiffleRuntime {
     
+    /** Whether the <i>outside</i> option is set. */
     protected boolean _outsideValueSet = false;
     
+    /** 
+     * The value to return for out-of-bounds image data requests if the
+     * <i>outside</i> option is set.
+     */
     protected double _outsideValue;
     
+    /** 
+     * A stack of integer values used in the evaluation of if statements.
+     */
     protected IntegerStack _stk;
     
+    /** 
+     * Provides runtime function support.
+     */
     protected final JiffleFunctions _FN;
 
     /**

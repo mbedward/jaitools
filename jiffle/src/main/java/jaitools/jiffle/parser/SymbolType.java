@@ -47,6 +47,11 @@ public enum SymbolType {
         this.desc = desc;
     }
     
+    /**
+     * Gets the description of this type.
+     * 
+     * @return the description
+     */
     public String getDesc() {
         return desc;
     }

@@ -33,10 +33,28 @@ import jaitools.jiffle.JiffleException;
  */
 public interface SourceGenerator {
     
+    /**
+     * Sets the runtime model.
+     * 
+     * @param model runtime model
+     */
     void setRuntimeModel(Jiffle.RuntimeModel model);
     
+    /**
+     * Sets the runtime base class name.
+     * 
+     * @param baseClassName base class name
+     */
     void setBaseClassName(String baseClassName);
 
+    /**
+     * Returns the source for the runtime class. The runtime model and base class
+     * name must be set before calling this method.
+     * 
+     * @return source of the runtime class as a single String.
+     * @throws JiffleException on errors creating source
+     * @throws RuntimeException if the runtime model or base class name are not set
+     */
     String getSource() throws JiffleException;
 
 }

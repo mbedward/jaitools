@@ -147,7 +147,7 @@ public class SymbolScopeStack {
      * the top scope or any enclosing scopes.
      * 
      * @param name symbol name
-     * @param type symbol scope type
+     * @param scopeType the symbol scope
      * @return {@code true} if the symbol is found; {@code false} otherwise
      */
     public boolean isDefined(String name, ScopeType scopeType) {

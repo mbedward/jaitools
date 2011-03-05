@@ -37,7 +37,7 @@ import jaitools.jiffle.JiffleException;
 import jaitools.jiffle.JiffleProperties;
 
 /**
- * Base class for runtime source generating tree parsers.
+ * Base class for tree parsers that generate Jiffle runtime source.
  * <p>
  * The runtime source generator is created from the ANTLR grammar
  * ({@code RuntimeSourceGenerator.g}. This class provides a small number
@@ -49,34 +49,24 @@ import jaitools.jiffle.JiffleProperties;
  */
 public abstract class AbstractSourceGenerator extends ErrorHandlingTreeParser implements SourceGenerator {
     
+    /** The runtime model to generate source for. */
     protected Jiffle.RuntimeModel model;
+
+    /** The package name to use for the runtime class. */
     protected String pkgName;
+
+    /** The imports to be included with the runtime class. */
     protected List<String> imports;
+
+    /** The runtime class name. */
     protected String className;
+
+    /** The name of the base class for the runtime class. */
     protected String baseClassName;
     
+    /** A counter used in naming variables inserted into the runtime source. */
     protected int varIndex = 0;
     
-    public void setRuntimeModel(Jiffle.RuntimeModel model) {
-        this.model = model;
-        switch (model) {
-            case DIRECT:
-                className = JiffleProperties.get(JiffleProperties.DIRECT_CLASS_KEY);
-                break;
-                
-            case INDIRECT:
-                className = JiffleProperties.get(JiffleProperties.INDIRECT_CLASS_KEY);
-                break;
-                
-            default:
-                throw new IllegalArgumentException("Internal compiler error");
-        }
-    }
-    
-    public void setBaseClassName(String baseClassName) {
-        this.baseClassName = baseClassName;
-    }
-
 
     /**
      * Constructor called by ANTLR.
@@ -106,17 +96,34 @@ public abstract class AbstractSourceGenerator extends ErrorHandlingTreeParser im
         }
     }
     
-    
     /**
-     * Returns the source for the runtime class. The runtime model and base class
-     * name must be set before calling this method.
-     * 
-     * @return source of the runtime class as a single String.
-     * @throws JiffleException on errors creating source
-     * @throws RuntimeException if the runtime model or base class name are not set
-     * 
-     * @see #setRuntimeModel(jaitools.jiffle.Jiffle.RuntimeModel) 
-     * @see #setBaseClassName(java.lang.String) 
+     * {@inheritDoc}
+     */    
+    public void setRuntimeModel(Jiffle.RuntimeModel model) {
+        this.model = model;
+        switch (model) {
+            case DIRECT:
+                className = JiffleProperties.get(JiffleProperties.DIRECT_CLASS_KEY);
+                break;
+                
+            case INDIRECT:
+                className = JiffleProperties.get(JiffleProperties.INDIRECT_CLASS_KEY);
+                break;
+                
+            default:
+                throw new IllegalArgumentException("Internal compiler error");
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public void setBaseClassName(String baseClassName) {
+        this.baseClassName = baseClassName;
+    }
+
+    /**
+     * {@inheritDoc}
      */
     public String getSource() throws JiffleException {
         if (model == null) {
@@ -217,11 +224,28 @@ public abstract class AbstractSourceGenerator extends ErrorHandlingTreeParser im
     }
     
     
+    /**
+     * Gets the runtime source for a script option name:value pair.
+     * 
+     * @param name option name
+     * @param value option value
+     * @return the runtime source
+     */
     protected String getOptionExpr(String name, String value) {
-        return OptionLookup.getActiveRuntimExpr(name, value);
+        try {
+            return OptionLookup.getActiveRuntimExpr(name, value);
+        } catch (UndefinedOptionException ex) {
+            throw new IllegalArgumentException(ex);
+        }
     }
     
     
+    /**
+     * Adds the given imports to those that will be included in the
+     * runtime source.
+     * 
+     * @param importNames fully qualified class names
+     */
     protected void addImport(String ...importNames) {
         for (String name : importNames) {
             boolean found = false;

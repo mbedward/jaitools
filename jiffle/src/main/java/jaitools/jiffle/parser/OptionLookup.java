@@ -60,6 +60,12 @@ public class OptionLookup {
                 + "_outsideValue = _VALUE_;");
     }
     
+    /**
+     * Tests if an option name is defined.
+     * 
+     * @param optionName the name
+     * @return {@code true} if the name is defined; {@code false} otherwise
+     */
     public static boolean isDefined(String optionName) {
         try {
             getInfo(optionName);
@@ -70,16 +76,54 @@ public class OptionLookup {
         }
     }
     
+    /**
+     * Tests if a value is valid for the given option.
+     * @param optionName option name
+     * @param value the value as a String
+     * @return {@code true} if the value is valid; {@code false} otherwise
+     * @throws UndefinedOptionException if the name is not recognized
+     */
     public static boolean isValidValue(String optionName, String value) 
             throws UndefinedOptionException {
         
         return getInfo(optionName).isValidValue(value);
     }
     
+    /**
+     * Gets the names known to the lookup service.
+     * 
+     * @return option names as an unmodifiable list
+     */
     public static Iterable<String> getNames() {
         return Collections.unmodifiableList(names);
     }
     
+    /**
+     * Gets the runtime source for the given option name:value pair.
+     * 
+     * @param name option name
+     * @param value option value
+     * 
+     * @return the runtime source
+     * @throws UndefinedOptionException if the name is not recognized
+     */
+    public static String getActiveRuntimExpr(String name, String value) 
+            throws UndefinedOptionException {
+        
+        String key = name.toLowerCase();
+        String expr = activeRuntimeExpr.get(key);
+        if (expr == null) {
+            throw new UndefinedOptionException(name);
+        }
+        return expr.replace("_VALUE_", value);
+    }
+
+    /**
+     * Get the info for a given option.
+     * @param optionName option name
+     * @return option info
+     * @throws UndefinedOptionException if the name is not recognized
+     */
     private static OptionInfo getInfo(String optionName) throws UndefinedOptionException {
         for (OptionInfo info : options) {
             if (info.getName().equalsIgnoreCase(optionName)) {
@@ -88,15 +132,6 @@ public class OptionLookup {
         }
         
         throw new UndefinedOptionException(optionName);
-    }
-
-    public static String getActiveRuntimExpr(String name, String value) {
-        String key = name.toLowerCase();
-        String expr = activeRuntimeExpr.get(key);
-        if (expr == null) {
-            throw new IllegalArgumentException("Option name not recognized: " + name);
-        }
-        return expr.replace("_VALUE_", value);
     }
 
 }

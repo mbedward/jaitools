@@ -41,12 +41,17 @@ public abstract class ErrorHandlingTreeParser extends TreeParser {
      * Constructor.
      *
      * @param input AST node stream
-     * @param state ANTLR recognizer state (not presently used by Jiffle)
      */
     public ErrorHandlingTreeParser(TreeNodeStream input) {
         super(input);
     }
     
+    /**
+     * Constructor.
+     * 
+     * @param input input AST node stream
+     * @param state recognizer state
+     */
     public ErrorHandlingTreeParser(TreeNodeStream input, RecognizerSharedState state) {
         super(input, state);
     }
