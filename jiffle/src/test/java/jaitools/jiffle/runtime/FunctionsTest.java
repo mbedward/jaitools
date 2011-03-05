@@ -151,6 +151,18 @@ public class FunctionsTest extends StatementsTestBase {
     }
     
     @Test
+    public void exp() throws Exception {
+        String script = "dest = exp(src);" ;
+        System.out.println("   " + script);
+        
+        Evaluator e = new Evaluator() {
+            public double eval(double val) {
+                return Math.exp(val);
+            }
+        };
+    }
+    
+    @Test
     public void floor() throws Exception {
         String script = "dest = floor(src / 10);" ;
         System.out.println("   " + script);
