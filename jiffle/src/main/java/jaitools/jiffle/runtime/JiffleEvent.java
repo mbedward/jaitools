@@ -21,7 +21,8 @@
 package jaitools.jiffle.runtime;
 
 /**
- * Base class for events issued by the {@link JiffleInterpreter}
+ * Used by {@link JiffleExecutor} to send task completion and failure messages
+ * listeners.
  * 
  * @see JiffleEventListener
  * 
