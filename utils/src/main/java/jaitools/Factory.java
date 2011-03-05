@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -26,8 +26,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Abstract base class for jai-tools object factories. Presently this is little more
- * than a stub.
+ * Abstract base class for jai-tools object factories.
  *
  * @author Michael Bedward
  * @since 1.0

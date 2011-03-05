@@ -19,7 +19,8 @@
  */
 
 /**
- * The JAITools and CollectionFactory helper classes 
+ * Contains a small number of utility classes including 
+ * {@link jaitools.CollectionFactory}.
  */
 
 package jaitools;

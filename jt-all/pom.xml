@@ -51,9 +51,9 @@
             </plugin>
             <plugin>
                 <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.7</version>
                 <executions>
                     <execution>
-                        <phase>package</phase>
                         <goals>
                             <goal>jar</goal>
                         </goals>
@@ -148,12 +148,14 @@
             <groupId>org.antlr</groupId>
             <artifactId>antlr</artifactId>
             <version>3.3</version>
+            <!-- Adding StringTemplate back in for code generation
             <exclusions>
                 <exclusion>
                     <groupId>org.antlr</groupId>
                     <artifactId>stringtemplate</artifactId>
                 </exclusion>
             </exclusions>
+            -->
         </dependency>
         
         <dependency>
