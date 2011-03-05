@@ -21,7 +21,8 @@
 package jaitools.numeric;
 
 /**
- * Various double value comparisons that take into account a tolerance factor.
+ * Provides static method to compare double values with either a default or
+ * specified tolerance.
  * 
  * @author Michael Bedward
  * @since 1.0
@@ -33,19 +34,19 @@ public class DoubleComparison {
     public static final double TOL = 1.0e-8;
 
     /**
-     * Check if the given value is 0 within the default tolerance
+     * Tests if the given value is 0 within the default tolerance.
      * @param x the value
-     * @return true if zero; false otherwise
+     * @return {@code true} if zero; {@code false} otherwise
      */
     public static boolean dzero(double x) {
         return Math.abs(x) < TOL;
     }
 
     /**
-     * Check if the given value is 0 within the user-specified tolerance
+     * Tests if the given value is 0 within the user-specified tolerance.
      * @param x the value
      * @param tol the user-specified tolerance (<b>assumed</b> to be positive)
-     * @return true if zero; false otherwise
+     * @return {@code true} if zero; {@code false} otherwise
      */
     public static boolean dzero(double x, double tol) {
         if (tol < TOL) {
@@ -56,7 +57,7 @@ public class DoubleComparison {
     }
 
     /**
-     * Compare two values using the default tolerance
+     * Compares two values using the default tolerance.
      * @param x1 first value
      * @param x2 second value
      * @return a value less than 0 if x1 is less than x2; 0 if x1 is equal to x2;
@@ -71,10 +72,10 @@ public class DoubleComparison {
     }
 
     /**
-     * Compare two values using the user-specified tolerance
+     * Compares two values using the user-specified tolerance
      * @param x1 first value
      * @param x2 second value
-     * @param the user-specified tolerance (<b>assumed</b> to be positive)
+     * @param tol the tolerance
      * @return a value less than 0 if x1 is less than x2; 0 if x1 is equal to x2;
      * a value greater than 0 if x1 is greater than x2
      */
@@ -91,30 +92,30 @@ public class DoubleComparison {
     }
 
     /**
-     * Test if two double values are equal within the default tolerance.
+     * Tests if two double values are equal within the default tolerance.
      * This is a short-cut for {@code dzero(x1 - x2)}.
      * @param x1 first value
      * @param x2 second value
-     * @return true if the two values are equal; false otherwise
+     * @return {@code true} if equal; {@code false} otherwise
      */
     public static boolean dequal(double x1, double x2) {
         return dzero(x1 - x2);
     }
 
     /**
-     * Test if two double values are equal within the specified tolerance.
+     * Tests if two double values are equal within the specified tolerance.
      * This is a short-cut for {@code dzero(x1 - x2, tol)}.
      * @param x1 first value
      * @param x2 second value
-     * @param the user-specified tolerance (<b>assumed</b> to be positive)
-     * @return true if the two values are equal; false otherwise
+     * @param tol the tolerance
+     * @return {@code true} if equal; {@code false} otherwise
      */
     public static boolean dequal(double x1, double x2, double tol) {
         return dzero(x1 - x2, tol);
     }
 
     /**
-     * Convert a double value to integer taking into account the
+     * Converts a double value to integer taking into account the
      * default tolerance when checking if it is zero, ie. values
      * within TOL either side of 0 will produce a 0 return value
      *

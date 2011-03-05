@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -55,6 +55,7 @@ import java.lang.reflect.Method;
 import java.text.AttributedCharacterIterator;
 import java.util.Hashtable;
 import java.util.Map;
+
 import javax.media.jai.PlanarImage;
 
 /**
@@ -79,8 +80,13 @@ public class DiskMemImageGraphics extends Graphics2D {
     private Hashtable<String, Object> properties;
     private RenderingHints renderingHints;
 
+    /**
+     * Constants for paint mode: PAINT or XOR.
+     */
     public static enum PaintMode {
+        /** Simple paint mode. */
         PAINT,
+        /** XOR paint mode. */
         XOR;
     };
     
@@ -108,62 +114,90 @@ public class DiskMemImageGraphics extends Graphics2D {
      */
     public static enum OpType {
 
+        /** Describes the clearRect method. */
         CLEAR_RECT("clearRect", int.class, int.class, int.class, int.class),
 
+        /** Describes the copyArea method. */
         COPY_AREA("copyArea", int.class, int.class, int.class, int.class, int.class, int.class),
         
+        /** Describes the drawArc method. */
         DRAW_ARC("drawArc", int.class, int.class, int.class, int.class, int.class, int.class),
 
+        /** Describes the drawImage method. */
         DRAW_BUFFERED_IMAGE("drawImage", BufferedImage.class, BufferedImageOp.class, int.class, int.class),
 
+        /** Describes the drawGlyphVector method. */
         DRAW_GLYPH_VECTOR("drawGlyphVector", GlyphVector.class, float.class, float.class),
 
+        /** Describes the drawImage method. */
         DRAW_IMAGE_DEST_SRC("drawImage", Image.class, int.class, int.class, int.class, int.class,
                             int.class, int.class, int.class, int.class, ImageObserver.class),
 
+        /** Describes the drawImage method. */
         DRAW_IMAGE_DEST_SRC_COL("drawImage", Image.class, int.class, int.class, int.class, int.class,
                                 int.class, int.class, int.class, int.class, Color.class, ImageObserver.class),
 
+        /** Describes the drawImage method. */
         DRAW_IMAGE_TRANSFORM("drawImage", Image.class, AffineTransform.class, ImageObserver.class),
 
+        /** Describes the drawImage method. */
         DRAW_IMAGE_XY("drawImage", Image.class, int.class, int.class, ImageObserver.class),
 
+        /** Describes the drawImage method. */
         DRAW_IMAGE_XY_COL("drawImage", Image.class, int.class, int.class, Color.class, ImageObserver.class),
 
+        /** Describes the drawImage method. */
         DRAW_IMAGE_XYWH("drawImage", Image.class, int.class, int.class, int.class, int.class, ImageObserver.class),
 
+        /** Describes the drawImage method. */
         DRAW_IMAGE_XYWH_COL("drawImage", Image.class, int.class, int.class, int.class, int.class, Color.class, ImageObserver.class),
 
+        /** Describes the drawLine method. */
         DRAW_LINE("drawLine", int.class, int.class, int.class, int.class),
 
+        /** Describes the drawOval method. */
         DRAW_OVAL("drawOval", int.class, int.class, int.class, int.class),
 
+        /** Describes the drawPolygon method. */
         DRAW_POLYGON("drawPolygon", int[].class, int[].class, int.class),
 
+        /** Describes the drawPolyline method. */
         DRAW_POLYLINE("drawPolyline", int[].class, int[].class, int.class),
 
+        /** Describes the drawRenderableImage method. */
         DRAW_RENDERABLE_IMAGE("drawRenderableImage", RenderableImage.class, AffineTransform.class),
 
+        /** Describes the drawRenderedImage method. */
         DRAW_RENDERED_IMAGE("drawRenderedImage", RenderedImage.class, AffineTransform.class),
 
+        /** Describes the drawRoundRect method. */
         DRAW_ROUND_RECT("drawRoundRect", int.class, int.class, int.class, int.class, int.class, int.class),
 
+        /** Describes the draw method. */
         DRAW_SHAPE("draw", Shape.class),
 
+        /** Describes the drawString method. */
         DRAW_STRING_XY("drawString", String.class, float.class, float.class),
 
+        /** Describes the drawString method. */
         DRAW_STRING_ITER_XY("drawString", AttributedCharacterIterator.class, float.class, float.class),
 
+        /** Describes the fill method. */
         FILL("fill", Shape.class),
 
+        /** Describes the fillArc method. */
         FILL_ARC("fillArc", int.class, int.class, int.class, int.class, int.class, int.class),
 
+        /** Describes the fillOval method. */
         FILL_OVAL("fillOval", int.class, int.class, int.class, int.class),
 
+        /** Describes the fillPolygon method. */
         FILL_POLYGON("fillPolygon", int[].class, int[].class, int.class),
 
+        /** Describes the fillRect method. */
         FILL_RECT("fillRect", int.class, int.class, int.class, int.class),
 
+        /** Describes the fillRoundRect method. */
         FILL_ROUND_RECT("fillRoundRect", int.class, int.class, int.class, int.class, int.class, int.class);
 
 
@@ -173,15 +207,21 @@ public class DiskMemImageGraphics extends Graphics2D {
         private OpType(String methodName, Class<?> ...types) {
             this.methodName = methodName;
             this.paramTypes = new Class<?>[types.length];
-            for (int i = 0; i < types.length; i++) {
-                this.paramTypes[i] = types[i];
-            }
+            System.arraycopy(types, 0, this.paramTypes, 0, types.length);
         }
 
+        /**
+         * Gets the method name.
+         * @return method name
+         */
         public String getMethodName() {
             return methodName;
         }
 
+        /**
+         * Gets the full method name.
+         * @return full name
+         */
         public String getFullMethodName() {
             StringBuffer sb = new StringBuffer();
             sb.append(methodName);
@@ -197,17 +237,25 @@ public class DiskMemImageGraphics extends Graphics2D {
             return sb.toString();
         }
 
-        public int getNumParams() {
+        /**
+         * Gets the number of method arguments
+         * @return number of arguments
+         */
+        public int getNumArgs() {
             return paramTypes.length;
         }
 
-        public Class<?>[] getParamTypes() {
+        /**
+         * Gets the types of the arguments.
+         * @return argument types
+         */
+        public Class<?>[] getArgTypes() {
             return paramTypes;
         }
     }
 
     /**
-     * Constructor: create an instance of this class for the given target image
+     * Creates an instance for the given target image
      *
      * @param targetImage the image to be drawn into
      */
@@ -680,7 +728,7 @@ public class DiskMemImageGraphics extends Graphics2D {
     }
 
     /**
-     * Perform the graphics operation by partitioning the work across the image's
+     * Performs the graphics operation by partitioning the work across the image's
      * tiles and using Graphics2D routines to draw into each tile.
      *
      * @param opType the type of operation
@@ -692,7 +740,7 @@ public class DiskMemImageGraphics extends Graphics2D {
         boolean rtnVal = false;
 
         try {
-            method = Graphics2D.class.getMethod(opType.getMethodName(), opType.getParamTypes());
+            method = Graphics2D.class.getMethod(opType.getMethodName(), opType.getArgTypes());
 
         } catch (NoSuchMethodException nsmEx) {
             // programmer error :-(
@@ -763,8 +811,8 @@ public class DiskMemImageGraphics extends Graphics2D {
     }
 
     /**
-     * Helper method that takes a bounding rectangle calculated by
-     * one fo the drawing methods and expands it, if necessary, to
+     * Takes a bounding rectangle calculated by
+     * one of the drawing methods and expands it, if necessary, to
      * account for the current Stroke width.
      * <p>
      * This correction appears to be missing from JAI's TiledImageGraphics
@@ -784,13 +832,12 @@ public class DiskMemImageGraphics extends Graphics2D {
     }
 
     /**
-     * Helper for methods that draw polylines and polygons. Gets the
-     * bounding rectangle of the vertices.
+     * Gets the bounding rectangle of the given vertices.
      *
-     * @param xPoints x coordinates of vertices
-     * @param yPoints y coordinates of vertices
+     * @param xPoints X ordinates
+     * @param yPoints Y ordinates
      * @param nPoints number of vertices
-     * @return
+     * @return the bounding rectangle
      */
     private Rectangle2D getPolyBounds(int[] xPoints, int[] yPoints, int nPoints) {
         Rectangle bounds = new Rectangle();
@@ -822,11 +869,11 @@ public class DiskMemImageGraphics extends Graphics2D {
     }
 
     /**
-     * Helper method for the constructor. Attempts to get
-     * or construct a <code>ColorModel</code> for the target
+     * Attempts to retrieve or create a <code>ColorModel</code> for the target
      * image.
      *
-     * @throws UnsupportedOperationException if a compatible <code>ColorModel</code> is not found
+     * @throws UnsupportedOperationException if a compatible 
+     * <code>ColorModel</code> is not found
      */
     private void setColorModel() {
         assert(targetImage != null);
@@ -852,8 +899,7 @@ public class DiskMemImageGraphics extends Graphics2D {
     }
 
     /**
-     * Helper method for the constructor. Retrieves any properties 
-     * set for the target image.
+     * Retrieves any properties set for the target image.
      */
     private void setProperties() {
         assert(targetImage != null);
@@ -870,9 +916,9 @@ public class DiskMemImageGraphics extends Graphics2D {
     }
 
     /**
-     * Helper method for the constructor. Creates a Graphics2D instance
-     * based on the target image's first tile and uses its state to set
-     * the graphics params of this object
+     * Creates a Graphics2D instance based on the first tile of the 
+     * target image and uses its state to set the graphics parameters
+     * of this instance.
      */
     private void setGraphicsParams() {
         assert(targetImage != null);
@@ -899,8 +945,8 @@ public class DiskMemImageGraphics extends Graphics2D {
     }
 
     /**
-     * Copy the current graphics params into the given <code>Graphics2D</code>
-     * object
+     * Copies the current graphics parameters into the given <code>Graphics2D</code>
+     * object.
      *
      * @param gr a Graphics2D object
      */

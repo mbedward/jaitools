@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -19,14 +19,15 @@
  */
 package jaitools.numeric;
 
-import jaitools.CollectionFactory;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
+import jaitools.CollectionFactory;
+
 /**
- * A comparator for {@linkplain Range} objects capable of discerning the 18 different possible
+ * A comparator for {@link Range} objects capable of discerning the 18 different possible
  * interval comparisons as described by:
  * <blockquote>
  * Brian Hayes (2003) A lucid interval. <br>
@@ -36,10 +37,10 @@ import java.util.Map;
  * </blockquote>
  *
  * Constants describing each of these possible comparisons are defined in the
- * {@linkplain RangeComparator.Result} class.
+ * {@link RangeComparator.Result} class.
  * <p>
  * Normally, client code will not need to use the methods defined in this class
- * directly but will work through the {@linkplain Range} class.
+ * directly but will work through the {@link Range} class.
  *
  * @author Michael Bedward
  * @since 1.0
@@ -47,37 +48,43 @@ import java.util.Map;
  */
 public class RangeComparator<T extends Number & Comparable> {
 
+    /** Constant for "less than". */
     public static final int LT = -1;
+
+    /** Constant for "equal to". */
     public static final int EQ = 0;
+
+    /** Constant for "greater than". */
     public static final int GT = 1;
+
     private static final int UNDEFINED = LT - 1;
 
     /**
-     * Index of {@linkplain Result} element for the comparison of the min value
+     * Index of {@link Result} element for the comparison of the min value
      * of the first Range with the max value of the second range.
      */
     public static final int MIN_MAX = 0;
 
     /**
-     * Index of {@linkplain Result} element for the comparison of the min value
+     * Index of {@link Result} element for the comparison of the min value
      * of the first Range with the min value of the second range.
      */
     public static final int MIN_MIN = 1;
 
     /**
-     * Index of {@linkplain Result} element for the comparison of the max value
+     * Index of {@link Result} element for the comparison of the max value
      * of the first Range with the max value of the second range.
      */
     public static final int MAX_MAX = 2;
 
     /**
-     * Index of {@linkplain Result} element for the comparison of the max value
+     * Index of {@link Result} element for the comparison of the max value
      * of the first Range with the min value of the second range.
      */
     public static final int MAX_MIN = 3;
 
     /**
-     * This enum defines names, notation and descriptions for the 18 different
+     * Constants defining the names, notation and descriptions for the 18 different
      * possible interval comparisons as described by:
      * <blockquote>
      * Brian Hayes (2003) A lucid interval. <br>
@@ -172,7 +179,7 @@ public class RangeComparator<T extends Number & Comparable> {
          */
         GGGG(">>>>", "is entirely greater than");
 
-        private static Map<String, Result> lookup = CollectionFactory.map();
+        private static final Map<String, Result> lookup = CollectionFactory.map();
         static {
             for (Result t : EnumSet.allOf(Result.class)) {
                 lookup.put(t.name(), t);
@@ -200,15 +207,17 @@ public class RangeComparator<T extends Number & Comparable> {
         }
 
         /**
-         * Get the notation form of this comparison. For example,
+         * Gets the notation form of this comparison. For example,
          * for Result.LLEG the notation form is "<<=>".
+         * 
+         * @return the Hayes notation
          */
         public String getNotation() {
             return notation;
         }
 
         /**
-         * Return a description for this comparison type. The description is
+         * Returns a description for this comparison type. The description is
          * worded so that it makes grammatical sense when placed between two
          * Range object names. For example...
          * <pre><code>
@@ -217,24 +226,25 @@ public class RangeComparator<T extends Number & Comparable> {
          * RangeComparator.Result comp = r1.compareTo(r2);
          * System.out.println(String.format("Range r1 %s Range r2", comp.getDesc()));
          * </code></pre>
-         * @return
+         * 
+         * @return the description
          */
         public String getDesc() {
             return desc;
         }
 
         /**
-         * Get the result element at the given index. The index can be
+         * Gets the result element at the given index. The index can be
          * specified as an int from 0 to 3 or one of the constants:
-         * {@linkplain RangeComparator#MAX_MAX},
-         * {@linkplain RangeComparator#MAX_MIN},
-         * {@linkplain RangeComparator#MIN_MAX},
-         * {@linkplain RangeComparator#MIN_MIN}.
+         * {@link RangeComparator#MAX_MAX},
+         * {@link RangeComparator#MAX_MIN},
+         * {@link RangeComparator#MIN_MAX},
+         * {@link RangeComparator#MIN_MIN}.
          *
          * @param pos index of the element to retrieve
          *
-         * @return one of {@linkplain RangeComparator#LT}, {@linkplain RangeComparator#GT},
-         *         or {@linkplain RangeComparator#EQ}
+         * @return one of {@link RangeComparator#LT}, {@link RangeComparator#GT},
+         *         or {@link RangeComparator#EQ}
          */
         public int getAt(int pos) {
             return flags[pos];
@@ -273,6 +283,7 @@ public class RangeComparator<T extends Number & Comparable> {
          *
          * @param op one of the RangeComparator constants: LT, EQ, GT
          * @param pos flag position 0-3
+         * @param typesToSearch 
          * @return the List of matching Types (may be empty)
          */
         public List<Result> match(int op, int pos, Collection<Result> typesToSearch) {
@@ -297,21 +308,9 @@ public class RangeComparator<T extends Number & Comparable> {
 
         /**
          * Get the Result that matches the given array of comparison flags.
-         * @param compOps an integer array with length of at least 4 where elements
-         * 0 to 3 contain the comparison flags (RangeComparator.LT, RangeComparator.EQ
-         * or RangeComparator.GT) for the following end-point comparisons:
-         * <ul>
-         * <li> range 1 min vs range 2 max
-         * <li> range 1 min vs range 2 min
-         * <li> range 1 max vs range 2 max
-         * <li> range 1 max vs range 2 min
-         * </ul>
-         * The result of each comparison is expressed from the point of view of
-         * range 1. This produces the four comparisons that equate to the
-         * nomenclature presented in Hayes (2003).
-         * 
+         * @param compFlags 
          * @return the Result that matches the given array of comparison flags or
-         * null if there is no match
+         *         {@code null} if there is no match
          */
         public static Result get(int[] compFlags) {
             char[] name = new char[4];
@@ -341,7 +340,7 @@ public class RangeComparator<T extends Number & Comparable> {
     }
 
     /**
-     * Check if a Result value describes an intersection between two ranges.
+     * Tests if a Result value describes an intersection between two ranges.
      * @param r the Result value
      * @return true if r represents an intersection; false otherwise
      */
@@ -350,13 +349,13 @@ public class RangeComparator<T extends Number & Comparable> {
     }
 
     /**
-     * Compare two Range objects and return the {@linkplain RangeComparator.Result}
+     * Compares two Range objects and return the {@link RangeComparator.Result}
      * that describes the relationship between them from the point of view of the first Range
      *
      * @param r1 the first Range
      * @param r2 the second Range
      * 
-     * @return a {@linkplain RangeComparator.Result} constant
+     * @return a {@link RangeComparator.Result} constant
      */
     public Result compare(Range<T> r1, Range<T> r2) {
 
@@ -504,13 +503,13 @@ public class RangeComparator<T extends Number & Comparable> {
 
 
     /**
-     * Helper for {@linkplain #compare(jaitools.numeric.Range, jaitools.numeric.Range) } used
+     * Helper for {@link #compare(jaitools.numeric.Range, jaitools.numeric.Range) } used
      * when one or both of the intervals are degenerate (point) intervals.
      *
      * @param r1 first interval
      * @param r2 second interval
      *
-     * @return a {@linkplain RangeComparator.Result} constant
+     * @return a {@link RangeComparator.Result} constant
      */
     private Result pointCompare(Range<T> r1, Range<T> r2) {
         int[] compFlags = new int[4];

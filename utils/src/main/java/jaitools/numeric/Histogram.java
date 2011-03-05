@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
 
@@ -43,35 +43,36 @@ public class Histogram<T extends Number & Comparable> {
     private boolean needsSort;
 
     /**
-     * Create a new instance.
+     * Creates a new histogram.
      */
     public Histogram() {
         bins = new ArrayList<Bin>();
     }
 
     /**
-     * Add a new bin.
+     * Adds a new bin to the histogram.
      *
-     * @param r the data range for this bin.
+     * @param range the data range for this bin.
      *
      * @throws HistogramException if the new bin overlaps any existing bins
      */
-    public void addBin(Range<T> r) throws HistogramException {
+    public void addBin(Range<T> range) throws HistogramException {
         for (Bin bin : bins) {
-            if (r.intersects(bin.range)) {
-                throw new HistogramException(r.toString() + " overlaps existing bin" + bin.toString());
+            if (range.intersects(bin.range)) {
+                throw new HistogramException(range.toString() + " overlaps existing bin" + bin.toString());
             }
         }
-        bins.add(new Bin(r));
+        bins.add(new Bin(range));
         needsSort = true;
     }
 
     /**
-     * Add a value to the histogram.
+     * Adds a value to the histogram.
      *
      * @param value the value
      *
-     * @return the index of the bin that the value was allocated to or {@linkplain #NO_BIN}
+     * @return the index of the bin that the value was allocated to or 
+     *         {@link #NO_BIN}
      */
     public int addValue(T value) {
         int index = getBinForValue(value);
@@ -82,7 +83,7 @@ public class Histogram<T extends Number & Comparable> {
     }
 
     /**
-     * Add a list of values to the histogram. This will be faster than
+     * Adds a list of values to the histogram. This will be faster than
      * adding values one at a time if the list is at least partially
      * sorted.
      *
@@ -107,12 +108,11 @@ public class Histogram<T extends Number & Comparable> {
     }
 
     /**
-     * Get the index of the bin that the given value would fall into if
-     * added to the histogram.
+     * Gets the bin index for a value. The value is not added to the histogram.
      *
      * @param value the value
      *
-     * @return the bin index or {@linkplain #NO_BIN}
+     * @return the bin index or {@link #NO_BIN}
      */
     public int getBinForValue(T value) {
         ensureBinsSorted();
@@ -120,7 +120,8 @@ public class Histogram<T extends Number & Comparable> {
     }
 
     /**
-     * Convenience method to get bin indices for a list of input values.
+     * Gets bin indices for a list of input values. The values are not added
+     * to the histogram.
      *
      * @param values input values
      *
@@ -135,7 +136,7 @@ public class Histogram<T extends Number & Comparable> {
     }
 
     /**
-     * Get the number of bins
+     * Gets the number of bins.
      *
      * @return number of bins
      */
@@ -144,9 +145,9 @@ public class Histogram<T extends Number & Comparable> {
     }
 
     /**
-     * Return the counts of data items per bin.
+     * Gets the count of data items in each bin.
      *
-     * @return counts as a new {@code List}
+     * @return the counts
      */
     public List<Integer> getCounts() {
         List<Integer> counts = new ArrayList<Integer>();
@@ -157,7 +158,7 @@ public class Histogram<T extends Number & Comparable> {
     }
 
     /**
-     * Find the bin for the given value.
+     * Finds the bin for the given value.
      *
      * @param value the value
      *
@@ -175,7 +176,7 @@ public class Histogram<T extends Number & Comparable> {
     }
 
     /**
-     * Ensure that bins are sorted in ascending order.
+     * Ensures that bins are sorted in ascending order.
      */
     private void ensureBinsSorted() {
         if (needsSort) {
@@ -185,7 +186,7 @@ public class Histogram<T extends Number & Comparable> {
     }
 
     /**
-     * A bin, made up of a defining {@code Range} and a data count
+     * A histogram bin.
      */
     private class Bin {
         Range<T> range;

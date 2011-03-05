@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -24,8 +24,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * This class provides a number of static helper methods for working with {@code Number}
- * objects without having to cast them to narrower types.
+ * Provides static methods to work directly with {@code Number} objects 
+ * without having to cast them to narrower types.
  *
  * @author Michael Bedward
  * @since 1.1
@@ -33,17 +33,19 @@ import java.util.Map;
  */
 public class NumberOperations {
 
-    /* Tolerance for float comparisons */
+    /** Default tolerance for float comparisons. */
     public static final float DEFAULT_FLOAT_TOL = 1.0e-4f;
+
     private static float floatTol = DEFAULT_FLOAT_TOL;
 
-    /* Tolerance for double comparisons */
+    /* Default tolerance for double comparisons */
     public static final double DEFAULT_DOUBLE_TOL = 1.0e-8f;
+
     private static double doubleTol = DEFAULT_DOUBLE_TOL;
 
     /**
      * Information about the {@code Number} classes supported including
-     * their relative ranks in terms of numeric precision
+     * their rank in terms of numeric precision.
      */
     public enum ClassInfo {
         /** Byte: rank 0, integral type */
@@ -80,7 +82,7 @@ public class NumberOperations {
         }
 
         /**
-         * Get the relative rank of this type in terms of numeric precision.
+         * Gets the relative rank of this type in terms of numeric precision.
          *
          * @return int value for rank
          */
@@ -89,7 +91,7 @@ public class NumberOperations {
         }
 
         /**
-         * Get the class that this type relates to
+         * Gets the class that this type relates to
          *
          * @return the class
          */
@@ -98,7 +100,7 @@ public class NumberOperations {
         }
 
         /**
-         * Test if this is an integral type
+         * Tests if this is an integral type
          *
          * @return true if integral; false otherwise
          */
@@ -107,7 +109,7 @@ public class NumberOperations {
         }
 
         /**
-         * Get a String representation of this type
+         * Gets a String representation of this type
          *
          * @return a String of the form "{@code ClassInfo<classname>}"
          */
@@ -117,7 +119,7 @@ public class NumberOperations {
         }
 
         /**
-         * Get the ClassInfo type for the given class
+         * Gets the ClassInfo type for the given class
          *
          * @param clazz a Number class
          *
@@ -129,9 +131,7 @@ public class NumberOperations {
         }
     }
 
-    /**
-     * Supported operations
-     */
+    /** Supported operations. */
     private enum OpType {
         ADD,
         SUBTRACT,
@@ -140,8 +140,9 @@ public class NumberOperations {
         COMPARE;
     }
 
+    
     /**
-     * Add two {@code Number} objects. The return value will be an instance
+     * Adds two {@code Number} objects. The return value will be an instance
      * of the highest ranking class of the two arguments (e.g. Byte + Integer
      * will give an Integer result)
      *
@@ -197,7 +198,7 @@ public class NumberOperations {
     }
 
     /**
-     * Compare value {@code n1} to value {@code n2}. If one or both of the values are
+     * Compares value {@code n1} to value {@code n2}. If one or both of the values are
      * Float or Double the comparison is done within the currently set float or double
      * tolerance.
      *
@@ -215,7 +216,7 @@ public class NumberOperations {
     }
 
     /**
-     * Get the current tolerance used for Float comparisons.
+     * Gets the current tolerance used for Float comparisons.
      *
      * @return the current tolerance
      */
@@ -224,7 +225,7 @@ public class NumberOperations {
     }
 
     /**
-     * Set the tolerance used for Float comparisons.
+     * Sets the tolerance used for Float comparisons.
      *
      * @param tol a small positive value
      */
@@ -233,7 +234,7 @@ public class NumberOperations {
     }
 
     /**
-     * Get the current tolerance used for Double comparisons.
+     * Gets the current tolerance used for Double comparisons.
      *
      * @return the current tolerance
      */
@@ -242,7 +243,7 @@ public class NumberOperations {
     }
 
     /**
-     * Set the tolerance used for Double comparisons.
+     * Sets the tolerance used for Double comparisons.
      *
      * @param tol a small positive value
      */

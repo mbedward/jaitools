@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Enum constants for the statistics supported by the {@linkplain SampleStats} and
+ * Constants for the statistics supported by the {@linkplain SampleStats} and
  * {@linkplain StreamingSampleStats} classes.
  * 
  * @author Michael Bedward
@@ -62,7 +62,7 @@ public enum Statistic {
     /** Sample variance */
     VARIANCE("variance", "sample variance", false);
 
-    private static Map<String, Statistic> lookup;
+    private static final Map<String, Statistic> lookup;
     static {
         lookup = new HashMap<String, Statistic>();
         for (Statistic stat : Statistic.values()) {
@@ -93,25 +93,29 @@ public enum Statistic {
 
     /**
      * Returns a brief description of the statistic
+     * @return 
      */
     public String getDescription() {
         return desc;
     }
 
     /**
-     * Query whether this statistic is can return an integral result
+     * Tests if this statistic can return an integral result
      * when working with integral sample data.
+     * 
+     * @return {@code true} if an integral result can be returned;
+     *         {@code false} otherwise
      */
     public boolean supportsIntegralResult() {
         return supportsIntResult;
     }
 
     /**
-     * Get a Statistic constant by name. A case-insensitive
-     * lookup is performed.
+     * Gets a Statistic constant by name (case-insensitive).
+     * 
      * @param name the statistic name
      * @return a Statistic instance or null if the name was
-     * not recognized
+     *         was not matched
      */
     public static Statistic get(String name) {
         return lookup.get(name.toLowerCase());

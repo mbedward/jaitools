@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Michael Bedward
+ * Copyright 2010-2011 Michael Bedward
  * 
  * This file is part of jai-tools.
  *
@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Base class for Bezier smoothing.
+ * Base class for Bezier smoothing of JTS Geometry objects.
  * 
  * @author Michael Bedward
  * @since 1.1
@@ -50,8 +50,10 @@ public abstract class AbstractSmoother {
         }
     };
     
+    /** The current SmootherControl instance. */
     protected SmootherControl control;;
     
+    /** The current {@code GeometryFactory} being used. */
     protected final GeometryFactory geomFactory;
 
     /**
@@ -69,10 +71,9 @@ public abstract class AbstractSmoother {
             new HashMap<Integer, WeakReference<InterpPoint[]>>();
 
     /**
-     * Constructor.
+     * Creates a new smoother that will use the given {@code GeometryFactory}.
      * 
-     * @param geomFactory an instance of {@code GeometryFactory} to use when
-     *        creating smoothed {@code Geometry} objects
+     * @param geomFactory factory to use for creating smoothed objects
      * 
      * @throws IllegalArgumentException if {@code geomFactory} is {@code null}
      */
@@ -86,8 +87,7 @@ public abstract class AbstractSmoother {
     }
 
     /**
-     * Set a new {@code Control} object to customize smoothing
-     * behaviour.
+     * Sets a new {@code Control} object to for smoothing.
      * 
      * @param control the control to use for smoothing; if {@code null} the
      *        default control will be set
@@ -137,7 +137,7 @@ public abstract class AbstractSmoother {
     }
     
     /**
-     * Get the interpolation parameters for a Bezier curve approximated
+     * Gets the interpolation parameters for a Bezier curve approximated
      * by the given number of vertices. 
      * 
      * @param npoints number of vertices

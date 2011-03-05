@@ -142,9 +142,6 @@ public class PolygonSmoother extends AbstractSmoother {
      * @param alpha a value between 0 and 1 (inclusive) specifying the tightness
      *        of fit of the smoothed boundary (0 is loose)
      * 
-     * @param pointsPerSegment the number of vertices to use to represent each
-     *        Bezier curve derived from an edge of the input {@code Polygon}
-     * 
      * @return the smoothed {@code Polygon}
      */
     public Polygon smooth(Polygon p, double alpha) {

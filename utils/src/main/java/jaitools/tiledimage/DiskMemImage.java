@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -123,7 +123,7 @@ public class DiskMemImage
     }
 
     /**
-     * Create a new tile cache.
+     * Creates a new tile cache.
      *
      * @return a new instance of {@code DiskMemTileCache}
      */
@@ -147,13 +147,6 @@ public class DiskMemImage
 
     /**
      * Defines the valid range of tile x and y coordinates.
-     *
-     * @see #getMinTileX()
-     * @see #getMinTileY()
-     * @see #getMaxTileX()
-     * @see #getMaxTileY()
-     * @see #getNumXTiles()
-     * @see #getNumYTiles()
      */
     protected Rectangle tileGrid;
 
@@ -161,11 +154,6 @@ public class DiskMemImage
      * A 2D array with dimensions corresponding to the tile grid width
      * and height that records, for each tile, the number of writers
      * that have the tile checked out currently
-     *
-     * @see #getWritableTile(int, int)
-     * @see #releaseWritableTile(int, int)
-     * @see #getWritableTileIndices()
-     * @see #isTileWritable(int, int)
      */
     protected int[][] numWriters;
 
@@ -180,29 +168,24 @@ public class DiskMemImage
     /**
      * The amount of memory (in bytes) required to hold
      * the data for an image tile
-     * 
-     * @see #getTileMemorySize()
      */
     protected long tileMemorySize;
 
     /**
      * The set of tile observers currently registered with
      * this image
-     *
-     * @see #addTileObserver(java.awt.image.TileObserver)
-     * @see #removeTileObserver(java.awt.image.TileObserver)
      */
     protected Set<TileObserver> tileObservers;
 
     /**
-     * Minimal constructor. This will set default values for the image's
-     * min x and y coordinates (0), x and y tile offsets (0) and <code>ColorModel</code>
-     * (<code>null</code>)
+     * Creates a new image with default values for origin (0, 0), 
+     * x and y tile offsets (0) and {@code ColorModel}
+     * ({@code null}).
      *
      * @param width image width
      * @param height image height
-     * @param tileSampleModel a <code>SampleModel</code> specifying the dimensions
-     * data type etc. for image tiles
+     * @param tileSampleModel a {@code SampleModel} specifying the dimensions
+     *        data type etc. for image tiles
      */
     public DiskMemImage(
             int width, int height,
@@ -218,13 +201,13 @@ public class DiskMemImage
 
 
     /**
-     * Constructor. This will set default values for the image's
-     * min x and y coordinates (0), x and y tile offsets (0)
+     * Creates a new image with default values for origin (0, 0) and
+     * tile offsets (0).
      *
      * @param width image width
      * @param height image height
-     * @param tileSampleModel a <code>SampleModel</code> specifying the dimensions
-     * data type etc. for image tiles
+     * @param tileSampleModel the {@code SampleModel}
+     * @param colorModel the {@code ColorModel}
      */
     public DiskMemImage(
             int width, int height,
@@ -241,16 +224,14 @@ public class DiskMemImage
 
 
     /**
-     * Constructor. This will set default values for the image's
-     * x and y tile offsets (0) and <code>ColorModel</code>
-     * (<code>null</code>)
+     * Creates a new image with default values for tile offsets (0)
+     * and {@code ColorModel} ({@code null})
      *
      * @param minX x coordinate of the upper-left image pixel
      * @param minY y coordinate of the upper-left image pixel
      * @param width image width
      * @param height image height
-     * @param tileSampleModel a <code>SampleModel</code> specifying the dimensions
-     * data type etc. for image tiles
+     * @param tileSampleModel the {@code SampleModel}
      */
     public DiskMemImage(
             int minX, int minY,
@@ -267,7 +248,7 @@ public class DiskMemImage
 
 
     /**
-     * Constructor. Sets the image's <code>ColorModel</code> to <code>null</code>
+     * Creates a new image. Sets the {@code ColorModel} to {@code null}
      * 
      * @param minX x coordinate of the upper-left image pixel
      * @param minY y coordinate of the upper-left image pixel
@@ -276,7 +257,7 @@ public class DiskMemImage
      * data type etc. for image tiles
      * @param tileGridXOffset x coordinate of the upper-left pixel of the upper-left tile
      * @param tileGridYOffset y coordinate of the upper-left pixel of the upper-left tile
-     * @param tileSampleModel a <code>SampleModel</code> specifying the dimensions
+     * @param tileSampleModel the {@code SampleModel}
      */
     public DiskMemImage(
             int minX, int minY,
@@ -293,7 +274,7 @@ public class DiskMemImage
     }
 
     /**
-     * Fully specified constructor
+     * Creates a new image.
      *
      * @param minX x coordinate of the upper-left image pixel
      * @param minY y coordinate of the upper-left image pixel
@@ -302,8 +283,8 @@ public class DiskMemImage
      * data type etc. for image tiles
      * @param tileGridXOffset x coordinate of the upper-left pixel of the upper-left tile
      * @param tileGridYOffset y coordinate of the upper-left pixel of the upper-left tile
-     * @param tileSampleModel a <code>SampleModel</code> specifying the dimensions
-     * @param colorModel a <code>ColorModel</code> to use with the image (may be null)
+     * @param tileSampleModel the {@code SampleModel}
+     * @param colorModel the {@code ColorModel}
      */
     public DiskMemImage(
             int minX, int minY,
@@ -341,7 +322,7 @@ public class DiskMemImage
     }
 
     /**
-     * Retrieve a tile for reading. Any changes to the tile's data
+     * Gets a tile for reading. Any changes to the tile's data
      * will not be preserved by the cache.
      *
      * @param tileX the tile's column in the tile grid
@@ -362,25 +343,31 @@ public class DiskMemImage
         return r;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void addTileObserver(TileObserver to) {
         tileObservers.add(to);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public void removeTileObserver(TileObserver to) {
         tileObservers.remove(to);
     }
 
     /**
-     * Check-out a tile for writing. The tile will be unavailable to other
+     * Checks out a tile for writing. The tile will be unavailable to other
      * callers through this method until it is released via
      * {@linkplain #releaseWritableTile(int, int)}. If this method is
      * called for the same time prior to the tile being released
-     * it returns <code>null</code> and a warning message is logged.
+     * it returns {@code null} and a warning message is logged.
      *
-     * @param tileX the tile's column in the tile grid
-     * @param tileY the tile's row in the tile grid
-     * @return the tile data for writing, or <code>null</code> if the tile
-     * is already checked-out
+     * @param tileX tile X ordinate
+     * @param tileY tile Y ordinate
+     * @return the tile data for writing, or {@code null} if the tile
+     *         is already checked-out
      */
     public WritableRaster getWritableTile(int tileX, int tileY) {
         WritableRaster r = null;
@@ -404,7 +391,7 @@ public class DiskMemImage
     }
 
     /**
-     * Release a tile after writing to it. The cache's disk copy of
+     * Releases a tile that was checked out for writing. The cache's disk copy of
      * the tile's data will be refreshed.
      * <p>
      * If the cache no longer has the tile in its memory storage, e.g.
@@ -416,8 +403,8 @@ public class DiskMemImage
      * {@linkplain #getWritableTile(int, int)} a warning message is
      * logged.
      *
-     * @param tileX the tile's column in the tile grid
-     * @param tileY the tile's row in the tile grid
+     * @param tileX tile X ordinate
+     * @param tileY tile Y ordinate
      */
     public void releaseWritableTile(int tileX, int tileY) {
         if (tileGrid.contains(tileX, tileY)) {
@@ -452,23 +439,23 @@ public class DiskMemImage
     }
 
     /**
-     * Query if a tile is currently checked-out for writing (via
+     * Tests if a tile is currently checked-out for writing (via
      * a call to {@linkplain #getWritableTile(int, int)}.
      *
-     * @param tileX the tile's column in the tile grid
-     * @param tileY the tile's row in the tile grid
-     * @return true if the tile is currently checked-out for
-     * writing; false otherwise.
+     * @param tileX tile X ordinate
+     * @param tileY tile Y ordinate
+     * @return {@code true} if the tile is currently checked-out for
+     *          writing; {@code false} otherwise.
      */
     public boolean isTileWritable(int tileX, int tileY) {
         return numWriters[tileX - tileGrid.x][tileY - tileGrid.y] > 0;
     }
 
     /**
-     * Returns the indices (tile grid col,row) as <code>Point</code>s of
-     * those tiles that are currently checked out for writing.
+     * Gets the indices (tile grid col,row) of tiles that are
+     * currently checked out for writing.
      *
-     * @return array of tile indices or null if no tiles are checked-out
+     * @return tile indices
      */
     public Point[] getWritableTileIndices() {
         Point[] indices = null;
@@ -489,8 +476,9 @@ public class DiskMemImage
     }
 
     /**
-     * Query if any tiles are currently checked out for writing
-     * @return true if any tiles are currently checked out for writing; false otherwise
+     * Tests if any tiles are currently checked out for writing.
+     * @return {@code true} if any tiles are currently checked out; 
+     *         {@code false} otherwise
      */
     public boolean hasTileWriters() {
         return numTilesInUse > 0;
@@ -498,14 +486,14 @@ public class DiskMemImage
 
 
     /**
-     * Return the image value for the given pixel and band
-     * as an integer
+     * Gets the image value for the given image position
+     * as an integer.
      *
-     * @param x pixel x coordinate
-     * @param y pixel y coordinate
-     * @param b band index (from 0)
+     * @param x X ordinate
+     * @param y Y ordinate
+     * @param b band index
      *
-     * @return image value as an integer
+     * @return image value
      * @throws PixelOutsideImageException if the pixel coordinates or band index
      *         are out of range for the image
      */
@@ -520,14 +508,14 @@ public class DiskMemImage
     }
 
     /**
-     * Return the image value for the given pixel and band
-     * as a float
+     * Gets the image value for the given image position
+     * as a float.
      *
-     * @param x pixel x coordinate
-     * @param y pixel y coordinate
-     * @param b band index (from 0)
+     * @param x X ordinate
+     * @param y Y ordinate
+     * @param b band index
      *
-     * @return image value as a float
+     * @return image value
      * @throws PixelOutsideImageException if the pixel coordinates or band index
      *         are out of range for the image
      */
@@ -542,14 +530,14 @@ public class DiskMemImage
     }
 
     /**
-     * Return the image value for the given pixel and band
-     * as a double
+     * Gets the image value for the given image position
+     * as a double.
      *
-     * @param x pixel x coordinate
-     * @param y pixel y coordinate
-     * @param b band index (from 0)
+     * @param x X ordinate
+     * @param y Y ordinate
+     * @param b band index
      *
-     * @return image value as a double
+     * @return image value
      * @throws PixelOutsideImageException if the pixel coordinates or band index
      *         are out of range for the image
      */
@@ -564,12 +552,12 @@ public class DiskMemImage
     }
 
     /**
-     * Set the image value for the given pixel and band as
-     * an integer
+     * Sets the image value for the given image position as
+     * an integer.
      *
-     * @param x pixel x coordinate
-     * @param y pixel y coordinate
-     * @param b band index (from 0)
+     * @param x X ordinate
+     * @param y Y ordinate
+     * @param b band index
      * @param value the new value
      *
      * @throws PixelOutsideImageException if the pixel coordinates or band index
@@ -591,12 +579,12 @@ public class DiskMemImage
     }
 
     /**
-     * Set the image value for the given pixel and band as
-     * a float
+     * Sets the image value for the given image position as
+     * a float.
      *
-     * @param x pixel x coordinate
-     * @param y pixel y coordinate
-     * @param b band index (from 0)
+     * @param x X ordinate
+     * @param y Y ordinate
+     * @param b band index
      * @param value the new value
      *
      * @throws PixelOutsideImageException if the pixel coordinates or band index
@@ -618,12 +606,12 @@ public class DiskMemImage
     }
 
     /**
-     * Set the image value for the given pixel and band as
-     * a double
+     * Sets the image value for the given image position as
+     * a double.
      *
-     * @param x pixel x coordinate
-     * @param y pixel y coordinate
-     * @param b band index (from 0)
+     * @param x X ordinate
+     * @param y Y ordinate
+     * @param b band index
      * @param value the new value
      *
      * @throws PixelOutsideImageException if the pixel coordinates or band index
@@ -645,7 +633,7 @@ public class DiskMemImage
     }
 
     /**
-     * Copy data from the given {@code Raster} object into this
+     * Copies data from the given {@code Raster} object into this
      * image. The bounds of {@code data} will be used to
      * place the data and only that portion of {@code data}
      * within this image's bounds will be copied.
@@ -692,8 +680,8 @@ public class DiskMemImage
     }
 
     /**
-     * Create a Graphics2D object for drawing operations with this image.
-     * The graphics object will be an instance of <code>DiskMemImageGraphics</code>.
+     * Creates a Graphics2D object for drawing operations with this image.
+     * The graphics object will be an instance of {@code DiskMemImageGraphics}.
      * <p>
      * Note that only images of integral data type support graphics operations.
      *
@@ -716,18 +704,20 @@ public class DiskMemImage
     }
 
     /**
-     * Returns the maximum amount of memory, in bytes, that this
+     * Gets the maximum amount of memory, in bytes, that this
      * image will use for in-memory storage of its data. Since
-     * this class uses a <code>DiskMemTileCache</code> this is not
+     * this class uses a {@code DiskMemTileCache} this is not
      * the limit of image size.
+     * 
+     * @return max memory usage
      */
     public long getMemoryCapacity() {
         return getTileCache().getMemoryCapacity();
     }
 
     /**
-     * Returns the amount of memory (bytes) required to store a single
-     * tile's data
+     * Gets the amount of memory (bytes) required to store a single
+     * tile's data.
      *
      * @return tile memory size in bytes
      */
@@ -736,7 +726,7 @@ public class DiskMemImage
     }
 
     /**
-     * Set whether this image will use the common tile cache. Any tiles
+     * Sets whether this image will use the common tile cache. Any tiles
      * belonging to this image that are already cached will be transferred
      * from the image's current tile cache to the common cache (if {@code useCommon}
      * is {@code true}) or to a new exclusive tile cache ((if {@code useCommon}
@@ -788,10 +778,10 @@ public class DiskMemImage
     }
 
     /**
-     * Retrieve a reference to the <code>DiskMemTileCache</code> instance
-     * that is being used by this image. This method is intended for client
+     * Gets a reference to the {@code DiskMemTileCache} instance
+     * used by this image. This method is intended for client
      * code that wishes to query cache state or receive cache diagnostic
-     * messages (via the <code>Observer</code> interface). It is probably <b>not</b>
+     * messages (via the {@code Observer} interface). It is probably <b>not</b>
      * a good idea to manipulate the cache state directly.
      *
      * @return a live reference to the cache being used by this image
@@ -807,9 +797,9 @@ public class DiskMemImage
     }
 
     /**
-     * Check if this image is using the common tile cache.
+     * Tests if this image is using the common tile cache.
      *
-     * @return true if using the common tile cache; false otherwise
+     * @return {@code true} if using the common tile cache; {@code false} otherwise
      * @see #setUseCommonCache(boolean)
      */
     public boolean isUsingCommonCache() {
@@ -817,9 +807,9 @@ public class DiskMemImage
     }
 
     /**
-     * Create a new image tile
-     * @param tileX the tile's column in the tile grid
-     * @param tileY the tile's row in the tile grid
+     * Creates a new image tile
+     * @param tileX tile X ordinate
+     * @param tileY tile Y ordinate
      * @return the new tile
      */
     private WritableRaster createTile(int tileX, int tileY) {

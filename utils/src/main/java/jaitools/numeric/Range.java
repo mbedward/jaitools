@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -45,6 +45,7 @@ package jaitools.numeric;
  * <li> A test value of NaN will always be treated as outside a proper interval
  * </ul>
  *
+ * @param <T> 
  * @see RangeComparator
  * @see jaitools.media.jai.rangelookup.RangeLookupDescriptor
  *
@@ -55,12 +56,8 @@ package jaitools.numeric;
 public class Range<T extends Number & Comparable> {
 
     /**
-     * This enum is used by jai-tools statistics classes to specify
-     * whether a {@code Range} parameter defines included or excluded
-     * values. It is defined within the {@code Range} class for
-     * convenience.
-     * <p>
-     * It provides the constants INCLUDE, EXCLUDE and UNDEFINED.
+     * Constants to specify whether a {@code Range} parameter defines 
+     * included or excluded values. 
      */
     public static enum Type {
         /** The range defines values to include in an operation */
@@ -111,16 +108,15 @@ public class Range<T extends Number & Comparable> {
      * the type parameter on both sides of the creation expression. So instead
      * of this...
      * <pre><code>
-     *
      *    Range&lt;Integer> r = new Range&lt;Integer>(10, false, 20, true);
      * </code></pre>
      * you can do this...
      * <pre><code>
-     *
      *    Range&lt;Integer> r = Range.create(10, false, 20, true);
      * </code></pre>
-     * which is infinitesimally better.
      *
+     * @param <T> value type
+     * 
      * @param minValue the lower bound; passing null for this parameter
      * means an open lower bound; for Float or Double types, the
      * relevant NEGATIVE_INFINITY value can also be used.
@@ -137,26 +133,28 @@ public class Range<T extends Number & Comparable> {
      * range; false to exclude the upper bound; overridden to be false if the
      * upper bound is open
      *
-     * @return a new Range object with the specified type and bounds
+     * @return the new instance
      */
-    public static <U extends Number & Comparable> Range<U> create(U minValue, boolean minIncluded, U maxValue, boolean maxIncluded) {
-        return new Range<U>(minValue, minIncluded, maxValue, maxIncluded);
+    public static <T extends Number & Comparable> Range<T> create(T minValue, boolean minIncluded, T maxValue, boolean maxIncluded) {
+        return new Range<T>(minValue, minIncluded, maxValue, maxIncluded);
     }
 
     /**
-     * Create a Range object that is a point (degenerate) interval with its (equal)
-     * min and max end-points set to value. If value is null, for a point at infinity,
-     * the optional inf argument must be provided and be one of Range.INF or Range.NEG_INF.
+     * Creates a Range instance that is a point (degenerate) interval. If value 
+     * is null, for a point at infinity, the inf argument must be 
+     * provided and be one of Range.INF or Range.NEG_INF.
      *
+     * @param <T> value type
      * @param value the value to set for both min and max end-points
-     * @param inf either Range.INF or Range.NEG_INF (ignored if present when value is non-null)
+     * @param inf either Range.INF or Range.NEG_INF (ignored if value is non-null)
+     * @return the new instance
      */
-    public static <U extends Number & Comparable> Range<U> create(U value, int... inf) {
-        return new Range<U>(value, inf);
+    public static <T extends Number & Comparable> Range<T> create(T value, int... inf) {
+        return new Range<T>(value, inf);
     }
 
     /**
-     * Constructor for a range with non-zero width (may be infinite)
+     * Creates a new Range with non-zero width (may be infinite).
      *
      * @param minValue the lower bound; passing null for this parameter
      * means an open lower bound; for Float or Double types, the
@@ -288,7 +286,7 @@ public class Range<T extends Number & Comparable> {
 
 
     /**
-     * Constructor for a point (degenerate) range.
+     * Creates a new point (degenerate) range.
      * <p>
      * Where value is finite the following apply:
      * <ul>
@@ -375,7 +373,9 @@ public class Range<T extends Number & Comparable> {
     }
 
     /**
-     * Copy constructor.
+     * Creates a copy of another Range instance.
+     * 
+     * @param other the range to copy
      */
     public Range(Range<T> other) {
         this.minValue = other.minValue;
@@ -390,14 +390,15 @@ public class Range<T extends Number & Comparable> {
     }
 
     /**
-     * Check if this range is a point (degenerate) interval
+     * Checks if this range is a point (degenerate) interval
+     * @return {@code true} if this is a point; {@code false} otherwise
      */
     public boolean isPoint() {
         return isPoint;
     }
 
     /**
-     * Get the minimum value for this range. The minimum value is
+     * Gets the minimum value for this range. The minimum value is
      * not necessarily included in the range (see {@linkplain #isMinIncluded()}).
      * <p>
      * <b>Caution:</b> If the range is lower-open
@@ -411,23 +412,27 @@ public class Range<T extends Number & Comparable> {
     }
 
     /**
-     * Query if the minimum value is positive infinity. If so, the range
+     * Tests if the minimum value is positive infinity. If so, the range
      * must be a point (degenerate) interval.
+     * 
+     * @return {@code true} if positive infinity; {@code false} otherwise
      */
     public boolean isMinInf() {
         return minType == INF;
     }
 
     /**
-     * Query if the minimum value is negative infinity. This is equivalent
+     * Tests if the minimum value is negative infinity. This is equivalent
      * to {@linkplain #isMinOpen()}
+     * 
+     * @return {@code true} if negative infinity; {@code false} otherwise
      */
     public boolean isMinNegInf() {
         return minType == NEG_INF;
     }
 
     /**
-     * Get the maximum value for this range. The maximum value is
+     * Gets the maximum value of this range. The maximum value is
      * not necessarily included in the range (see {@linkplain #isMaxIncluded()}).
      * <p>
      * <b>Caution:</b> If the range is upper-open
@@ -441,25 +446,31 @@ public class Range<T extends Number & Comparable> {
     }
 
     /**
-     * Query if the maximum value is positive infinity. This is equivalent
+     * Tests if the maximum value is positive infinity. This is equivalent
      * to {@linkplain #isMaxOpen()}
+     * 
+     * @return {@code true} if positive infinity; {@code false} otherwise
      */
     public boolean isMaxInf() {
         return maxType == INF;
     }
 
     /**
-     * Query if the maximum value is negative infinity. If so, the range
+     * Tests if the maximum value is negative infinity. If so, the range
      * must be a point (degenerate) interval.
+     * 
+     * @return {@code true} if negative infinity; {@code false} otherwise
      */
     public boolean isMaxNegInf() {
         return maxType == NEG_INF;
     }
 
     /**
-     * Query if the minimum range value is included in the range.
+     * Tests if the minimum value is included in the range.
      * This will return false if the range has an unbounded
      * minimum.
+     * 
+     * @return {@code true} if minimum value is included; {@code false} otherwise
      * @see #isMinOpen()
      * @see #isMinClosed()
      */
@@ -468,9 +479,11 @@ public class Range<T extends Number & Comparable> {
     }
 
     /**
-     * Query if the maximum range value is included in the range.
+     * Tests if the maximum range value is included in the range.
      * This will return false if the range has an unbounded
      * maximum.
+     * 
+     * @return {@code true} if maximum value is included; {@code false} otherwise
      * @see #isMaxOpen
      * @see #isMaxClosed
      */
@@ -479,8 +492,10 @@ public class Range<T extends Number & Comparable> {
     }
 
     /**
-     * Return true if this range has an unbounded minimum value, ie.
+     * Tests if this range has an unbounded (open) minimum, ie.
      * the range extends to negative infinity.
+     * 
+     * @return {@code true} if unbounded; {@code false} otherwise
      * @see #isMinIncluded()
      */
     public boolean isMinOpen() {
@@ -488,7 +503,9 @@ public class Range<T extends Number & Comparable> {
     }
 
     /**
-     * Return true if this range has a bounded minimum value.
+     * Tests if this range has a bounded (closed) minimum.
+     * 
+     * @return {@code true} if bounded; {@code false} otherwise
      * @see #isMinIncluded()
      */
     public boolean isMinClosed() {
@@ -496,8 +513,10 @@ public class Range<T extends Number & Comparable> {
     }
 
     /**
-     * Return true if this range has unbounded upper end, ie the
+     * Tests if this range has unbounded (open) upper end, ie the
      * range extends to positive infinity.
+     * 
+     * @return {@code true} if unbounded; {@code false} otherwise
      * @see #isMaxIncluded()
      */
     public boolean isMaxOpen() {
@@ -505,7 +524,9 @@ public class Range<T extends Number & Comparable> {
     }
 
     /**
-     * Return true if this range has a bounded maximum value.
+     * Tests if this range has a bounded (closed) maximum value.
+     * 
+     * @return {@code true} if bounded; {@code false} otherwise
      * @see #isMaxIncluded()
      */
     public boolean isMaxClosed() {
@@ -513,7 +534,10 @@ public class Range<T extends Number & Comparable> {
     }
 
     /**
-     * Query if this range contains the specified, non-null value
+     * Tests if this range contains the specified, non-null value.
+     * 
+     * @param value the value
+     * @return {@code true} if the value is within this range; {@code false} otherwise
      */
     public boolean contains(T value) {
         if (value == null) {
@@ -562,12 +586,12 @@ public class Range<T extends Number & Comparable> {
     }
 
     /**
-     * Query if this range intersects another range. The two ranges intersect if
+     * Tests if this range intersects another range. Two ranges intersect if
      * there is at least one value, x, for which contains(x) returns true
      * for both ranges
      *
      * @param other the range to check for intersection
-     * @return true if this range intersects with other; false otherwise
+     * @return {@code true} if the ranges intersect; {@code false} otherwise
      */
     public boolean intersects(Range<T> other) {
         RangeComparator.Result comp = this.compareTo(other);
@@ -575,12 +599,13 @@ public class Range<T extends Number & Comparable> {
     }
 
     /**
-     * Test for equality.
+     * Tests for equality with another range. Two ranges are equal if
+     * their respective end-points are identical in both value and type 
+     * (included / excluded).
      *
-     * @param obj the other {@code Range} object
+     * @param obj the other range
      *
-     * @return true if this instance has the same end point values and type
-     *         (included / excluded) as the other instance
+     * @return {@code true} if equal; {@code false} otherwise
      */
     @Override
     public boolean equals(Object obj) {
@@ -624,15 +649,17 @@ public class Range<T extends Number & Comparable> {
     }
 
     /**
-     * Returns a string representation of this {@code Range}.
+     * Returns a string representation of this range. The common interval
+     * notation of square brackets for closed boundaries and round brackets
+     * for open boundaries is used.
      * <p>
      * Examples of output:
      * <blockquote>
-     * Range[10, 20] <br>
-     * Range[-Inf, 42)
+     * [10, 20] <br>
+     * (-Inf, 42)
      * </blockquote>
      *
-     * @return this range as a String
+     * @return the string
      */
     @Override
     public String toString() {
@@ -665,7 +692,7 @@ public class Range<T extends Number & Comparable> {
     }
 
     /**
-     * Compare this Range to another Range.  Range comparisons are more involved
+     * Compares this Range to another Range.  Range comparisons are more involved
      * than comparisons between point values.  There are 18 distinct comparison
      * results as described by Hayes (2003). See {@linkplain RangeComparator} for
      * more details.

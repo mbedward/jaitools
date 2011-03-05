@@ -17,7 +17,6 @@
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  * 
  */
-
 package jaitools.imageutils;
 
 /** 
@@ -33,6 +32,9 @@ package jaitools.imageutils;
  * @version $Id$
  */
 public enum PixelCoordType {
-        CORNER,
-        CENTER
+
+    /** Standard JAI indexing with integer coordinates. */
+    CORNER,
+    /** Center coordinates (corner ordinates + 0.5). */
+    CENTER
 }

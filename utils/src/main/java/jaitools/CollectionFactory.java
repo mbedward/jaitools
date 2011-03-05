@@ -63,6 +63,8 @@ public class CollectionFactory {
      * Map&lt;Foo, Bar&gt; myMap = CollectionFactory.map();
      * </code></pre>
      * 
+     * @param <K> key type
+     * @param <V> value type
      * @return a new Map&lt;K,V&gt; instance
      */
     public static <K, V> Map<K, V> map() {
@@ -78,6 +80,8 @@ public class CollectionFactory {
      * Map&lt;Foo, Bar&gt; myMap = CollectionFactory.orderedMap();
      * </code></pre>
      *
+     * @param <K> key type
+     * @param <V> value type
      * @return a new Map&lt;K,V&gt; instance
      */
     public static <K, V> Map<K, V> orderedMap() {
@@ -94,6 +98,8 @@ public class CollectionFactory {
      * Map&lt;Foo, Bar&gt; myMap = CollectionFactory.sortedMap();
      * </code></pre>
      * 
+     * @param <K> key type
+     * @param <V> value type
      * @return a new SortedMap&lt;K,V&gt; instance
      */
     public static <K, V> SortedMap<K, V> sortedMap() {
@@ -109,6 +115,7 @@ public class CollectionFactory {
      * List&lt;Foo&gt; myList = CollectionFactory.list();
      * </code></pre>
      * 
+     * @param <T> element type
      * @return a new List&lt;T&gt; instance
      */
     public static <T> List<T> list() {
@@ -123,6 +130,7 @@ public class CollectionFactory {
      * Stack&lt;Foo&gt; myStack = CollectionFactory.stack();
      * </code></pre>
      * 
+     * @param <T> element type
      * @return a new Stack&lt;T&gt; instance
      */
     public static <T> Stack<T> stack() {
@@ -138,6 +146,7 @@ public class CollectionFactory {
      * Set&lt;Foo&gt; mySet = CollectionFactory.set();
      * </code></pre>
      * 
+     * @param <T> element type
      * @return a new HashSet&lt;T&gt; instance
      */
     public static <T> Set<T> set() {
@@ -153,6 +162,7 @@ public class CollectionFactory {
      * Set&lt;Foo&gt; mySet = CollectionFactory.set();
      * </code></pre>
      *
+     * @param <T> element type
      * @return a new LinkedHashSet&lt;T&gt; instance
      */
     public static <T> Set<T> orderedSet() {
@@ -169,6 +179,7 @@ public class CollectionFactory {
      * Set&lt;MyObject&gt; foo = CollectionFactory.sortedSet();
      * </code></pre>
      * 
+     * @param <T> element type
      * @return a new TreeSet&lt;T&gt; instance
      */
     public static <T> SortedSet<T> sortedSet() {

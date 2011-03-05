@@ -69,7 +69,7 @@ public class RangeUtils {
 
 
     /**
-     * Create the complement of a {@code Range}. This is equivalent to subtracting the
+     * Creates the complement of a {@code Range}. This is equivalent to subtracting the
      * input from the infinite interval.
      * <p>
      * If the input is a finite interval or point, the result will be a list of
@@ -85,6 +85,7 @@ public class RangeUtils {
      * If the input is the infinite interval (-Inf, Inf) the result list will be
      * empty.
      *
+     * @param <T> the value type
      * @param range input range
      * 
      * @return a list of 0, 1 or 2 {@code Ranges} which form the complement
@@ -96,10 +97,11 @@ public class RangeUtils {
     }
 
     /**
-     * Create the complement of the given list of {@code Ranges}. This method first
+     * Creates the complement of the given list of {@code Ranges}. This method first
      * calls {@linkplain #simplify} on the inputs and then subtracts each of the
      * resulting {@code Ranges} from the whole number line.
      *
+     * @param <T> value type
      * @param ranges input ranges
      *
      * @return a list of {@code Ranges} which form the complement (may be empty)
@@ -151,11 +153,12 @@ public class RangeUtils {
     }
 
     /**
-     * Sort a collection of {@code Ranges} in ascending order of min value, then max value.
+     * Sorts a collection of ranges into ascending order of min value, then max value.
      *
-     * @param ranges the {@code Ranges} to sort
+     * @param <T> the value type
+     * @param ranges the ranges to sort
      *
-     * @return sorted {@code Ranges}
+     * @return sorted ranges as a {@code List}
      */
     public static <T extends Number & Comparable> List<Range<T>> sort(Collection<Range<T>> ranges) {
         List<Range<T>> inputs = new ArrayList<Range<T>>(ranges);
@@ -164,9 +167,9 @@ public class RangeUtils {
     }
 
     /**
-     * Takes a collection of ranges and returns a simplified collection by merging ranges
-     * that overlap.
+     * Simplifies a collection of ranges by merging those which overlap.
      *
+     * @param <T> value type
      * @param ranges input ranges to simplify
      *
      * @return simplified ranges sorted by min, then max end-points
@@ -252,13 +255,13 @@ public class RangeUtils {
     }
 
     /**
-     * Return the intersection of the two ranges.
+     * Gets the intersection of two ranges.
      *
+     * @param <T> value type
      * @param r1 first range
      * @param r2 second range
      *
-     * @return a new {@code Range} representing the intersection or null if the inputs
-     *         do not intersect
+     * @return the intersection as a new range; or {@code null} if there was no intersection
      */
     public static <T extends Number & Comparable> Range<T> intersection(Range<T> r1, Range<T> r2) {
         if (r1.isPoint()) {
@@ -339,15 +342,16 @@ public class RangeUtils {
     }
 
     /**
-     * Subtract the first {@code Range} from the second. If the two inputs do not intersect
+     * Subtracts the first range from the second. If the two inputs do not intersect
      * the result will be equal to the second. If the two inputs are equal, or the first
      * input encloses the second, the result will be an empty list. If the first input
-     * is strictly contained within the second the result will be two {@code Ranges}.
+     * is strictly contained within the second the result will be two ranges.
      * 
+     * @param <T> value type
      * @param r1 the first range
      * @param r2 the second range
      * 
-     * @return 0, 1 or 2 {@code Ranges} representing the result of {@code r2 - r1}
+     * @return 0, 1 or 2 ranges representing the result of {@code r2 - r1}
      */
     public static <T extends Number & Comparable> List<Range<T>> subtract(Range<T> r1, Range<T> r2) {
         List<Range<T>> difference = new ArrayList<Range<T>>();

@@ -143,7 +143,14 @@ public class ROIGeometry extends ROI {
     }
 
     /**
-     * Not yet implemented.
+     * Returns a new instance which is the union of this ROI and {@code roi}. 
+     * This is only possible if {@code roi} is an instance of ROIGeometry 
+     * or {@link ROIShape}.
+     * 
+     * @param roi the ROI to add
+     * @return the union as a new instance
+     * @throws UnsupportedOperationException if {@code roi} is not an instance
+     *         of ROIGeometry or {@link ROIShape}
      */
     @Override
     public ROI add(ROI roi) {
@@ -155,25 +162,54 @@ public class ROIGeometry extends ROI {
     }
 
     /**
-     * Test if 
-     * @param p
-     * @return 
+     * Tests if this ROI contains the given point.
+     * 
+     * @param p the point
+     * 
+     * @return {@code true} if the point is within this ROI; 
+     *         {@code false} otherwise
      */
     @Override
     public boolean contains(Point p) {
         return contains(p.getX(), p.getY());
     }
 
+    /**
+     * Tests if this ROI contains the given point.
+     * 
+     * @param p the point
+     * 
+     * @return {@code true} if the point is within this ROI; 
+     *         {@code false} otherwise
+     */
     @Override
     public boolean contains(Point2D p) {
         return contains(p.getX(), p.getY());
     }
 
+    /**
+     * Tests if this ROI contains the given image location.
+     * 
+     * @param x location X ordinate
+     * @param y location Y ordinate
+     * 
+     * @return {@code true} if the location is within this ROI; 
+     *         {@code false} otherwise
+     */
     @Override
     public boolean contains(int x, int y) {
         return contains((double)x, (double)y);
     }
 
+    /**
+     * Tests if this ROI contains the given image location.
+     * 
+     * @param x location X ordinate
+     * @param y location Y ordinate
+     * 
+     * @return {@code true} if the location is within this ROI; 
+     *         {@code false} otherwise
+     */
     @Override
     public boolean contains(double x, double y) {
         testPointCS.setX(0, x + delta);
@@ -182,37 +218,89 @@ public class ROIGeometry extends ROI {
         return theGeom.contains(testPoint);
     }
 
+    /**
+     * Tests if this ROI contains the given rectangle.
+     * 
+     * @param rect the rectangle
+     * @return {@code true} if the rectangle is within this ROI; 
+     *         {@code false} otherwise
+     */
     @Override
     public boolean contains(Rectangle rect) {
         return contains(rect.getMinX(), rect.getMinY(), rect.getWidth(), rect.getHeight());
     }
 
+    /**
+     * Tests if this ROI contains the given rectangle.
+     * 
+     * @param rect the rectangle
+     * @return {@code true} if the rectangle is within this ROI; 
+     *         {@code false} otherwise
+     */
     @Override
     public boolean contains(Rectangle2D rect) {
         return contains(rect.getMinX(), rect.getMinY(), rect.getWidth(), rect.getHeight());
     }
 
+    /**
+     * Tests if this ROI contains the given rectangle.
+     * 
+     * @param x rectangle origin X ordinate
+     * @param y rectangle origin Y ordinate
+     * @param w rectangle width
+     * @param h rectangle height
+     * 
+     * @return {@code true} if the rectangle is within this ROI; 
+     *         {@code false} otherwise
+     */
     @Override
     public boolean contains(int x, int y, int w, int h) {
         return contains((double)x, (double)y, (double)w, (double)h);
     }
 
+    /**
+     * Tests if this ROI contains the given rectangle.
+     * 
+     * @param x rectangle origin X ordinate
+     * @param y rectangle origin Y ordinate
+     * @param w rectangle width
+     * @param h rectangle height
+     * 
+     * @return {@code true} if the rectangle is within this ROI; 
+     *         {@code false} otherwise
+     */
     @Override
     public boolean contains(double x, double y, double w, double h) {
         setTestRect(x, y, w, h);
         return theGeom.contains(testRect);
     }
 
+    /**
+     * This method is not supported.
+     * @throws UnsupportedOperationException if called
+     */
     @Override
     public ROI exclusiveOr(ROI roi) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    /**
+     * This method is not supported.
+     * @throws UnsupportedOperationException if called
+     */
     @Override
     public int[][] getAsBitmask(int x, int y, int width, int height, int[][] mask) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    /**
+     * Gets an image representation of this ROI using the {@code VectorBinarize}
+     * operation. For an ROI with very large bounds but simple shape(s) the 
+     * resulting image has a small memory footprint.
+     * 
+     * @return a new image representing this ROI
+     * @see jaitools.media.jai.vectorbinarize.VectorBinarizeDescriptor
+     */
     @Override
     public PlanarImage getAsImage() {
         if(roiImage == null) {
@@ -235,46 +323,84 @@ public class ROIGeometry extends ROI {
         return roiImage;
     }
 
+    /**
+     * This method is not supported.
+     * @throws UnsupportedOperationException if called
+     */
     @Override
     public LinkedList getAsRectangleList(int x, int y, int width, int height) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    /**
+     * This method is not supported.
+     * @throws UnsupportedOperationException if called
+     */
     @Override
     protected LinkedList getAsRectangleList(int x, int y, int width, int height, boolean mergeRectangles) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    /**
+     * Gets a new {@link Shape} representing this ROI.
+     * 
+     * @return the shape
+     */
     @Override
     public Shape getAsShape() {
         return new ShapeWriter().toShape(theGeom.getGeometry());
     }
     
     /**
-     * Returns the shape as a JTS geometry
-     * @return
+     * Returns the ROI as a JTS {@code Geometry}.
+     * 
+     * @return the geometry
      */
     public Geometry getAsGeometry() {
         return theGeom.getGeometry();
     }
 
+    /**
+     * Gets the enclosing rectangle of this ROI.
+     * 
+     * @return a new rectangle
+     */
     @Override
     public Rectangle getBounds() {
         Envelope env = theGeom.getGeometry().getEnvelopeInternal();
         return new Rectangle((int)env.getMinX(), (int)env.getMinY(), (int)env.getWidth(), (int)env.getHeight());
     }
 
+    /**
+     * Gets the enclosing double-precision rectangle of this ROI.
+     * 
+     * @return a new rectangle
+     */
     @Override
     public Rectangle2D getBounds2D() {
         Envelope env = theGeom.getGeometry().getEnvelopeInternal();
         return new Rectangle2D.Double(env.getMinX(), env.getMinY(), env.getWidth(), env.getHeight());
     }
 
+    /**
+     * This method is not supported.
+     * @throws UnsupportedOperationException if called
+     */
     @Override
     public int getThreshold() {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    /**
+     * Returns a new instance which is the intersection of this ROI and {@code roi}. 
+     * This is only possible if {@code roi} is an instance of ROIGeometry 
+     * or {@link ROIShape}.
+     * 
+     * @param roi the ROI to intersect with
+     * @return the intersection as a new instance
+     * @throws UnsupportedOperationException if {@code roi} is not an instance
+     *         of ROIGeometry or {@link ROIShape}
+     */
     @Override
     public ROI intersect(ROI roi) {
         final Geometry geom = getGeometry(roi);
@@ -285,10 +411,10 @@ public class ROIGeometry extends ROI {
     }
     
     /**
-     * Get a {@link Geometry} from an input {@link ROI}.
+     * Gets a {@link Geometry} from an input {@link ROI}.
      * 
-     * @param roi
-     * @return a {@link Geometry} instance from the provided input, 
+     * @param roi the ROI
+     * @return a {@link Geometry} instance from the provided input;
      * null in case the input roi is neither a geometry, nor a shape. 
      */
     private Geometry getGeometry(ROI roi){
@@ -303,55 +429,118 @@ public class ROIGeometry extends ROI {
         return null;
     }
 
+    /**
+     * Tests if the given rectangle intersects with this ROI.
+     * 
+     * @param rect the rectangle
+     * @return {@code true} if there is an intersection; {@code false} otherwise
+     */
     @Override
     public boolean intersects(Rectangle rect) {
         setTestRect(rect.x, rect.y, rect.width, rect.height);
         return theGeom.intersects(testRect);
     }
 
+    /**
+     * Tests if the given rectangle intersects with this ROI.
+     * 
+     * @param rect the rectangle
+     * @return {@code true} if there is an intersection; {@code false} otherwise
+     */
     @Override
-    public boolean intersects(Rectangle2D r) {
-        setTestRect(r.getMinX(), r.getMinY(), r.getWidth(), r.getHeight());
+    public boolean intersects(Rectangle2D rect) {
+        setTestRect(rect.getMinX(), rect.getMinY(), rect.getWidth(), rect.getHeight());
         return theGeom.intersects(testRect);
     }
 
+    /**
+     * Tests if the given rectangle intersects with this ROI.
+     * 
+     * @param x rectangle origin X ordinate
+     * @param y rectangle origin Y ordinate
+     * @param w rectangle width
+     * @param h rectangle height
+     * @return {@code true} if there is an intersection; {@code false} otherwise
+     */
     @Override
     public boolean intersects(int x, int y, int w, int h) {
         setTestRect(x, y, w, h);
         return theGeom.intersects(testRect);
     }
 
+    /**
+     * Tests if the given rectangle intersects with this ROI.
+     * 
+     * @param x rectangle origin X ordinate
+     * @param y rectangle origin Y ordinate
+     * @param w rectangle width
+     * @param h rectangle height
+     * @return {@code true} if there is an intersection; {@code false} otherwise
+     */
     @Override
     public boolean intersects(double x, double y, double w, double h) {
         setTestRect(x, y, w, h);
         return theGeom.intersects(testRect);
     }
 
+    /**
+     * This method is not supported.
+     * @throws UnsupportedOperationException if called
+     */
     @Override
     public ROI performImageOp(RenderedImageFactory RIF, ParameterBlock paramBlock, int sourceIndex, RenderingHints renderHints) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    /**
+     * This method is not supported.
+     * @throws UnsupportedOperationException if called
+     */
     @Override
     public ROI performImageOp(String name, ParameterBlock paramBlock, int sourceIndex, RenderingHints renderHints) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    /**
+     * This method is not supported.
+     * @throws UnsupportedOperationException if called
+     */
     @Override
     public void setThreshold(int threshold) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    /**
+     * This method is not supported.
+     * @throws UnsupportedOperationException if called
+     */
     @Override
     public ROI subtract(ROI roi) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
+    /**
+     * Returns a new ROI created by applying the given transform to 
+     * this ROI.
+     * 
+     * @param at the transform
+     * @param interp ignored
+     * 
+     * @return the new ROI
+     */
     @Override
     public ROI transform(AffineTransform at, Interpolation interp) {
         return transform(at);
     }
 
+    /**
+     * Returns a new ROI created by applying the given transform to 
+     * this ROI.
+     * 
+     * @param at the transform
+     * 
+     * @return the new ROI
+     */
     @Override
     public ROI transform(AffineTransform at) {
         Geometry cloned = (Geometry) theGeom.getGeometry().clone();
@@ -360,6 +549,14 @@ public class ROIGeometry extends ROI {
         return new ROIGeometry(cloned);
     }
 
+    /**
+     * Helper function for contains and intersects methods.
+     * 
+     * @param x rectangle origin X ordinate
+     * @param y rectangle origin Y ordinate
+     * @param w rectangle width
+     * @param h rectangle height
+     */
     private void setTestRect(double x, double y, double w, double h) {
         testRectCS.setXY(0, x + delta, y + delta);
         testRectCS.setXY(1, x + delta, y + h - delta);

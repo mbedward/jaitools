@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
 
@@ -98,7 +98,12 @@ public class FillResult {
     }
 
     /**
-     * Check if this region contains the given pixel coords
+     * Checks if this region contains the given location.
+     * 
+     * @param x X ordinate
+     * @param y Y ordinate
+     * @return {@code true} if the region contains the location; 
+     *         {@code false} otherwise
      */
     public boolean contains(int x, int y) {
         if (!bounds.contains(x, y)) {
@@ -117,10 +122,14 @@ public class FillResult {
     }
 
     /**
-     * Merge the given region into this region.
+     * Merges the given region into this region.
+     * <p>
+     * 
      * At present, this method doesn't bother about merging scan segments,
-     * it just addes the other region's segments and updates the index
+     * it just adds the other region's segments and updates the index
      * and bounds as necessary.
+     * 
+     * @param other other region
      */
     public void expand(FillResult other) {
         bounds = bounds.union(other.bounds);
@@ -134,39 +143,49 @@ public class FillResult {
     }
 
     /**
-     * Get the ID of this region.
+     * Gets the ID of this region.
+     * 
+     * @return integer ID
      */
     public int getID() {
         return id;
     }
 
     /**
-     * Get the bounds of this region
-     * @return a copy of the bounds
+     * Gets the bounds of this region.
+     * 
+     * @return a new rectangle
      */
     public Rectangle getBounds() {
         return new Rectangle(bounds);
     }
 
     /**
-     * Get the number of pixels within this region.
+     * Gets the number of pixels within this region.
+     * 
+     * @return number of pixels
      */
     public int getNumPixels() {
         return numPixels;
     }
 
     /**
-     * Get the reference value of this region.
+     * Gets the reference value of this region.
      * This is the value of the start pixel used in the regionalize
      * operation.
+     * 
+     * @return reference value
      */
     public double getValue() {
         return value;
     }
 
     /**
-     * Add a segment to the index. This is to improve the performance
-     * of the {@linkplain #contains(int, int) } method
+     * Adds a segment to the index. This is used to improve the performance
+     * of the {@linkplain #contains(int, int) } method.
+     * 
+     * @param segment the segment to add
+     * @param segmentListPos insertion position
      */
     private void addToIndex(FloodFiller.ScanSegment segment, int segmentListPos) {
         List<Integer> indices = index.get(segment.y);

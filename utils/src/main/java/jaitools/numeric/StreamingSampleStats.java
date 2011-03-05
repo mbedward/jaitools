@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -24,6 +24,7 @@ import jaitools.CollectionFactory;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -83,6 +84,7 @@ import java.util.logging.Logger;
 public class StreamingSampleStats {
 
     private static final Logger LOGGER = Logger.getLogger("jaitools.numeric");
+    
     private ProcessorFactory factory = new ProcessorFactory();
     private List<Processor> processors;
     private List<Range<Double>> ranges;
@@ -90,18 +92,18 @@ public class StreamingSampleStats {
     private final Range.Type rangesType;
 
     /**
-     * Default constructor
+     * Creates a new sampler and sets the default range type to 
+     * {@link Range.Type#EXCLUDE}.
      */
     public StreamingSampleStats() {
         this(Range.Type.EXCLUDE);
     }
 
     /**
-     * Create a new instance with specified use of {@code Ranges}.
+     * Creates a new sampler with specified use of {@code Ranges}.
      *
-     * @param rangesType normally either {@linkplain Range.Type#INCLUDE} to indicate that
-     *        {@code Ranges} will define values to operate on, or {@linkplain Range.Type#EXCLUDE}
-     *        when {@code Ranges} will define values to exclude from operations.
+     * @param rangesType either {@link Range.Type#INCLUDE} 
+     *        or {@link Range.Type#EXCLUDE}
      */
     public StreamingSampleStats(Range.Type rangesType) {
         processors = CollectionFactory.list();
@@ -111,11 +113,11 @@ public class StreamingSampleStats {
     }
 
     /**
-     * Set a statistic to be calculated as sample values are added.
+     * Adds a statistic to those calculated by this sampler.
      * If the same statistic was previously set then calling this method
      * has no effect.
      *
-     * @param stat the requested statistic
+     * @param stat the statistic
      * @see Statistic
      */
     public void setStatistic(Statistic stat) {
@@ -124,7 +126,7 @@ public class StreamingSampleStats {
             p = factory.getForStatistic(stat);
 
             if (p == null) {
-                LOGGER.severe("Unsupported Statistic: " + stat);
+                LOGGER.log(Level.SEVERE, "Unsupported Statistic: {0}", stat);
             } else {
                 processors.add(p);
 
@@ -141,9 +143,10 @@ public class StreamingSampleStats {
     }
 
     /**
-     * Convenience method: sets the specified statistics.
+     * Adds the given statistics to those that will be calculated by this sampler.
      *
      * @param stats the statistics
+     * 
      * @see #setStatistic(Statistic)
      */
     public void setStatistics(Statistic[] stats) {
@@ -153,7 +156,7 @@ public class StreamingSampleStats {
     }
 
     /**
-     * Query whether the specified statistic is currently set. Note that
+     * Tests whether the specified statistic is currently set. Note that
      * statistics can be set indirectly because of logical groupings. For
      * example, if {@code Statistic.MEAN} is set then {@code SDEV} and
      * {@code VARIANCE} will also be set as these three are calculated
@@ -161,35 +164,18 @@ public class StreamingSampleStats {
      *
      * @param stat the statistic
      *
-     * @return true if the statistic has been set; false otherwise.
+     * @return {@code true} if the statistic has been set; {@code false} otherwise.
      */
     public boolean isSet(Statistic stat) {
         return findProcessor(stat) != null;
     }
 
     /**
-     * Add a range of values to exclude from the calculation of <b>all</b>
-     * statistics. If further statistics are set after calling this method
-     * the excluded range will be applied to them as well.
-     *
-     * @param exclude the {@code Range} to exclude
-     *
-     * @deprecated Please use {@link #addRange(Range)}
-     */
-    public void addExcludedRange(Range<Double> exclude) {
-        ranges.add(new Range<Double>(exclude));
-
-        for (Processor p : processors) {
-            p.addExcludedRange(exclude);
-        }
-    }
-
-    /**
-     * Add a range of values to be considered as NoData and then to be excluded
+     * Adds a range of values to be considered as NoData and then to be excluded
      * from the calculation of <b>all</b> statistics. NoData ranges take precedence
      * over included / excluded data ranges.
      *
-     * @param noData the {@code Range} containing NoData values
+     * @param noData the range defining NoData values
      */
     public void addNoDataRange(Range<Double> noData) {
         noDataRanges.add(new Range<Double>(noData));
@@ -200,7 +186,7 @@ public class StreamingSampleStats {
     }
 
     /**
-     * Convenience method for specifying a single value to be considered as NoData.
+     * Adds a single value to be considered as NoData.
      *
      * @param noData the value to be treated as NoData
      *
@@ -213,11 +199,11 @@ public class StreamingSampleStats {
     }
 
     /**
-     * Add a range of values to include/exclude from the calculation of <b>all</b>
-     * statistics. If further statistics are set after calling this method
-     * the range will be applied to them as well.
+     * Adds a range of values to include in or exclude from the calculation 
+     * of <b>all</b> statistics. If further statistics are set after calling
+     * this method the range will be applied to them as well.
      *
-     * @param range the {@code Range} to include/exclude
+     * @param range the range to include/exclude
      */
     public void addRange(Range<Double> range) {
         ranges.add(new Range<Double>(range));
@@ -228,12 +214,12 @@ public class StreamingSampleStats {
     }
 
     /**
-     * Add a range of values to exclude/include from the calculation of <b>all</b>
-     * statistics. If further statistics are set after calling this method
-     * the range will be applied to them as well.
+     * Adds a range of values to include in or exclude from the calculation 
+     * of <b>all</b> statistics. If further statistics are set after calling
+     * this method the range will be applied to them as well.
      *
-     * @param range the {@code Range} to include/exclude
-     * @param rangesType one of {@linkplain Range.Type#INCLUDE} or {@linkplain Range.Type#EXCLUDE}
+     * @param range the range to include/exclude
+     * @param rangesType one of {@link Range.Type#INCLUDE} or {@link Range.Type#EXCLUDE}
      */
     public void addRange(Range<Double> range, Range.Type rangesType) {
         for (Processor p : processors) {
@@ -243,7 +229,7 @@ public class StreamingSampleStats {
     }
 
     /**
-     * Get the statistics that are currently set.
+     * Gets the statistics that are currently set.
      *
      * @return the statistics
      */
@@ -259,14 +245,14 @@ public class StreamingSampleStats {
     }
 
     /**
-     * Get the (current) value of a running statistic. If there have not
+     * Gets the current value of a running statistic. If there have not
      * been enough samples provided to compute the statistic, Double.NaN
      * is returned.
      *
-     * @param stat
-     * @return the (current) value of the statistic
+     * @param stat the statistic
+     * @return the current value of the statistic
      *
-     * @throws IllegalStateException if stat was not previously set
+     * @throws IllegalStateException if {@code stat} was not previously set
      */
     public Double getStatisticValue(Statistic stat) {
         Processor p = findProcessor(stat);
@@ -279,7 +265,7 @@ public class StreamingSampleStats {
     }
 
     /**
-     * Get the number of sample values that have been accepted for the
+     * Gets the number of sample values that have been accepted for the
      * specified {@code Statistic}.
      * <p>
      * Note that different statistics might have been set at different
@@ -302,9 +288,9 @@ public class StreamingSampleStats {
     }
 
     /**
-     * Get the number of sample values that have been <b>offered</b> for the
+     * Gets the number of sample values that have been <b>offered</b> for the
      * specified {@code Statistic}. This might be higher than the value
-     * returned by {@linkplain #getNumAccepted} due to {@code nulls},
+     * returned by {@link #getNumAccepted} due to {@code nulls},
      * {@code Double.NaNs} and excluded values in the data stream.
      * <p>
      * Note that different statistics might have been set at different
@@ -327,13 +313,13 @@ public class StreamingSampleStats {
     }
 
     /**
-     * Get the number of sample values that are NaN
+     * Gets the number of NaN values that have been offered.
      * Note that different statistics might have been set at different
      * times in the sampling process.
      *
      * @param stat the statistic
      *
-     * @return number of NaN samples received
+     * @return number of NaN samples offered
      *
      * @throws IllegalArgumentException if the statistic hasn't been set
      */
@@ -348,13 +334,13 @@ public class StreamingSampleStats {
     }
 
     /**
-     * Get the number of sample values that are noData (including NaN).
+     * Gets the number of NoData values (including NaN) that have been offered.
      * Note that different statistics might have been set at different
      * times in the sampling process.
      *
      * @param stat the statistic
      *
-     * @return number of NoData samples received
+     * @return number of NoData samples offered
      *
      * @throws IllegalArgumentException if the statistic hasn't been set
      */
@@ -370,7 +356,7 @@ public class StreamingSampleStats {
 
 
     /**
-     * Offer a sample value. Offered values are filtered through excluded ranges.
+     * Offers a sample value. Offered values are filtered through excluded ranges.
      * {@code Double.NaNs} and {@code nulls} are excluded by default.
      *
      * @param sample the sample value
@@ -382,8 +368,7 @@ public class StreamingSampleStats {
     }
 
     /**
-     * Convenience method: adds an array of new sample values and
-     * updates all currently set statistics.
+     * Offers an array of sample values.
      *
      * @param samples the sample values
      */
@@ -394,7 +379,7 @@ public class StreamingSampleStats {
     }
 
     /**
-     * Search the list of {@code Processors} for one that supports
+     * Searches the list of {@code Processors} for one that supports
      * the given {@code Statistic}.
      *
      * @param stat the statistic
@@ -412,6 +397,11 @@ public class StreamingSampleStats {
         return null;
     }
 
+    /**
+     * Gets the values of all statistics calculated by this sampler.
+     * 
+     * @return calculated values
+     */
     public Map<Statistic, Double> getStatisticValues() {
         Map<Statistic, Double> results = CollectionFactory.orderedMap();
 

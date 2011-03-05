@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -23,7 +23,6 @@ import jaitools.CollectionFactory;
 import jaitools.numeric.Range.Type;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,9 +37,16 @@ import java.util.Map;
  */
 public abstract class AbstractProcessor implements Processor {
 
+    /** Number of samples offered. */
     protected long numOffered;
+    
+    /** Number of samples accepted. */
     protected long numAccepted;
+    
+    /** Number of NaN samples offered. */
     protected long numNaN;
+
+    /** Number of NODATA samples offered. */
     protected long numNoData;
 
     /* Ranges of data values to include / exclude from calculations */
@@ -64,7 +70,7 @@ public abstract class AbstractProcessor implements Processor {
     }
 
     /**
-     * Create a new processor with specified use of {@code Ranges}.
+     * Creates a new processor with specified use of {@code Ranges}.
      *
      * @param rangesType normally either {@linkplain Range.Type#INCLUDE} to indicate that
      *        {@code Ranges} will define values to operate on, or {@linkplain Range.Type#EXCLUDE}
@@ -79,28 +85,6 @@ public abstract class AbstractProcessor implements Processor {
 
     /**
      * {@inheritDoc}
-     *
-     * Adding a {@code Range} that overlaps with one or more existing
-     * {@code Ranges} is permitted.
-     *
-     * @deprecated Please use {@linkplain #addRange(jaitools.numeric.Range)} or
-     *             {@linkplain #addRange(jaitools.numeric.Range, jaitools.numeric.Range.Type)}
-     */
-    public void addExcludedRange(Range<Double> exclude) {
-        if (exclude != null) {
-            if (this.rangesType == Range.Type.UNDEFINED) {
-                this.rangesType = Range.Type.EXCLUDE;
-            }
-            // copy the input Range defensively
-            ranges.add(new Range<Double>(exclude));
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * Adding a {@code Range} to the noData ranges
-     *
      */
     public void addNoDataRange(Range<Double> noData) {
         if (noData != null) {
@@ -118,41 +102,6 @@ public abstract class AbstractProcessor implements Processor {
         }
     }
 
-
-    /**
-     * {@inheritDoc}
-     * @deprecated Please use {@link #getRanges()}
-     */
-    public List<Range<Double>> getExcludedRanges() {
-        return Collections.unmodifiableList(ranges);
-    }
-
-    /**
-     * {@inheritDoc}.
-     * Null and Double.NaN values are excluded by default.
-     *
-     * @deprecated Please use {@link #isAccepted(Double)} with opposite logic.
-     */
-    public boolean isExcluded(Double sample) {
-        if (sample == null) {
-            return true;
-        }
-        if (sample.isNaN()) {
-            numNaN++;
-            return true;
-        }
-
-        for (Range<Double> r : ranges) {
-            switch (rangesType) {
-                case EXCLUDE:
-                    return r.contains(sample);
-                case INCLUDE:
-                    return !r.contains(sample);
-            }
-        }
-
-        return false;
-    }
 
     /**
      * {@inheritDoc}
@@ -189,7 +138,7 @@ public abstract class AbstractProcessor implements Processor {
      * {@inheritDoc}
      */
     public Map<Statistic, Double> get() {
-        Map<Statistic, Double> stats = new HashMap<Statistic, Double>();
+        Map<Statistic, Double> stats = CollectionFactory.map();
         for (Statistic s : getSupported()) {
             stats.put(s, get(s));
         }
@@ -197,12 +146,12 @@ public abstract class AbstractProcessor implements Processor {
     }
 
     /**
-     * Process a sample value that has been offered by the client.
-     *
+     * Processes a sample value.
+     * 
      * @param sample the sample value
      *
-     * @return true if the sample is accepted (ie. used for calculations);
-     *         false otherwise
+     * @return {@code true} if the sample is accepted;
+     *         {@code false} otherwise
      */
     protected abstract boolean update(Double sample);
 

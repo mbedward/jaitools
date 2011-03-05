@@ -46,7 +46,7 @@ import javax.media.jai.iterator.WritableRectIter;
 import jaitools.CollectionFactory;
 
 /**
- * Static helper functions for common image tasks.
+ * Provides static utility methods for some common image-related tasks.
  * 
  * @author Michael Bedward
  * @since 1.0
@@ -231,7 +231,25 @@ public class ImageUtils {
         return tImg;
     }
     
+    /**
+     * Creates a new single-band TiledImage with the provided values. The
+     * {@code array} argument must be of length {@code width} x {@code height}.
+     * 
+     * @param array a 1D array of values for the image
+     * @param width image width
+     * @param height image height
+     * @return the new image
+     */
     public static TiledImage createImageFromArray(Number[] array, int width, int height) {
+        if (array == null) {
+            throw new IllegalArgumentException("array must be non-null");
+        }
+        
+        if (array.length == 0 || array.length != width * height) {
+            throw new IllegalArgumentException(
+                    "The array must be non-empty and have length width x height");
+        }
+        
         Number val = array[0];
         TiledImage img = createConstantImage(width, height, val);
 

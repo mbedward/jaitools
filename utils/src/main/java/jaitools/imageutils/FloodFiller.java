@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -38,12 +38,12 @@ import javax.media.jai.iterator.RandomIterFactory;
 import javax.media.jai.iterator.WritableRandomIter;
 
 /**
- * Implements a flood-fill algorithm to work with Rasters.
+ * A flood-filling algorithm to use with rasters.
  * <p>
- * The code is (very highly) adapted from an algorithm published in C# by J. Dunlap at:
+ * The code is adapted from an algorithm published in C# by J. Dunlap at:
  * <pre>   http://www.codeproject.com/KB/GDI-plus/queuelinearfloodfill.aspx</pre>
- * which was subsequently ported to Java by Owen Kaluza.
- * <b>Any bugs in the present code are not their fault</b>.
+ * which was subsequently ported to Java by Owen Kaluza. The JAI-tools implementation
+ * is substantially different and any bugs should not be blamed on the above authors.
  * <p>
  * This version works with a source {@code RenderedImage} and a destination
  * {@code WritableRenderedImage}, both of which are accessed using JAI iterators.
@@ -79,7 +79,11 @@ public class FloodFiller {
         int y;
 
         /**
-         * Constructor
+         * Creates a new segment.
+         * 
+         * @param startX start X ordinate
+         * @param endX end X ordinate
+         * @param y Y ordinate
          */
         public ScanSegment(int startX, int endX, int y) {
             this.startX = startX;
@@ -88,15 +92,22 @@ public class FloodFiller {
         }
 
         /**
-         * Check if the given pixel location lies within this segment
+         * Checks if the given location lies within this segment.
+         * 
+         * @param x location X ordinate
+         * @param y location Y ordinate
+         * 
+         * @return the result as boolean
          */
         public boolean contains(int x, int y) {
             return this.y == y && startX <= x && endX >= x;
         }
 
         /**
-         * Compare to another segment. Comparison is done first by
-         * y coord, then by left x coord, then by right x coord.
+         * Compares this segment to another. The comparison is first by
+         * Y ordinate, then by left and right X ordinates.
+         * 
+         * @param other the other segment
          */
         public int compareTo(ScanSegment other) {
             if (y < other.y) {
@@ -124,12 +135,14 @@ public class FloodFiller {
     /**
      * Create a FloodFiller to work with the given source image
      *
-     * @param targetImage the image to which flood fill values are written
-     *
-     * @param sourceimage the source image - may be the same as the targetImage
+     * @param sourceImage the source image
+     * 
+     * @param destImage the destination image
      *
      * @param sourceBand the source image band to be processed
      *
+     * @param destBand the destination image band to write to
+     * 
      * @param tolerance the maximum absolute difference in value for a pixel to be
      *        included in the region
      *
@@ -138,20 +151,20 @@ public class FloodFiller {
      */
     public FloodFiller(
             RenderedImage sourceImage, int sourceBand,
-            WritableRenderedImage targetImage, int targetBand,
+            WritableRenderedImage destImage, int destBand,
             double tolerance, boolean diagonal) {
 
         this.srcBand = sourceBand;
-        this.destImage = targetImage;
-        this.destBand = targetBand;
+        this.destImage = destImage;
+        this.destBand = destBand;
         this.tolerance = tolerance;
         this.diagonal = diagonal;
 
-        if (targetImage instanceof PlanarImage) {
-            this.destBounds = ((PlanarImage)targetImage).getBounds();
+        if (destImage instanceof PlanarImage) {
+            this.destBounds = ((PlanarImage)destImage).getBounds();
 
-        } else if (targetImage instanceof BufferedImage) {
-            BufferedImage bImg = (BufferedImage) targetImage;
+        } else if (destImage instanceof BufferedImage) {
+            BufferedImage bImg = (BufferedImage) destImage;
             this.destBounds = new Rectangle(
                     bImg.getMinX(),
                     bImg.getMinY(),
@@ -171,7 +184,7 @@ public class FloodFiller {
     }
 
     /**
-     * Fill the region connected to the specified start pixel.
+     * Fills the region connected to the specified start pixel.
      * A pixel belongs to this region if there is a path between it and the starting
      * pixel which passes only through pixels of value {@code v} within the range
      * {@code start_pixel_value - tolerance <= v <= start_pixel_value + tolerance}.
@@ -189,7 +202,7 @@ public class FloodFiller {
     }
 
     /**
-     * Fill the region connected to the specified start pixel and lying within
+     * Fills the region connected to the specified start pixel and lying within
      * {@code radius} pixels of the start pixel.
      * <p>
      * A pixel belongs to this region if there is a path between it and the starting
@@ -212,7 +225,7 @@ public class FloodFiller {
     }
 
     /**
-     * Fill the region connected to the specified start pixel.
+     * Fills the region connected to the specified start pixel.
      * A pixel belongs to this region if there is a path between it and the starting
      * pixel which passes only through pixels of value {@code v} within the range
      * {@code refValue - tolerance <= v <= refValue + tolerance}.
@@ -232,7 +245,7 @@ public class FloodFiller {
     }
 
     /**
-     * Fill the region connected to the specified start pixel and lying within
+     * Fills the region connected to the specified start pixel and lying within
      * {@code radius} pixels of the start pixel.
      * <p>
      * A pixel belongs to this region if there is a path between it and the starting
@@ -309,15 +322,17 @@ public class FloodFiller {
 
 
     /**
-     * Fill pixels that:
+     * Fills pixels that:
      * <ul>
      * <li>are on the same horizontal scan line as the start pixel
      * <li>have the same value (plus or minus tolerance) as the start pixel
      * <li>have no intervening pixels with other values between them and
      * the start pixel
      * </ul>
-     * @param x start pixel x coord
-     * @param y start pixel y coord
+     * 
+     * @param x start X ordinate
+     * @param y start Y ordinate
+     * 
      * @return one of FILL_NEW_SEGMENT, FILL_NONE or FILL_NEED_NEXT_RASTER
      */
     private ScanSegment fillSegment(int x, int y, WritableRandomIter destIter) {
@@ -365,10 +380,10 @@ public class FloodFiller {
 
 
     /**
-     * Test if a pixel is a candidate to be filled.
+     * Tests if a pixel is a candidate to be filled.
      *
-     * @param x pixel x
-     * @param y pixel y
+     * @param x X ordinate
+     * @param y Y ordinate
      *
      * @return true if a fill candidate; false otherwise
      */

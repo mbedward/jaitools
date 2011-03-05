@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  * 
  * This file is part of jai-tools.
  *
@@ -39,9 +39,9 @@ import java.util.SortedSet;
 public class SampleStats {
     
     /**
-     * Return the maximum of a sample of values.
+     * Return the maximum of the given values.
      *
-     * @param values  sample data
+     * @param values sample values
      * @param ignoreNaN specifies whether to ignore NaN values
      * @return max value or Double.NaN if the sample is empty
      */
@@ -59,9 +59,9 @@ public class SampleStats {
     }
 
     /**
-     * Return the mean of a sample of values.
+     * Return the mean of the given values.
      *
-     * @param values  sample data
+     * @param values sample values
      * @param ignoreNaN specifies whether to ignore NaN values
      * @return mean value or Double.NaN if the sample is empty
      */
@@ -87,9 +87,9 @@ public class SampleStats {
     }
 
     /**
-     * Return the minimum of a sample of values.
+     * Calculates the minimum of the given values.
      *
-     * @param values  sample data
+     * @param values sample values
      * @param ignoreNaN specifies whether to ignore NaN values
      * @return min value or Double.NaN if the sample is empty
      */
@@ -107,12 +107,12 @@ public class SampleStats {
     }
 
     /**
-     * Calculate the median of a sample of values. For a sample with an odd
+     * Calculates the median of the given values. For a sample with an odd
      * number of elements the median is the mid-point value of the 
      * sorted sample. For an even number of elements it is the mean of
      * the two values on either side of the mid-point. 
      * 
-     * @param values sample data (need not be pre-sorted)
+     * @param values sample values (need not be pre-sorted)
      * @param ignoreNaN specifies whether to ignore NaN values
      * @return median value or Double.NaN if the sample is empty
      */
@@ -162,7 +162,7 @@ public class SampleStats {
     }
     
     /**
-     * Calculate the emperical mode (highest frequency value) of a sample of values.
+     * Calculates the empirical mode (highest frequency value) of the given values.
      * Double.NaN values are ignored. If more than one data value occurs with
      * maximum frequency the following tie-break rules are used:
      * <ul>
@@ -173,7 +173,7 @@ public class SampleStats {
      * This ensures that the calculated mode occurs in the sample data.
      * Whether or not the mode is meaningful for the sample is up to the user !
      * 
-     * @param values sample data
+     * @param values sample values
      * @param ignoreNaN specifies whether to ignore NaN values
      * @return calculated mode or Double.NaN if the sample is empty
      */
@@ -239,9 +239,9 @@ public class SampleStats {
     }
 
     /**
-     * Return the range (max - min) of a set of values
+     * Calculates the range (max - min) of a set of values.
      *
-     * @param values input values
+     * @param values sample values
      * @param ignoreNaN specifies whether to ignore NaN values
      * @return the range or Double.NaN if the set is empty
      */
@@ -259,9 +259,13 @@ public class SampleStats {
     }
 
     /**
-     * Calculate sample variance using the running sample algorithm
+     * Calculates sample variance using the running sample algorithm
      * of Welford (1962) described by Knuth in <i>The Art of Computer
      * Programming (3rd ed)</i> Vol.2 p.232
+     * 
+     * @param values sample values
+     * @param ignoreNaN specifies whether to ignore NaN values
+     * @return sample variance
      */
     public static double variance(Double[] values, boolean ignoreNaN) {
         if (values.length < 2) {
@@ -299,7 +303,7 @@ public class SampleStats {
     }
 
     /**
-     * Calculate sample standard deviation. This is a convenience
+     * Calculates sample standard deviation. This is a convenience
      * method that calls {@linkplain #variance(java.lang.Double[], boolean) }
      * and returns the square-root of the result
      *
@@ -313,7 +317,11 @@ public class SampleStats {
     }
 
     /**
-     * Calculate the sum of the values passed.
+     * Calculates the sum of the values.
+     * 
+     * @param values sample values
+     * @param ignoreNaN specifies whether to ignore NaN values
+     * @return sum of the values
      */
     public static double sum(Double[] values, boolean ignoreNaN) {
         double sum = 0.0d;

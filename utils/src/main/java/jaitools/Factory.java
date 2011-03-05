@@ -35,13 +35,26 @@ import java.util.Set;
 public abstract class Factory {
     private static final Set<String> supportedSpi = new HashSet<String>();
 
+    /**
+     * Protected-access constructor.
+     */
     protected Factory() {
     }
 
+    /**
+     * Adds a service provider interface.
+     * 
+     * @param spiName the interface name
+     */
     protected static void addSpi(String spiName) {
         supportedSpi.add(spiName);
     }
 
+    /**
+     * Gets the supported interfaces.
+     * 
+     * @return an unmodifiable list of the interface names
+     */
     public static Collection<String> getSupported() {
         return Collections.unmodifiableCollection(supportedSpi);
     }
