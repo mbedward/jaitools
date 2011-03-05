@@ -136,13 +136,12 @@ public class JiffleExecutor {
     private final ExecutorService threadPool;
     
     /** Scheduled executor to run job polling */
-    private final ScheduledExecutorService pollingExecutor;
+    private ScheduledExecutorService pollingExecutor;
     private ScheduledFuture<?> poll;
 
     private static int jobID = 0;
     private Map<Integer, Future<JiffleExecutorResult>> jobs; 
     private List<JiffleEventListener> listeners;
-    
     
     /**
      * Creates an executor with default settings. A default executor sets 
@@ -189,7 +188,8 @@ public class JiffleExecutor {
             default:
                 throw new IllegalArgumentException("Bad arg to private JiffleExecutor constructor");
         }
-        pollingExecutor = Executors.newSingleThreadScheduledExecutor();
+        
+        pollingExecutor = null;
         pollingInterval = DEFAULT_POLLING_INTERVAL;
         jobs = new ConcurrentHashMap<Integer, Future<JiffleExecutorResult>>();
         listeners = CollectionFactory.list();
@@ -294,10 +294,50 @@ public class JiffleExecutor {
         return id;
     }
     
+    /**
+     * Requests that the executor shutdown after completing any tasks
+     * already submitted. Control returns to the calling thread immediately.
+     */
+    public void shutdown() {
+        threadPool.shutdown();
+    }
+    
+    /**
+     * Requests that the executor shutdown after completing any tasks
+     * already submitted. Control returns to the calling thread after
+     * the executor has shutdown or the time out period has elapsed, 
+     * whichever comes first.
+     * 
+     * @param timeOut time-out period
+     * @param unit time unit
+     * 
+     * @return {@code true} if the executor has shutdown; {@code false} if
+     *         the time-out period elapsed or the thread was interrupted
+     */
+    public boolean shutdownAndWait(long timeOut, TimeUnit unit) {
+        threadPool.shutdown();
+        try {
+            return threadPool.awaitTermination(timeOut, unit);
+        } catch (InterruptedException ignored) { 
+            return false; 
+        }
+    }
+    
+    /**
+     * Attempts to shutdown the executor immediately.
+     */
+    public void shutdownNow() {
+        threadPool.shutdownNow();
+        pollingExecutor.shutdownNow();
+        pollingExecutor = null;
+        jobs.clear();
+    }
+    
     private void startPolling() {
-        if (poll == null || !poll.isCancelled()) {
-            poll = pollingExecutor.scheduleAtFixedRate(new Runnable() {
+        if (pollingExecutor == null || pollingExecutor.isTerminated()) {
+            pollingExecutor = Executors.newSingleThreadScheduledExecutor();
 
+            pollingExecutor.scheduleAtFixedRate(new Runnable() {
                 public void run() {
                     pollJobs();
                 }
@@ -305,41 +345,45 @@ public class JiffleExecutor {
         }
     }
 
-    private void pollJobs() {
-        synchronized (jobsDone) {
-            jobsDone.clear();
-
-            for (Integer id : jobs.keySet()) {
-                if (jobs.get(id).isDone()) {
-                    jobsDone.add(id);
-                }
-            }
-
-            for (Integer id : jobsDone) {
-                Future<JiffleExecutorResult> future = jobs.remove(id);
-                try {
-                    JiffleExecutorResult result = future.get();
-                    switch (result.getStatus()) {
-                        case COMPLETED:
-                            fireCompletionEvent(result);
-                            break;
-
-                        case FAILED:
-                            fireFailureEvent(result);
-                            break;
-                    }
-
-                } catch (Exception ex) {
-                    throw new IllegalStateException("When getting job result", ex);
-                }
-            }
-
-            if (jobs.isEmpty()) {
-                poll.cancel(true);
-            }
+    private void stopPolling() {
+        if (pollingExecutor != null && !pollingExecutor.isShutdown()) {
+            pollingExecutor.shutdown();
         }
     }
 
+    private void pollJobs() {
+        jobsDone.clear();
+
+        for (Integer id : jobs.keySet()) {
+            if (jobs.get(id).isDone()) {
+                jobsDone.add(id);
+            }
+        }
+
+        for (Integer id : jobsDone) {
+            Future<JiffleExecutorResult> future = jobs.remove(id);
+            try {
+                JiffleExecutorResult result = future.get();
+                switch (result.getStatus()) {
+                    case COMPLETED:
+                        fireCompletionEvent(result);
+                        break;
+
+                    case FAILED:
+                        fireFailureEvent(result);
+                        break;
+                }
+
+            } catch (Exception ex) {
+                throw new IllegalStateException("When getting job result", ex);
+            }
+        }
+
+        if (jobs.isEmpty()) {
+            stopPolling();
+        }
+    }
+    
     private void fireCompletionEvent(JiffleExecutorResult result) {
         JiffleEvent ev = new JiffleEvent(result);
         for (JiffleEventListener el : listeners) {
