@@ -66,15 +66,15 @@ public class WaitingListener implements JiffleEventListener {
     }
 
     public void onCompletionEvent(JiffleEvent ev) {
-        latch.countDown();
         JiffleExecutorResult result = ev.getResult();
         results.put(result.getTaskID(), result);
+        latch.countDown();
     }
 
     public void onFailureEvent(JiffleEvent ev) {
-        latch.countDown();
         JiffleExecutorResult result = ev.getResult();
         results.put(result.getTaskID(), result);
+        latch.countDown();
     }
 
     public void onProgressEvent(float progress) {

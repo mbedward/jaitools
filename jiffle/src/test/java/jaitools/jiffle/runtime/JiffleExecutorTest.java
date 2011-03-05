@@ -22,17 +22,20 @@ package jaitools.jiffle.runtime;
 
 import java.awt.image.RenderedImage;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 
-import static org.junit.Assert.*;
-import org.junit.Ignore;
-import org.junit.Test;
-
 import jaitools.CollectionFactory;
 import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
+
+import org.junit.After;
+import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.Test;
+
 
 /**
  * Unit tests for JiffleExecutor.
@@ -41,12 +44,23 @@ import jaitools.jiffle.Jiffle;
  * @since 1.1
  * @version $Id$
  */
-@Ignore("thread deadlock problem with WaitingListener needs to be fixed")
 public class JiffleExecutorTest {
     private static final int WIDTH = 100;
     private static final double TOL = 1.0e-8;
     
+    private JiffleExecutor executor;
     private final JiffleProgressListener nullListener = new NullProgressListener();
+    
+
+    @Before
+    public void setup() {
+        executor = new JiffleExecutor();
+    }
+    
+    @After
+    public void cleanup() {
+        executor.shutdownAndWait(1, TimeUnit.SECONDS);
+    }
     
     @Test
     public void simpleJob() throws Exception {
@@ -58,8 +72,6 @@ public class JiffleExecutorTest {
         
         Map<String, RenderedImage> images = CollectionFactory.map();
         images.put("dest", ImageUtils.createConstantImage(WIDTH, WIDTH, 0d));
-        
-        JiffleExecutor executor = new JiffleExecutor();
         
         WaitingListener listener = new WaitingListener();
         executor.addEventListener(listener);
