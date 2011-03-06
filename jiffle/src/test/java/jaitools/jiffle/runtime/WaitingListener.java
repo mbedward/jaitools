@@ -20,31 +20,33 @@
 
 package jaitools.jiffle.runtime;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import jaitools.CollectionFactory;
+
 
 /**
- * An event listener with a wait function to allow unit tests to work with
- * JiffleExecutor tasks.
+ * An event listener that uses a {@code CountDownLatch} to force the client to
+ * wait for the expected number of tasks to be completed.
  * 
  * @author Michael Bedward
  * @since 1.1
  * @version $Id$
  */
 public class WaitingListener implements JiffleEventListener {
-    
-    private CountDownLatch latch;
 
-    private final Map<Integer, JiffleExecutorResult> results = 
-            new ConcurrentHashMap<Integer, JiffleExecutorResult>();
+    private CountDownLatch latch = null;
+
+    private final List<JiffleExecutorResult> results = CollectionFactory.list();
     
     /**
      * Sets the number of job completions and/or failures to wait for.
      * 
      * @param n number of jobs
      */
-    public synchronized void setNumJobs(int n) {
+    public void setNumJobs(int n) {
         if (latch != null && latch.getCount() > 0) {
             throw new IllegalStateException("Method called during wait period");
         }
@@ -55,29 +57,33 @@ public class WaitingListener implements JiffleEventListener {
     /**
      * Waits for jobs to finish.
      */
-    public void await() {
+    public boolean await(long timeOut, TimeUnit units) {
         try {
-            latch.await();
-        } catch (InterruptedException ignored) {}
+            boolean isZero = latch.await(timeOut, units);
+            if (!isZero) {
+                return false;
+            }
+            return true;
+            
+        } catch (InterruptedException ex) {
+            throw new RuntimeException(ex);
+        }
     }
     
-    public synchronized JiffleExecutorResult getResult(int jobID) {
+    public JiffleExecutorResult getResult(int jobID) {
         return results.get(jobID);
     }
 
     public void onCompletionEvent(JiffleEvent ev) {
         JiffleExecutorResult result = ev.getResult();
-        results.put(result.getTaskID(), result);
+        results.add(result);
         latch.countDown();
     }
 
     public void onFailureEvent(JiffleEvent ev) {
         JiffleExecutorResult result = ev.getResult();
-        results.put(result.getTaskID(), result);
+        results.add(result);
         latch.countDown();
-    }
-
-    public void onProgressEvent(float progress) {
     }
 
 }

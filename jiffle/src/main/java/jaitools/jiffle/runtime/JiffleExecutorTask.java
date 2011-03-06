@@ -35,8 +35,9 @@ import jaitools.jiffle.JiffleException;
  * @since 1.0
  * @version $Id$
  */
-class JiffleExecutorTask implements Callable<JiffleExecutorResult> {
+public class JiffleExecutorTask implements Callable<JiffleExecutorResult> {
     
+    private final JiffleExecutor executor;
     private final int id;
     private final Jiffle jiffle;
     private final Map<String, RenderedImage> images;
@@ -57,11 +58,14 @@ class JiffleExecutorTask implements Callable<JiffleExecutorResult> {
      * @param images a {@code Map} with image variable name as key and the
      *        corresponding source or destination image as value 
      */
-    public JiffleExecutorTask(int id, 
+    public JiffleExecutorTask(
+            JiffleExecutor executor,
+            int id, 
             Jiffle jiffle, 
             Map<String, RenderedImage> images,
             JiffleProgressListener progressListener) {
         
+        this.executor = executor;
         this.id = id;
         this.jiffle = jiffle;
         this.images = images;

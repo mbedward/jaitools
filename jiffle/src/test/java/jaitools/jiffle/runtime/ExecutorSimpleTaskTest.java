@@ -34,19 +34,21 @@ import jaitools.jiffle.Jiffle;
 import org.junit.After;
 import static org.junit.Assert.*;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 
 /**
- * Unit tests for JiffleExecutor.
+ * Tests running a basic task with the executor. Can be run multiple times with
+ * {@code JiffleExecutorTestRunner} to check for concurrency problems.
  * 
  * @author Michael Bedward
  * @since 1.1
  * @version $Id$
+ *
  */
-@Ignore("thread deadlock problem with WaitingListener needs to be fixed")
-public class JiffleExecutorTest {
+@RunWith(ExecutorTestRunner.class)
+public class ExecutorSimpleTaskTest {
     private static final int WIDTH = 100;
     private static final double TOL = 1.0e-8;
     
@@ -65,7 +67,7 @@ public class JiffleExecutorTest {
     }
     
     @Test
-    public void simpleJob() throws Exception {
+    public void simpleTask() throws Exception {
         Map<String, Jiffle.ImageRole> imageParams;
         imageParams = CollectionFactory.map();
         imageParams.put("dest", Jiffle.ImageRole.DEST);
@@ -79,8 +81,12 @@ public class JiffleExecutorTest {
         executor.addEventListener(listener);
         
         listener.setNumJobs(1);
+
         int jobID = executor.submit(jiffle, images, nullListener);
-        listener.await();
+        
+        if (!listener.await(2, TimeUnit.SECONDS)) {
+            fail("Listener time-out period elapsed");
+        }
         
         JiffleExecutorResult result = listener.getResult(jobID);
         assertNotNull(result);

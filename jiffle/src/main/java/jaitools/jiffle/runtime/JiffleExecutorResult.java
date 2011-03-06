@@ -35,21 +35,10 @@ import jaitools.jiffle.Jiffle;
  */
 public class JiffleExecutorResult {
 
-    /**
-     * Constants to indicate the general status of the task.
-     */
-    public static enum Status {
-        /** Task completed successfully. */
-        COMPLETED,
-
-        /** Task failed. */
-        FAILED;
-    }
-    
     private final int jobID;
     private final Jiffle jiffle;
     private final Map<String, RenderedImage> images;
-    private final Status status;
+    private final boolean completed;
 
     /**
      * Creates a new result object.
@@ -63,8 +52,7 @@ public class JiffleExecutorResult {
         this.jobID = taskID;
         this.jiffle = jiffle;
         this.images = images;
-        
-        status = completed ? Status.COMPLETED : Status.FAILED;
+        this.completed = completed;
     }
 
     /**
@@ -97,10 +85,10 @@ public class JiffleExecutorResult {
     /**
      * Gets the completion status of the task.
      * 
-     * @return completion status
+     * @return {@code true} if the task was completed; {@code false} otherwise
      */
-    public Status getStatus() {
-        return status;
+    public boolean isCompleted() {
+        return completed;
     }
     
 }

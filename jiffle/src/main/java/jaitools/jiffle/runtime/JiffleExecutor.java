@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2011 Michael Bedward
+ * Copyright 2011 Michael Bedward
  * 
  * This file is part of jai-tools.
  *
@@ -21,41 +21,43 @@
 package jaitools.jiffle.runtime;
 
 import java.awt.image.RenderedImage;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import jaitools.CollectionFactory;
 import jaitools.jiffle.Jiffle;
 import jaitools.jiffle.JiffleException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 
 /**
- * A multi-threaded, event-driven executor service for Jiffle scripts.
- * <p>
- * As an alternative to getting a {@link jaitools.jiffle.runtime.JiffleRuntime}
- * instance from a compiled {@code Jiffle} object and using it directly, Jiffle
- * objects can be submitted to this class to execute. This can be preferable
+ * A multi-threaded, event-driven executor service for Jiffle scripts. Jiffle
+ * objects can be submitted to this class to execute rather than the client 
+ * working with a JiffleRuntime instance directly. This is preferable
  * for computationally demanding tasks because the scripts run in a separate
- * thread to the client code. For multiple tasks, the executor can be set up to:
+ * thread to the client. For multiple tasks, the executor can be set up to
  * run all tasks concurrently in separate threads (if system resources permit),
  * or run up to N tasks concurrently while hold further tasks in a queue. Setting
  * N to 1 gives the option of serial execution.
  * <p>
- * The client is informed about completion or failure via {@link JiffleEvent}s
- * and can follow progress using a {@link jaitools.jiffle.runtime.JiffleProgressListener}.
+ * The client can optionally follow progress during execution with a 
+ * {@link jaitools.jiffle.runtime.JiffleProgressListener}. When the task is
+ * finished its status and results can be retrieved via {@link JiffleEventListener}.
  * <p>
  * Example of use:
- * <br>
- * First we create an executor (we assume it is a class field here), then
- * register an event listener and identify the methods to run when the script
- * completes or fails...
+ * 
  * <pre><code>
+ * 
+ * // assuming the executor is a class field in this example
  * executor = new JiffleExecutor();
  *
  * executor.addEventListener(new JiffleEventListener() {
@@ -69,20 +71,20 @@ import jaitools.jiffle.JiffleException;
  *     }
  * });
  * </code></pre>
- * Now we can submit a task to the executor in the form of a Jiffle object
- * and the associated source and destination images...
+ * 
+ * Now we can build Jiffle objects and submit them to the executor as shown here:
+ * 
  * <pre><code>
- * String script = "dest = src < 10 ? NULL : src;" ;
+ * 
+ * String script = "dest = src > 10 ? src : null;" ;
  *
- * // Parameters to identify the image variables
  * Map&lt;String, Jiffle.ImageRole&gt; imageParams = CollectionFactory.map();
  * imageParams.put("src", Jiffle.ImageRole.SOURCE);
  * imageParams.put("dest", Jiffle.ImageRole.DEST);
  *
- * // Using this constructor checks and compiles the script immediately
  * Jiffle jiffle = new Jiffle(script, imageParams);
  *
- * // Provide a Map with the source and destination images
+ * // Map with the source and destination images
  * RenderedImage sourceImg = ...
  * WritableRenderedImage destImg = ...
  * Map&lt;String, RenderedImage&gt; images = CollectionFactory.map();
@@ -90,65 +92,72 @@ import jaitools.jiffle.JiffleException;
  * images.put("dest", destImg);
  *
  * // Submit the task to the executor
- * executor.submit(j, images, new NullProgressListener());
+ * executor.submit(jiffle, images, new MyProgressListener());
  * </code></pre>
- * Finally, here are the methods called when the script completes or fails...
+ * 
+ * When the script has completed the event listener will be notified and
+ * the results can be retrieved:
+ * 
  * <pre><code>
+ * 
  * private void myCompletionMethod(JiffleEvent ev) {
  *     // Get and display the result image
  *     JiffleExecutorResult result = ev.getResult();
- *     final RenderedImage img = result.getImages().get("dest");
- *
- *     SwingUtilities.invokeLater(new Runnable() {
- *         public void run() {
- *             ImageFrame frame = new ImageFrame(img, "My image");
- *             frame.setVisible(true);
- *         }
- *     });
+ *     RenderedImage img = result.getImages().get("dest");
+ *     ...
  * }
  *
  * private void myFailureMethod(JiffleEvent ev) {
  *     System.out.println("Bummer...");
  * }
-</code></pre>
+ * </code></pre>
+ * 
+ * Once the application has finished with th executor it should call one of
+ * the shutdown methods which terminate the task and polling threads.
  * 
  * @author Michael Bedward
- * @since 1.0
+ * @since 1.1
  * @version $Id$
- */
-public class JiffleExecutor {
+ */public class JiffleExecutor {
+    
+    private static final Logger LOGGER = Logger.getLogger(JiffleExecutor.class.getName());
 
+    // Templates for log INFO messages
+    private static final String TASK_SUBMITTED_MSG = "Task {0} submitted";
+    private static final String TASK_SUCCESS_MSG = "Task {0} completed";
+    private static final String TASK_FAILURE_MSG = "Task {0} failed";
+    
+    
+    /** 
+     * The default interval for polling tasks to check for
+     * completion (20 mS)
+     */
+    public static final long DEFAULT_POLLING_INTERVAL = 20L;
+
+    private long pollingInterval = DEFAULT_POLLING_INTERVAL;
+    
+
+    private final ExecutorService taskService;
+    private final ScheduledExecutorService pollingService;
+    private final ExecutorCompletionService<JiffleExecutorResult> completionService;
+    
+    private final Object _lock = new Object();
+    
+    private final List<JiffleEventListener> listeners;
+    
+    private final AtomicBoolean isPolling = new AtomicBoolean(false);
+    private final AtomicInteger jobID = new AtomicInteger(0);
+    
     private static enum ThreadPoolType {
         CACHED,
         FIXED;
     }
-    
-    /** 
-     * The default interval (milliseconds) for polling the 
-     * result of a rendering task 
-     */
-    public static final long DEFAULT_POLLING_INTERVAL = 20L;
 
-    private long pollingInterval;
-    private final List<Integer> jobsDone;
-    
-    /** Thread pool used to execute Jiffle runtime objects */
-    private final ExecutorService threadPool;
-    
-    /** Scheduled executor to run job polling */
-    private ScheduledExecutorService pollingExecutor;
-    private ScheduledFuture<?> poll;
-
-    private static int jobID = 0;
-    private Map<Integer, Future<JiffleExecutorResult>> jobs; 
-    private List<JiffleEventListener> listeners;
     
     /**
-     * Creates an executor with default settings. A default executor sets 
-     * no upper limit to the number of {@code Jiffle} runtime objects that
-     * can execute concurrently. It uses a cached thread pool, creating new
-     * threads when required but recycling existing threads when earlier
-     * jobs have completed.
+     * Creates an executor with default settings. There is no upper limit 
+     * on the number of concurrent tasks. A cached thread pool will be used
+     * which will recycle existing threads where possible.
      */
     public JiffleExecutor() {
         this(ThreadPoolType.CACHED, -1);
@@ -156,15 +165,13 @@ public class JiffleExecutor {
     
     
     /**
-     * Creates an executor that can have, at most,{@code maxJobs} 
-     * {@code Jiffle} objects running concurrently. If a larger number of
-     * jobs is submitted, some will be placed in a queue to wait for 
-     * executor threads to become available.
+     * Creates an executor that can have, at most,{@code maxTasks} 
+     * running concurrently, with further tasks being placed in a queue.
      * 
-     * @param maxJobs the maximum number of 
+     * @param maxTasks the maximum number of concurrent tasks
      */
-    public JiffleExecutor(int maxJobs) {
-        this(ThreadPoolType.FIXED, maxJobs);
+    public JiffleExecutor(int maxTasks) {
+        this(ThreadPoolType.FIXED, maxTasks);
     }
     
     /**
@@ -178,46 +185,65 @@ public class JiffleExecutor {
     private JiffleExecutor(ThreadPoolType type, int maxJobs) {
         switch (type) {
             case CACHED:
-                threadPool = Executors.newCachedThreadPool();
+                taskService = Executors.newCachedThreadPool();
                 break;
                 
             case FIXED:
-                threadPool = Executors.newFixedThreadPool(maxJobs);
+                taskService = Executors.newFixedThreadPool(maxJobs);
                 break;
                 
             default:
                 throw new IllegalArgumentException("Bad arg to private JiffleExecutor constructor");
         }
         
-        pollingExecutor = null;
-        pollingInterval = DEFAULT_POLLING_INTERVAL;
-        jobs = new ConcurrentHashMap<Integer, Future<JiffleExecutorResult>>();
-        listeners = CollectionFactory.list();
-        jobsDone = CollectionFactory.list();
+        completionService = new ExecutorCompletionService<JiffleExecutorResult>(taskService);
+        pollingService = Executors.newSingleThreadScheduledExecutor();
+        
+        listeners = new ArrayList<JiffleEventListener>();
     }
     
     /**
-     * Sets the interval between polling the executing jobs.
-     *
-     * @param interval interval in milliseconds 
-     *        (values {@code <=} 0 are ignored)
+     * Sets the polling interval for task completion. JiffleExecutor runs a 
+     * separate task thread to poll tasks for completion (either success
+     * or failure) at a fixed interval. The interval can only be changed 
+     * prior to submitting the first task. After that, any calls to this
+     * method will result in a warning message being logged and the polling
+     * interval remaining unchanged.
+     * 
+     * @param millis interval between task polling in milliseconds; values
+     *        less than 1 are ignored
+     * 
+     * @see #DEFAULT_POLLING_INTERVAL
      */
-    public void setPollingInterval(long interval) {
-        if (interval > 0) {
-            pollingInterval = interval;
+    public void setPollingInterval(long millis) {
+        synchronized (_lock) {
+            if (isPolling.get()) {
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.log(Level.WARNING,
+                            "Request to change polling interval ignored");
+                }
+            } else if (millis < 1) {
+                if (LOGGER.isLoggable(Level.WARNING)) {
+                    LOGGER.log(Level.WARNING, "Invalid polling interval ignored: {0}", millis);
+                }
+            }
+
+            pollingInterval = millis;
         }
     }
-
+    
     /**
-     * Gets the interval between polling the executing jobs.
-     *
-     * @return interval in milliseconds
+     * Gets the interval in milliseconds for polling task completion.
+     * 
+     * @return polling interval
      */
     public long getPollingInterval() {
-        return pollingInterval;
+        synchronized (_lock) {
+            return pollingInterval;
+        }
     }
-
-
+            
+    
     /**
      * Adds an event listener.
      * 
@@ -226,7 +252,9 @@ public class JiffleExecutor {
      * @see {@link JiffleEvent}
      */
     public void addEventListener(JiffleEventListener listener) {
-        listeners.add(listener);
+        synchronized(_lock) {
+            listeners.add(listener);
+        }
     }
     
     /**
@@ -238,7 +266,9 @@ public class JiffleExecutor {
      *         {@code false} if it was not registered with this executor
      */
     public boolean removeEventListener(JiffleEventListener listener) {
-        return listeners.remove(listener);
+        synchronized(_lock) {
+            return listeners.remove(listener);
+        }
     }
     
     /**
@@ -250,7 +280,9 @@ public class JiffleExecutor {
      *         {@code false} otherwise
      */
     public boolean isListening(JiffleEventListener listener) {
-        return listeners.contains(listener);
+        synchronized(_lock) {
+            return listeners.contains(listener);
+        }
     }
     
     /**
@@ -278,20 +310,32 @@ public class JiffleExecutor {
             JiffleProgressListener progressListener)
             throws JiffleExecutorException {
 
-        try {
-            if (!jiffle.isCompiled()) {
-                jiffle.compile();
+        synchronized(_lock) {
+            if (taskService.isShutdown()) {
+                throw new IllegalStateException("Submitting task after executor shutdown");
             }
-        } catch (JiffleException ex) {
-            throw new JiffleExecutorException(ex);
+            
+            try {
+                if (!jiffle.isCompiled()) {
+                    jiffle.compile();
+                }
+            } catch (JiffleException ex) {
+                throw new JiffleExecutorException(ex);
+            }
+
+            startPolling();
+            
+            int id = jobID.getAndIncrement();
+            
+            if (LOGGER.isLoggable(Level.INFO)) {
+                LOGGER.log(Level.INFO, TASK_SUBMITTED_MSG, id);
+            }
+
+            completionService.submit( new JiffleExecutorTask(
+                    this, id, jiffle, images, progressListener));
+
+            return id;
         }
-        
-        int id = ++jobID;
-        startPolling();
-        jobs.put(id, threadPool.submit(
-                new JiffleExecutorTask(id, jiffle, images, progressListener)));
-        
-        return id;
     }
     
     /**
@@ -299,7 +343,10 @@ public class JiffleExecutor {
      * already submitted. Control returns to the calling thread immediately.
      */
     public void shutdown() {
-        threadPool.shutdown();
+        synchronized(_lock) {
+            taskService.shutdown();
+            pollingService.shutdown();
+        }
     }
     
     /**
@@ -315,11 +362,17 @@ public class JiffleExecutor {
      *         the time-out period elapsed or the thread was interrupted
      */
     public boolean shutdownAndWait(long timeOut, TimeUnit unit) {
-        threadPool.shutdown();
-        try {
-            return threadPool.awaitTermination(timeOut, unit);
-        } catch (InterruptedException ignored) { 
-            return false; 
+        synchronized (_lock) {
+            boolean success = false;
+            taskService.shutdown();
+            try {
+                success = taskService.awaitTermination(timeOut, unit);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
+
+            pollingService.shutdown();
+            return success;
         }
     }
     
@@ -327,74 +380,58 @@ public class JiffleExecutor {
      * Attempts to shutdown the executor immediately.
      */
     public void shutdownNow() {
-        threadPool.shutdownNow();
-        pollingExecutor.shutdownNow();
-        pollingExecutor = null;
-        jobs.clear();
+        taskService.shutdownNow();
+        pollingService.shutdownNow();
+    }
+        
+    /**
+     * Starts the polling service if it is not already running.
+     */
+    private void startPolling() {
+        if (!isPolling.get()) {
+            pollingService.scheduleWithFixedDelay(new PollingTask(),
+                    pollingInterval, pollingInterval, TimeUnit.MILLISECONDS);
+            isPolling.set(true);
+        }
     }
     
-    private void startPolling() {
-        if (pollingExecutor == null || pollingExecutor.isTerminated()) {
-            pollingExecutor = Executors.newSingleThreadScheduledExecutor();
-
-            pollingExecutor.scheduleAtFixedRate(new Runnable() {
-                public void run() {
-                    pollJobs();
-                }
-            }, pollingInterval, pollingInterval, TimeUnit.MILLISECONDS);
-        }
-    }
-
-    private void stopPolling() {
-        if (pollingExecutor != null && !pollingExecutor.isShutdown()) {
-            pollingExecutor.shutdown();
-        }
-    }
-
-    private void pollJobs() {
-        jobsDone.clear();
-
-        for (Integer id : jobs.keySet()) {
-            if (jobs.get(id).isDone()) {
-                jobsDone.add(id);
-            }
-        }
-
-        for (Integer id : jobsDone) {
-            Future<JiffleExecutorResult> future = jobs.remove(id);
+    
+    private class PollingTask implements Runnable {
+        public void run() {
             try {
-                JiffleExecutorResult result = future.get();
-                switch (result.getStatus()) {
-                    case COMPLETED:
-                        fireCompletionEvent(result);
-                        break;
+                Future<JiffleExecutorResult> future = completionService.poll();
+                if (future != null) {
+                    JiffleExecutorResult result = future.get();
 
-                    case FAILED:
-                        fireFailureEvent(result);
-                        break;
+                    if (result.isCompleted()) {
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.log(Level.INFO, TASK_SUCCESS_MSG, result.getTaskID());
+                        }
+                        notifySuccess(result);
+                        
+                    } else {
+                        if (LOGGER.isLoggable(Level.INFO)) {
+                            LOGGER.log(Level.INFO, TASK_FAILURE_MSG, result.getTaskID());
+                        }
+                        notifyFailure(result);
+                    }
                 }
 
             } catch (Exception ex) {
-                throw new IllegalStateException("When getting job result", ex);
+                throw new RuntimeException(ex);
             }
         }
 
-        if (jobs.isEmpty()) {
-            stopPolling();
+        private void notifySuccess(JiffleExecutorResult result) {
+            for (JiffleEventListener listener : listeners) {
+                listener.onCompletionEvent(new JiffleEvent(result));
+            }
         }
-    }
-    
-    private void fireCompletionEvent(JiffleExecutorResult result) {
-        JiffleEvent ev = new JiffleEvent(result);
-        for (JiffleEventListener el : listeners) {
-            el.onCompletionEvent(ev);
-        }
-    }
 
-    private void fireFailureEvent(JiffleExecutorResult result) {
-        JiffleEvent ev = new JiffleEvent(result);
-        for (JiffleEventListener el : listeners) {
-            el.onFailureEvent(ev);
+        private void notifyFailure(JiffleExecutorResult result) {
+            for (JiffleEventListener listener : listeners) {
+                listener.onFailureEvent(new JiffleEvent(result));
+            }
         }
     }
     
