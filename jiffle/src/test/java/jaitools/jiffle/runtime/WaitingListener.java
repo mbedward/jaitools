@@ -42,11 +42,11 @@ public class WaitingListener implements JiffleEventListener {
     private final List<JiffleExecutorResult> results = CollectionFactory.list();
     
     /**
-     * Sets the number of job completions and/or failures to wait for.
+     * Sets the number of task completions and/or failures to wait for.
      * 
-     * @param n number of jobs
+     * @param n number of tasks
      */
-    public void setNumJobs(int n) {
+    public void setNumTasks(int n) {
         if (latch != null && latch.getCount() > 0) {
             throw new IllegalStateException("Method called during wait period");
         }
@@ -55,9 +55,13 @@ public class WaitingListener implements JiffleEventListener {
     }
     
     /**
-     * Waits for jobs to finish.
+     * Waits for tasks to finish.
      */
     public boolean await(long timeOut, TimeUnit units) {
+        if (latch == null) {
+            throw new RuntimeException("Called await without setting number of tasks");
+        }
+        
         try {
             boolean isZero = latch.await(timeOut, units);
             if (!isZero) {
@@ -70,8 +74,8 @@ public class WaitingListener implements JiffleEventListener {
         }
     }
     
-    public JiffleExecutorResult getResult(int jobID) {
-        return results.get(jobID);
+    public List<JiffleExecutorResult> getResults() {
+        return results;
     }
 
     public void onCompletionEvent(JiffleEvent ev) {

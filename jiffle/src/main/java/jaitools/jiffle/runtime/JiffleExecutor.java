@@ -136,18 +136,22 @@ import java.util.logging.Logger;
 
     private long pollingInterval = DEFAULT_POLLING_INTERVAL;
     
+    /* Provides unique job ID values across all executor instances. */
+    private static final AtomicInteger jobID = new AtomicInteger(0);
 
+    private final Object _lock = new Object();
+    
     private final ExecutorService taskService;
     private final ScheduledExecutorService pollingService;
+    private final ScheduledExecutorService shutdownService;
     private final ExecutorCompletionService<JiffleExecutorResult> completionService;
-    
-    private final Object _lock = new Object();
     
     private final List<JiffleEventListener> listeners;
     
     private final AtomicBoolean isPolling = new AtomicBoolean(false);
-    private final AtomicInteger jobID = new AtomicInteger(0);
+    private final AtomicInteger numTasksRunning = new AtomicInteger(0);
     
+    /* Used by constructors when setting up the task service. */
     private static enum ThreadPoolType {
         CACHED,
         FIXED;
@@ -198,6 +202,7 @@ import java.util.logging.Logger;
         
         completionService = new ExecutorCompletionService<JiffleExecutorResult>(taskService);
         pollingService = Executors.newSingleThreadScheduledExecutor();
+        shutdownService = Executors.newSingleThreadScheduledExecutor();
         
         listeners = new ArrayList<JiffleEventListener>();
     }
@@ -226,9 +231,9 @@ import java.util.logging.Logger;
                 if (LOGGER.isLoggable(Level.WARNING)) {
                     LOGGER.log(Level.WARNING, "Invalid polling interval ignored: {0}", millis);
                 }
+            } else {
+                pollingInterval = millis;
             }
-
-            pollingInterval = millis;
         }
     }
     
@@ -331,6 +336,7 @@ import java.util.logging.Logger;
                 LOGGER.log(Level.INFO, TASK_SUBMITTED_MSG, id);
             }
 
+            numTasksRunning.incrementAndGet();
             completionService.submit( new JiffleExecutorTask(
                     this, id, jiffle, images, progressListener));
 
@@ -340,12 +346,12 @@ import java.util.logging.Logger;
     
     /**
      * Requests that the executor shutdown after completing any tasks
-     * already submitted. Control returns to the calling thread immediately.
+     * already submitted, at which time this method returns.
      */
     public void shutdown() {
         synchronized(_lock) {
             taskService.shutdown();
-            pollingService.shutdown();
+            stopPolling(false);
         }
     }
     
@@ -365,13 +371,15 @@ import java.util.logging.Logger;
         synchronized (_lock) {
             boolean success = false;
             taskService.shutdown();
+            stopPolling(false);
+            
             try {
                 success = taskService.awaitTermination(timeOut, unit);
+                
             } catch (InterruptedException ex) {
                 throw new RuntimeException(ex);
             }
 
-            pollingService.shutdown();
             return success;
         }
     }
@@ -381,7 +389,7 @@ import java.util.logging.Logger;
      */
     public void shutdownNow() {
         taskService.shutdownNow();
-        pollingService.shutdownNow();
+        stopPolling(true);
     }
         
     /**
@@ -395,6 +403,27 @@ import java.util.logging.Logger;
         }
     }
     
+    /**
+     * Stops the polling service.
+     * 
+     * @param immediate whether to stop the service immediately or wait
+     *        for any running tasks to complete
+     */
+    private void stopPolling(boolean immediate) {
+        if (immediate) {
+            pollingService.shutdown();
+            return;
+        }
+
+        shutdownService.scheduleAtFixedRate(new Runnable() {
+            public void run() {
+                if (numTasksRunning.get() == 0) {
+                    pollingService.shutdown();
+                    shutdownService.shutdown();
+                }
+            }
+        }, pollingInterval, pollingInterval, TimeUnit.MILLISECONDS);
+    }
     
     private class PollingTask implements Runnable {
         public void run() {
@@ -402,7 +431,8 @@ import java.util.logging.Logger;
                 Future<JiffleExecutorResult> future = completionService.poll();
                 if (future != null) {
                     JiffleExecutorResult result = future.get();
-
+                    numTasksRunning.decrementAndGet();
+                    
                     if (result.isCompleted()) {
                         if (LOGGER.isLoggable(Level.INFO)) {
                             LOGGER.log(Level.INFO, TASK_SUCCESS_MSG, result.getTaskID());

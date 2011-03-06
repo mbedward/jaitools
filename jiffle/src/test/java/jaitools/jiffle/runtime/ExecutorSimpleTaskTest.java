@@ -80,7 +80,7 @@ public class ExecutorSimpleTaskTest {
         WaitingListener listener = new WaitingListener();
         executor.addEventListener(listener);
         
-        listener.setNumJobs(1);
+        listener.setNumTasks(1);
 
         int jobID = executor.submit(jiffle, images, nullListener);
         
@@ -88,7 +88,7 @@ public class ExecutorSimpleTaskTest {
             fail("Listener time-out period elapsed");
         }
         
-        JiffleExecutorResult result = listener.getResult(jobID);
+        JiffleExecutorResult result = listener.getResults().get(0);
         assertNotNull(result);
         
         RenderedImage dest = result.getImages().get("dest");
