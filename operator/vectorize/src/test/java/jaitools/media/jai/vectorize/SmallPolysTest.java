@@ -108,7 +108,7 @@ public class SmallPolysTest extends TestBase {
             areas[1] - startAreas.get(ids[1]) 
         };
         
-        assertTrue(diffs[0] > 0 && diffs[1] > 0);
+        assertTrue(diffs[0] >= 0 && diffs[1] >= 0);
         assertEquals(NUM_SMALL, diffs[0] + diffs[1]);
     }
     
