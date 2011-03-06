@@ -45,7 +45,7 @@ import org.junit.Test;
  */
 public class SmallPolysTest extends TestBase {
     
-    private static final Integer[] DATA = {
+    private final Integer[] DATA = {
         1, 1, 1, 1, 1, 1,
         1, 1, 1, 1, 1, 1,
         1, 1, 1, 3, 1, 1,
@@ -54,7 +54,8 @@ public class SmallPolysTest extends TestBase {
         2, 2, 2, 2, 2, 2
     };
     
-    private static final int WIDTH = 6;
+    private final int WIDTH = 6;
+    private final int NUM_SMALL = 5;
     
     private Map<String, Object> args;
     
@@ -102,22 +103,13 @@ public class SmallPolysTest extends TestBase {
          */
         Map<Integer, Integer> startAreas = getStartAreas();
         
-        for (int i = 0; i < 2; i++) {
-            int startArea = startAreas.get(ids[i]);
-            int diff = areas[i] - startArea;
-            switch (ids[i]) {
-                case 1:
-                    assertTrue(diff == 4 || diff == 5);
-                    break;
-
-                case 2:
-                    assertTrue(diff == 0 || diff == 1);
-                    break;
-
-                default:
-                    fail("Unexpected poly id");
-            }
-        }
+        int[] diffs = { 
+            areas[0] - startAreas.get(ids[0]), 
+            areas[1] - startAreas.get(ids[1]) 
+        };
+        
+        assertTrue(diffs[0] > 0 && diffs[1] > 0);
+        assertEquals(NUM_SMALL, diffs[0] + diffs[1]);
     }
     
     @Test
