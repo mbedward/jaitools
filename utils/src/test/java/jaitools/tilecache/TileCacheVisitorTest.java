@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -22,12 +22,13 @@ package jaitools.tilecache;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.media.jai.JAI;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.TileCache;
+
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 

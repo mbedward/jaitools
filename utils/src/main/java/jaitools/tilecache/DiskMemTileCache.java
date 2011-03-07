@@ -37,6 +37,7 @@ import java.util.Observable;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
@@ -87,17 +88,27 @@ public class DiskMemTileCache extends Observable implements TileCache {
 
     /**
      * The default memory threshold value (0.75)
+     * 
      * @see #setMemoryThreshold(float)
      */
     public static final float DEFAULT_MEMORY_THRESHOLD = 0.75F;
 
     /**
-     * The default interval after which the cache will flush if
-     * auto-flushing of resident tiles is enabled
+     * The default minimum period (2.5 seconds) of cache inactivity that 
+     * must elapse before memory-resident tiles are automatically flushed.
+     * 
      * @see #setAutoFlushMemoryInterval(long)
-     * @see #setAutoFlushMemoryEnabled(boolean)
      */
     public static final long DEFAULT_AUTO_FLUSH_MEMORY_INTERVAL = 2500;
+    
+    /**
+     * The default interval (2 seconds) for polling each tile to check if 
+     * its owning image has been garbage collected.
+     * 
+     * @see #setTilePollingInterval(long) 
+     */
+    public static final long DEFAULT_TILE_POLLING_INTERVAL = 2000L;
+
 
     // @todo use JAI ParameterList or some other ready-made class for this ?
     private static class ParamDesc {
@@ -216,25 +227,30 @@ public class DiskMemTileCache extends Observable implements TileCache {
     // whether to send cache diagnostics to observers
     private boolean diagnosticsEnabled;
 
-    /**
-     * Variables used for auto-flushing of resident tiles
-     */
+    // Variables used for auto-flushing of resident tiles
     private ScheduledExecutorService flushService;
+    private ScheduledFuture flushFuture;
     private long autoFlushInterval = DEFAULT_AUTO_FLUSH_MEMORY_INTERVAL;
     private AtomicBoolean okToFlush = new AtomicBoolean(false);
+    
+    // Variables used for polling each tile to check if its owning image has been 
+    // garbage collected
+    private final ScheduledExecutorService tilePollingService;
+    private ScheduledFuture tilePollingFuture;
+    private long tilePollingInterval = DEFAULT_TILE_POLLING_INTERVAL; 
 
+    
     /**
-     * Constructor. Creates an instance of the cache with all parameters set
-     * to their default values. Equivalent to <code>DiskMemTileCache(null)</code>.
+     * Creates a new cache with all parameters set to their default values.
      */
     public DiskMemTileCache() {
         this(null);
     }
 
     /**
-     * Constructor.
+     * Creates a new cache.
      *
-     * @param params an optional map of parameters (may be empty or null)
+     * @param params an optional map of parameters (may be empty or {@code null})
      */
     public DiskMemTileCache(Map<String, Object> params) {
         if (params == null) {
@@ -290,21 +306,13 @@ public class DiskMemTileCache extends Observable implements TileCache {
 
         comparator = new TileAccessTimeComparator();
         sortedResidentTiles = new ArrayList<DiskCachedTile>();
+
+        tilePollingService = Executors.newSingleThreadScheduledExecutor();
+        startTilePolling();
     }
 
     /**
-     * Deletes all disk-cached tiles when the cache is garbage collected
-     *
-     * @throws Throwable
-     */
-    @Override
-    protected void finalize() throws Throwable {
-        flush();
-        super.finalize();
-    }
-
-    /**
-     * Add a tile to the cache if not already present.
+     * Adds a tile to the cache if not already present.
      *
      * @param owner the image that this tile belongs to
      * @param tileX the tile column
@@ -316,7 +324,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 		 
     /**
-     * Add a tile to the cache if not already present.
+     * Adds a tile to the cache if not already present.
      *
      * @param owner the image that this tile belongs to
      * @param tileX the tile column
@@ -361,7 +369,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * Remove the specifed tile from the cache
+     * Removes a tile from the cache.
+     * 
      * @param owner the image that this tile belongs to
      * @param tileX the tile column
      * @param tileY the tile row
@@ -403,14 +412,14 @@ public class DiskMemTileCache extends Observable implements TileCache {
 
     
     /**
-     * Get the specified tile from the cache, if present. If the tile is
+     * Gets the specified tile from the cache if present. If the tile is
      * cached but not resident in memory it will be read from the cache's
      * disk storage and made resident.
      *
      * @param owner the image that the tile belongs to
      * @param tileX the tile column
      * @param tileY the tile row
-     * @return the requested tile or null if the tile was not cached
+     * @return the requested tile or {@code null} if the tile was not cached
      */
     public synchronized Raster getTile(RenderedImage owner, int tileX, int tileY) {
         okToFlush.set(false);
@@ -457,7 +466,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * Get all cached tiles associated with the specified image.
+     * Gets all cached tiles associated with the given image.
      * The tiles will be loaded into memory as space allows.
      * 
      * @param owner the image for which tiles are requested
@@ -503,7 +512,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * Remove all tiles that belong to the specified image from the cache
+     * Removes all tiles that belong to the given image from the cache.
+     * 
      * @param owner the image owning the tiles to be removed
      */
     public void removeTiles(RenderedImage owner) {
@@ -515,10 +525,68 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * Check if any tiles have a null owner (e.g. owning image has been
-     * garbage collected) and, if so, remove them from the cache.
+     * Sets the interval between polling each tile to check if its owning image
+     * has been garbage collected. Any such tiles are removed from the
+     * cache.
+     *
+     * @param interval interval in milliseconds
+     *        (values less than or equal to zero are ignored)
      */
-    public synchronized void removeNullTiles() {
+    public void setTilePollingInterval(long interval) {
+        if (interval > 0 && interval != tilePollingInterval) {
+            stopTilePolling();
+            tilePollingInterval = interval;
+            startTilePolling();
+        }
+    }
+
+    /**
+     * Sets the interval between polling each tile to check if its owning image
+     * has been garbage collected. Any such tiles are removed from the
+     * cache.     *
+     * @return interval in milliseconds
+     */
+    public long getTilePollingInterval() {
+        return tilePollingInterval;
+    }
+
+    /**
+     * Starts the tile polling task which calls {@link #removeNullTiles()}
+     * at a fixed interval.
+     */
+    private void startTilePolling() {
+        if (!isPollingTiles()) {
+            tilePollingFuture = tilePollingService.scheduleAtFixedRate(
+                    new Runnable() {
+                        public void run() {
+                            removeNullTiles();
+                        }
+                    }, 
+                    tilePollingInterval, 
+                    tilePollingInterval, 
+                    TimeUnit.MILLISECONDS);
+        }
+    }
+    
+    /**
+     * Stops the tile polling task.
+     */
+    private void stopTilePolling() {
+        if (isPollingTiles()) {
+            tilePollingFuture.cancel(true);
+            tilePollingFuture = null;
+        }
+    }
+    
+    private boolean isPollingTiles() {
+        return tilePollingFuture != null && !tilePollingFuture.isDone();
+    }
+
+    /**
+     * Checks if any tiles have a {@code null} owner (e.g. owning image has been
+     * garbage collected) and, if so, removes them from the cache.
+     */
+    private void removeNullTiles() {
         Set<Object> nullTileKeys = CollectionFactory.set();
         for (Object key : tiles.keySet()) {
             DiskCachedTile tile = tiles.get(key);
@@ -540,18 +608,15 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * This method is not presently declared as synchronized because it simply calls
-     * the {@code add} method repeatedly.
-     *
+     * Adds all tiles for the given image to the cache.
+     * 
      * @param owner the image that the tiles belong to
      * @param tileIndices an array of Points specifying the column-row coordinates
      * of each tile
      * @param tiles tile data in the form of Raster objects
-     * @param tileCacheMetric optional metric (may be null)
-     *
-     * @see #add(java.awt.image.RenderedImage, int, int, java.awt.image.Raster, java.lang.Object) 
+     * @param tileCacheMetric optional metric (may be {@code null})
      */
-    public void addTiles(RenderedImage owner,
+    public synchronized void addTiles(RenderedImage owner,
                      Point[] tileIndices,
                      Raster[] tiles,
                      Object tileCacheMetric) {
@@ -566,15 +631,14 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * This method is not presently declared as synchronized because it simply calls
-     * the <code>getTile</code> method repeatedly.
+     * Gets the specified tiles for the given image.
      *
      * @param owner the image that the tiles belong to
      * @param tileIndices an array of Points specifying the column-row coordinates
      * of each tile
      * @return data for the requested tiles as Raster objects
      */
-    public Raster[] getTiles(RenderedImage owner, Point[] tileIndices) {
+    public synchronized Raster[] getTiles(RenderedImage owner, Point[] tileIndices) {
         Raster[] r = null;
 
         if (tileIndices.length > 0) {
@@ -588,7 +652,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * Remove ALL tiles from the cache: all resident tiles will be
+     * Removes ALL tiles from the cache: all resident tiles will be
      * removed from memory and all files for disk-cached tiles will
      * be discarded.
      * <p>
@@ -609,7 +673,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * Remove all resident tiles from memory. No rewriting of tile data
+     * Removes all resident tiles from memory. No rewriting of tile data
      * to disk is done.
      */
     public synchronized void flushMemory() {
@@ -619,7 +683,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * Free memory for resident tiles so that the fraction of memory occupied is
+     * Frees memory for resident tiles so that the fraction of memory occupied is
      * no more than the current value of the mamory threshold. 
      *
      * @see DiskMemTileCache#setMemoryThreshold(float)
@@ -633,8 +697,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * Make the requested amount of memory cache available, removing
-     * resident tiles as necessary
+     * Makes the requested amount of memory cache available, removing
+     * resident tiles as necessary.
      *
      * @param memRequired memory requested (bytes)
      */
@@ -667,7 +731,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
 
 
     /**
-     * Implemented as an empty method (it was deprecated as of JAI 1.1)
+     * Does nothing.
+     * 
      * @param arg0
      * @deprecated
      */
@@ -676,8 +741,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * Implemented as a dummy method that always returns 0
-     * (it was deprecated as of JAI 1.1)
+     * Always returns 0.
+     * 
      * @deprecated
      */
     @Deprecated
@@ -686,9 +751,9 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * Reset the memory capacity of the cache. Setting capacity to 0 will
-     * flush all resident tiles from memory. Setting a capcity less than the
-     * current capacity may result in some memory-resident tiles being
+     * Resets the memory capacity of the cache. Setting capacity to 0 will
+     * flush all resident tiles from memory. Setting a capacity less than the
+     * current capacity could cause some memory-resident tiles being
      * removed from memory.
      *
      * @param newCapacity requested memory capacity for resident tiles
@@ -728,7 +793,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * Get the amount of memory, in bytes, allocated for storage of
+     * Gets the amount of memory, in bytes, allocated for storage of
      * resident tiles.
      *
      * @return resident tile memory capacity in bytes
@@ -738,8 +803,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * Get the amount of memory currently being used for storage of
-     * memory-resident tiles
+     * Gets the amount of memory currently being used for storage of
+     * memory-resident tiles.
      *
      * @return current memory use in bytes
      */
@@ -772,7 +837,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * Returns the memory threshold, which is the fractional amount of cache memory
      * to retain during tile removal. This only applies if memory thresholding has
      * been enabled by passing the parameter {@linkplain #KEY_USE_MEMORY_THRESHOLD} to
-     * the constructor with a value of <code>Boolean.TRUE</code>.
+     * the constructor with a value of {@code Boolean.TRUE}.
      *
      * @return the retained fraction of memory
      */
@@ -780,7 +845,13 @@ public class DiskMemTileCache extends Observable implements TileCache {
         return memThreshold;
     }
 
-    // TODO write me !
+    /**
+     * Sets the comparator to use to assign memory-residence priority to
+     * tiles. If {@code comp} is {@code null} the default comparator
+     * ({@link TileAccessTimeComparator}) will be used.
+     * 
+     * @param comp the comparator or {@code null} for the default
+     */
     public synchronized void setTileComparator(Comparator comp) {
 
         if ( comp == null ) {
@@ -798,16 +869,18 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * Get the Comparator currently being used to set priority
-     * for resident tiles
-     * @return reference to the current Comparator
+     * Gets the comparator currently used to assign memory-residence
+     * priority to tiles.
+     * 
+     * @return the current comparator
      */
     public Comparator getTileComparator() {
         return comparator;
     }
 
     /**
-     * Get the total number of tiles currently in the cache
+     * Gets the total number of tiles currently in the cache.
+     * 
      * @return number of cached tiles
      */
     public int getNumTiles() {
@@ -815,8 +888,9 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * Get the number of tiles currently residing in the
-     * cache's memory storage
+     * Gets the number of tiles currently residing in the
+     * cache's memory storage.
+     * 
      * @return number of memory-resident tiles
      */
     public int getNumResidentTiles() {
@@ -824,12 +898,12 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * Query whether a given tile is in this cache
+     * Checks whether a given tile is in this cache.
      * 
      * @param owner the owning image
      * @param tileX tile column
      * @param tileY tile row
-     * @return true if the cache contains the tile; false otherwise
+     * @return {@code true} if the cache contains the tile; {@code false} otherwise
      */
     public boolean containsTile(RenderedImage owner, int tileX, int tileY) {
         Object key = getTileId(owner, tileX, tileY);
@@ -837,12 +911,12 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * Query whether a given tile is in this cache's memory storage
+     * Checks whether a given tile is in this cache's memory storage.
      *
      * @param owner the owning image
      * @param tileX tile column
      * @param tileY tile row
-     * @return true if the tile is in cache memory; false otherwise
+     * @return {@code true} if the tile is in cache memory; {@code false} otherwise
      */
     public boolean containsResidentTile(RenderedImage owner, int tileX, int tileY) {
         Object key = getTileId(owner, tileX, tileY);
@@ -850,14 +924,14 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * Inform the cache that the tile's data have changed. The tile should
-     * be resident in memory as the result of a previous <code>getTile</code>
+     * Informs the cache that a tile's data have changed. The tile should
+     * be resident in memory as the result of a previous {@code getTile}
      * request. If this is the case and the tile was previously written to
      * disk, then the cache's disk copy of the tile will be refreshed.
      * <P>
      * If the tile is not resident in memory, for instance
      * because of memory swapping for other tile accesses, the disk copy
-     * will not be refreshed and a <code>TileNotResidentException</code> is
+     * will not be refreshed and a {@code TileNotResidentException} is
      * thrown.
      *
      * @param owner the owning image
@@ -887,59 +961,67 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * Enable or disable auto-flushing of the cache with the
-     * currently set auto-flush interval
+     * Enables or disables auto-flushing of memory resident with the
+     * currently set minimum interval.
      *
-     * @param state true to enable auto-flushing; false to disable
+     * @param enable {@code true} to enable auto-flushing; {@code false} to disable
      * @see #setAutoFlushMemoryInterval(long)
      */
-    public final void setAutoFlushMemoryEnabled(boolean state) {
-        if (state) {
-            if (flushService == null) {
-                flushService = Executors.newSingleThreadScheduledExecutor();
-            }
-            
-            flushService.scheduleWithFixedDelay(new Runnable() {
-                public void run() {
-                    if (okToFlush.getAndSet(true)) {
-                        flushMemory();
-                    }
+    public final void setAutoFlushMemoryEnabled(boolean enable) {
+        if (enable) {
+            if (!isAutoFlushMemoryEnabled()) {
+                if (flushService == null) {
+                    flushService = Executors.newSingleThreadScheduledExecutor();
                 }
-            }, autoFlushInterval, autoFlushInterval, TimeUnit.MILLISECONDS);
-            
-        } else {
-            if (flushService != null) {
-                flushService.shutdown();
+
+                flushFuture = flushService.scheduleWithFixedDelay(
+                        new Runnable() {
+                            public void run() {
+                                if (okToFlush.getAndSet(true)) {
+                                    flushMemory();
+                                }
+                            }
+                        }, 
+                        autoFlushInterval, 
+                        autoFlushInterval, 
+                        TimeUnit.MILLISECONDS);
             }
+
+        } else if (isAutoFlushMemoryEnabled()) {
+            flushFuture.cancel(true);
         }
     }
 
     /**
-     * Query whether auto-flushing is currently enabled
+     * Checks whether auto-flushing of memory-resident tiles is currently enabled.
      *
-     * @return true if the cache is auto-flushing; false otherwise
+     * @return {@code true} if the cache is auto-flushing; {@code false} otherwise
      */
     public boolean isAutoFlushMemoryEnabled() {
-        return (flushService != null && !flushService.isShutdown());
+        return (flushFuture != null && !flushFuture.isDone());
     }
 
     /**
-     * Set the interval, in milliseconds, to elapse between each automatic
-     * flush of the cache.
+     * Sets the minimum period of cache inactivity, in milliseconds, that must
+     * elapse before automatically flushing memory-resident tiles.
      *
      * @param interval interval in milliseconds
      *        (values less than or equal to zero are ignored)
      */
     public void setAutoFlushMemoryInterval(long interval) {
         if (interval > 0 && interval != autoFlushInterval) {
-            okToFlush.set(false);
+            if (isAutoFlushMemoryEnabled()) {
+                setAutoFlushMemoryEnabled(false);
+            }
             autoFlushInterval = interval;
             setAutoFlushMemoryEnabled(true);
         }
     }
-
+    
     /**
-     * Get the current auto-flush interval
+     * Gets the current auto-flush interval. This is the minimum period of 
+     * cache inactivity, in milliseconds, that must elapse before 
+     * automatically flushing tiles.
      *
      * @return interval in milliseconds
      */
@@ -948,19 +1030,17 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * Enable or disable the publishing of cache messages
-     * to Observers
+     * Enables or disables the publishing of cache messages to Observers.
      *
-     * @param state true to publish diagnostic messages; false to suppress them
+     * @param state {@code true} to publish diagnostic messages; {@code false} to suppress them
      */
     public void setDiagnostics(boolean state) {
         diagnosticsEnabled = state;
     }
 
     /**
-     * Accept a <code>DiskMemCacheVisitor</code> object and call its
-     * <code>visit</code> method for each tile presently in the
-     * cache.
+     * Accepts a {@code DiskMemCacheVisitor} object and calls its
+     * {@code visit} method for each tile in the cache.
      */
     public synchronized void accept(DiskMemTileCacheVisitor visitor) {
         for (Object key : tiles.keySet()) {
@@ -969,7 +1049,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
     }
 
     /**
-     * Add a raster to those resident in memory
+     * Adds a raster to those resident in memory.
      */
     private boolean makeResident(DiskCachedTile tile, Raster data) {
         okToFlush.set(false);
@@ -1005,15 +1085,15 @@ public class DiskMemTileCache extends Observable implements TileCache {
 
 
     /**
-     * Remove a tile from the cache's memory storage. This may be to free
-     * space for other tiles, in which case <code>writeData</code> will be
-     * set to true and, if the tile is writable, a request is made to write
+     * Removes a tile from the cache's memory storage. This may be to free
+     * space for other tiles, in which case {@code writeData} will be
+     * set to {@code true} and, if the tile is writable, a request is made to write
      * its data to disk again. If the tile is being removed from the cache
-     * entirely, this method will be called with <code>writeData</code> set
-     * to false.
+     * entirely, this method will be called with {@code writeData} set
+     * to {@code false}.
      *
      * @param tileId the tile's unique id
-     * @param writeData if true, and the tile is writable, its data will be
+     * @param writeData if {@code true}, and the tile is writable, its data will be
      * written to disk again; otherwise no writing is done.
      */
     private void removeResidentTile(Object tileId, boolean writeData) throws DiskCacheFailedException {
@@ -1045,7 +1125,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
     
 
     /**
-     * Generate a unique ID for this tile. This uses the same technique as the
+     * Generates a unique ID for this tile. This uses the same technique as the
      * Sun memory cache implementation: putting the id of the owning image
      * into the upper bytes of a long or BigInteger value and the tile index into
      * the lower bytes.

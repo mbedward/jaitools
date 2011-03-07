@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -20,14 +20,18 @@
 
 package jaitools.tilecache;
 
+import java.awt.image.Raster;
 import java.io.File;
+import java.util.concurrent.TimeUnit;
+
 import javax.media.jai.JAI;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.TileCache;
+
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -41,30 +45,33 @@ import static org.junit.Assert.*;
 public class TileCacheTest {
 
     private static TileCache origCache;
-    private static DiskMemTileCache cache;
-    private static TileCacheTestHelper helper;
+    private DiskMemTileCache cache;
+    private TileCacheTestHelper helper;
 
     private static final float FLOAT_TOL = 0.0001F;
 
     @BeforeClass
     public static void commonSetup() {
-        JAI inst = JAI.getDefaultInstance();
-        origCache = inst.getTileCache();
-        cache = new DiskMemTileCache();
-        inst.setTileCache(cache);
+        origCache = JAI.getDefaultInstance().getTileCache();
 
-        helper = new TileCacheTestHelper();
     }
 
     @AfterClass
-    public static void commonTearDown() {
+    public static void commonCleanup() {
         JAI.getDefaultInstance().setTileCache(origCache);
+    }
+    
+    @Before
+    public void setup() {
+        cache = new DiskMemTileCache();
+        helper = new TileCacheTestHelper();
+        JAI.getDefaultInstance().setTileCache(cache);
+        
     }
 
     @After
-    public void afterTests() {
+    public void cleanup() {
         cache.flush();
-        cache.setMemoryCapacity(DiskMemTileCache.DEFAULT_MEMORY_CAPACITY);
     }
 
     /**
@@ -239,7 +246,7 @@ public class TileCacheTest {
         System.out.println("   cache auto-flush:");
 
         RenderedOp op = helper.simpleJAIOp(2, 2);
-        cache.setAutoFlushMemoryInterval(1000);
+        cache.setAutoFlushMemoryInterval(500);
         cache.setAutoFlushMemoryEnabled(true);
 
         for (int i = 0; i < 5; i++) {
@@ -256,7 +263,7 @@ public class TileCacheTest {
             assertTrue(cache.getNumResidentTiles() == 0);
         }
     }
-
+    
     /**
      * Test that cache files are deleted when the associated tiles
      * are removed from the cache

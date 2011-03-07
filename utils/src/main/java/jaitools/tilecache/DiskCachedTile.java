@@ -107,7 +107,7 @@ public final class DiskCachedTile implements CachedTile {
         /**
          * Map for the reverse lookup facility
          */
-        private static Map<Integer, TileAction> lookup;
+        private static final Map<Integer, TileAction> lookup;
         static {
             lookup = new HashMap<Integer, TileAction>();
             for (TileAction t : EnumSet.allOf(TileAction.class)) {
@@ -182,18 +182,18 @@ public final class DiskCachedTile implements CachedTile {
     private static File cacheFolder = null;
     private static final Object folderLock = new Object();
 
-    private Object id;
-    private WeakReference<RenderedImage> owner;
-    private int tileX;
-    private int tileY;
-    private Object tileCacheMetric;
+    private final Object id;
+    private final WeakReference<RenderedImage> ownerRef;
+    private final int tileX;
+    private final int tileY;
+    private final Object tileCacheMetric;
     private long timeStamp;
-    private int  numBanks;
-    private int  dataLen;
-    private long memorySize;
+    private final int  numBanks;
+    private final int  dataLen;
+    private final long memorySize;
     private File file;
-    private Point location;
-    private boolean isWritable;
+    private final Point location;
+    private final boolean isWritable;
 
     private TileAction action =TileAction.getDefault();
 
@@ -264,7 +264,7 @@ public final class DiskCachedTile implements CachedTile {
         }
 
         this.id = id;
-        this.owner = new WeakReference<RenderedImage>(owner);
+        this.ownerRef = new WeakReference<RenderedImage>(owner);
         this.tileX = tileX;
         this.tileY = tileY;
         this.tileCacheMetric = tileCacheMetric;
@@ -321,7 +321,7 @@ public final class DiskCachedTile implements CachedTile {
      * Get the image that owns this tile
      */
     public RenderedImage getOwner() {
-        return owner.get();
+        return ownerRef.get();
     }
 
     /**
@@ -449,7 +449,7 @@ public final class DiskCachedTile implements CachedTile {
     Raster readData() {
         ImageInputStream strm = null;
         DataBuffer dataBuf = null;
-        RenderedImage img = owner.get();
+        RenderedImage img = ownerRef.get();
         Raster raster = null;
 
         if (file != null && img != null) {

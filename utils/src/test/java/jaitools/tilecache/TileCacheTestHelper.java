@@ -1,21 +1,40 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright 2009-2011 Michael Bedward
+ *
+ * This file is part of jai-tools.
+ *
+ * jai-tools is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * jai-tools is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
+ *
  */
 
 package jaitools.tilecache;
 
-import jaitools.CollectionFactory;
 import java.awt.RenderingHints;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+
 import javax.media.jai.ImageLayout;
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
+
+import jaitools.CollectionFactory;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Support class for unit tests in the jaitools.tilecache package
@@ -31,6 +50,8 @@ class TileCacheTestHelper implements Observer {
 
     private List<DiskCachedTile> tiles;
     private List<DiskCachedTile> residentTiles;
+    
+    private CountDownLatch updateLatch;
 
     /**
      * Constructor
@@ -115,6 +136,10 @@ class TileCacheTestHelper implements Observer {
      * @param otile a cached tile
      */
     public void update(Observable ocache, Object otile) {
+        if (updateLatch != null) {
+            updateLatch.countDown();
+        }
+        
         DiskCachedTile tile = (DiskCachedTile)otile;
 
         int actionValue = tile.getAction();
@@ -143,6 +168,19 @@ class TileCacheTestHelper implements Observer {
                 tiles.remove(tile);
                 residentTiles.remove(tile);
                 break;
+        }
+    }
+    
+    boolean waitForUpdate(int numUpdates, long maxTime, TimeUnit units) {
+        if (updateLatch != null && updateLatch.getCount() > 0) {
+            throw new RuntimeException("Must not call this method when latch is already set");
+        }
+        
+        updateLatch = new CountDownLatch(numUpdates);
+        try {
+            return updateLatch.await(maxTime, units);
+        } catch (InterruptedException ex) {
+            throw new RuntimeException(ex);
         }
     }
 
