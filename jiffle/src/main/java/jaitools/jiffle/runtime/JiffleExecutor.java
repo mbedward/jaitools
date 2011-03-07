@@ -46,8 +46,9 @@ import java.util.logging.Logger;
  * for computationally demanding tasks because the scripts run in a separate
  * thread to the client. For multiple tasks, the executor can be set up to
  * run all tasks concurrently in separate threads (if system resources permit),
- * or run up to N tasks concurrently while hold further tasks in a queue. Setting
- * N to 1 gives the option of serial execution.
+ * or run up to N tasks concurrently. If necessary, a task will be held in a 
+ * queue while waiting for a thread. Setting N to 1 gives the option of serial
+ * execution.
  * <p>
  * The client can optionally follow progress during execution with a 
  * {@link jaitools.jiffle.runtime.JiffleProgressListener}. When the task is
@@ -56,7 +57,6 @@ import java.util.logging.Logger;
  * Example of use:
  * 
  * <pre><code>
- * 
  * // assuming the executor is a class field in this example
  * executor = new JiffleExecutor();
  *
@@ -75,7 +75,6 @@ import java.util.logging.Logger;
  * Now we can build Jiffle objects and submit them to the executor as shown here:
  * 
  * <pre><code>
- * 
  * String script = "dest = src > 10 ? src : null;" ;
  *
  * Map&lt;String, Jiffle.ImageRole&gt; imageParams = CollectionFactory.map();
@@ -99,7 +98,6 @@ import java.util.logging.Logger;
  * the results can be retrieved:
  * 
  * <pre><code>
- * 
  * private void myCompletionMethod(JiffleEvent ev) {
  *     // Get and display the result image
  *     JiffleExecutorResult result = ev.getResult();
@@ -161,7 +159,7 @@ import java.util.logging.Logger;
     /**
      * Creates an executor with default settings. There is no upper limit 
      * on the number of concurrent tasks. A cached thread pool will be used
-     * which will recycle existing threads where possible.
+     * which recycles existing threads where possible.
      */
     public JiffleExecutor() {
         this(ThreadPoolType.CACHED, -1);
@@ -208,12 +206,12 @@ import java.util.logging.Logger;
     }
     
     /**
-     * Sets the polling interval for task completion. JiffleExecutor runs a 
-     * separate task thread to poll tasks for completion (either success
+     * Sets the polling interval for task completion. JiffleExecutor uses a 
+     * separate thread to poll tasks for completion (either success
      * or failure) at a fixed interval. The interval can only be changed 
      * prior to submitting the first task. After that, any calls to this
-     * method will result in a warning message being logged and the polling
-     * interval remaining unchanged.
+     * method will result in a warning message being logged and the new
+     * value being ignored.
      * 
      * @param millis interval between task polling in milliseconds; values
      *        less than 1 are ignored
@@ -291,11 +289,12 @@ import java.util.logging.Logger;
     }
     
     /**
-     * Submits an {@code Jiffle} object for immediate execution. 
+     * Submits an {@code Jiffle} object for execution. If the script is not
+     * already compiled the executor will compile it. Depending on existing
+     * tasks and the number of threads available to the executor there could
+     * be a delay before the task starts. Clients can receive notification 
+     * via an optional progress listener.
      * <p>
-     * This method first checks that the {@code Jiffle} object is properly
-     * compiled. It then retrieves a {@link JiffleRuntime} instance from
-     * the object and executes it.
      * 
      * @param jiffle a properly compiled {@code Jiffle} object
      * 
@@ -346,7 +345,7 @@ import java.util.logging.Logger;
     
     /**
      * Requests that the executor shutdown after completing any tasks
-     * already submitted, at which time this method returns.
+     * already submitted. Control returns immediately to the client.
      */
     public void shutdown() {
         synchronized(_lock) {
