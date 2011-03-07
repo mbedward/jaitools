@@ -37,15 +37,14 @@ import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.runtime.JiffleDirectRuntime;
 
 /**
- * A helper class to compile and run Jiffle scripts while avoiding Jiffle's
- * boiler-plate code.
+ * A builder script which makes it easy to compile and run basic Jiffle scripts.
  * <p>
  * When working with Jiffle objects directly you end up writing a certain 
  * amount of boiler-plate code for image parameters etc. JiffleBuilder offers
- * concise, chained methods to help you get your imges with fewer keystrokes.
+ * concise, chained methods to help you get the job done with fewer keystrokes.
  * <p>
- * Here is an example of creating a Jiffle object and retrieving the runtime
- * instance 'by hand'...
+ * For comparison, first look at this example of creating a Jiffle object and 
+ * retrieving the runtime instance 'by hand':
  * <pre><code>
  * // A script to sum values from two source images
  * String sumScript = "dest = foo + bar;" ;
@@ -77,7 +76,7 @@ import jaitools.jiffle.runtime.JiffleDirectRuntime;
  * // Now run the script
  * runtime.evaluateAll(null);
  * </code></pre>
- * Now here is the same task done using JiffleBuilder...
+ * Now here is the same task done using JiffleBuilder:
  * <pre><code>
  * // A script to sum values from two source images
  * String sumScript = "dest = foo + bar;" ;
@@ -99,7 +98,7 @@ import jaitools.jiffle.runtime.JiffleDirectRuntime;
  * RenderedImage destImg = jb.getImage("dest");
  * </code></pre>
  * When a script does not use any source images, {@code JiffleBuilder} makes
- * for very concise code...
+ * for very concise code:
  * <pre><code>
  * String script = "waves = sin( 4 * M_PI * x() / width() );" ;
  * JiffleBuilder jb = new JiffleBuilder();
@@ -160,7 +159,7 @@ public class JiffleBuilder {
     }
 
     /**
-     * Sets the script.
+     * Sets the script to be compiled.
      *
      * @param script the script
      *
@@ -172,7 +171,7 @@ public class JiffleBuilder {
     }
 
     /**
-     * Sets the script to the contents of the {@code scriptFile}.
+     * Reads the script from {@code scriptFile}.
      *
      * @param scriptFile file containing the script
      *
@@ -185,7 +184,7 @@ public class JiffleBuilder {
     }
 
     /**
-     * Sets a source image associated with a variable name in the script.
+     * Associates a source image with a variable name in the script.
      * The image will be stored by the builder as a weak reference.
      *
      * @param varName variable name
@@ -206,7 +205,7 @@ public class JiffleBuilder {
      * Note: a {@code JiffleBuilder} maintains only {@code WeakReferences}
      * to all source images and any destination images passed to it via
      * the {@link #dest(String, WritableRenderedImage)} method. However,
-     * a strong reference is stored to the destination images created with this
+     * a strong reference is stored to any destination images created with this
      * method. This can be freed later by calling {@link #clear()} or
      * {@link #removeImage(String varName)}.
      *
@@ -231,7 +230,7 @@ public class JiffleBuilder {
      * Note: a {@code JiffleBuilder} maintains only {@code WeakReferences}
      * to all source images and any destination images passed to it via
      * the {@link #dest(String, WritableRenderedImage)} method. However,
-     * a strong reference is stored to the destination images created with this
+     * a strong reference is stored to any destination images created with this
      * method. This can be freed later by calling {@link #clear()} or
      * {@link #removeImage(String varName)}.
      *
@@ -252,7 +251,7 @@ public class JiffleBuilder {
      * Note: a {@code JiffleBuilder} maintains only {@code WeakReferences}
      * to all source images and any destination images passed to it via
      * the {@link #dest(String, WritableRenderedImage)} method. However,
-     * a strong reference is stored to the destination images created with this
+     * a strong reference is stored to any destination images created with this
      * method. This can be freed later by calling {@link #clear()} or
      * {@link #removeImage(String varName)}.
      *

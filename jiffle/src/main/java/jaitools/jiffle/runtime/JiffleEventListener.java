@@ -21,8 +21,8 @@
 package jaitools.jiffle.runtime;
 
 /**
- * Interface implemented by classes wishing to receive job status and progress
- * events from {@link JiffleExecutor}.
+ * Interface implemented by classes wishing to receive task progress
+ * information from {@link JiffleExecutor}.
  * 
  * @author Michael Bedward
  * @since 1.0
@@ -31,14 +31,14 @@ package jaitools.jiffle.runtime;
 public interface JiffleEventListener {
    
     /**
-     * Called when a {@link JiffleExecutor} job has completed successfully.
+     * Called when the task has been completed successfully.
      * 
      * @param ev the event
      */
     public void onCompletionEvent(JiffleEvent ev);
 
     /**
-     * Called when a {@link JiffleExecutor} job fails to complete successfully.
+     * Called when the task has failed.
      * 
      * @param ev the event
      */

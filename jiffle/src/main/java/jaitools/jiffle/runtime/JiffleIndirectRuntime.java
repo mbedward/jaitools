@@ -23,7 +23,10 @@ package jaitools.jiffle.runtime;
 import java.awt.image.RenderedImage;
 
 /**
- * Defines methods implemented by indirect evaluation runtime classes.
+ * Defines methods implemented by runtime classes adopting the indirect 
+ * evaluation model. In this model, there is only a single destination image
+ * and the {@link #evaluate(int, int)} method passes values back to the caller 
+ * rather than writing them to the destination image directly.
  *
  * @author Michael Bedward
  * @since 1.1

@@ -28,7 +28,7 @@ import jaitools.jiffle.runtime.JiffleRuntime;
 /**
  * Helper class which reads the Jiffle properties file and provides values
  * to other classes. It is used by {@link Jiffle} and 
- * {@link jaitools.jiffle.parser.AbstractRuntimeSourceCreator}.
+ * {@link jaitools.jiffle.parser.AbstractSourceGenerator}.
  * 
  * @author Michael Bedward
  * @since 1.1

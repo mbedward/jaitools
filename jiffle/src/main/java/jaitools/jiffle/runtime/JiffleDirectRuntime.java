@@ -24,7 +24,10 @@ import java.awt.image.RenderedImage;
 import java.awt.image.WritableRenderedImage;
 
 /**
- * Defines methods implemented by direct evaluation runtime classes.
+ * Defines methods implemented by runtime classes adopting the direct evaluation
+ * model. In this model, the runtime object writes values to the destination
+ * image(s) directly within its {@link #evaluate(int, int)} method. It also
+ * provides an {@link #evaluateAll(JiffleProgressListener)} method.
  *
  * @author Michael Bedward
  * @since 1.1

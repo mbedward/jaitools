@@ -24,9 +24,10 @@ package jaitools.jiffle.runtime;
  * An interface implemented by classes wishing to receive task progress information
  * from a {@link JiffleExecutor}.
  * <p>
- * Note: all that the executor does is pass the progress listener to a the
- * {@link JiffleRuntime} object that is doing the processing. It is the this object
- * that updates the listener (in its {@code evaluateAll} method.
+ * At run-time, the executor passes the progress listener to the 
+ * {@link JiffleRuntime} object and it is the this object that updates the 
+ * listener in its {@link jaitools.jiffle.runtime.JiffleDirectRuntime#evaluateAll}
+ * method.
  * 
  * @author Michael Bedward
  * @since 1.1
@@ -36,7 +37,7 @@ public interface JiffleProgressListener {
 
     /**
      * Called by the client to request that the listener be notified
-     * of task progress after each {@code numPixels] number of destination
+     * of task progress after each {@code numPixels} number of destination
      * pixels have been processed by the runtime object.
      *
      * @param numPixels number of pixels between listener updates
@@ -79,7 +80,7 @@ public interface JiffleProgressListener {
      * either {@link #setUpdateInterval(long)} or {@link #setUpdateInterval(double)}.
      * <p>
      * It is important to keep the amount of processing done in this method
-     * to a minimum to avoid slowing down processing too much.
+     * to a minimum.
      * 
      * @param done number of pixels processed
      */

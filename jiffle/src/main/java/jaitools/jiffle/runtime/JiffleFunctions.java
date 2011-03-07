@@ -30,7 +30,7 @@ import jaitools.numeric.SampleStats;
 
 /**
  * Provides functions for Jiffle runtime objects. An instance of this class
- * is created by {@link AbstractJiffleRuntime}.
+ * is used as a field in {@link AbstractJiffleRuntime}.
  * 
  * @author Michael Bedward
  * @since 1.1

@@ -88,10 +88,10 @@ import jaitools.jiffle.runtime.JiffleRuntime;
  * {@code jaitools.demo.jiffle} package in the JAI-tools demo module.
  *
  * <h4>Implementation note</h4>
- * The Jiffle compiler is essentially a Jiffle script to Java translator.
- * When a client requests a runtime object, this class translates the input
- * script and passes the resulting source to the embedded Janino compiler
- * which creates executable bytecode in memory.
+ * The Jiffle compiler is really a Jiffle to Java translator.
+ * When a client requests a runtime object, the script is translated and
+ * the resulting Java source is passed to an embedded Janino compiler
+ * which compiles the source to bytecode in memory.
  *
  * @see JiffleBuilder
  * @see jaitools.jiffle.runtime.JiffleExecutor
@@ -102,7 +102,24 @@ import jaitools.jiffle.runtime.JiffleRuntime;
  */
 public class Jiffle {
     
-    /** Constants for runtime model. */
+    /** 
+     * Constants for runtime model. Jiffle supports two runtime models:
+     * <ol type="1">
+     * <li>
+     * <b>Direct</b> - where the runtime class {@code evaluate} method directly 
+     * sets values in the destination image(s)
+     * </li>
+     * <li>
+     * <b>Indirect</b> - where there is a single destination image and the runtime
+     * class {@code evaluate} method returns the destination value, leaving
+     * it up to the caller to set the value in the image.
+     * object 
+     * </li>
+     * </ol>
+     * The indirect model is designed for use in an image operator or similar
+     * context where further processing of destination values might be required
+     * before writing to an image.
+     */
     public static enum RuntimeModel {
         /** The runtime class implements {@link JiffleDirectRuntime} */
         DIRECT(JiffleDirectRuntime.class),
@@ -349,8 +366,7 @@ public class Jiffle {
     }
     
     /**
-     * Compiles the script into a form from which a runtime object can
-     * be created.
+     * Compiles the script into Java source for the runtime class.
      * 
      * @throws JiffleException if no script has been set or if any errors
      *         occur during compilation
@@ -435,8 +451,13 @@ public class Jiffle {
      * Gets the runtime object for this script. 
      * <p>
      * The runtime object is an instance of {@link JiffleRuntime}. By default
-     * it extends an abstract base class included with JAI-tools. An 
-     * alternative base class can be specified with this method. 
+     * it extends an abstract base class supplied JAI-tools: 
+     * {@link jaitools.jiffle.runtime.AbstractDirectRuntime}
+     * when using the direct runtiem model or 
+     * {@link jaitools.jiffle.runtime.AbstractIndirectRuntime}
+     * when using the indirect model. This method allows you to
+     * specify a custom base class. The custom class must implement either 
+     * {@link JiffleDirectRuntime} or {@link JiffleIndirectRuntime}.
      * 
      * @param <T> the runtime base class type
      * @param baseClass the runtime base class
@@ -479,7 +500,7 @@ public class Jiffle {
         }
         return createRuntimeSource(model, baseClass.getName(), scriptInDocs);
     }
-
+    
     /**
      * Initializes this object's name and runtime base class.
      */
