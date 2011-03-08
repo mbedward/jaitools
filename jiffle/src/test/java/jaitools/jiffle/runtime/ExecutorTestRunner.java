@@ -40,7 +40,7 @@ import org.junit.runners.model.InitializationError;
  */
 public class ExecutorTestRunner extends BlockJUnit4ClassRunner {
     
-    final int N = 100;
+    final int N = 1;
     int numFailures;
 
     public ExecutorTestRunner(Class<?> klass) throws InitializationError {

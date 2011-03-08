@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -21,6 +21,7 @@
 package jaitools.tilecache;
 
 import jaitools.CollectionFactory;
+import jaitools.DaemonThreadFactory;
 
 import java.awt.Point;
 import java.awt.image.Raster;
@@ -50,16 +51,17 @@ import javax.media.jai.TileCache;
 /**
  * This class implements JAI {@linkplain javax.media.jai.TileCache}. It can store
  * cached tiles on disk to allow applications to work with very large volumes of
- * tiled image data without being limited by available memory.
+ * tiled image data without being limited by available memory. A subset of tiles 
+ * (by default, the most recently accessed) are cached in memory to reduce access
+ * time.
  * <p>
- * A subset of tiles (by default, the most recently accessed) are cached in memory
- * to reduce access time.
- * <p>
+ * 
  * The default behaviour is to cache newly added tiles into memory. If the cache
- * needs to free memory to accomodate a tile, it does so by removing lowest priority
+ * needs to free memory to accommodate a tile, it does so by removing lowest priority
  * tiles from memory and caching them to disk. Optionally, the user can specify
  * that newly added tiles are cached to disk immediately.
  * <p>
+ * 
  * Unlike the standard JAI {@code TileCache} implementation, resident tiles are cached
  * using strong references. This is to support the use of this class with
  * {@linkplain jaitools.tiledimage.DiskMemImage} as well as operations that need to
@@ -68,6 +70,12 @@ import javax.media.jai.TileCache;
  * generated tiles it can end up unnecessarily holding memory that is more urgently
  * required by other parts of an application. To avoid this happening, the cache can
  * be set to auto-flush resident tiles at regular intervals.
+ * <p>
+ * 
+ * <h4>Implementation note</h4>
+ * Tile polling and auto-flushing of memory resident tiles (if enabled) both run
+ * on low-priority background threads. These are marked as daemon threads to 
+ * avoid these services blocking application shutdown.
  *
  * @author Michael Bedward
  * @author Simone Giannecchini, GeoSolutions SAS
@@ -226,6 +234,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
 
     // whether to send cache diagnostics to observers
     private boolean diagnosticsEnabled;
+    
+    
 
     // Variables used for auto-flushing of resident tiles
     private ScheduledExecutorService flushService;
@@ -307,7 +317,9 @@ public class DiskMemTileCache extends Observable implements TileCache {
         comparator = new TileAccessTimeComparator();
         sortedResidentTiles = new ArrayList<DiskCachedTile>();
 
-        tilePollingService = Executors.newSingleThreadScheduledExecutor();
+        tilePollingService = Executors.newSingleThreadScheduledExecutor(
+                new DaemonThreadFactory(Thread.MIN_PRIORITY, "cache-polling"));
+        
         startTilePolling();
     }
 
@@ -971,7 +983,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
         if (enable) {
             if (!isAutoFlushMemoryEnabled()) {
                 if (flushService == null) {
-                    flushService = Executors.newSingleThreadScheduledExecutor();
+                    flushService = Executors.newSingleThreadScheduledExecutor(
+                            new DaemonThreadFactory(Thread.MIN_PRIORITY, "cache-flush"));
                 }
 
                 flushFuture = flushService.scheduleWithFixedDelay(

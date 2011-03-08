@@ -4,7 +4,7 @@
 
     <groupId>com.googlecode.jaitools</groupId>
     <artifactId>jaitools</artifactId>
-    <version>1.1.0</version>
+    <version>1.1-SNAPSHOT</version>
 
     <packaging>pom</packaging>
     <name>JAI-tools</name>
@@ -30,9 +30,9 @@
     </mailingLists>
 
     <scm>
-        <connection>scm:svn:http://jai-tools.googlecode.com/svn/tags/1.1.0</connection>
-        <developerConnection>scm:svn:https://jai-tools.googlecode.com/svn/tags/1.1.0</developerConnection>
-        <url>http://code.google.com/p/jai-tools/source/browse/tags/1.1.0</url>
+        <connection>scm:svn:http://jai-tools.googlecode.com/svn/branches/1.1.x</connection>
+        <developerConnection>scm:svn:https://jai-tools.googlecode.com/svn/branches/1.1.x</developerConnection>
+        <url>http://code.google.com/p/jai-tools/source/browse/branches/1.1.x</url>
     </scm>
 
     <licenses>
