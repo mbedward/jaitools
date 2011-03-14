@@ -23,7 +23,6 @@ package jaitools.jiffle.runtime;
 import jaitools.CollectionFactory;
 import jaitools.imageutils.ImageUtils;
 import jaitools.jiffle.Jiffle;
-import jaitools.jiffle.JiffleException;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.util.Collections;
@@ -33,7 +32,6 @@ import java.util.concurrent.TimeUnit;
 
 
 import java.util.logging.Formatter;
-import java.util.logging.Handler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.logging.StreamHandler;

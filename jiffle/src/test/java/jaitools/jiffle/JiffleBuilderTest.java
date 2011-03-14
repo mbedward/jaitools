@@ -56,7 +56,7 @@ public class JiffleBuilderTest extends StatementsTestBase {
     @Test
     public void runBasicScript() throws Exception {
         System.out.println("   basic script with provided dest image");
-        String script = "dest = if (src1 > 10, src1, NULL);" ;
+        String script = "dest = con(src1 > 10, src1, null);" ;
 
         TiledImage srcImg1 = createSequenceImage();
         TiledImage destImg = ImageUtils.createConstantImage(WIDTH, WIDTH, 0d);

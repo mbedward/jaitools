@@ -39,7 +39,7 @@ tokens {
     DECLARED_LIST;
     PAR;
     FUNC_CALL;
-    IF_CALL;
+    CON_CALL;
     BLOCK;
     IMAGE_POS;
     BAND_REF;
@@ -158,12 +158,11 @@ sequence        : lo=expression COLON hi=expression -> ^(SEQUENCE $lo $hi)
 
 
 /*
- * If statements are function calls in Jiffle. This form is inherited
- * from the r.mapcalc language. They are treated separately from general
+ * The "con" function is treated separately from general
  * functions during compilation because we want to ensure lazy evaluation
  * of the alternatives.
  */
-ifCall          : IF LPAR expressionList RPAR -> ^(IF_CALL expressionList)
+conCall         : CON LPAR expressionList RPAR -> ^(CON_CALL expressionList)
                 ;
 
 
@@ -255,7 +254,7 @@ primaryExpression
 atom            : LPAR expression RPAR -> ^(PAR expression)
                 | literal
                 | listLiteral
-                | ifCall
+                | conCall
                 | identifiedAtom
                 ;
 
@@ -326,7 +325,8 @@ BOOLEAN_TYPE    : 'boolean' ;
 OPTIONS : 'options' ;
 INIT    : 'init' ;
 
-IF      : 'if' ;
+CON     : 'con' ;
+// IF      : 'if' ;
 WHILE   : 'while' ;
 UNTIL   : 'until' ;
 FOREACH : 'foreach' ;

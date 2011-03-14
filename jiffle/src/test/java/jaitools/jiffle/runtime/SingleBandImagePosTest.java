@@ -48,7 +48,7 @@ public class SingleBandImagePosTest extends StatementsTestBase {
     public void relativeReferences() throws Exception {
         System.out.println("   relative pixel position");
         
-        String src = "dest = if (x() > 0, src[-1, 0], NULL);";
+        String src = "dest = con(x() > 0, src[-1, 0], NULL);";
         
         testScript(src, new Evaluator() {
             double lastVal;
@@ -73,7 +73,7 @@ public class SingleBandImagePosTest extends StatementsTestBase {
     public void absoluteReferences() throws Exception {
         System.out.println("   absolute pixel position");
         
-        String src = "dest = if (x() > 5 && y() > 5, src[$5, $5], NULL);";
+        String src = "dest = con(x() > 5 && y() > 5, src[$5, $5], NULL);";
         
         testScript(src, new Evaluator() {
             double val55;

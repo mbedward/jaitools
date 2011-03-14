@@ -137,10 +137,10 @@ expression
                     
 
                 | ^(QUESTION e1=expression e2=expression e3=expression) 
-                  -> ^(IF_CALL ^(EXPR_LIST $e1 $e2 $e3))
+                  -> ^(CON_CALL ^(EXPR_LIST $e1 $e2 $e3))
 
 
-                | ^(IF_CALL expressionList)
+                | ^(CON_CALL expressionList)
                 | ^(IMAGE_WRITE identifier expression)
                 | ^(IMAGE_POS identifier bandSpecifier? pixelSpecifier?)
                 | ^(logicalOp expression expression)

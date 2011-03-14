@@ -40,7 +40,7 @@ until (n >= MaxIter) {
     Z_re2 = Z_re*Z_re;
     Z_im2 = Z_im*Z_im;
 
-    outside = if (Z_re2 + Z_im2 > 4);
+    outside = Z_re2 + Z_im2 > 4;
     breakif( outside );
 
     Z_im = 2*Z_re*Z_im + c_im;

@@ -27,18 +27,19 @@ import javax.media.jai.TiledImage;
 import org.junit.Test;
 
 /**
- * Unit tests for the various {@code if} fnctions and the ternary statement.
+ * Unit tests for {@code con} functions.
  * @author Michael Bedward
  * @since 1.1
  * @version $Id$
  */
-public class IfStatementsTest extends StatementsTestBase {
+public class ConStatementsTest extends StatementsTestBase {
 
     @Test
-    public void if1Arg() throws Exception {
-        String src = "dest = if (src > 10);";
+    public void con1Arg() throws Exception {
+        String script = "dest = con(src > 10);";
+        System.out.println("   " + script);
         
-        testScript(src, new Evaluator() {
+        testScript(script, new Evaluator() {
 
             public double eval(double val) {
                 return val > 10 ? 1 : 0;
@@ -47,10 +48,11 @@ public class IfStatementsTest extends StatementsTestBase {
     }
 
     @Test
-    public void if2Arg() throws Exception {
-        String src = "dest = if (src > 10, 10);";
+    public void con2Arg() throws Exception {
+        String script = "dest = con(src > 10, 10);";
+        System.out.println("   " + script);
         
-        testScript(src, new Evaluator() {
+        testScript(script, new Evaluator() {
 
             public double eval(double val) {
                 return val > 10 ? 10 : 0;
@@ -59,10 +61,11 @@ public class IfStatementsTest extends StatementsTestBase {
     }
 
     @Test
-    public void if3Arg() throws Exception {
-        String src = "dest = if (src > 10, src, 10);";
+    public void con3Arg() throws Exception {
+        String script = "dest = con(src > 10, src, 10);";
+        System.out.println("   " + script);
         
-        testScript(src, new Evaluator() {
+        testScript(script, new Evaluator() {
 
             public double eval(double val) {
                 return val > 10 ? val : 10;
@@ -71,10 +74,11 @@ public class IfStatementsTest extends StatementsTestBase {
     }
     
     @Test
-    public void if4Arg() throws Exception {
-        String src = "dest = if (src - 10, src, 10, 0);";
+    public void con4Arg() throws Exception {
+        String script = "dest = con(src - 10, src, 10, 0);";
+        System.out.println("   " + script);
         
-        testScript(src, new Evaluator() {
+        testScript(script, new Evaluator() {
 
             public double eval(double val) {
                 double comp = val - 10;
@@ -90,26 +94,8 @@ public class IfStatementsTest extends StatementsTestBase {
     }
     
     @Test
-    public void ternary() throws Exception {
-        
-        String src = String.format("dest = src <= %d ? -1 : 1;",
-                NUM_PIXELS / 2);
-        
-        System.out.println("   " + src);
-        
-        testScript(src,
-                new Evaluator() {
-
-                    public double eval(double val) {
-                        return val <= NUM_PIXELS / 2 ? -1.0 : 1.0;
-                    }
-                });
-    }
-    
-    @Test
-    public void nestedIfProblem1() throws Exception {
-        // A statement that was reported not to work
-        String script = "dest = if(src1, if(src1 > src2, 1, null), null);" ;
+    public void nestedCon() throws Exception {
+        String script = "dest = con(src1, con(src1 > src2, 1, null), null);" ;
         
         System.out.println("   " + script);
         

@@ -71,7 +71,7 @@ public class ImageScopeVarsTest extends StatementsTestBase {
         System.out.println("   getting values from runtime instance");
 
         String script = String.format(
-                "init { n = 0; } n += if (src < %s); dest = n;",
+                "init { n = 0; } n += con(src < %s); dest = n;",
                 NUM_PIXELS / 2);
 
         Evaluator e = new Evaluator() {
@@ -109,7 +109,7 @@ public class ImageScopeVarsTest extends StatementsTestBase {
     public void ifWithinInitBlock() throws Exception {
         System.out.println("   using if expressions in init block");
 
-        String script = "init { n = if (width() > 100, 2, 1); } dest = n;" ;
+        String script = "init { n = con(width() > 100, 2, 1); } dest = n;" ;
         
         Evaluator e = new Evaluator() {
 

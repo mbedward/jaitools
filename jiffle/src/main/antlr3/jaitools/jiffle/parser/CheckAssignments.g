@@ -180,7 +180,7 @@ userVar         : VAR_IMAGE_SCOPE
 
 
 expression      : ^(FUNC_CALL ID expressionList)
-                | ^(IF_CALL expressionList)
+                | ^(CON_CALL expressionList)
                 | ^(QUESTION expression expression expression)
                 | ^(IMAGE_WRITE . expression)
                 | ^(IMAGE_POS . bandSpecifier? pixelSpecifier?)

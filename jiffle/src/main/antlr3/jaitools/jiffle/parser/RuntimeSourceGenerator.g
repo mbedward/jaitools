@@ -222,7 +222,7 @@ foreachLoop
 expression      : ^(FUNC_CALL ID el=expressionList) 
                 -> call(name={getRuntimeExpr($ID.text, $el.argTypes)}, args={$el.templates})
 
-                | ^(IF_CALL el=expressionList) -> ifcall(args={$el.templates})
+                | ^(CON_CALL el=expressionList) -> ifcall(args={$el.templates})
 
                 | imagePos -> {$imagePos.st}
 

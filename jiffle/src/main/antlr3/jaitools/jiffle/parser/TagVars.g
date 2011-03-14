@@ -241,7 +241,7 @@ expression returns [String rtnType]
 
 
 scalarExpression
-                : ^(IF_CALL expressionList)
+                : ^(CON_CALL expressionList)
                 | ^(QUESTION expression expression expression)
                 | ^(IMAGE_POS identifier bandSpecifier? pixelSpecifier?)
                 | ^(logicalOp expression expression)

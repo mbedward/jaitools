@@ -138,7 +138,7 @@ public class MutliBandImagePosTest {
     public void bandRelativePixel() throws Exception {
         System.out.println("   band plus relative pixel position");
 
-        String script = "dest = if (x() > 0 && y() > 0, src[1][-1,-1], NULL);" ;
+        String script = "dest = con(x() > 0 && y() > 0, src[1][-1,-1], NULL);" ;
 
         Evaluator e = new Evaluator() {
             int x = 0;
@@ -164,7 +164,7 @@ public class MutliBandImagePosTest {
     public void bandAbsolutePixel() throws Exception {
         System.out.println("   band plus absolute pixel position");
 
-        String script = "dest = if (x() > 0 && y() > 0, src[1][$(x()-1), $(y()-1)], NULL);";
+        String script = "dest = con(x() > 0 && y() > 0, src[1][$(x()-1), $(y()-1)], NULL);";
 
         Evaluator e = new Evaluator() {
             int x = 0;
