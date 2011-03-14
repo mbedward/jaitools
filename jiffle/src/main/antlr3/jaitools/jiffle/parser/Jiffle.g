@@ -30,6 +30,8 @@ grammar Jiffle;
 options {
     output=AST;
     ASTLabelType = CommonTree;
+    backtrack = true;
+    memoize = true;
 }
 
 tokens {
@@ -122,13 +124,21 @@ blockStatement  : statement
                 ;
 
 
-statement       : block
+statement       : ifCall
+                | block
                 | delimitedStatement SEMI!
                 | assignmentExpression SEMI!
                 | WHILE LPAR loopCondition RPAR statement -> ^(WHILE loopCondition statement)
                 | UNTIL LPAR loopCondition RPAR statement -> ^(UNTIL loopCondition statement)
                 | FOREACH LPAR ID IN loopSet RPAR statement -> ^(FOREACH ID loopSet statement)
                 | SEMI!
+                ;
+
+
+ifCall          : IF LPAR orExpression RPAR s1=statement
+                  ( ELSE s2=statement -> ^(IF orExpression $s1 $s2)
+                  | -> ^(IF orExpression $s1)
+                  )
                 ;
 
 
@@ -141,9 +151,7 @@ loopCondition   : orExpression
                 ;
 
 
-loopSet
-options {backtrack = true; }
-                : listLiteral
+loopSet         : listLiteral
                 | sequence
                 | ID
                 ;
@@ -269,9 +277,7 @@ arguments       : LPAR! expressionList RPAR!
                 ;
 
 
-imagePos
-options { backtrack=true; memoize=true; }
-                : bandSpecifier pixelSpecifier
+imagePos        : bandSpecifier pixelSpecifier
                 | pixelSpecifier
                 | bandSpecifier
                 ;
@@ -326,7 +332,8 @@ OPTIONS : 'options' ;
 INIT    : 'init' ;
 
 CON     : 'con' ;
-// IF      : 'if' ;
+IF      : 'if' ;
+ELSE    : 'else' ;
 WHILE   : 'while' ;
 UNTIL   : 'until' ;
 FOREACH : 'foreach' ;

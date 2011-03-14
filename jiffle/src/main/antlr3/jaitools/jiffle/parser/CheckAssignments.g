@@ -84,12 +84,18 @@ blockStatement  : statement
 
 
 statement       : block
+                | ifCall
                 | assignmentExpression
                 | ^(WHILE loopCondition statement)
                 | ^(UNTIL loopCondition statement)
                 | foreachLoop
                 | expression
                 ;
+
+
+ifCall          : ^(IF expression statement statement?)
+                ;
+
 
 foreachLoop
 @init {

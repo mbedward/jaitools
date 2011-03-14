@@ -113,6 +113,7 @@ simpleStatement : imageWrite -> {$imageWrite.st}
                 | scalarAssignment -> {$scalarAssignment.st}
                 | listAssignment -> {$listAssignment.st}
                 | loop -> {$loop.st}
+                | ifCall -> {$ifCall.st}
                 | expression -> {$expression.st}
                 ;
 
@@ -219,10 +220,16 @@ foreachLoop
                 ;
 
 
+ifCall          : ^(IF expression s1=statement s2=statement?)
+                -> {$s2.st == null}? ifcall(cond={$expression.st}, case={$s1.st})
+                -> ifelsecall(cond={$expression.st}, case1={$s1.st}, case2={$s2.st})
+                ;
+
+
 expression      : ^(FUNC_CALL ID el=expressionList) 
                 -> call(name={getRuntimeExpr($ID.text, $el.argTypes)}, args={$el.templates})
 
-                | ^(CON_CALL el=expressionList) -> ifcall(args={$el.templates})
+                | ^(CON_CALL el=expressionList) -> concall(args={$el.templates})
 
                 | imagePos -> {$imagePos.st}
 

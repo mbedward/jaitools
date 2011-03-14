@@ -192,40 +192,52 @@ if (_FN.sign(<cond>) == 1) break;
 
 
 ////////////////////////////////////////////////////////////
-// If-calls
+// con calls
 //
 // These are treated separately from general functions to 
 // ensure lazy evaluation of the alternatives
 
 
 // This template is called from the grammar
-ifcall(args) ::= <<
-<({if<length(args)>})(args)>
+concall(args) ::= <<
+<({con<length(args)>})(args)>
 >>
 
 
 ////////////////////////////////////////////////////////////
-// Helper templates called by ifcall
+// Helper templates called by concall
 
-if1(cond) ::= <<
+con1(cond) ::= <<
 (_stk.push(_FN.sign(<first(args)>)) == null ? Double.NaN :
     _stk.peek() != 0 ? 1.0 : 0.0)
 >>
 
-if2(args) ::= <<
+con2(args) ::= <<
 (_stk.push(_FN.sign(<first(args)>)) == null ? Double.NaN : 
     _stk.peek() != 0 ? <last(args)> : 0.0)
 >>
 
-if3(args) ::= <<
+con3(args) ::= <<
 (_stk.push(_FN.sign(<first(args)>)) == null ? Double.NaN : 
     _stk.peek() != 0 ? <first(rest(args))> : <last(args)>)
 >>
 
-if4(args) ::= <<
+con4(args) ::= <<
 (_stk.push(_FN.sign(<first(args)>)) == null ? Double.NaN : 
     _stk.peek() == 1 ? <first(rest(args))> : 
         _stk.peek() == 0 ? <first(rest(rest(args)))> : <last(args)>)
+>>
+
+
+////////////////////////////////////////////////////////////
+// If statement
+ifcall(cond, case) ::= <<
+if (_stk.push(_FN.sign(<cond>)) != null && _stk.peek() != 0) <case>
+>>
+
+ifelsecall(cond, case1, case2) ::= <<
+if (_stk.push(_FN.sign(<cond>)) != null && _stk.peek() != 0) <case1>
+else <case2>
 >>
 
 

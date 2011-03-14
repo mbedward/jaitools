@@ -87,11 +87,16 @@ blockStatement  : statement
 
 
 statement       : block
+                | ifCall
                 | assignmentExpression
                 | ^(WHILE loopCondition statement)
                 | ^(UNTIL loopCondition statement)
                 | ^(FOREACH ID loopSet statement)
                 | expression
+                ;
+
+
+ifCall          : ^(IF expression statement statement?)
                 ;
 
 
