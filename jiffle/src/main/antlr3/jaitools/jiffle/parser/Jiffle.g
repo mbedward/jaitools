@@ -115,12 +115,7 @@ varDeclaration  : ID EQ expression SEMI -> ^(IMAGE_SCOPE_VAR_DECL ID expression)
                 ;
 
 
-block           : LCURLY blockStatement* RCURLY -> ^(BLOCK blockStatement*)
-                ;
-
-
-blockStatement  : statement
-                | BREAKIF LPAR expression RPAR -> ^(BREAKIF expression)
+block           : LCURLY statement* RCURLY -> ^(BLOCK statement*)
                 ;
 
 
@@ -131,6 +126,7 @@ statement       : ifCall
                 | WHILE LPAR loopCondition RPAR statement -> ^(WHILE loopCondition statement)
                 | UNTIL LPAR loopCondition RPAR statement -> ^(UNTIL loopCondition statement)
                 | FOREACH LPAR ID IN loopSet RPAR statement -> ^(FOREACH ID loopSet statement)
+                | BREAKIF LPAR expression RPAR -> ^(BREAKIF expression)
                 | SEMI!
                 ;
 

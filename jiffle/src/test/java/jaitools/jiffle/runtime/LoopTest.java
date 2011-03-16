@@ -241,6 +241,35 @@ public class LoopTest extends StatementsTestBase {
     }
     
     @Test
+    public void breakifNestedInIf() throws Exception {
+        System.out.println("   breakif nested in if-block");
+        
+        String script = 
+                  "n = 0; \n"
+                + "i = 0; \n"
+                + "while (i < x()) { \n"
+                + "  n += i; \n"
+                + "  if (true) { \n"
+                + "      breakif(n >= 10); \n"
+                + "  } \n"
+                + "  i++ ; \n"
+                + "} \n"
+                + "dest = n;" ;
+        
+        Evaluator e = new Evaluator() {
+            int x = 0;
+            public double eval(double val) {
+                int n = 0;
+                for (int i = 0; i < x; i++) n += i;
+                x = (x + 1) % WIDTH;
+                return (n < 10 ? n : 10);
+            }
+        };
+        
+        testScript(script, e);
+    }
+    
+    @Test
     public void nestedForEachLoops() throws Exception {
         System.out.println("   nested foreach loops");
         String script = 

@@ -94,13 +94,8 @@ block
 @after {
     varScope.dropLevel();
 }
-                : ^(BLOCK s+=blockStatement*)
+                : ^(BLOCK s+=statement*)
                 -> block(stmts={$s})
-                ;
-
-
-blockStatement  : statement -> {$statement.st}
-                | ^(BREAKIF expression) -> breakif(cond={$expression.st})
                 ;
 
 
@@ -113,6 +108,7 @@ simpleStatement : imageWrite -> {$imageWrite.st}
                 | scalarAssignment -> {$scalarAssignment.st}
                 | listAssignment -> {$listAssignment.st}
                 | loop -> {$loop.st}
+                | ^(BREAKIF expression) -> breakif(cond={$expression.st})
                 | ifCall -> {$ifCall.st}
                 | expression -> {$expression.st}
                 ;

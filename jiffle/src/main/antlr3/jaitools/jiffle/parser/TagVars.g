@@ -128,12 +128,7 @@ block
 @after {
     varScope.dropLevel();
 }
-                : ^(BLOCK blockStatement*)
-                ;
-
-
-blockStatement  : statement
-                | ^(BREAKIF expression)
+                : ^(BLOCK statement*)
                 ;
 
 
@@ -143,6 +138,7 @@ statement       : block
                 | ^(WHILE loopCondition statement)
                 | ^(UNTIL loopCondition statement)
                 | foreachLoop
+                | ^(BREAKIF expression)
                 | expression
                 ;
 

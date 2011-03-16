@@ -77,12 +77,7 @@ varDeclaration  : ^(IMAGE_SCOPE_VAR_DECL id=. expression)
                 ;
 
 
-block           : ^(BLOCK blockStatement*)
-                ;
-
-
-blockStatement  : statement
-                | ^(BREAKIF expression)
+block           : ^(BLOCK statement*)
                 ;
 
 
@@ -92,6 +87,7 @@ statement       : block
                 | ^(WHILE loopCondition statement)
                 | ^(UNTIL loopCondition statement)
                 | ^(FOREACH ID loopSet statement)
+                | ^(BREAKIF expression)
                 | expression
                 ;
 

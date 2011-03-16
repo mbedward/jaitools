@@ -74,12 +74,7 @@ varDeclaration  : ^(IMAGE_SCOPE_VAR_DECL VAR_IMAGE_SCOPE .)
                 ;
 
 
-block           : ^(BLOCK blockStatement*)
-                ;
-
-
-blockStatement  : statement
-                | ^(BREAKIF expression)
+block           : ^(BLOCK statement*)
                 ;
 
 
@@ -89,6 +84,7 @@ statement       : block
                 | ^(WHILE loopCondition statement)
                 | ^(UNTIL loopCondition statement)
                 | foreachLoop
+                | ^(BREAKIF expression)
                 | expression
                 ;
 
