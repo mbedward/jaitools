@@ -85,6 +85,7 @@ statement       : block
                 | ^(UNTIL loopCondition statement)
                 | foreachLoop
                 | ^(BREAKIF expression)
+                | BREAK
                 | expression
                 ;
 

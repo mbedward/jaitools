@@ -20,6 +20,7 @@
 
 package jaitools.jiffle.runtime;
 
+import jaitools.jiffle.JiffleException;
 import org.junit.Test;
 
 /**
@@ -263,6 +264,59 @@ public class LoopTest extends StatementsTestBase {
                 for (int i = 0; i < x; i++) n += i;
                 x = (x + 1) % WIDTH;
                 return (n < 10 ? n : 10);
+            }
+        };
+        
+        testScript(script, e);
+    }
+    
+    @Test
+    public void unconditionalBreak() throws Exception {
+        System.out.println("   unconditional break");
+        String script = 
+                  "i = 0;"
+                + "while (i < src) { \n"
+                + "  if (++i >= 5) break;"
+                + "} \n"
+                + "dest = i;";
+        
+        Evaluator e = new Evaluator() {
+            public double eval(double val) {
+                return Math.min(val, 5.0);
+            }
+        };
+        
+        testScript(script, e);
+    }
+    
+    @Test(expected=JiffleException.class)
+    public void breakifStatementOutsideOfLoop() throws Exception {
+        System.out.println("   breakif statement outside loop throws exception");
+        String script = 
+                  "i = 42;\n"
+                + "breakif( i == 42 );\n"
+                + "dest = i;" ;
+
+        Evaluator e = new Evaluator() {
+            public double eval(double val) {
+                throw new IllegalStateException("Should not be called");
+            }
+        };
+        
+        testScript(script, e);
+    }
+    
+    @Test(expected=JiffleException.class)
+    public void breakStatementOutsideOfLoop() throws Exception {
+        System.out.println("   break statement outside loop throws exception");
+        String script = 
+                  "i = 42;\n"
+                + "break;\n"
+                + "dest = i;" ;
+
+        Evaluator e = new Evaluator() {
+            public double eval(double val) {
+                throw new IllegalStateException("Should not be called");
             }
         };
         

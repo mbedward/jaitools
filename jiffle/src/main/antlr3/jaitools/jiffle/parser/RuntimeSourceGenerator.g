@@ -109,6 +109,7 @@ simpleStatement : imageWrite -> {$imageWrite.st}
                 | listAssignment -> {$listAssignment.st}
                 | loop -> {$loop.st}
                 | ^(BREAKIF expression) -> breakif(cond={$expression.st})
+                | BREAK -> {%{"break"}}
                 | ifCall -> {$ifCall.st}
                 | expression -> {$expression.st}
                 ;

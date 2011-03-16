@@ -88,6 +88,7 @@ statement       : block
                 | ^(UNTIL loopCondition statement)
                 | ^(FOREACH ID loopSet statement)
                 | ^(BREAKIF expression)
+                | BREAK
                 | expression
                 ;
 

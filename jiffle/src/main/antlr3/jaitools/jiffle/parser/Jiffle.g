@@ -126,7 +126,6 @@ statement       : ifCall
                 | WHILE LPAR loopCondition RPAR statement -> ^(WHILE loopCondition statement)
                 | UNTIL LPAR loopCondition RPAR statement -> ^(UNTIL loopCondition statement)
                 | FOREACH LPAR ID IN loopSet RPAR statement -> ^(FOREACH ID loopSet statement)
-                | BREAKIF LPAR expression RPAR -> ^(BREAKIF expression)
                 | SEMI!
                 ;
 
@@ -140,6 +139,8 @@ ifCall          : IF LPAR orExpression RPAR s1=statement
 
 delimitedStatement
                 : expression
+                | BREAKIF LPAR expression RPAR -> ^(BREAKIF expression)
+                | BREAK
                 ;
 
 
@@ -335,6 +336,7 @@ UNTIL   : 'until' ;
 FOREACH : 'foreach' ;
 IN      : 'in' ;
 BREAKIF : 'breakif' ;
+BREAK   : 'break' ;
 
 /* Operators sorted and grouped by precedence order */
 
