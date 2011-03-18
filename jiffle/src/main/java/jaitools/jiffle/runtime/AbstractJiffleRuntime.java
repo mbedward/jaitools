@@ -145,6 +145,7 @@ public abstract class AbstractJiffleRuntime implements JiffleRuntime {
             
         } else {
             _vars[index].value = value;
+            _vars[index].isSet = true;
         }
     }
 
