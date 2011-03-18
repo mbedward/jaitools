@@ -226,30 +226,65 @@ public abstract class AbstractJiffleRuntime implements JiffleRuntime {
         System.arraycopy(temp, 0, _vars, 0, temp.length);
     }
     
+    /**
+     * Gets the min X ordinate of the processing area.
+     * 
+     * @return min X ordinate
+     */
     public int getMinX() {
         return _bounds.x;
     }
 
+    /**
+     * Gets the max X ordinate of the processing area.
+     * 
+     * @return max X ordinate
+     */
     public int getMaxX() {
         return _bounds.x + _bounds.width - 1;
     }
 
+    /**
+     * Gets the min Y ordinate of the processing area.
+     * 
+     * @return min Y ordinate
+     */
     public int getMinY() {
         return _bounds.y;
     }
 
+    /**
+     * Gets the max Y ordinate of the processing area.
+     * 
+     * @return max Y ordinate
+     */
     public int getMaxY() {
         return _bounds.y + _bounds.height - 1;
     }
     
+    /**
+     * Gets the width of the processing area.
+     * 
+     * @return the width
+     */
     public int getWidth() {
         return _bounds.width;
     }
     
+    /**
+     * Gets the height of the processing area.
+     * 
+     * @return the height
+     */
     public int getHeight() {
         return _bounds.height;
     }
     
+    /**
+     * Gets the total number of pixels in the processing area.
+     * 
+     * @return the number of pixels
+     */
     public long getSize() {
         return (long)_bounds.width * _bounds.height;
     }
