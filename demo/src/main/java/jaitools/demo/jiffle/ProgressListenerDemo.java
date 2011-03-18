@@ -221,10 +221,7 @@ public class ProgressListenerDemo {
 
         public PretendJiffleRuntime() {
             // set the pretend processing area
-            this._width = NUM_PIXELS;
-            this._height = 1;
-            this._minx = 0;
-            this._miny = 0;
+            setBounds(0, 0, NUM_PIXELS, 1);
         }
 
         @Override
@@ -243,6 +240,11 @@ public class ProgressListenerDemo {
             } catch (InterruptedException ex) {
                 throw new RuntimeException(ex);
             }
+        }
+
+        @Override
+        protected Double getDefaultValue(int index) {
+            return null;
         }
     }
 }
