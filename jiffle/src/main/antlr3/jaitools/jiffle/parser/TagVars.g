@@ -106,7 +106,7 @@ optionValue     : identifier
                 ;
 
 
-varDeclaration  : ^(IMAGE_SCOPE_VAR_DECL ID expression)
+varDeclaration  : ^(IMAGE_SCOPE_VAR_DECL ID expression?)
                 {
                     String varName = $ID.text;
 
@@ -117,7 +117,7 @@ varDeclaration  : ^(IMAGE_SCOPE_VAR_DECL ID expression)
                         varScope.addSymbol(varName, SymbolType.SCALAR, ScopeType.IMAGE);
                     }
                 }
-                  -> ^(IMAGE_SCOPE_VAR_DECL VAR_IMAGE_SCOPE[varName] expression)
+                  -> ^(IMAGE_SCOPE_VAR_DECL VAR_IMAGE_SCOPE[varName] expression?)
                 ;
 
 

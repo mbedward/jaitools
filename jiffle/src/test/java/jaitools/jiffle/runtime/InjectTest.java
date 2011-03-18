@@ -41,16 +41,39 @@ public class InjectTest extends StatementsTestBase {
         String script = 
                   "init { n = 0; } \n"
                 + "dest = n;" ;
-        
+
+        testInject(script, 42.0);
+    }
+    
+    @Test
+    public void varWithNoDefault() throws Exception {
+        String script = 
+                  "init { n; } \n"
+                + "dest = n;" ;
+
+        testInject(script, 42.0);
+    }
+
+    @Test(expected=JiffleRuntimeException.class)
+    public void neglectVarWithNoDefault() throws Exception {
+        String script = 
+                  "init { n; } \n"
+                + "dest = n;" ;
+
+        testInject(script, null);
+    }
+
+    private void testInject(String script, final Double value) throws Exception {
         JiffleBuilder builder = new JiffleBuilder();
         builder.script(script).dest("dest", WIDTH, WIDTH);
         
         RenderedImage destImg = builder.getImage("dest");
         JiffleDirectRuntime runtime = builder.getRuntime();
         
-        final double value = 42;
         runtime.setDestinationImage("dest", (WritableRenderedImage)destImg);
-        runtime.setVar("n", value);
+        if (value != null) {
+            runtime.setVar("n", value);
+        }
         runtime.evaluateAll(null);
         
         Evaluator e = new Evaluator() {
@@ -61,4 +84,6 @@ public class InjectTest extends StatementsTestBase {
         
         assertImage(null, destImg, e);
     }
+    
+    
 }

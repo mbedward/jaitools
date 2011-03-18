@@ -111,7 +111,7 @@ initBlock       : INIT LCURLY varDeclaration* RCURLY -> varDeclaration*
                 ;
 
 
-varDeclaration  : ID EQ expression SEMI -> ^(IMAGE_SCOPE_VAR_DECL ID expression)
+varDeclaration  : ID (EQ expression)? SEMI -> ^(IMAGE_SCOPE_VAR_DECL ID expression?)
                 ;
 
 

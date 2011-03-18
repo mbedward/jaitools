@@ -67,7 +67,7 @@ jiffleOption    : ^(JIFFLE_OPTION ID .)
                 ;
 
 
-varDeclaration  : ^(IMAGE_SCOPE_VAR_DECL VAR_IMAGE_SCOPE .)
+varDeclaration  : ^(IMAGE_SCOPE_VAR_DECL VAR_IMAGE_SCOPE .?)
                 { 
                     varScope.addSymbol($VAR_IMAGE_SCOPE.text, SymbolType.SCALAR, ScopeType.IMAGE);
                 }
