@@ -38,6 +38,7 @@ options {
 package jaitools.jiffle.parser;
 
 import jaitools.jiffle.Jiffle;
+import jaitools.jiffle.runtime.AbstractJiffleRuntime;
 }
 
 @members {
@@ -50,6 +51,10 @@ private String getConstantString(String name) {
         return "Double.NaN";
     }
     return s;
+}
+
+private String getImageScopeVarExpr(String varName) {
+    return AbstractJiffleRuntime.VAR_STRING.replace("_VAR_", varName);
 }
 
 }
@@ -135,8 +140,22 @@ expressionList returns [List argTypes, List templates]
 
 
 scalarAssignment
-                : ^(op=assignmentOp id=scalar expression)
-                -> binaryexpr(lhs={$id.st}, op={$op.st}, rhs={$expression.st})
+                : ^(EQ scalar expression) 
+                -> binaryexpr(lhs={$scalar.st}, op={$EQ.text}, rhs={$expression.st})
+
+                | ^(compoundAssignmentOp scalar expression)
+                {
+                    String opChar1 = String.valueOf($compoundAssignmentOp.start.getText().charAt(0));
+                }
+                -> compoundassignment(lhs={$scalar.st}, op={opChar1}, rhs={$expression.st})
+                ;
+
+compoundAssignmentOp
+                : TIMESEQ
+                | DIVEQ
+                | MODEQ
+                | PLUSEQ
+                | MINUSEQ
                 ;
 
 
@@ -164,6 +183,10 @@ scalar returns [boolean newVar]
     String varName = $start.getText();
     if ($newVar) {
         $st = %{"double " + varName};
+
+    } else if ($start.getType() == VAR_IMAGE_SCOPE) {
+        $st = %{getImageScopeVarExpr(varName)};
+
     } else {
         $st = %{varName};
     }
@@ -266,13 +289,11 @@ listLiteral     : ^(DECLARED_LIST e=expressionList)
                 ;
 
 
-var
-@after { $st = $start.getType() == VAR_LIST ? %{"(List)" + $start.getText()} : %{$start.getText()}; }
-                : VAR_IMAGE_SCOPE
-                | VAR_PIXEL_SCOPE
-                | VAR_PROVIDED
-                | VAR_LOOP
-                | VAR_LIST
+var             : VAR_IMAGE_SCOPE -> {%{getImageScopeVarExpr($VAR_IMAGE_SCOPE.text)}}
+                | VAR_PIXEL_SCOPE -> {%{$VAR_PIXEL_SCOPE.text}}
+                | VAR_PROVIDED -> {%{$VAR_PROVIDED.text}}
+                | VAR_LOOP -> {%{$VAR_LOOP.text}}
+                | VAR_LIST -> {%{"(List)" + $VAR_LIST.text}}
                 ;
 
 
@@ -308,17 +329,6 @@ binaryExpression returns [String src]
 
                 | ^(arithmeticOp x=expression y=expression) 
                 -> binaryexpr(lhs={x.st}, op={$arithmeticOp.st}, rhs={y.st})
-                ;
-
-
-assignmentOp
-@after { $st = %{$start.getText()}; }
-                : EQ
-                | TIMESEQ
-                | DIVEQ
-                | MODEQ
-                | PLUSEQ
-                | MINUSEQ
                 ;
 
 

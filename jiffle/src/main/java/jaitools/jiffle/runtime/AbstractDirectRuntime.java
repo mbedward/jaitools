@@ -62,27 +62,8 @@ public abstract class AbstractDirectRuntime extends AbstractJiffleRuntime implem
      */
     protected Map writers = new HashMap();
 
-    /** Processing bounds min X ordinate */
-    protected int _minx;
-
-    /** Processing bounds min Y ordinate */
-    protected int _miny;
-    
-    /** Processing bounds max X ordinate */
-    protected int _maxx;
-    
-    /** Processing bounds max Y ordinate */
-    protected int _maxy;
-
-    /** Processing bounds width */
-    protected int _width;
-    
-    /** Processing bounds height */
-    protected int _height;
-    
-
     /**
-     * Creates a new instance.
+     * Creates a new instance and initializes script-option variables.
      */
     public AbstractDirectRuntime() {
         initOptionVars();
@@ -105,20 +86,6 @@ public abstract class AbstractDirectRuntime extends AbstractJiffleRuntime implem
     /**
      * {@inheritDoc}
      */
-    public void setBounds(int minx, int miny, int width, int height) {
-        _minx = minx;
-        _miny = miny;
-        _width = width;
-        _height = height;
-        _maxx = _minx + _width - 1;
-        _maxy = _miny + _height - 1;
-
-        initImageScopeVars();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public void setSourceImage(String imageName, RenderedImage image) {
         images.put(imageName, image);
         readers.put(imageName, RandomIterFactory.create(image, null));
@@ -130,7 +97,7 @@ public abstract class AbstractDirectRuntime extends AbstractJiffleRuntime implem
     public void evaluateAll(JiffleProgressListener pl) {
         JiffleProgressListener listener = pl == null ? new NullProgressListener() : pl;
 
-        final long numPixels = (long)_width * _height;
+        final long numPixels = getSize();
         listener.setTaskSize(numPixels);
         
         long count = 0;
@@ -138,8 +105,8 @@ public abstract class AbstractDirectRuntime extends AbstractJiffleRuntime implem
         final long updateInterval = listener.getUpdateInterval();
         
         listener.start();
-        for (int y = _miny, iy = 0; iy < _height; y++, iy++) {
-            for (int x = _minx, ix = 0; ix < _width; x++, ix++) {
+        for (int y = _bounds.y, iy = 0; iy < _bounds.height; y++, iy++) {
+            for (int x = _bounds.x, ix = 0; ix < _bounds.width; x++, ix++) {
                 evaluate(x, y);
                 
                 count++ ;

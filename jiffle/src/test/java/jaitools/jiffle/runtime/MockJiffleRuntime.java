@@ -43,11 +43,7 @@ class MockJiffleRuntime extends AbstractDirectRuntime {
     public MockJiffleRuntime(int imageSize, long pixelTime) {
         this.pixelTime = pixelTime;
         
-        // super class fields
-        this._width = imageSize;
-        this._height = 1;
-        this._minx = 0;
-        this._miny = 0;
+        setBounds(0, 0, imageSize, 1);
     }
 
 
@@ -75,5 +71,10 @@ class MockJiffleRuntime extends AbstractDirectRuntime {
         } catch (InterruptedException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    @Override
+    protected Double getDefaultValue(int index) {
+        return null;
     }
 }

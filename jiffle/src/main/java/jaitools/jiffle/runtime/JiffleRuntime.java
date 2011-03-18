@@ -42,7 +42,7 @@ public interface JiffleRuntime {
     
     /**
      * Returns the value of a variable that was declared in the
-     * script's init block.
+     * script's <i>init</i> block.
      *
      * @param varName variable name
      *
@@ -51,4 +51,16 @@ public interface JiffleRuntime {
      */
     Double getVar(String varName);
 
+    /**
+     * Sets the value of a variable that was declared in the script's
+     * <i>init</i> block, overriding the default value in the script
+     * if present. Setting {@code value} to {@code null} results in the
+     * default script value being used.
+     * 
+     * @param varName variable name
+     * @param value the new value
+     * 
+     * @throws JiffleRuntimeException if the variable name is not found
+     */
+    void setVar(String varName, Double value) throws JiffleRuntimeException;
 }

@@ -132,8 +132,6 @@ assignmentOp    : EQ
 
 expression
                 : ^(FUNC_CALL ID expressionList)
-                { 
-                }
                   -> {isProxy($ID.text)}? VAR_PROVIDED[ getRuntimeExpr($ID.text) ]
                   -> ^(FUNC_CALL ID expressionList)
                     

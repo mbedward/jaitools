@@ -33,6 +33,27 @@ group Runtime;
  * @version $Id$
  */
 
+
+////////////////////////////////////////////////////////////
+// Constructor
+//
+// The fields arg holds templates for image-scope variables
+
+ctor(classname, fields) ::= <<
+public <classname>() {
+    <ctorbody(fields)>
+}
+
+>>
+
+ctorbody(fields) ::= <<
+<registervars(fields=fields)>
+>>
+
+registervars(name, fields) ::= <<
+<fields: {field |registerVar("<field.name>", <if(field.init)>true<else>false<endif>);}; separator="\n">
+>>
+
 ////////////////////////////////////////////////////////////
 // Field declaration
 //
@@ -55,17 +76,9 @@ scriptoption(name, value) ::= << >>
 // Helper templates for the runtime template
 // 
 
-// Formats fields for image-scope variables
-declarefields(vars) ::= <<
-<vars: {var |<var.mods; separator=" "> <var.type> <var.name>;}; separator="\n">
->>
-
-
-// Formats initializing expressions for image-scope variables
-initfields(vars) ::= <<
-protected void initImageScopeVars() {
-    <vars: {var |<var.name> = <var.init>;}; separator="\n">
-}
+// Creates an int index field for each image-scope variable
+fieldindices(vars) ::= <<
+<vars: {var |private final int <var.name> = <i0>;}; separator="\n">
 >>
 
 
@@ -76,19 +89,22 @@ protected void initOptionVars() {
 }
 >>
 
-
-// Formats the getter method for image-scope variables.
-getter(vars) ::= <<
-public Double getVar(String varName) {
-    <first(vars): {var |<vargetter(var=var)>;}>
-    <rest(vars):  {var |else <vargetter(var=var)>;}>
-    return null;
+// Getter function for image-scope variable default values
+defaultvaluegetter(fields) ::= <<
+protected Double getDefaultValue(int index) {
+    switch (index) {
+        <fields: {field |<defaultvaluecase(index={<i0>}, field=field)>}; separator="\n">
+        default:
+            return null;
+    }
 }
+
 >>
 
-// Formats an individual case in the getter method
-vargetter(var) ::= <<
-if ("<var.name>".equals(varName)) return <var.name>
+// Creates a case statement for a variable default value
+defaultvaluecase(index, field) ::= <<
+case <index>:  // <field.name>
+    return <if(field.init)><field.init><else>null<endif>;
 >>
 
 
@@ -259,6 +275,12 @@ binaryexpr(lhs, op, rhs) ::= <<
 
 pow(x, y) ::= <<
 Math.pow(<x>, <y>)
+>>
+
+// this template is a work-around for Janino 2.5.16 being unable
+// to compile come expressions with "+=" etc compound ops
+compoundassignment(lhs, op, rhs) ::= <<
+<lhs> = <lhs> <op> <rhs>
 >>
 
 

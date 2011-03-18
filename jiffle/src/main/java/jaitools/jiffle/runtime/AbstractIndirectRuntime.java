@@ -53,6 +53,14 @@ public abstract class AbstractIndirectRuntime extends AbstractJiffleRuntime impl
 
     /** Processing bounds height */
     protected int _height;
+    
+    
+    /**
+     * Creates a new instance and initializes script-option variables.
+     */
+    public AbstractIndirectRuntime() {
+        initOptionVars();
+    }
 
     public void setDestinationImage(String imageName) {
         destImageName = imageName;
@@ -74,13 +82,5 @@ public abstract class AbstractIndirectRuntime extends AbstractJiffleRuntime impl
     public double readFromImage(String srcImageName, int x, int y, int band) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
-
-    /**
-     * Initializes image-scope variables. These are fields in the runtime class.
-     * They are initialized in a separate method rather than the constructor
-     * because they may depend on expressions involving values that are not
-     * known until the processing area is set (e.g. Jiffle's width() function).
-     */
-    protected abstract void initImageScopeVars();
 
 }

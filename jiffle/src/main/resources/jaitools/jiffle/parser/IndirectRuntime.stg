@@ -43,19 +43,19 @@ package <pkgname>;
 <imports: {imp |import <imp>;}; separator="\n">
 
 public class <name> extends <base> {
-    <declarefields(fields)>
-
-    <initfields(fields)>
-
+    <fieldindices(fields)>
     <initoptions(opts)>
-    
+
+    <ctor(classname=name, fields=fields)>
+    <defaultvaluegetter(fields)>
     public double evaluate(int _x, int _y) {
+        if (!_imageScopeVarsInitialized) {
+            initImageScopeVars();
+        }
         _stk.clear();
 
         <eval; separator="\n">
     }
-
-    <getter(vars=fields)>
 }
 >>
 

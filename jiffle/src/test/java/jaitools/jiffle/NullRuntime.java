@@ -21,6 +21,7 @@
 package jaitools.jiffle;
 
 import jaitools.jiffle.runtime.JiffleRuntime;
+import jaitools.jiffle.runtime.JiffleRuntimeException;
 
 /**
  * A stub class used in unit tests.
@@ -33,6 +34,10 @@ public class NullRuntime implements JiffleRuntime {
 
     public Double getVar(String varName) {
         throw new UnsupportedOperationException("Should not be called");
+    }
+
+    public void setVar(String varName, Double value) throws JiffleRuntimeException {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public void setBounds(int minx, int miny, int width, int height) {
