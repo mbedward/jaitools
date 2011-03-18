@@ -218,7 +218,7 @@ public class StreamingSampleStatsTest {
         assertEquals(500.0, exact, TOL);
 
         double error = Math.abs(exact - streamStats.getStatisticValue(Statistic.APPROX_MEDIAN));
-        assertTrue(error / streamStats.getNumAccepted(Statistic.APPROX_MEDIAN) <= 0.05);
+        assertTrue(error / streamStats.getNumAccepted(Statistic.APPROX_MEDIAN) <= 0.1);
     }
 
     @Test
