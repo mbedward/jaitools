@@ -102,4 +102,12 @@ public class ImageGraphicsGeneralTest extends TiledImageTestBase {
         assertTrue(returnedHints.equals(newHints));
     }
         
+     
+    @Test
+    public void nullFontIsSilentlyIgnored() {
+        System.out.println("   null arg to setFont is silently ignored");
+        
+        gr.setFont(null);
+        assertNotNull(gr.getFont());
+    }
 }
