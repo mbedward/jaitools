@@ -547,7 +547,9 @@ public class DiskMemImageGraphics extends Graphics2D {
 
     @Override
     public void setFont(Font font) {
-        this.font = font;
+        if (font != null) {
+            this.font = font;
+        }
     }
 
     @Override
