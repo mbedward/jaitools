@@ -223,7 +223,7 @@ public class DiskMemImageGraphics extends Graphics2D {
          * @return full name
          */
         public String getFullMethodName() {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             sb.append(methodName);
             sb.append("(");
             if (paramTypes.length > 0) {
@@ -261,6 +261,7 @@ public class DiskMemImageGraphics extends Graphics2D {
      */
     DiskMemImageGraphics(DiskMemImage targetImage) {
         this.targetImage = targetImage;
+        this.renderingHints = new RenderingHints(null);
         setColorModel();
         setProperties();
         setGraphicsParams();
@@ -392,7 +393,6 @@ public class DiskMemImageGraphics extends Graphics2D {
 
     @Override
     public void setRenderingHint(Key hintKey, Object hintValue) {
-        renderingHints.clear();
         renderingHints.put(hintKey, hintValue);
     }
 
@@ -403,6 +403,7 @@ public class DiskMemImageGraphics extends Graphics2D {
 
     @Override
     public void setRenderingHints(Map<?, ?> hints) {
+        renderingHints = new RenderingHints(null);
         renderingHints.putAll(hints);
     }
 

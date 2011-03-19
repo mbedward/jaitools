@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -40,8 +40,8 @@ import static org.junit.Assert.*;
  * @since 1.0
  * @version $Id$
  */
-@Ignore("These tests seem to be sensitive to JDK / platform")
-public class ImageGraphicsTest extends TiledImageTestBase {
+@Ignore("Users report these drawing tests are sensitive to JDK / platform")
+public class ImageGraphicsDrawingTest extends TiledImageTestBase {
 
     private final int TILE_WIDTH = 128;
     private final int XTILES = 2;
@@ -278,7 +278,7 @@ public class ImageGraphicsTest extends TiledImageTestBase {
             assertTrue(data[ALPHA_INDEX] == alpha);
         }
     }
-
+    
     private RandomIter getRandomIter() {
         return RandomIterFactory.create(image, null);
     }
