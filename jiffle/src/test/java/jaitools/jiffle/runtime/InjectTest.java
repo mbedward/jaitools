@@ -20,10 +20,12 @@
 
 package jaitools.jiffle.runtime;
 
-import java.awt.image.RenderedImage;
-
-import jaitools.jiffle.JiffleBuilder;
 import java.awt.image.WritableRenderedImage;
+import java.util.Map;
+
+import jaitools.CollectionFactory;
+import jaitools.imageutils.ImageUtils;
+import jaitools.jiffle.Jiffle;
 
 import org.junit.Test;
 
@@ -38,39 +40,99 @@ public class InjectTest extends StatementsTestBase {
     
     @Test
     public void varWithDefault() throws Exception {
+        System.out.println("   inject value for var with default");
         String script = 
                   "init { n = 0; } \n"
                 + "dest = n;" ;
 
-        testInject(script, 42.0);
+        testScriptWithValue(script, 42.0);
     }
     
     @Test
     public void varWithNoDefault() throws Exception {
+        System.out.println("   inject value for var with no default");
         String script = 
                   "init { n; } \n"
                 + "dest = n;" ;
 
-        testInject(script, 42.0);
+        testScriptWithValue(script, 42.0);
     }
 
     @Test(expected=JiffleRuntimeException.class)
     public void neglectVarWithNoDefault() throws Exception {
+        System.out.println("   unset var with no default gives exception");
         String script = 
                   "init { n; } \n"
                 + "dest = n;" ;
 
-        testInject(script, null);
+        testScriptWithValue(script, null);
     }
+    
+    @Test
+    public void injectThenDefault() throws Exception {
+        System.out.println("   run with injected value then default value");
+        String script = 
+                  "init { n = 42; } \n"
+                + "dest = n;" ;
+        
+        JiffleDirectRuntime runtime = getRuntime(script);
+        WritableRenderedImage destImg = ImageUtils.createConstantImage(WIDTH, WIDTH, 0d);
+        runtime.setDestinationImage("dest", destImg);
 
-    private void testInject(String script, final Double value) throws Exception {
-        JiffleBuilder builder = new JiffleBuilder();
-        builder.script(script).dest("dest", WIDTH, WIDTH);
+        runtime.setVar("n", -1.0);
+        runtime.evaluateAll(null);
+        assertImage(null, destImg, new Evaluator() {
+            public double eval(double val) {
+                return -1.0;
+            }
+        });
         
-        RenderedImage destImg = builder.getImage("dest");
-        JiffleDirectRuntime runtime = builder.getRuntime();
+        // set var back to default value (42)
+        runtime.setVar("n", null);
+        runtime.evaluateAll(null);
+        assertImage(null, destImg, new Evaluator() {
+            public double eval(double val) {
+                return 42.0;
+            }
+        });
         
-        runtime.setDestinationImage("dest", (WritableRenderedImage)destImg);
+    }
+    
+    @Test
+    public void repeatedSetting() throws Exception {
+        System.out.println("   repeated setting of var");
+        String script = 
+                  "init { n; } \n"
+                + "dest = n;" ;
+        
+        JiffleDirectRuntime runtime = getRuntime(script);
+        for (int i = -5; i <= 5; i++) {
+            testInject(runtime, Double.valueOf(i));
+        }
+    }
+    
+    
+    private void testScriptWithValue(String script, final Double value) throws Exception {
+        JiffleDirectRuntime runtime = getRuntime(script);
+        testInject(runtime, value);
+    }
+            
+
+    private JiffleDirectRuntime getRuntime(String script) throws Exception {
+        Jiffle jiffle = new Jiffle();
+        jiffle.setScript(script);
+        
+        Map<String, Jiffle.ImageRole> params = CollectionFactory.map();
+        params.put("dest", Jiffle.ImageRole.DEST);
+        jiffle.setImageParams(params);
+        jiffle.compile();
+        
+        return jiffle.getRuntimeInstance();
+    }
+    
+    private void testInject(JiffleDirectRuntime runtime, final Double value) throws Exception {
+        WritableRenderedImage destImg = ImageUtils.createConstantImage(WIDTH, WIDTH, 0d);
+        runtime.setDestinationImage("dest", destImg);
         if (value != null) {
             runtime.setVar("n", value);
         }
