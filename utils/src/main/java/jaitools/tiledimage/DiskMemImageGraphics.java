@@ -781,7 +781,11 @@ public class DiskMemImageGraphics extends Graphics2D {
                         properties);
 
                 Graphics2D gr = bufImg.createGraphics();
-                copyGraphicsParams(gr);
+                
+                // Note: we use the version of copyGraphicsParams taking a 
+                // Point arg used to adjust the clip area before copying it
+                // into the graphics object
+                copyGraphicsParams(gr, new Point(minX, minY));
 
                 try {
                     Point2D p2d = gr.getTransform().transform(new Point2D.Double(0, 0), null);
@@ -954,9 +958,28 @@ public class DiskMemImageGraphics extends Graphics2D {
      * @param gr a Graphics2D object
      */
     private void copyGraphicsParams(Graphics2D gr) {
+        copyGraphicsParams(gr, null);
+    }
+    
+    /**
+     * Copies the current graphics parameters into the given <code>Graphics2D</code>
+     * object. If {@code workingOrigin} is non-null it is used to translate the
+     * clip area before copying it across.
+     *
+     * @param gr a Graphics2D object
+     */
+    private void copyGraphicsParams(Graphics2D gr, Point workingOrigin) {
         gr.translate(origin.x, origin.y);
-        gr.setClip(clip);
         gr.setColor(getColor());
+        
+        if (workingOrigin == null) {
+            gr.setClip(clip);
+        } else {
+            AffineTransform tr = AffineTransform.getTranslateInstance(
+                    -workingOrigin.x, -workingOrigin.y);
+            Shape trclip = tr.createTransformedShape(clip);
+            gr.setClip(trclip);
+        }
 
         if(paintMode == PaintMode.PAINT) {
             gr.setPaintMode();
