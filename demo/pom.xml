@@ -45,8 +45,8 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>jt-jiffle</artifactId>
-            <version>${project.version}</version>
+            <artifactId>jt-jiffle-language</artifactId>
+            <version>0.1-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
