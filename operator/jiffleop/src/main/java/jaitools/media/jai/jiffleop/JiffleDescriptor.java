@@ -28,7 +28,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * 
  * @author Michael Bedward
  * @since 1.2
- * @version $Id: MaskedConvolveDescriptor.java 1383 2011-02-10 11:22:29Z michael.bedward $
+ * @version $Id$
  */
 class JiffleDescriptor extends OperationDescriptorImpl {
 

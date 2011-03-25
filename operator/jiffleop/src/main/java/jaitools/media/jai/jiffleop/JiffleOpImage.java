@@ -30,7 +30,7 @@ import javax.media.jai.OpImage;
  * 
  * @author Michael Bedward
  * @since 1.0
- * @version $Id: MaskedConvolveDescriptor.java 1383 2011-02-10 11:22:29Z michael.bedward $
+ * @version $Id$
  */
 class JiffleOpImage extends OpImage {
 
