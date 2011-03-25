@@ -1,0 +1,51 @@
+/*
+ * Copyright 2011 Michael Bedward
+ * 
+ * This file is part of jai-tools.
+ *
+ * jai-tools is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the 
+ * License, or (at your option) any later version.
+ *
+ * jai-tools is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public 
+ * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ */
+
+package jaitools.media.jai.jiffleop;
+
+import java.awt.Rectangle;
+import java.util.Map;
+import javax.media.jai.ImageLayout;
+import javax.media.jai.OpImage;
+
+/**
+ * Jiffle operation.
+ * 
+ * @author Michael Bedward
+ * @since 1.0
+ * @version $Id: MaskedConvolveDescriptor.java 1383 2011-02-10 11:22:29Z michael.bedward $
+ */
+class JiffleOpImage extends OpImage {
+
+    public JiffleOpImage(ImageLayout layout, Map configuration) {
+        super(null, layout, configuration, false);
+    }
+
+    @Override
+    public Rectangle mapSourceRect(Rectangle rctngl, int i) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public Rectangle mapDestRect(Rectangle rctngl, int i) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+}
