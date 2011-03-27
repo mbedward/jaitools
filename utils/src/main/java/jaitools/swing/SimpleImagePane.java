@@ -18,7 +18,7 @@
  *
  */
 
-package jaitools.demo;
+package jaitools.swing;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
