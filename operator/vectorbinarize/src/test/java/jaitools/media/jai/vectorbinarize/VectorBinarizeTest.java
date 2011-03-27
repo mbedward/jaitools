@@ -20,23 +20,23 @@
 
 package jaitools.media.jai.vectorbinarize;
 
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.io.WKTReader;
+import static org.junit.Assert.*;
 import jaitools.jts.CoordinateSequence2D;
 
 import java.awt.Dimension;
 import java.awt.image.Raster;
 
-import javax.imageio.ImageIO;
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
 
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
+
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.io.WKTReader;
 
 /**
  * Unit tests for the VectorBinarize operation.
@@ -94,9 +94,9 @@ public class VectorBinarizeTest {
             for (int xtile = 0; xtile < Ntiles; xtile++) {
                 Raster tile = dest.getTile(xtile, ytile);
                 for (int y = tile.getMinY(), iy = 0; iy < tile.getHeight(); y++, iy++) {
-                    testPointCS.setY(0, y);
+                    testPointCS.setY(0, y + 0.5);
                     for (int x = tile.getMinX(), ix = 0; ix < tile.getWidth(); x++, ix++) {
-                        testPointCS.setX(0, x);
+                        testPointCS.setX(0, x + 0.5);
                         testPoint.geometryChanged();
                         int expected = poly.intersects(testPoint) ? 1 : 0;
                         assertEquals("Failed test at position " + x + ", " + y + ", " +

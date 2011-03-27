@@ -20,17 +20,6 @@
 
 package jaitools.imageutils;
 
-import com.vividsolutions.jts.awt.ShapeReader;
-import com.vividsolutions.jts.awt.ShapeWriter;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.geom.prep.PreparedGeometry;
-import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory;
-import com.vividsolutions.jts.geom.util.AffineTransformation;
-
 import jaitools.jts.CoordinateSequence2D;
 
 import java.awt.Point;
@@ -50,6 +39,17 @@ import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.PlanarImage;
 import javax.media.jai.ROI;
 import javax.media.jai.ROIShape;
+
+import com.vividsolutions.jts.awt.ShapeReader;
+import com.vividsolutions.jts.awt.ShapeWriter;
+import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.prep.PreparedGeometry;
+import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory;
+import com.vividsolutions.jts.geom.util.AffineTransformation;
 
 /**
  * An {@code ROI} class that honours double precision coordinates when testing for inclusion.
@@ -157,6 +157,12 @@ public class ROIGeometry extends ROI {
         final Geometry geom = getGeometry(roi);
         if (geom != null) {
             return new ROIGeometry(geom.union(theGeom.getGeometry()));
+            
+//            Area a1 = new Area(new GeneralPath(new ShapeWriter().toShape(geom)));
+//            Area a2 = new Area(new GeneralPath(new ShapeWriter().toShape(getAsGeometry())));
+//            a1.add(a2);
+//            
+//            return new ROIGeometry(ShapeReader.read(a1, 0.0, geom.getFactory()));
         }
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -281,6 +287,10 @@ public class ROIGeometry extends ROI {
      */
     @Override
     public ROI exclusiveOr(ROI roi) {
+        final Geometry geom = getGeometry(roi);
+        if (geom != null) {
+            return new ROIGeometry(theGeom.getGeometry().symDifference(geom));
+        }
         throw new UnsupportedOperationException("Not implemented");
     }
 
@@ -516,6 +526,10 @@ public class ROIGeometry extends ROI {
      */
     @Override
     public ROI subtract(ROI roi) {
+        final Geometry geom = getGeometry(roi);
+        if (geom != null) {
+            return new ROIGeometry(theGeom.getGeometry().difference(geom));
+        }
         throw new UnsupportedOperationException("Not implemented");
     }
 

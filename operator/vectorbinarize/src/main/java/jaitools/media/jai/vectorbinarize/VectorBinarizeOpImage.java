@@ -25,8 +25,10 @@ import jaitools.jts.CoordinateSequence2D;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.GeneralPath;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
@@ -57,6 +59,8 @@ import com.vividsolutions.jts.geom.prep.PreparedGeometry;
 public class VectorBinarizeOpImage extends SourcelessOpImage {
     
     private final PreparedGeometry geom;
+    
+    private final Shape shape;
 
     private final PixelCoordType coordType;
 
@@ -71,7 +75,7 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
     private Raster solidTile;
     
     private Raster blankTile;
-
+    
     /**
      * Constructor.
      * 
@@ -91,6 +95,7 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
                 height);
 
         this.geom = geom;
+        this.shape = new ShapeWriter().toShape(geom.getGeometry());
         this.coordType = coordType;
 
         GeometryFactory gf = new GeometryFactory();
@@ -181,19 +186,13 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
             Graphics2D graphics = null;
             try {
                 graphics = bi.createGraphics();
-                Shape shape = new ShapeWriter().toShape(geom.getGeometry());
                 
                 // translate the geometry to compensate for the tile origin at 0,0
                 graphics.setTransform(AffineTransform.getTranslateInstance(-minX, -minY));
                 
-                // fill the bg 
-                graphics.setColor(Color.BLACK);
-                graphics.fill(raster.getBounds());
-                
                 // draw the shape
                 graphics.setColor(Color.WHITE);
                 graphics.fill(shape);
-                graphics.draw(shape);
             } finally {
                 if(graphics != null) {
                     graphics.dispose();
