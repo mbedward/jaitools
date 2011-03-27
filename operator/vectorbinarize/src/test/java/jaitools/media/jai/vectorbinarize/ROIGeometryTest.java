@@ -172,8 +172,8 @@ public class ROIGeometryTest {
      * @throws IOException
      */
     void assertROIEquivalent(ROI first, ROI second, String title) throws IOException {
-        RenderedImage firstImage = first.getAsImage().getAsBufferedImage();
-        BufferedImage secondImage = second.getAsImage().getAsBufferedImage();
+        RenderedImage firstImage = first.getAsImage();
+        RenderedImage secondImage = second.getAsImage();
         visualize(firstImage, secondImage, title);
         
         assertImagesEqual(firstImage, secondImage);
