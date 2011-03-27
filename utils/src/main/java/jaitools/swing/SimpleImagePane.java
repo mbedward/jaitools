@@ -18,7 +18,7 @@
  *
  */
 
-package jaitools.demo;
+package jaitools.swing;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -35,7 +35,7 @@ import javax.swing.JPanel;
  * Used by JAI-tools demo applications.
  * 
  * @author Michael Bedward
- * @since 1.0
+ * @since 1.1
  * @version $Id$
  */
 public class SimpleImagePane extends JPanel {
