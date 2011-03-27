@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Michael Bedward
+ * Copyright 2010-2011 Michael Bedward
  * 
  * This file is part of jai-tools.
  *
@@ -62,6 +62,9 @@ import com.vividsolutions.jts.geom.util.AffineTransformation;
 public class ROIGeometry extends ROI {
     
     private static final long serialVersionUID = 1L;
+    
+    private static final String UNSUPPORTED_ROI_TYPE = 
+            "The argument be either an ROIGeometry or an ROIShape";
 
     /** The {@code Geometry} that defines the area of inclusion */
     private final PreparedGeometry theGeom;
@@ -164,7 +167,7 @@ public class ROIGeometry extends ROI {
 //            
 //            return new ROIGeometry(ShapeReader.read(a1, 0.0, geom.getFactory()));
         }
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException(UNSUPPORTED_ROI_TYPE);
     }
 
     /**
@@ -282,8 +285,14 @@ public class ROIGeometry extends ROI {
     }
 
     /**
-     * This method is not supported.
-     * @throws UnsupportedOperationException if called
+     * Returns a new instance which is the exclusive OR of this ROI and {@code roi}. 
+     * This is only possible if {@code roi} is an instance of ROIGeometry 
+     * or {@link ROIShape}.
+     * 
+     * @param roi the ROI to add
+     * @return the union as a new instance
+     * @throws UnsupportedOperationException if {@code roi} is not an instance
+     *         of ROIGeometry or {@link ROIShape}
      */
     @Override
     public ROI exclusiveOr(ROI roi) {
@@ -291,7 +300,7 @@ public class ROIGeometry extends ROI {
         if (geom != null) {
             return new ROIGeometry(theGeom.getGeometry().symDifference(geom));
         }
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException(UNSUPPORTED_ROI_TYPE);
     }
 
     /**
@@ -417,7 +426,7 @@ public class ROIGeometry extends ROI {
         if (geom != null) {
             return new ROIGeometry(geom.intersection(theGeom.getGeometry()));
         }
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException(UNSUPPORTED_ROI_TYPE);
     }
     
     /**
@@ -520,9 +529,15 @@ public class ROIGeometry extends ROI {
         throw new UnsupportedOperationException("Not implemented");
     }
 
-    /**
-     * This method is not supported.
-     * @throws UnsupportedOperationException if called
+    /*
+     * Returns a new instance which is the difference of this ROI and {@code roi}. 
+     * This is only possible if {@code roi} is an instance of ROIGeometry 
+     * or {@link ROIShape}.
+     * 
+     * @param roi the ROI to add
+     * @return the union as a new instance
+     * @throws UnsupportedOperationException if {@code roi} is not an instance
+     *         of ROIGeometry or {@link ROIShape}
      */
     @Override
     public ROI subtract(ROI roi) {
@@ -530,7 +545,7 @@ public class ROIGeometry extends ROI {
         if (geom != null) {
             return new ROIGeometry(theGeom.getGeometry().difference(geom));
         }
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException(UNSUPPORTED_ROI_TYPE);
     }
 
     /**
