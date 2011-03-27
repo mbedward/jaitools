@@ -1,19 +1,34 @@
-package jaitools.media.jai.vectorbinarize;
+/*
+ * Copyright 2011 Michael Bedward
+ * 
+ * This file is part of jai-tools.
+ *
+ * jai-tools is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the 
+ * License, or (at your option) any later version.
+ *
+ * jai-tools is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public 
+ * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ */
 
-import static junit.framework.Assert.*;
-import jaitools.imageutils.ROIGeometry;
+package jaitools.media.jai.vectorbinarize;
 
 import java.awt.GridLayout;
 import java.awt.Shape;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.GeneralPath;
-import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
 import java.io.IOException;
 
-import javax.media.jai.PlanarImage;
 import javax.media.jai.ROI;
 import javax.media.jai.ROIShape;
 import javax.media.jai.operator.ExtremaDescriptor;
@@ -23,9 +38,6 @@ import javax.media.jai.widget.ScrollingImagePanel;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
-import org.junit.Ignore;
-import org.junit.Test;
-
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -34,10 +46,29 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.io.WKTReader;
 
+import jaitools.imageutils.ROIGeometry;
+import java.awt.GraphicsEnvironment;
+import org.junit.BeforeClass;
+
+import static org.junit.Assert.*;
+import org.junit.Ignore;
+import org.junit.Test;
+
+
 public class ROIGeometryTest {
     
-    // REMEMBER TO SET THIS ONE TO FALSE BEFORE COMMITTING!
-    static final boolean INTERACTIVE = false;
+    // Set this to true to display test ROIs as images.
+    private static final boolean INTERACTIVE = false;
+    
+    // Used to avoid problems with Hudson's headless build if INTERACTIVE
+    // is true.
+    private static boolean headless;
+    
+    @BeforeClass
+    public static void beforeClass() {
+        GraphicsEnvironment grEnv = GraphicsEnvironment.getLocalGraphicsEnvironment(); 
+        headless = grEnv.isHeadless();
+    }
 
     @Test
     public void testCheckerBoard() throws Exception {
@@ -199,7 +230,7 @@ public class ROIGeometryTest {
      */
     void visualize(final RenderedImage ri1, final RenderedImage ri2, String title) throws IOException {
         
-        if(INTERACTIVE) {
+        if(INTERACTIVE && !headless) {
             final Thread mainThread = Thread.currentThread();
             
             final JFrame frame = new JFrame(title + " - Close the window to continue");
