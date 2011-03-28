@@ -88,6 +88,8 @@ public class JiffleOpImage extends OpImage {
                 bounds = new Rectangle(destBounds);
             }
             
+            runtime.setBounds(bounds.x, bounds.y, bounds.width, bounds.height);
+            
         } catch (JiffleException ex) {
             throw new RuntimeException(ex);
         }
