@@ -21,12 +21,20 @@
 package jaitools.media.jai.jiffleop;
 
 import com.sun.media.jai.opimage.RIFUtil;
+import jaitools.CollectionFactory;
+import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
+import java.awt.image.SampleModel;
 import java.awt.image.renderable.ParameterBlock;
 import java.awt.image.renderable.RenderedImageFactory;
-import javax.media.jai.BorderExtender;
+import java.util.Map;
 import javax.media.jai.ImageLayout;
+import javax.media.jai.JAI;
+import javax.media.jai.PlanarImage;
+import javax.media.jai.RasterFactory;
 
 /**
  * The image factory for the "Jiffle" operation.
@@ -50,13 +58,22 @@ public class JiffleRIF implements RenderedImageFactory {
     public RenderedImage create(ParameterBlock paramBlock,
             RenderingHints renderHints) {
         
-        // Get ImageLayout from renderHints if any.
-        ImageLayout layout = RIFUtil.getImageLayoutHint(renderHints);
+        Map<String, RenderedImage> sourceImages = CollectionFactory.map();
+        
+        String script = (String) paramBlock.getObjectParameter(JiffleDescriptor.SCRIPT_ARG);
+        String destVarName = (String) paramBlock.getObjectParameter(JiffleDescriptor.DEST_NAME_ARG);
+        Rectangle destBounds = (Rectangle) paramBlock.getObjectParameter(JiffleDescriptor.DEST_BOUNDS_ARG);
 
-        // Get BorderExtender from renderHints if any.
-        BorderExtender extender = RIFUtil.getBorderExtenderHint(renderHints);
+        // Ignore any ImageLayout that was provided and create one here
+        ImageLayout layout = new ImageLayout(destBounds.x, destBounds.y, destBounds.width, destBounds.height);
 
-        return new JiffleOpImage(layout, renderHints);
+        Dimension defaultTileSize = JAI.getDefaultTileSize();
+        SampleModel sm = RasterFactory.createPixelInterleavedSampleModel(
+                DataBuffer.TYPE_DOUBLE, defaultTileSize.width, defaultTileSize.height, 1);
+        layout.setSampleModel(sm);
+        layout.setColorModel(PlanarImage.createColorModel(sm));
+        
+        return new JiffleOpImage(sourceImages, layout, renderHints, script, destVarName, destBounds);
     }
 }
 

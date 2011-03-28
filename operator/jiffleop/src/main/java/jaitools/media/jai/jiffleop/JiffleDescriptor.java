@@ -20,6 +20,7 @@
 
 package jaitools.media.jai.jiffleop;
 
+import java.awt.Rectangle;
 import javax.media.jai.OperationDescriptorImpl;
 import javax.media.jai.registry.RenderedRegistryMode;
 
@@ -30,30 +31,42 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * @since 1.2
  * @version $Id$
  */
-class JiffleDescriptor extends OperationDescriptorImpl {
+public class JiffleDescriptor extends OperationDescriptorImpl {
+    
+    static final int SCRIPT_ARG = 0;
+    static final int DEST_NAME_ARG = 1;
+    static final int DEST_BOUNDS_ARG = 2;
 
     private static final String[] paramNames = {
-        "script"
+        "script",
+        "destName",
+        "destBounds"
     };
 
     private static final Class[] paramClasses = {
-         String.class
+         String.class,
+         String.class,
+         Rectangle.class
     };
 
     private static final Object[] paramDefaults = {
-         NO_PARAMETER_DEFAULT
+         NO_PARAMETER_DEFAULT,
+         "dest",
+         (Rectangle)null
     };
 
     public JiffleDescriptor() {
         super(new String[][]{
                     {"GlobalName", "Jiffle"},
-                    {"LocalName", "Jifle"},
+                    {"LocalName", "Jiffle"},
                     {"Vendor", "jaitools.media.jai"},
                     {"Description", "Execute a Jiffle script"},
                     {"DocURL", "http://code.google.com/p/jai-tools/"},
                     {"Version", "1.2.0"},
                     {"arg0Desc", paramNames[0] + " (String):" +
-                             "the Jiffle script"}
+                             "the Jiffle script"},
+                    {"arg1Desc", paramNames[1] + " (String, default \"dest\"):" +
+                             "the destination variable name"}
 
                 },
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
@@ -68,4 +81,10 @@ class JiffleDescriptor extends OperationDescriptorImpl {
                 );
     }
 
+    @Override
+    public int getNumSources() {
+        return 0;
+    }
+
+    
 }
