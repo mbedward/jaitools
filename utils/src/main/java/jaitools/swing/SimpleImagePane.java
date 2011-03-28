@@ -32,10 +32,9 @@ import javax.swing.JPanel;
 
 /**
  * A very basic Swing widget to display a {@code RenderedImage}.
- * Used by JAI-tools demo applications.
  * 
  * @author Michael Bedward
- * @since 1.0
+ * @since 1.1
  * @version $Id$
  */
 public class SimpleImagePane extends JPanel {
@@ -43,10 +42,13 @@ public class SimpleImagePane extends JPanel {
     RenderedImage image;
     AffineTransform transform;
     private final Object lock = new Object();
+    
+    private int margin;
 
     
     public SimpleImagePane() {
-        transform = new AffineTransform();
+        margin = 0;
+        
         addComponentListener(new ComponentAdapter() {
 
             @Override
@@ -76,6 +78,9 @@ public class SimpleImagePane extends JPanel {
         super.paintComponent(g);
         synchronized(lock) {
             if (image != null) {
+                if (transform == null) {
+                    setTransform();
+                }
                 Graphics2D g2d = (Graphics2D) g;
                 g2d.drawRenderedImage(image, transform);
             }
@@ -85,12 +90,23 @@ public class SimpleImagePane extends JPanel {
     private void setTransform() {
         synchronized(lock) {
             if (image != null) {
-                Rectangle r = getVisibleRect();
-                double xscale = r.getWidth() / image.getWidth();
-                double yscale = r.getHeight() / image.getHeight();
+                Rectangle visr = getVisibleRect();
+                if (visr.isEmpty()) {
+                    return;
+                }
+            
+                if (transform == null) {
+                    transform = new AffineTransform();
+                }
+            
+                double xscale = (visr.getWidth() - 2*margin) / image.getWidth();
+                double yscale = (visr.getHeight() - 2*margin) / image.getHeight();
                 double scale = Math.min(xscale, yscale);
-
-                transform.setToScale(scale, scale);
+        
+                double xoff = margin - (scale * image.getMinX());
+                double yoff = margin - (scale * image.getMinY());
+                
+                transform.setTransform(scale, 0, 0, scale, xoff, yoff);
             }
         }
     }
