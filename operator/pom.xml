@@ -20,6 +20,7 @@
     <modules>
         <module>attributeop</module>
         <module>contour</module>
+        <module>jiffleop</module>
         <module>kernelstats</module>
         <module>maskedconvolve</module>
         <module>rangelookup</module>
