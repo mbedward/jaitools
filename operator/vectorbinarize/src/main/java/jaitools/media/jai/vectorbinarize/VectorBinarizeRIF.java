@@ -108,6 +108,14 @@ public class VectorBinarizeRIF implements RenderedImageFactory {
             sm = new MultiPixelPackedSampleModel(DataBuffer.TYPE_BYTE, tileSize.width, tileSize.height, 1);
         }
         
-        return new VectorBinarizeOpImage(sm, renderHints, minx, miny, width, height, pg, coordType);
+        boolean antiAliasing = VectorBinarizeOpImage.DEFAULT_ANTIALIASING; 
+        Object antiAlias = paramBlock.getObjectParameter(VectorBinarizeDescriptor.ANTIALIASING_ARG);
+        
+        if (antiAlias != null && antiAlias instanceof Boolean){
+            antiAliasing = ((Boolean) antiAlias).booleanValue();
+        }
+
+        
+        return new VectorBinarizeOpImage(sm, renderHints, minx, miny, width, height, pg, coordType, antiAliasing);
     }
 }
