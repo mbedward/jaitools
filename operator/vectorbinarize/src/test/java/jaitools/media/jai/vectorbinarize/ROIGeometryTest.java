@@ -29,6 +29,7 @@ import java.awt.GraphicsEnvironment;
 import java.awt.Shape;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.PathIterator;
 import java.awt.image.DataBuffer;
@@ -111,6 +112,24 @@ public class ROIGeometryTest {
             
             assertROIEquivalent(g, shape, "Circle");
         }
+    }
+    
+
+    /**
+     * Sorry Michael, using ROIGeometry produces a circle that's way more
+     * symmetrical than java2d one... difficult to reproduce a broken output ;-)
+     * @throws Exception
+     */
+    @Test
+    @Ignore
+    public void testEllipse() throws Exception {
+        Point p = new GeometryFactory().createPoint(new Coordinate(10, 10)); 
+        Geometry buffer = p.buffer(15, 20);
+        
+        ROIGeometry g = new ROIGeometry(buffer, PixelCoordType.CORNER);
+        ROIShape shape = new ROIShape(new Ellipse2D.Double(-5, -5, 30, 30));
+        
+        assertROIEquivalent(g, shape, "java2d Ellipse");
     }
 
     @Test
