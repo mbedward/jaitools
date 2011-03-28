@@ -20,7 +20,6 @@
 
 package jaitools.media.jai.vectorbinarize;
 
-import java.awt.GridLayout;
 import java.awt.Shape;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -34,7 +33,6 @@ import javax.media.jai.ROIShape;
 import javax.media.jai.operator.ExtremaDescriptor;
 import javax.media.jai.operator.FormatDescriptor;
 import javax.media.jai.operator.SubtractDescriptor;
-import javax.media.jai.widget.ScrollingImagePanel;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
@@ -45,9 +43,12 @@ import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.io.WKTReader;
+import jaitools.imageutils.PixelCoordType;
 
 import jaitools.imageutils.ROIGeometry;
+import jaitools.swing.SimpleImagePane;
 import java.awt.GraphicsEnvironment;
+import javax.swing.JSplitPane;
 import org.junit.BeforeClass;
 
 import static org.junit.Assert.*;
@@ -63,6 +64,10 @@ public class ROIGeometryTest {
     // Used to avoid problems with Hudson's headless build if INTERACTIVE
     // is true.
     private static boolean headless;
+    
+    // Width of frame when visualizing tests
+    private static final int VIZ_WIDTH = 600;
+    
     
     @BeforeClass
     public static void beforeClass() {
@@ -96,9 +101,9 @@ public class ROIGeometryTest {
     @Ignore
     public void testCircle() throws Exception {
         Point p = new GeometryFactory().createPoint(new Coordinate(10, 10)); 
-        Geometry buffer = p.buffer(15);
+        Geometry buffer = p.buffer(5);
         
-        ROIGeometry g = new ROIGeometry(buffer);
+        ROIGeometry g = new ROIGeometry(buffer, PixelCoordType.CORNER);
         ROIShape shape = getEquivalentROIShape(g);
         
         assertROIEquivalent(g, shape, "Circle");
@@ -234,22 +239,35 @@ public class ROIGeometryTest {
             final Thread mainThread = Thread.currentThread();
             
             final JFrame frame = new JFrame(title + " - Close the window to continue");
-            frame.getContentPane().setLayout(new GridLayout(1, 2));
-            frame.getContentPane().add(new ScrollingImagePanel(ri1, 200, 200));
-            frame.getContentPane().add(new ScrollingImagePanel(ri2, 200, 200));
+
+            final JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+            
+            SimpleImagePane sip1 = new SimpleImagePane();
+            sip1.setImage(ri1);
+            splitPane.setLeftComponent(sip1);
+            
+            SimpleImagePane sip2 = new SimpleImagePane();
+            sip2.setImage(ri2);
+            splitPane.setRightComponent(sip2);
+            
+            
+            frame.getContentPane().add(splitPane);
+            
             frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
             frame.addWindowListener(new WindowAdapter() {
                 @Override
                 public void windowClosed(WindowEvent e) {
-                          mainThread.interrupt();
+                      mainThread.interrupt();
                 }
             });
     
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
                     frame.pack();
-                    frame.setSize(400, 200);
+                    frame.setSize(VIZ_WIDTH, VIZ_WIDTH / 2);
                     frame.setVisible(true);
+                    splitPane.setDividerLocation(0.5);
+                    frame.repaint();
                 }
             });
             
