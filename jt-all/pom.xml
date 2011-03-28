@@ -96,6 +96,11 @@
         </dependency>
         <dependency>
             <groupId>com.googlecode.jaitools</groupId>
+            <artifactId>jt-jiffleop</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.jaitools</groupId>
             <artifactId>jt-kernelstats</artifactId>
             <version>${project.version}</version>
         </dependency>
