@@ -20,7 +20,6 @@
 
 package jaitools.demo.contour;
 
-import com.vividsolutions.jts.geom.LineString;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -28,9 +27,12 @@ import java.awt.image.RenderedImage;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
+
+import com.vividsolutions.jts.geom.LineString;
 
 import jaitools.demo.DemoImages;
 import jaitools.media.jai.contour.ContourDescriptor;
