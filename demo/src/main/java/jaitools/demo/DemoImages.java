@@ -21,13 +21,11 @@
 package jaitools.demo;
 
 import java.awt.image.RenderedImage;
-import java.io.File;
-import java.net.URL;
+import java.util.Random;
 
 import javax.media.jai.TiledImage;
 
 import jaitools.imageutils.ImageUtils;
-import java.util.Random;
 
 /**
  * Serves images to the demo applications.
