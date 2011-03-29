@@ -33,7 +33,6 @@ import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
 
 import jaitools.demo.DemoImages;
-import jaitools.demo.ImageChoice;
 import jaitools.media.jai.contour.ContourDescriptor;
 import jaitools.swing.ImageFrame;
 import jaitools.swing.JTSFrame;
@@ -55,7 +54,7 @@ public class ContourDemo {
     
     private void doDemo() throws Exception {
         RenderedImage image = 
-                DemoImages.get(ImageChoice.SQUIRCLE, 400, 400);
+                DemoImages.createSquircleImage(400, 400);
 
         List<Double> contourIntervals = new ArrayList<Double>();
         
