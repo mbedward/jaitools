@@ -19,14 +19,13 @@
  */
 package jaitools.demo.zonalstats;
 
-import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
 
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
 
-import jaitools.jiffle.JiffleBuilder;
+import jaitools.demo.DemoImages;
 import jaitools.media.jai.zonalstats.ZonalStats;
 import jaitools.media.jai.zonalstats.ZonalStatsDescriptor;
 import jaitools.numeric.Statistic;
@@ -56,6 +55,14 @@ public class ZonalStatsDemo {
     public static void main(String[] args) throws Exception {
         ZonalStatsDemo me = new ZonalStatsDemo();
         me.demo();
+    }
+
+    /**
+     * Constructor: gets test images.
+     */
+    public ZonalStatsDemo() {
+        dataImg = DemoImages.createUniformRandomImage(500, 500, 10.0);
+        zoneImg = DemoImages.createBandedImage(500, 500, 5);
     }
 
     /**
@@ -104,39 +111,4 @@ public class ZonalStatsDemo {
         }
     }
 
-
-    /**
-     * Constructor. Generates test data.
-     *
-     * @throws Exception on errors running the Jiffle script that builds
-     *         the example data images
-     */
-    public ZonalStatsDemo() throws Exception {
-        /*
-         * We use Jiffle to generate some example data:
-         * - a data image with uniformly distributed random values
-         *   between 0 and 10
-         * - a zone image where zones are equal-area horizontal bands
-         */
-        String script =
-                  "dataImg = rand(10); \n"
-                + "numZones = 5; \n"
-                + "rowsPerZone = height() / numZones; \n"
-                + "zoneImg = y() / rowsPerZone + 1;";
-
-        JiffleBuilder jb = new JiffleBuilder();
-        jb.script(script).dest("dataImg", 500, 500).dest("zoneImg", 500, 500);
-        jb.getRuntime().evaluateAll(null);
-        dataImg = jb.getImage("dataImg");
-        RenderedImage zoneImgDouble = jb.getImage("zoneImg");
-
-        /*
-         * Now we convert the zone image from DOUBLE to INT for
-         * the ZonalStats operator
-         */
-        ParameterBlockJAI pb = new ParameterBlockJAI("format");
-        pb.setSource("source0", zoneImgDouble);
-        pb.setParameter("dataType", DataBuffer.TYPE_INT);
-        zoneImg = JAI.create("format", pb);
-    }
 }
