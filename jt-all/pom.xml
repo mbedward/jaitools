@@ -36,9 +36,6 @@
                                     <exclude>com.googlecode.jaitools:jt-demo</exclude>
                                     <exclude>com.vividsolutions:jts</exclude>
                                     <exclude>junit:junit</exclude>
-                                    <exclude>org.antlr:*</exclude>
-                                    <exclude>antlr:*</exclude>
-                                    <exclude>org.codehaus.janino:janino</exclude>
                                     <exclude>xerces:xercesImpl</exclude>
                                 </excludes>
                             </artifactSet>
@@ -138,25 +135,6 @@
             <!-- version is specified in parent jai-tools pom -->
         </dependency>
         
-        <dependency>
-            <groupId>org.antlr</groupId>
-            <artifactId>antlr</artifactId>
-            <version>3.3</version>
-            <!-- Adding StringTemplate back in for code generation
-            <exclusions>
-                <exclusion>
-                    <groupId>org.antlr</groupId>
-                    <artifactId>stringtemplate</artifactId>
-                </exclusion>
-            </exclusions>
-            -->
-        </dependency>
-        
-        <dependency>
-            <groupId>org.codehaus.janino</groupId>
-            <artifactId>janino</artifactId>
-            <version>2.5.16</version>
-        </dependency>
     </dependencies>
   
 </project>
