@@ -70,12 +70,18 @@ public class ROIGeometryTest {
     
     // Width of frame when visualizing tests
     private static final int VIZ_WIDTH = 600;
+
+    // Flag for running on OSX, used to skip some tests
+    private static boolean isOSX;
     
     
     @BeforeClass
     public static void beforeClass() {
         GraphicsEnvironment grEnv = GraphicsEnvironment.getLocalGraphicsEnvironment(); 
         headless = grEnv.isHeadless();
+
+        String osname = System.getProperty("os.name").replaceAll("\\s", "");
+        isOSX = "macosx".equalsIgnoreCase(osname);
     }
 
     @Test
@@ -101,40 +107,26 @@ public class ROIGeometryTest {
     }
     
     @Test 
-    @Ignore(value="Fails on OSX 10.6 Java 1.6")
     public void testCircles() throws Exception {
-        final int buffers[] = new int[]{3,5,7,8,10,15,20};
-        for (int i = 0; i < buffers.length; i++){
-            Point p = new GeometryFactory().createPoint(new Coordinate(10, 10)); 
-            Geometry buffer = p.buffer(buffers[i]);
-            
-            ROIGeometry g = new ROIGeometry(buffer, PixelCoordType.CORNER);
-            ROIShape shape = getEquivalentROIShape(g);
-            
-            assertROIEquivalent(g, shape, "Circle");
+        if (isOSX) {
+            System.out.println("skipping testCircles on OSX");
+        } else {
+            final int buffers[] = new int[]{3, 5, 7, 8, 10, 15, 20};
+            for (int i = 0; i < buffers.length; i++) {
+                Point p = new GeometryFactory().createPoint(new Coordinate(10, 10));
+                Geometry buffer = p.buffer(buffers[i]);
+
+                ROIGeometry g = new ROIGeometry(buffer, PixelCoordType.CORNER);
+                ROIShape shape = getEquivalentROIShape(g);
+
+                assertROIEquivalent(g, shape, "Circle");
+            }
         }
     }
     
 
-    /**
-     * Sorry Michael, using ROIGeometry produces a circle that's way more
-     * symmetrical than java2d one... difficult to reproduce a broken output ;-)
-     * @throws Exception
-     */
     @Test
-    @Ignore
-    public void testEllipse() throws Exception {
-        Point p = new GeometryFactory().createPoint(new Coordinate(10, 10)); 
-        Geometry buffer = p.buffer(15, 20);
-        
-        ROIGeometry g = new ROIGeometry(buffer, PixelCoordType.CORNER);
-        ROIShape shape = new ROIShape(new Ellipse2D.Double(-5, -5, 30, 30));
-        
-        assertROIEquivalent(g, shape, "java2d Ellipse");
-    }
-
-    @Test
-    @Ignore
+    @Ignore("not working on any platform ?")
     public void testUnion() throws Exception {
         Point p1 = new GeometryFactory().createPoint(new Coordinate(10, 10)); 
         Point p2 = new GeometryFactory().createPoint(new Coordinate(20, 10));
@@ -163,7 +155,7 @@ public class ROIGeometryTest {
     }
     
     @Test
-    @Ignore
+    @Ignore("not working on any platform ?")
     public void testIntersect() throws Exception {
         Point p1 = new GeometryFactory().createPoint(new Coordinate(10, 10)); 
         Point p2 = new GeometryFactory().createPoint(new Coordinate(20, 10));
@@ -200,70 +192,81 @@ public class ROIGeometryTest {
     }
     
     @Test
-    @Ignore(value="Fails on OSX 10.6 Java 1.6")
     public void testXor() throws Exception {
-        Point p1 = new GeometryFactory().createPoint(new Coordinate(10, 10)); 
-        Point p2 = new GeometryFactory().createPoint(new Coordinate(20, 10));
-        Geometry buffer1 = p1.buffer(15);
-        Geometry buffer2 = p2.buffer(15);
-        
-        ROIGeometry rg1 = new ROIGeometry(buffer1);
-        ROIGeometry rg2 = new ROIGeometry(buffer2);
-        ROI rgXor = rg1.exclusiveOr(rg2);
-        
-        ROIShape rs1 = getEquivalentROIShape(rg1);
-        ROIShape rs2 = getEquivalentROIShape(rg2);
-        ROI rsXor = rs1.exclusiveOr(rs2);
+        if (isOSX) {
+            System.out.println("skipping testXor on OSX");
+        } else {
+            Point p1 = new GeometryFactory().createPoint(new Coordinate(10, 10));
+            Point p2 = new GeometryFactory().createPoint(new Coordinate(20, 10));
+            Geometry buffer1 = p1.buffer(15);
+            Geometry buffer2 = p2.buffer(15);
 
-        assertROIEquivalent(rgXor, rsXor, "Xor");
+            ROIGeometry rg1 = new ROIGeometry(buffer1);
+            ROIGeometry rg2 = new ROIGeometry(buffer2);
+            ROI rgXor = rg1.exclusiveOr(rg2);
+
+            ROIShape rs1 = getEquivalentROIShape(rg1);
+            ROIShape rs2 = getEquivalentROIShape(rg2);
+            ROI rsXor = rs1.exclusiveOr(rs2);
+
+            assertROIEquivalent(rgXor, rsXor, "Xor");
+        }
     }
     
     @Test
-    @Ignore(value="Fails on OSX 10.6 Java 1.6")
     public void testRotatedRectangle() throws Exception {
-        Polygon polygon = (Polygon) new WKTReader().read("POLYGON((20 0, 50 -30, 30 -50, 0 -20, 20 0))");
-        
-        ROIGeometry g = new ROIGeometry(polygon);
-        ROIShape shape = getEquivalentROIShape(g);
-        
-        assertROIEquivalent(g, shape, "RotatedRectangle");
+        if (isOSX) {
+            System.out.println("skipping testRotatedRectangle on OSX");
+        } else {
+            Polygon polygon = (Polygon) new WKTReader().read("POLYGON((20 0, 50 -30, 30 -50, 0 -20, 20 0))");
 
+            ROIGeometry g = new ROIGeometry(polygon);
+            ROIShape shape = getEquivalentROIShape(g);
+
+            assertROIEquivalent(g, shape, "RotatedRectangle");
+        }
     }
     
     @Test
-    @Ignore(value="Fails on OSX 10.6 Java 1.6")
     public void testRotatedRectangleUnion() throws Exception {
-        Polygon polygon1 = (Polygon) new WKTReader().read("POLYGON((20 0, 50 -30, 30 -50, 0 -20, 20 0))");
-        Polygon polygon2 = (Polygon) new WKTReader().read("POLYGON((60 -40, 80 -20, 40 20, 20 0, 60 -40))");
-        
-        ROIGeometry geom1 = new ROIGeometry(polygon1);
-        ROIShape shape1 = getEquivalentROIShape(geom1);
-        
-        ROIGeometry geom2 = new ROIGeometry(polygon2);
-        ROIShape shape2 = getEquivalentROIShape(geom2);
-        
-        final ROI geomUnion = geom1.add(geom2);
-        final ROI shapeUnion = shape1.add(shape2);
-        
-        assertROIEquivalent(geomUnion, shapeUnion, "RotatedUnion");
+        if (isOSX) {
+            System.out.println("skipping testRotatedRectangleUnion on OSX");
+        } else {
+            Polygon polygon1 = (Polygon) new WKTReader().read("POLYGON((20 0, 50 -30, 30 -50, 0 -20, 20 0))");
+            Polygon polygon2 = (Polygon) new WKTReader().read("POLYGON((60 -40, 80 -20, 40 20, 20 0, 60 -40))");
+
+            ROIGeometry geom1 = new ROIGeometry(polygon1);
+            ROIShape shape1 = getEquivalentROIShape(geom1);
+
+            ROIGeometry geom2 = new ROIGeometry(polygon2);
+            ROIShape shape2 = getEquivalentROIShape(geom2);
+
+            final ROI geomUnion = geom1.add(geom2);
+            final ROI shapeUnion = shape1.add(shape2);
+
+            assertROIEquivalent(geomUnion, shapeUnion, "RotatedUnion");
+        }
     }
     
     @Test
-    @Ignore(value="Fails on OSX 10.6 Java 1.6")
     public void testRotatedRectangleIntersection() throws Exception {
-        Polygon polygon1 = (Polygon) new WKTReader().read("POLYGON((20 0, 50 -30, 30 -50, 0 -20, 20 0))");
-        Polygon polygon2 = (Polygon) new WKTReader().read("POLYGON((40 -40, 60 -20, 20 20, 0 0, 40 -40))");
-        
-        ROIGeometry geom1 = new ROIGeometry(polygon1);
-        ROIShape shape1 = getEquivalentROIShape(geom1);
-        
-        ROIGeometry geom2 = new ROIGeometry(polygon2);
-        ROIShape shape2 = getEquivalentROIShape(geom2);
-        
-        final ROI geomUnion = geom1.intersect(geom2);
-        final ROI shapeUnion = shape1.intersect(shape2);
-        
-        assertROIEquivalent(geomUnion, shapeUnion, "RotatedIntersection");
+        if (isOSX) {
+            System.out.println("skipping testRotatedRectangleIntersection on OSX");
+        } else {
+            Polygon polygon1 = (Polygon) new WKTReader().read("POLYGON((20 0, 50 -30, 30 -50, 0 -20, 20 0))");
+            Polygon polygon2 = (Polygon) new WKTReader().read("POLYGON((40 -40, 60 -20, 20 20, 0 0, 40 -40))");
+
+            ROIGeometry geom1 = new ROIGeometry(polygon1);
+            ROIShape shape1 = getEquivalentROIShape(geom1);
+
+            ROIGeometry geom2 = new ROIGeometry(polygon2);
+            ROIShape shape2 = getEquivalentROIShape(geom2);
+
+            final ROI geomUnion = geom1.intersect(geom2);
+            final ROI shapeUnion = shape1.intersect(shape2);
+
+            assertROIEquivalent(geomUnion, shapeUnion, "RotatedIntersection");
+        }
     }
     
     @Test
@@ -287,29 +290,31 @@ public class ROIGeometryTest {
     }
     
     @Test
-    @Ignore(value="Fails on OSX 10.6 Java 1.6")
-    public void testUnionTransformedFractional() throws Exception{
-      final String geom1 = "POLYGON ((256.0156254550953 384.00000013906043, 384.00000082678343 384.00000013906043, 384.00000082678343 256.00000005685433, 256.0000004550675 256.00000005685433, 256.0000004550675 384.00000013906043, 256.0156254550953 384.00000013906043))"; 
-      final String geom2 = "POLYGON ((384.0156256825708 128.00000008217478, 512.0000010543083 128.00000008217478, 512.0000010543083 -0.0000000000291038, 384.00000068254303 -0.0000000000291038, 384.00000068254303 128.00000008217478, 384.0156256825708 128.00000008217478))";
-      
-      final WKTReader wktReader = new WKTReader();
-      final Geometry geometry1 = wktReader.read(geom1);
-      final Geometry geometry2 = wktReader.read(geom2);
-      geometry1.apply(new AffineTransformation(1.1, 1.1, 0, 0, 1.1, 0));
-      geometry2.apply(new AffineTransformation(0, 1.1, 0, 1.1, 0, 0));
+    public void testUnionTransformedFractional() throws Exception {
+        if (isOSX) {
+            System.out.println("skipping testUnionTransformedFractional on OSX");
+        } else {
+            final String geom1 = "POLYGON ((256.0156254550953 384.00000013906043, 384.00000082678343 384.00000013906043, 384.00000082678343 256.00000005685433, 256.0000004550675 256.00000005685433, 256.0000004550675 384.00000013906043, 256.0156254550953 384.00000013906043))";
+            final String geom2 = "POLYGON ((384.0156256825708 128.00000008217478, 512.0000010543083 128.00000008217478, 512.0000010543083 -0.0000000000291038, 384.00000068254303 -0.0000000000291038, 384.00000068254303 128.00000008217478, 384.0156256825708 128.00000008217478))";
 
-      final ROIGeometry roiGeom1 = new ROIGeometry(geometry1);
-      final ROIGeometry roiGeom2 = new ROIGeometry(geometry2);
-      final ROI roiGeometryUnion = roiGeom1.add(roiGeom2);
-      
-      final ROIShape roiShape1 = getEquivalentROIShape(roiGeom1);
-      final ROIShape roiShape2 = getEquivalentROIShape(roiGeom2);
-      final ROI roiShapeUnion = roiShape1.add(roiShape2);
-      
-      assertROIEquivalent(roiGeometryUnion, roiShapeUnion, "Union");
-      
-  }
-    
+            final WKTReader wktReader = new WKTReader();
+            final Geometry geometry1 = wktReader.read(geom1);
+            final Geometry geometry2 = wktReader.read(geom2);
+            geometry1.apply(new AffineTransformation(1.1, 1.1, 0, 0, 1.1, 0));
+            geometry2.apply(new AffineTransformation(0, 1.1, 0, 1.1, 0, 0));
+
+            final ROIGeometry roiGeom1 = new ROIGeometry(geometry1);
+            final ROIGeometry roiGeom2 = new ROIGeometry(geometry2);
+            final ROI roiGeometryUnion = roiGeom1.add(roiGeom2);
+
+            final ROIShape roiShape1 = getEquivalentROIShape(roiGeom1);
+            final ROIShape roiShape2 = getEquivalentROIShape(roiGeom2);
+            final ROI roiShapeUnion = roiShape1.add(roiShape2);
+
+            assertROIEquivalent(roiGeometryUnion, roiShapeUnion, "Union");
+        }
+    }
+
     /**
      * Turns the roi geometry in a ROIShape with the same geometry
      * @param g
