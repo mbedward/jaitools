@@ -6,13 +6,17 @@
         <groupId>com.googlecode.jaitools</groupId>
         <version>1.2-SNAPSHOT</version>
     </parent>
+    
     <groupId>com.googlecode.jaitools</groupId>
     <artifactId>jt-all</artifactId>
     <packaging>jar</packaging>
-    <name>jt-all</name>
+    <name>Combined JAI-tools jar</name>
+    
     <description>
         Provides a single jar containing all JAI-tools modules which you can
-        use instead of including individual modules in your project.
+        use instead of including individual modules in your project. Note:
+        It does not include the Jiffle scripting language or Jiffle image 
+        operator.
     </description>
     
     <build>
@@ -32,8 +36,8 @@
                                     <exclude>com.googlecode.jaitools:jt-demo</exclude>
                                     <exclude>com.vividsolutions:jts</exclude>
                                     <exclude>junit:junit</exclude>
-                                    <exclude>org.antlr:antlr</exclude>
-                                    <exclude>org.antlr:antlr-runtime</exclude>
+                                    <exclude>org.antlr:*</exclude>
+                                    <exclude>antlr:*</exclude>
                                     <exclude>org.codehaus.janino:janino</exclude>
                                     <exclude>xerces:xercesImpl</exclude>
                                 </excludes>
