@@ -1,18 +1,18 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
-
+ *
  * jai-tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
-
+ *
  * jai-tools is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
-
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -20,12 +20,14 @@
 
 package jaitools.swing;
 
-import com.sun.media.jai.widget.DisplayJAI;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
+
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 
@@ -38,26 +40,25 @@ import javax.media.jai.iterator.RandomIterFactory;
  * @since 1.0
  * @version $Id$
  */
-class ImagePane extends DisplayJAI {
+class ImagePane extends SimpleImagePane implements MouseListener, MouseMotionListener {
 
-    private FrameWithStatusBar frame;
+    private ImageFrame frame;
 
     private RenderedImage displayImage;
-    private Rectangle imageDisplayBounds;
-    private Point imageOrigin;
-
     private RenderedImage dataImage;
     private RandomIter dataImageIter;
+    private boolean integralImageDataType;
+    private final Rectangle imageBounds;
 
     private int[] intData;
     private double[] doubleData;
-
-    private enum ImageDataType {
-        INTEGRAL, FLOAT;
+    
+    private void setMouseListener() {
+        addMouseListener(this);
+        addMouseMotionListener(this);
     }
-    private ImageDataType imageDataType;
 
-
+    
     /**
      * Constructor.
      *
@@ -67,35 +68,32 @@ class ImagePane extends DisplayJAI {
      * when the mouse is over the pane. If null, data is drawn from the displayImg. If non-null, this
      * image should have bounds equal to, or surrounding, those of the display image.
      */
-    public ImagePane(FrameWithStatusBar frame, RenderedImage displayImg, RenderedImage dataImg) {
-        super(displayImg);
-
+    public ImagePane(ImageFrame frame, RenderedImage displayImg, RenderedImage dataImg) {
+        setImage(displayImg);
         this.frame = frame;
         this.displayImage = displayImg;
-        this.imageDisplayBounds = new Rectangle(0, 0, displayImage.getWidth(), displayImage.getHeight());
-        this.imageOrigin = new Point(displayImage.getMinX(), displayImage.getMinY());
-
+        this.imageBounds = new Rectangle(displayImage.getMinX(), displayImage.getMinY(), 
+                displayImage.getWidth(), displayImage.getHeight());
+        
         this.dataImage = (dataImg == null ? displayImg : dataImg);
-        this.dataImageIter = RandomIterFactory.create(dataImage, imageDisplayBounds);
 
         switch (dataImage.getSampleModel().getDataType()) {
             case DataBuffer.TYPE_BYTE:
             case DataBuffer.TYPE_SHORT:
             case DataBuffer.TYPE_USHORT:
             case DataBuffer.TYPE_INT:
-                imageDataType = ImageDataType.INTEGRAL;
+                integralImageDataType = true;
                 intData = new int[dataImage.getSampleModel().getNumBands()];
                 break;
 
             case DataBuffer.TYPE_FLOAT:
             case DataBuffer.TYPE_DOUBLE:
-                imageDataType = ImageDataType.FLOAT;
+                integralImageDataType = false;
                 doubleData = new double[dataImage.getSampleModel().getNumBands()];
                 break;
         }
 
-        addMouseListener(this);
-        addMouseMotionListener(this);
+        setMouseListener();
     }
 
     /**
@@ -105,30 +103,22 @@ class ImagePane extends DisplayJAI {
     @Override
     public void mouseMoved(MouseEvent ev) {
         if (dataImage != null) {
-            Point pos = ev.getPoint();
-            if (imageDisplayBounds.contains(pos)) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("x:");
-                sb.append(pos.x);
-                sb.append(" y:");
-                sb.append(pos.y);
-                sb.append(" band data:");
-
-                if (imageDataType == ImageDataType.INTEGRAL) {
-                    dataImageIter.getPixel(pos.x, pos.y, intData);
-                    for (int i = 0; i < intData.length; i++) {
-                        sb.append(" ");
-                        sb.append(intData[i]);
-                    }
-
-                } else {
-                    dataImageIter.getPixel(pos.x, pos.y, doubleData);
-                    for (int i = 0; i < doubleData.length; i++) {
-                        sb.append(String.format(" %.4f", doubleData[i]));
-                    }
+            Point imagePos = getImageCoords(ev.getPoint(), null);
+            if (imageBounds.contains(imagePos)) {
+                
+                if (dataImageIter == null) {
+                    dataImageIter = RandomIterFactory.create(dataImage, imageBounds);
                 }
 
-                frame.setStatusText(sb.toString());
+                if (integralImageDataType) {
+                    dataImageIter.getPixel(imagePos.x, imagePos.y, intData);
+                    frame.setCursorInfo(imagePos, intData);
+                } else {
+                    dataImageIter.getPixel(imagePos.x, imagePos.y, doubleData);
+                    frame.setCursorInfo(imagePos, doubleData);
+                }
+            } else {
+                frame.setStatusText("");
             }
         }
     }
@@ -137,5 +127,35 @@ class ImagePane extends DisplayJAI {
     public void mouseExited(MouseEvent ev) {
         frame.setStatusText("");
     }
+
+    /**
+     * Empty method.
+     * @param e the event
+     */
+    public void mouseClicked(MouseEvent e) {}
+
+    /**
+     * Empty method.
+     * @param e the event
+     */
+    public void mousePressed(MouseEvent e) {}
+
+    /**
+     * Empty method.
+     * @param e the event
+     */
+    public void mouseReleased(MouseEvent e) {}
+
+    /**
+     * Empty method.
+     * @param e the event
+     */
+    public void mouseEntered(MouseEvent e) {}
+
+    /**
+     * Empty method.
+     * @param e the event
+     */
+    public void mouseDragged(MouseEvent e) {}
 
 }
