@@ -27,6 +27,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.image.ColorModel;
 import java.awt.image.SampleModel;
@@ -71,6 +72,7 @@ public class DrawingDemo {
          * bridge to Graphics2D drawing methods
          */
         Graphics2D gr = img.createGraphics();
+        gr.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         /*
          * Here we do some common operations to demonstrate
@@ -104,6 +106,7 @@ public class DrawingDemo {
          * We display the results using jaitools.utils.ImageFrame widget
          */
         ImageFrame frame = new ImageFrame(img, "Image of 4 square tiles");
+        frame.setSize(300, 300);
         frame.setVisible(true);
     }
 }
