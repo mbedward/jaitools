@@ -22,10 +22,13 @@ package jaitools.swing;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Point2D;
 import java.awt.image.RenderedImage;
 import javax.swing.JPanel;
 
@@ -39,11 +42,13 @@ import javax.swing.JPanel;
  */
 public class SimpleImagePane extends JPanel {
 
-    RenderedImage image;
-    AffineTransform transform;
+    private RenderedImage image;
+    private AffineTransform imageToDisplay;
+    private AffineTransform displayToImage;
+    private int margin;
+    
     private final Object lock = new Object();
     
-    private int margin;
 
     
     public SimpleImagePane() {
@@ -73,16 +78,38 @@ public class SimpleImagePane extends JPanel {
         setTransform();
     }
     
+    public Point getImageCoords(Point paneCoords, Point imageCoords) {
+        Point2D p = displayToImage.transform(paneCoords, null);
+        
+        if (imageCoords != null) {
+            imageCoords.x = (int) p.getX();
+            imageCoords.y = (int) p.getY();
+            return imageCoords;
+        }
+        return new Point((int)p.getX(), (int)p.getY());
+    }
+    
+    public Point getPaneCoords(Point imageCoords, Point paneCoords) {
+        Point2D p = imageToDisplay.transform(imageCoords, null);
+        
+        if (paneCoords != null) {
+            paneCoords.x = (int) p.getX();
+            paneCoords.y = (int) p.getY();
+            return paneCoords;
+        }
+        return new Point((int)p.getX(), (int)p.getY());
+    }
+    
     @Override
-    public void paintComponent(Graphics g) {
+    protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         synchronized(lock) {
             if (image != null) {
-                if (transform == null) {
+                if (imageToDisplay == null) {
                     setTransform();
                 }
                 Graphics2D g2d = (Graphics2D) g;
-                g2d.drawRenderedImage(image, transform);
+                g2d.drawRenderedImage(image, imageToDisplay);
             }
         }
     }
@@ -95,8 +122,8 @@ public class SimpleImagePane extends JPanel {
                     return;
                 }
             
-                if (transform == null) {
-                    transform = new AffineTransform();
+                if (imageToDisplay == null) {
+                    imageToDisplay = new AffineTransform();
                 }
             
                 double xscale = (visr.getWidth() - 2*margin) / image.getWidth();
@@ -106,7 +133,14 @@ public class SimpleImagePane extends JPanel {
                 double xoff = margin - (scale * image.getMinX());
                 double yoff = margin - (scale * image.getMinY());
                 
-                transform.setTransform(scale, 0, 0, scale, xoff, yoff);
+                imageToDisplay.setTransform(scale, 0, 0, scale, xoff, yoff);
+                
+                try {
+                    displayToImage = imageToDisplay.createInverse();
+                } catch (NoninvertibleTransformException ex) {
+                    // we shouldn't ever be here
+                    throw new RuntimeException(ex);
+                }
             }
         }
     }
