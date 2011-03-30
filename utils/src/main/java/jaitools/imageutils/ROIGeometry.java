@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Michael Bedward
+ * Copyright 2010-2011 Michael Bedward
  * 
  * This file is part of jai-tools.
  *
@@ -19,17 +19,6 @@
  */
 
 package jaitools.imageutils;
-
-import com.vividsolutions.jts.awt.ShapeReader;
-import com.vividsolutions.jts.awt.ShapeWriter;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.MultiPolygon;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.geom.prep.PreparedGeometry;
-import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory;
-import com.vividsolutions.jts.geom.util.AffineTransformation;
 
 import jaitools.jts.CoordinateSequence2D;
 
@@ -51,6 +40,19 @@ import javax.media.jai.PlanarImage;
 import javax.media.jai.ROI;
 import javax.media.jai.ROIShape;
 
+import com.vividsolutions.jts.awt.ShapeReader;
+import com.vividsolutions.jts.awt.ShapeWriter;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.PrecisionModel;
+import com.vividsolutions.jts.geom.prep.PreparedGeometry;
+import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory;
+import com.vividsolutions.jts.geom.util.AffineTransformation;
+
 /**
  * An {@code ROI} class that honours double precision coordinates when testing for inclusion.
  * 
@@ -61,7 +63,20 @@ import javax.media.jai.ROIShape;
  */
 public class ROIGeometry extends ROI {
     
+    private static boolean DEFAULT_ROIGEOMETRY_ANTIALISING = true;
+    
+    private static boolean DEFAULT_ROIGEOMETRY_USEFIXEDPRECISION = true;
+    
+    private boolean useAntialiasing = DEFAULT_ROIGEOMETRY_ANTIALISING;
+    
+    private boolean useFixedPrecision = DEFAULT_ROIGEOMETRY_USEFIXEDPRECISION;
+    
     private static final long serialVersionUID = 1L;
+    
+    private static final AffineTransformation Y_INVERSION = new AffineTransformation(1, 0, 0, 0, -1, 0);
+    
+    private static final String UNSUPPORTED_ROI_TYPE = 
+            "The argument be either an ROIGeometry or an ROIShape";
 
     /** The {@code Geometry} that defines the area of inclusion */
     private final PreparedGeometry theGeom;
@@ -69,6 +84,11 @@ public class ROIGeometry extends ROI {
     private PlanarImage roiImage;
     
     private final GeometryFactory geomFactory;
+    
+    private final static double tolerance = 1d;
+    private final static PrecisionModel PRECISION = new PrecisionModel(tolerance);
+    // read, remove excess ordinates, force precision and collect
+    private final static GeometryFactory PRECISE_FACTORY = new GeometryFactory(PRECISION);
 
     private final CoordinateSequence2D testPointCS;
     private final com.vividsolutions.jts.geom.Point testPoint;
@@ -99,7 +119,31 @@ public class ROIGeometry extends ROI {
      *         not an instance of either {@code Polygon} or {@code MultiPolygon}
      */
     public ROIGeometry(Geometry geom) {
-        this(geom, PixelCoordType.CORNER);
+        this(geom, PixelCoordType.CORNER, DEFAULT_ROIGEOMETRY_ANTIALISING, DEFAULT_ROIGEOMETRY_USEFIXEDPRECISION);
+    }
+    
+    /**
+     * Constructor which takes a {@code Geometry} object to be used
+     * as the reference against which to test inclusion of image coordinates.
+     * The argument {@code geom} must be either a {@code Polygon} or
+     * {@code MultiPolygon}.
+     * <p>
+     * Using this constructor will result in pixel inclusion being tested
+     * with corner coordinates (equivalent to standard JAI pixel indexing).
+     * <p>
+     * Note: {@code geom} will be copied so subsequent changes to it will
+     * not be reflected in the {@code ROIGeometry} object.
+     * 
+     * @param geom either a {@code Polygon} or {@code MultiPolygon} object
+     *        defining the area(s) of inclusion.
+     *        
+     * @param useFixedPrecision whether to use fixedPrecision on ROIGeometry coordinates.
+     * 
+     * @throws IllegalArgumentException if {@code theGeom} is {@code null} or
+     *         not an instance of either {@code Polygon} or {@code MultiPolygon}
+     */
+    public ROIGeometry(Geometry geom, final boolean useFixedPrecision) {
+        this(geom, PixelCoordType.CORNER, DEFAULT_ROIGEOMETRY_ANTIALISING, useFixedPrecision);
     }
     
     /**
@@ -120,6 +164,32 @@ public class ROIGeometry extends ROI {
      *         not an instance of either {@code Polygon} or {@code MultiPolygon}
      */
     public ROIGeometry(Geometry geom, PixelCoordType coordType) {
+        this(geom, coordType, DEFAULT_ROIGEOMETRY_ANTIALISING, DEFAULT_ROIGEOMETRY_USEFIXEDPRECISION);
+    }
+    
+    /**
+     * Constructor which takes a {@code Geometry} object to be used
+     * as the reference against which to test inclusion of image coordinates.
+     * The argument {@code geom} must be either a {@code Polygon} or
+     * {@code MultiPolygon}.
+     * <p>
+     * Note: {@code geom} will be copied so subsequent changes to it will
+     * not be reflected in the {@code ROIGeometry} object.
+     * 
+     * @param geom either a {@code Polygon} or {@code MultiPolygon} object
+     *        defining the area(s) of inclusion.
+     * 
+     * @param coordType type of pixel coordinates to use when testing for inclusion
+     * 
+     * @param antiAliasing whether to use antiAliasing hint when getting the geometry as an image.
+     * 
+     * @param useFixedPrecision whether to use fixedPrecision on ROIGeometry coordinates.
+     * 
+     * @throws IllegalArgumentException if {@code theGeom} is {@code null} or
+     *         not an instance of either {@code Polygon} or {@code MultiPolygon}
+     */
+    public ROIGeometry(Geometry geom, PixelCoordType coordType, final boolean antiAliasing, 
+            final boolean useFixedPrecision) {
         if (geom == null) {
             throw new IllegalArgumentException("geom must not be null");
         }
@@ -127,10 +197,23 @@ public class ROIGeometry extends ROI {
         if (!(geom instanceof Polygon || geom instanceof MultiPolygon)) {
             throw new IllegalArgumentException("geom must be a Polygon, MultiPolygon or null");
         }
-            
-        geomFactory = new GeometryFactory();
+        this.useFixedPrecision = useFixedPrecision;
+        Geometry cloned = null; 
+        if (useFixedPrecision){
+            geomFactory = PRECISE_FACTORY;
+            cloned = geomFactory.createGeometry(geom);
+            Coordinate[] coords = cloned.getCoordinates();
+            for (Coordinate coord : coords) {
+                Coordinate cc1 = coord;
+                PRECISION.makePrecise(cc1);
+            }
+            cloned.normalize();
+        } else {
+            geomFactory = new GeometryFactory();
+            cloned = (Geometry)geom.clone();
+        }
         
-        theGeom = PreparedGeometryFactory.prepare((Geometry)geom.clone());
+        theGeom = PreparedGeometryFactory.prepare(cloned);
         
         testPointCS = new CoordinateSequence2D(1);
         testPoint = geomFactory.createPoint(testPointCS);
@@ -156,9 +239,17 @@ public class ROIGeometry extends ROI {
     public ROI add(ROI roi) {
         final Geometry geom = getGeometry(roi);
         if (geom != null) {
-            return new ROIGeometry(geom.union(theGeom.getGeometry()));
+            Geometry union = geom.union(theGeom.getGeometry());
+//            Geometry fixed = PRECISE_FACTORY.createGeometry(union);
+//            Coordinate[] coords = fixed.getCoordinates();
+//            for (Coordinate coord : coords) {
+//                Coordinate cc1 = coord;
+//                PRECISION.makePrecise(cc1);
+//            }
+//            union = fixed;
+            return new ROIGeometry(union);
         }
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException(UNSUPPORTED_ROI_TYPE);
     }
 
     /**
@@ -276,12 +367,22 @@ public class ROIGeometry extends ROI {
     }
 
     /**
-     * This method is not supported.
-     * @throws UnsupportedOperationException if called
+     * Returns a new instance which is the exclusive OR of this ROI and {@code roi}. 
+     * This is only possible if {@code roi} is an instance of ROIGeometry 
+     * or {@link ROIShape}.
+     * 
+     * @param roi the ROI to add
+     * @return the union as a new instance
+     * @throws UnsupportedOperationException if {@code roi} is not an instance
+     *         of ROIGeometry or {@link ROIShape}
      */
     @Override
     public ROI exclusiveOr(ROI roi) {
-        throw new UnsupportedOperationException("Not implemented");
+        final Geometry geom = getGeometry(roi);
+        if (geom != null) {
+            return new ROIGeometry(theGeom.getGeometry().symDifference(geom));
+        }
+        throw new UnsupportedOperationException(UNSUPPORTED_ROI_TYPE);
     }
 
     /**
@@ -317,6 +418,7 @@ public class ROIGeometry extends ROI {
             pb.setParameter("height", h);
             pb.setParameter("geometry", theGeom);
             pb.setParameter("coordtype", coordType);
+            pb.setParameter("antiAliasing", useAntialiasing);
             roiImage = JAI.create("VectorBinarize", pb);
         }
         
@@ -405,9 +507,18 @@ public class ROIGeometry extends ROI {
     public ROI intersect(ROI roi) {
         final Geometry geom = getGeometry(roi);
         if (geom != null) {
-            return new ROIGeometry(geom.intersection(theGeom.getGeometry()));
+            Geometry intersect = geom.intersection(theGeom.getGeometry());
+//            Geometry fixed = PRECISE_FACTORY.createGeometry(intersect);
+//            Coordinate[] coords = fixed.getCoordinates();
+//            for (Coordinate coord : coords) {
+//                Coordinate cc1 = coord;
+//                PRECISION.makePrecise(cc1);
+//            }
+//            intersect = fixed;
+            return new ROIGeometry(intersect);
+
         }
-        throw new UnsupportedOperationException("Not implemented");
+        throw new UnsupportedOperationException(UNSUPPORTED_ROI_TYPE);
     }
     
     /**
@@ -423,7 +534,7 @@ public class ROIGeometry extends ROI {
         } else if (roi instanceof ROIShape){
             final Shape shape = ((ROIShape) roi).getAsShape();
             final Geometry geom = ShapeReader.read(shape, 0, geomFactory);
-            geom.apply(new AffineTransformation(1, 0, 0, 0, -1, 0));
+            geom.apply(Y_INVERSION);
             return geom;
         }
         return null;
@@ -510,13 +621,23 @@ public class ROIGeometry extends ROI {
         throw new UnsupportedOperationException("Not implemented");
     }
 
-    /**
-     * This method is not supported.
-     * @throws UnsupportedOperationException if called
+    /*
+     * Returns a new instance which is the difference of this ROI and {@code roi}. 
+     * This is only possible if {@code roi} is an instance of ROIGeometry 
+     * or {@link ROIShape}.
+     * 
+     * @param roi the ROI to add
+     * @return the union as a new instance
+     * @throws UnsupportedOperationException if {@code roi} is not an instance
+     *         of ROIGeometry or {@link ROIShape}
      */
     @Override
     public ROI subtract(ROI roi) {
-        throw new UnsupportedOperationException("Not implemented");
+        final Geometry geom = getGeometry(roi);
+        if (geom != null) {
+            return new ROIGeometry(theGeom.getGeometry().difference(geom));
+        }
+        throw new UnsupportedOperationException(UNSUPPORTED_ROI_TYPE);
     }
 
     /**
@@ -546,6 +667,15 @@ public class ROIGeometry extends ROI {
         Geometry cloned = (Geometry) theGeom.getGeometry().clone();
         cloned.apply(new AffineTransformation(at.getScaleX(), at.getShearX(), at.getTranslateX(), 
                 at.getShearY(), at.getScaleY(), at.getTranslateY()));
+        if (useFixedPrecision){
+            Geometry fixed = PRECISE_FACTORY.createGeometry(cloned);
+            Coordinate[] coords = fixed.getCoordinates();
+            for (Coordinate coord : coords) {
+                Coordinate precise = coord;
+                PRECISION.makePrecise(precise);
+            }
+            cloned = fixed;
+        }
         return new ROIGeometry(cloned);
     }
 

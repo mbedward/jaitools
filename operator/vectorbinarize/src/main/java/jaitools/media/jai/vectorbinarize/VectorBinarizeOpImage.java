@@ -25,8 +25,10 @@ import jaitools.jts.CoordinateSequence2D;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.GeneralPath;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
@@ -57,6 +59,8 @@ import com.vividsolutions.jts.geom.prep.PreparedGeometry;
 public class VectorBinarizeOpImage extends SourcelessOpImage {
     
     private final PreparedGeometry geom;
+    
+    private final Shape shape;
 
     private final PixelCoordType coordType;
 
@@ -71,6 +75,10 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
     private Raster solidTile;
     
     private Raster blankTile;
+    
+    static boolean DEFAULT_ANTIALIASING = false;
+    
+    private boolean antiAliasing = DEFAULT_ANTIALIASING; 
 
     /**
      * Constructor.
@@ -87,11 +95,32 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
      */
     public VectorBinarizeOpImage(SampleModel sm, Map configuration, int minX, int minY, int width,
             int height, PreparedGeometry geom, PixelCoordType coordType) {
+        this(sm, configuration, minX, minY, width, height, geom, coordType, DEFAULT_ANTIALIASING);
+    }
+    
+    
+    /**
+     * Constructor.
+     * 
+     * @param sm the {@code SampleModel} used to create tiles
+     * @param configuration rendering hints
+     * @param minX origin X ordinate
+     * @param minY origin Y ordinate
+     * @param width image width
+     * @param height image height
+     * @param geom reference polygonal geometry
+     * @param coordType type of coordinates to use when testing pixel inclusion
+     *        (corner or center)
+     */
+    public VectorBinarizeOpImage(SampleModel sm, Map configuration, int minX, int minY, int width,
+            int height, PreparedGeometry geom, PixelCoordType coordType, final boolean antiAliasing) {
         super(buildLayout(minX, minY, width, height, sm), configuration, sm, minX, minY, width,
                 height);
 
         this.geom = geom;
+        this.shape = new ShapeWriter().toShape(geom.getGeometry());
         this.coordType = coordType;
+        this.antiAliasing = antiAliasing;
 
         GeometryFactory gf = new GeometryFactory();
         testPointCS = new CoordinateSequence2D(1);
@@ -181,19 +210,17 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
             Graphics2D graphics = null;
             try {
                 graphics = bi.createGraphics();
-                Shape shape = new ShapeWriter().toShape(geom.getGeometry());
                 
                 // translate the geometry to compensate for the tile origin at 0,0
                 graphics.setTransform(AffineTransform.getTranslateInstance(-minX, -minY));
                 
-                // fill the bg 
-                graphics.setColor(Color.BLACK);
-                graphics.fill(raster.getBounds());
+                if (antiAliasing){
+                    graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                }
                 
                 // draw the shape
                 graphics.setColor(Color.WHITE);
                 graphics.fill(shape);
-                graphics.draw(shape);
             } finally {
                 if(graphics != null) {
                     graphics.dispose();

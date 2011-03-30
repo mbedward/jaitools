@@ -82,6 +82,7 @@ public class VectorBinarizeDescriptor extends OperationDescriptorImpl {
     static final int HEIGHT_ARG = 3;
     static final int GEOM_ARG = 4;
     static final int COORD_TYPE_ARG = 5;
+    static final int ANTIALIASING_ARG = 6;
 
     private static final String[] paramNames = {
         "minx",
@@ -89,7 +90,8 @@ public class VectorBinarizeDescriptor extends OperationDescriptorImpl {
         "width",
         "height",
         "geometry",
-        "coordtype"
+        "coordtype",
+        "antiAliasing"
     };
     
     private static final Class[] paramClasses = {
@@ -98,7 +100,8 @@ public class VectorBinarizeDescriptor extends OperationDescriptorImpl {
         Integer.class,
         Integer.class,
         Object.class,
-        PixelCoordType.class
+        PixelCoordType.class,
+        Boolean.class
     };
 
     private static final Object[] paramDefaults = {
@@ -107,7 +110,8 @@ public class VectorBinarizeDescriptor extends OperationDescriptorImpl {
         NO_PARAMETER_DEFAULT,
         NO_PARAMETER_DEFAULT,
         NO_PARAMETER_DEFAULT,
-        PixelCoordType.CORNER
+        PixelCoordType.CORNER,
+        VectorBinarizeOpImage.DEFAULT_ANTIALIASING
     };
 
     
@@ -133,7 +137,9 @@ public class VectorBinarizeDescriptor extends OperationDescriptorImpl {
                               "a MultiPolygon or a polygonal PreparedGeometry"},
                     
                     {"arg5Desc", paramNames[5] + " (PixelCoordType, default = CENTER) " +
-                              "the type of pixel coordinates to use"}
+                              "the type of pixel coordinates to use"},
+                    {"arg6Desc", paramNames[6] + " (Boolean, default = false) " +
+                              "Whether to use antiAliasing as Hints on geometry rendering" }
                 },
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
                 

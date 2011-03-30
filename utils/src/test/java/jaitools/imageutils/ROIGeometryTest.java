@@ -306,7 +306,7 @@ public class ROIGeometryTest {
                 x0, y0, x0, y1, x1, y1, x1, y0, x0, y0);
         
         Polygon poly = gf.createPolygon(gf.createLinearRing(cs), null);
-        return new ROIGeometry(poly);
+        return new ROIGeometry(poly, false);
     }
 
 }
