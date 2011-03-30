@@ -100,7 +100,6 @@ class ImagePane extends SimpleImagePane implements MouseListener, MouseMotionLis
      * If the mouse cursor is over the image, get the value of the image
      * pixel from band 0
      */
-    @Override
     public void mouseMoved(MouseEvent ev) {
         if (dataImage != null) {
             Point imagePos = getImageCoords(ev.getPoint(), null);
@@ -123,7 +122,6 @@ class ImagePane extends SimpleImagePane implements MouseListener, MouseMotionLis
         }
     }
 
-    @Override
     public void mouseExited(MouseEvent ev) {
         frame.setStatusText("");
     }
