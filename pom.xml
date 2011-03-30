@@ -292,7 +292,6 @@
     <modules>
         <module>demo</module>
         <module>utils</module>
-        <module>kernel</module>
         <module>operator</module>
     </modules>
 

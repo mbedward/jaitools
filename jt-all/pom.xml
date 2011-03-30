@@ -81,11 +81,6 @@
         </dependency>
         <dependency>
             <groupId>com.googlecode.jaitools</groupId>
-            <artifactId>jt-kernel</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
             <artifactId>jt-attributeop</artifactId>
             <version>${project.version}</version>
         </dependency>
