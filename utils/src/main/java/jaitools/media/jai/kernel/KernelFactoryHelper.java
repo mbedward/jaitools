@@ -75,32 +75,34 @@ class KernelFactoryHelper {
     }
 
     /**
-     * Create a flat array representing a rectangular grid with
-     * all elements having value 1.0f
+     * Creates an array for a rectangular kernel with
+     * all elements set to {@code value}.
      *
      * @param w width
      * @param h height
+     * @param value value for all elements
      */
-    float[] makeRect(int w, int h) {
+    float[] makeRect(int w, int h, float value) {
         float[] m = new float[w*h];
-        Arrays.fill(m, 1.0f);
+        Arrays.fill(m, value);
         return m;
     }
 
     /**
      * Takes a float array with data for a closed raster shape
-     * and fills the shape by setting element values to 1
-     * @param m
-     * @param mwidth
-     * @param mheight
+     * and fills the shape by setting element values to {@code value}
+     * 
+     * @param data data array of length {@code w} * {@code h}
+     * @param w width
+     * @param h height
      */
-    void rowFill(float[] m, int mwidth, int mheight) {
+    void rowFill(float[] data, int w, int h, float value) {
 
         int k = 0;
-        for (int y = 0; y < mheight; y++) {
+        for (int y = 0; y < h; y++) {
             int left = -1, right = -1;
-            for (int x = 0; x < mwidth; x++, k++) {
-                if (m[k] > 0) {
+            for (int x = 0; x < w; x++, k++) {
+                if (data[k] > 0) {
                     if (left < 0) {
                         left = k;
                     } else {
@@ -110,7 +112,7 @@ class KernelFactoryHelper {
             }
 
             while (right > left+1) {
-                m[--right] = 1f;
+                data[--right] = value;
             }
         }
     }
