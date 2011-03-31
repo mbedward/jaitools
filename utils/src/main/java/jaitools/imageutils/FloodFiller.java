@@ -20,7 +20,6 @@
 
 package jaitools.imageutils;
 
-import jaitools.numeric.DoubleComparison;
 import java.awt.Rectangle;
 import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
@@ -30,12 +29,16 @@ import java.util.ArrayList;
 import java.util.Queue;
 import java.util.LinkedList;
 import java.util.List;
+
 import javax.media.jai.PlanarImage;
 import javax.media.jai.ROI;
 import javax.media.jai.ROIShape;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 import javax.media.jai.iterator.WritableRandomIter;
+
+import jaitools.numeric.CompareOp;
+
 
 /**
  * A flood-filling algorithm to use with rasters.
@@ -412,7 +415,7 @@ public class FloodFiller {
          * of the flood fill reference value
          */
         double val = srcIter.getSampleDouble(x, y, srcBand);
-        return DoubleComparison.dcomp(Math.abs(val - refValue), tolerance) <= 0;
+        return CompareOp.acompare(Math.abs(val - refValue), tolerance) <= 0;
     }
 
 }

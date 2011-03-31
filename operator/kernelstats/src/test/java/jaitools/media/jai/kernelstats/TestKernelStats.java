@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -19,11 +19,10 @@
  */
 package jaitools.media.jai.kernelstats;
 
-import jaitools.numeric.Statistic;
-import jaitools.numeric.SampleStats;
 import java.awt.RenderingHints;
 import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
+
 import javax.media.jai.BorderExtender;
 import javax.media.jai.JAI;
 import javax.media.jai.KernelJAI;
@@ -33,9 +32,12 @@ import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
+
+import jaitools.numeric.Statistic;
+import jaitools.numeric.SampleStats;
+
 import org.junit.Test;
 import static org.junit.Assert.*;
-import static jaitools.numeric.DoubleComparison.*;
 
 /**
  * Unit test for the KernelStats operator
@@ -43,6 +45,8 @@ import static jaitools.numeric.DoubleComparison.*;
  * @author Michael Bedward
  */
 public class TestKernelStats {
+    
+    private static final double TOL = 1.0e-4;
 
     /**
      * In this test we provide the operator with a TYPE_INT test image
@@ -180,7 +184,7 @@ public class TestKernelStats {
         RectIter iter = RectIterFactory.create(img, null);
         do {
             do {
-                assertTrue(dcomp(expValue, iter.getSampleDouble()) == 0);
+                assertEquals(expValue, iter.getSampleDouble(), TOL);
             } while (!iter.nextPixelDone());
             iter.startPixels();
         } while (!iter.nextLineDone());
@@ -236,31 +240,31 @@ public class TestKernelStats {
 
                     switch (stat) {
                         case MAX:
-                            assertTrue(dcomp(SampleStats.max(nbrHoodValues, true), result, tol) == 0);
+                            assertEquals(SampleStats.max(nbrHoodValues, true), result, TOL);
                             break;
 
                         case MEAN:
-                            assertTrue(dcomp(SampleStats.mean(nbrHoodValues, true), result, tol) == 0);
+                            assertEquals(SampleStats.mean(nbrHoodValues, true), result, TOL);
                             break;
 
                         case MEDIAN:
-                            assertTrue(dcomp(SampleStats.median(nbrHoodValues, true), result, tol) == 0);
+                            assertEquals(SampleStats.median(nbrHoodValues, true), result, TOL);
                             break;
 
                         case MIN:
-                            assertTrue(dcomp(SampleStats.min(nbrHoodValues, true), result, tol) == 0);
+                            assertEquals(SampleStats.min(nbrHoodValues, true), result, TOL);
                             break;
 
                         case RANGE:
-                            assertTrue(dcomp(SampleStats.range(nbrHoodValues, true), result, tol) == 0);
+                            assertEquals(SampleStats.range(nbrHoodValues, true), result, TOL);
                             break;
 
                         case SDEV:
-                            assertTrue(dcomp(SampleStats.sdev(nbrHoodValues, true), result, tol) == 0);
+                            assertEquals(SampleStats.sdev(nbrHoodValues, true), result, TOL);
                             break;
 
                         case VARIANCE:
-                            assertTrue(dcomp(SampleStats.variance(nbrHoodValues, true), result, tol) == 0);
+                            assertEquals(SampleStats.variance(nbrHoodValues, true), result, TOL);
                             break;
                     }
                 }

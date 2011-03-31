@@ -1,18 +1,18 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
-
+ *
  * jai-tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
-
+ *
  * jai-tools is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
-
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -20,18 +20,20 @@
 
 package jaitools.imageutils;
 
-import jaitools.numeric.DoubleComparison;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.DataBuffer;
 import java.awt.image.WritableRaster;
+
 import javax.media.jai.PlanarImage;
 import javax.media.jai.RasterFactory;
 import javax.media.jai.TiledImage;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 import javax.media.jai.iterator.WritableRectIter;
-import org.junit.BeforeClass;
+
+import jaitools.numeric.CompareOp;
+
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -48,10 +50,10 @@ public class SamplingBorderExtenderTest {
     private static final int BUFFER_WIDTH = 2;
     private static final int SAMPLE_DISTANCE = 5;
 
-    private static PlanarImage sourceImage;
+    private final PlanarImage sourceImage;
 
-    @BeforeClass
-    public static void setup() {
+    
+    public SamplingBorderExtenderTest() {
         TiledImage timg = ImageUtils.createConstantImage(SOURCE_WIDTH, SOURCE_WIDTH, 0d);
         WritableRectIter iter = RectIterFactory.createWritable(timg, null);
         double y = 0d;
@@ -177,7 +179,7 @@ public class SamplingBorderExtenderTest {
                     boolean found = false;
                     do {
                         do {
-                            if (DoubleComparison.dequal(value, iter.getSample())) {
+                            if (CompareOp.aequal(value, iter.getSample())) {
                                 found = true;
                             }
                         } while (!found && !iter.nextPixelDone());

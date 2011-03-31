@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Michael Bedward
+ * Copyright 2010-2011 Michael Bedward
  * 
  * This file is part of jai-tools.
  *
@@ -20,15 +20,15 @@
 
 package jaitools.imageutils;
 
-import com.vividsolutions.jts.geom.Polygon;
-import jaitools.jts.CoordinateSequence2D;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import jaitools.numeric.DoubleComparison;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
+import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.GeometryFactory;
+
+import jaitools.jts.CoordinateSequence2D;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -197,10 +197,10 @@ public class ROIGeometryTest {
         Rectangle2D expected = new Rectangle2D.Double(-1.1, -2.2, 4.4, 6.6);
         Rectangle2D result = roi.getBounds2D();
 
-        DoubleComparison.dequal(expected.getMinX(), result.getMinX(), 0.0001);
-        DoubleComparison.dequal(expected.getMinY(), result.getMinY(), 0.0001);
-        DoubleComparison.dequal(expected.getWidth(), result.getWidth(), 0.0001);
-        DoubleComparison.dequal(expected.getHeight(), result.getHeight(), 0.0001);
+        assertEquals(expected.getMinX(), result.getMinX(), 0.0001);
+        assertEquals(expected.getMinY(), result.getMinY(), 0.0001);
+        assertEquals(expected.getWidth(), result.getWidth(), 0.0001);
+        assertEquals(expected.getHeight(), result.getHeight(), 0.0001);
     }
 
     @Ignore

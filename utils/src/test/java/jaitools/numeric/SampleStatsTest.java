@@ -32,6 +32,8 @@ import static org.junit.Assert.*;
  */
 public class SampleStatsTest {
     
+    private static final double TOL = 1.0e-8;
+    
     static final Double[] values;
     static {
         values = new Double[20];
@@ -48,7 +50,7 @@ public class SampleStatsTest {
         System.out.println("   max");
         double expResult = 10.0d;
         double result = SampleStats.max(values, true);
-        assertTrue(DoubleComparison.dzero(expResult - result));
+        assertEquals(expResult, result, TOL);
     }
     
     @Test
@@ -62,7 +64,7 @@ public class SampleStatsTest {
         System.out.println("   min");
         double expResult = 1.0d;
         double result = SampleStats.min(values, true);
-        assertTrue(DoubleComparison.dzero(expResult - result));
+        assertEquals(expResult, result, TOL);
     }
 
     @Test
@@ -76,7 +78,7 @@ public class SampleStatsTest {
         System.out.println("   median");
         double expResult = 5.5d;
         double result = SampleStats.median(values, true);
-        assertTrue(DoubleComparison.dzero(expResult - result));
+        assertEquals(expResult, result, TOL);
     }
     
     @Test
@@ -90,7 +92,7 @@ public class SampleStatsTest {
         System.out.println("   range");
         double expResult = 9.0d;
         double result = SampleStats.range(values, true);
-        assertTrue(DoubleComparison.dzero(expResult - result));
+        assertEquals(expResult, result, TOL);
     }
     
     @Test
@@ -104,7 +106,7 @@ public class SampleStatsTest {
         System.out.println("   mean");
         double expResult = 5.5d;
         double result = SampleStats.mean(values, true);
-        assertTrue(DoubleComparison.dzero(expResult - result));
+        assertEquals(expResult, result, TOL);
     }
 
     @Test
@@ -118,7 +120,7 @@ public class SampleStatsTest {
         System.out.println("   variance");
         double expResult = 9.0d + 1.0d / 6;
         double result = SampleStats.variance(values, true);
-        assertTrue(DoubleComparison.dcomp(expResult, result) == 0);
+        assertEquals(expResult, result, TOL);
     }
     
     @Test
@@ -126,7 +128,7 @@ public class SampleStatsTest {
         System.out.println("   sum");
         double expResult = 55.0d;
         double result = SampleStats.sum(values, true);
-        assertTrue(DoubleComparison.dcomp(expResult, result) == 0);
+        assertEquals(expResult, result, TOL);
     }
 
     @Test

@@ -1,41 +1,45 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
-
+ *
  * jai-tools is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
-
+ *
  * jai-tools is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
-
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with jai-tools.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
 package jaitools.media.jai.kernel;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.MultiPoint;
-import jaitools.CollectionFactory;
 import java.awt.Point;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.util.List;
+
 import javax.media.jai.KernelJAI;
 
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.MultiPoint;
+
+import jaitools.CollectionFactory;
+import jaitools.numeric.CompareOp;
+
 /**
- * A factory class with static methods to create a variety of
- * KernelJAI objects with specified geometries
+ * Provides static methods to create a variety of raster kernels 
+ * ({@code KernelJAI} objects).
  *
  * @author Michael Bedward
  * @since 1.0
@@ -44,7 +48,7 @@ import javax.media.jai.KernelJAI;
 public class KernelFactory {
 
     /**
-     * Meaning of the kernel values
+     * Kernel types.
      */
     public static enum ValueType {
 
@@ -129,7 +133,7 @@ public class KernelFactory {
                 float dist2 = x * x + y2;
                 float value = 0f;
 
-                if (kh.fcomp(r2, dist2) >= 0) {
+                if (CompareOp.acompare(r2, dist2) >= 0) {
                     if (type == ValueType.DISTANCE) {
                         value = (float) Math.sqrt(dist2);
                     } else if (type == ValueType.INVERSE_DISTANCE) {
@@ -223,7 +227,8 @@ public class KernelFactory {
                 float dist2 = x * x + y2;
                 float value = 0f;
 
-                if (kh.fcomp(dist2, outer2) <= 0 && kh.fcomp(dist2, inner2) > 0) {
+                if (CompareOp.acompare(dist2, outer2) <= 0 && 
+                        CompareOp.acompare(dist2, inner2) > 0) {
                     if (type == ValueType.DISTANCE) {
                         value = (float) Math.sqrt(dist2);
                     } else if (type == ValueType.INVERSE_DISTANCE) {
