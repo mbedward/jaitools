@@ -35,7 +35,6 @@ import com.vividsolutions.jts.geom.LineString;
 
 import jaitools.CollectionFactory;
 import jaitools.imageutils.ImageUtils;
-import static jaitools.numeric.DoubleComparison.*;
 
 import static org.junit.Assert.*;
 
@@ -89,10 +88,10 @@ public abstract class TestBase {
         Coordinate[] coords = contour.getCoordinates();
         final int N = coords.length;
         
-        assertTrue( dequal(coords[0].x, x0) );
-        assertTrue( dequal(coords[0].y, y0) );
-        assertTrue( dequal(coords[N-1].x, x1) );
-        assertTrue( dequal(coords[N-1].y, y1) );
+        assertEquals(coords[0].x, x0, TOL);
+        assertEquals(coords[0].y, y0, TOL);
+        assertEquals(coords[N-1].x, x1, TOL);
+        assertEquals(coords[N-1].y, y1, TOL);
     }
 
     /**

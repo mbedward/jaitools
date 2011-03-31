@@ -20,11 +20,12 @@
 
 package jaitools.numeric;
 
-import jaitools.CollectionFactory;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.SortedSet;
+
+import jaitools.CollectionFactory;
 
 /**
  * A collection of static methods to calculate summary statistics for
@@ -205,7 +206,7 @@ public class SampleStats {
         int maxFreq = 1;
         
         for (int i = 1; i < list.size(); i++) {
-            if (DoubleComparison.dcomp(curVal, list.get(i)) == 0) {
+            if (CompareOp.aequal(curVal, list.get(i))) {
                 curFreq++ ;
             } else {
                 uniqueValues.add(curVal);

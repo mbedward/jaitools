@@ -20,8 +20,6 @@
 
 package jaitools.media.jai.contour;
 
-import jaitools.media.jai.contour.TestBase.Gradient;
-import jaitools.numeric.Range;
 import java.awt.Point;
 import java.awt.Transparency;
 import java.awt.color.ColorSpace;
@@ -43,18 +41,16 @@ import javax.media.jai.FloatDoubleColorModel;
 import javax.media.jai.PlanarImage;
 import javax.media.jai.TiledImage;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import org.junit.Before;
-import org.junit.Test;
-
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.io.WKTReader;
 
 import jaitools.imageutils.ImageUtils;
-import static jaitools.numeric.DoubleComparison.dequal;
+import jaitools.numeric.Range;
+
+import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * Unit tests for the "Contour" operation.
@@ -197,7 +193,7 @@ public class ContourTest extends TestBase {
         Coordinate mid = new Coordinate(IMAGE_WIDTH/2, IMAGE_WIDTH/2);
         final double tol = value / 100.0;
         for (Coordinate c : contour.getCoordinates()) {
-            assertTrue(dequal(value, c.distance(mid), tol));
+            assertEquals(value, c.distance(mid), tol);
         }
     }
 

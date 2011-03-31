@@ -24,6 +24,9 @@ package jaitools.numeric;
  * Provides static method to compare double values with either a default or
  * specified tolerance.
  * 
+ * @deprecated This class will be removed in JAI-tools version 1.2. Please
+ *             use {@linkplain CompareOp} instead.
+ * 
  * @author Michael Bedward
  * @since 1.0
  * @version $Id$

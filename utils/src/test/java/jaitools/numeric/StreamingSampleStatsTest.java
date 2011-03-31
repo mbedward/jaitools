@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -20,15 +20,18 @@
 
 package jaitools.numeric;
 
-import jaitools.CollectionFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+
+import jaitools.CollectionFactory;
+
 import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
- *
+ * Unit tests for StreamingSampleStats.
+ * 
  * @author Michael Bedward
  * @since 1.0
  * @version $Id$
@@ -285,7 +288,7 @@ public class StreamingSampleStatsTest {
         double total = 0;
         for (double d = -1.0; d <= 1.0; d += 0.01) {
             streamStats.offer(d);
-            if (!noDataRange.contains(d) && !DoubleComparison.dequal(d, noDataValue)) {
+            if (!noDataRange.contains(d) && !CompareOp.aequal(d, noDataValue)) {
                 total += d;
             }
         }

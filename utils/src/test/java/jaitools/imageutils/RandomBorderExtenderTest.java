@@ -20,16 +20,16 @@
 
 package jaitools.imageutils;
 
-import jaitools.numeric.DoubleComparison;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.DataBuffer;
 import java.awt.image.WritableRaster;
-import javax.media.jai.JAI;
-import javax.media.jai.ParameterBlockJAI;
+
 import javax.media.jai.PlanarImage;
 import javax.media.jai.RasterFactory;
-import org.junit.BeforeClass;
+
+import jaitools.numeric.CompareOp;
+
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -42,19 +42,13 @@ import static org.junit.Assert.*;
  */
 public class RandomBorderExtenderTest {
 
-    private static final int SOURCE_WIDTH = 100;
+    private static final int SOURCE_WIDTH = 10;
     private static final int BUFFER_WIDTH = 2;
 
-    private static PlanarImage sourceImage;
+    private final PlanarImage sourceImage;
 
-    @BeforeClass
-    public static void setup() {
-       ParameterBlockJAI pb = new ParameterBlockJAI("constant");
-        pb.setParameter("width", (float)SOURCE_WIDTH);
-        pb.setParameter("height", (float)SOURCE_WIDTH);
-        pb.setParameter("bandValues", new Integer[] { 0 });
-
-        sourceImage = JAI.create("constant", pb);
+    public RandomBorderExtenderTest() {
+        sourceImage = ImageUtils.createConstantImage(SOURCE_WIDTH, SOURCE_WIDTH, 0);
     }
 
     @Test
@@ -145,8 +139,8 @@ public class RandomBorderExtenderTest {
             for (int x = raster.getMinX(), nx = 0; nx < raster.getWidth(); x++, nx++) {
                 if (!srcRectangle.contains(x, y)) {
                     double value = raster.getSampleDouble(x, y, 0);
-                    assertTrue(DoubleComparison.dcomp(value, minValue) >= 0);
-                    assertTrue(DoubleComparison.dcomp(value, maxValue) < 0);
+                    assertTrue(CompareOp.acompare(value, minValue) >= 0);
+                    assertTrue(CompareOp.acompare(value, maxValue) < 0);
                 }
             }
         }

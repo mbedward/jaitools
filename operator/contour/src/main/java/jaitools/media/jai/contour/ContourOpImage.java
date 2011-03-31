@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 Michael Bedward
+ * Copyright 2010-2011 Michael Bedward
  * 
  * This file is part of jai-tools.
  *
@@ -19,13 +19,6 @@
  */
 package jaitools.media.jai.contour;
 
-import static jaitools.numeric.DoubleComparison.*;
-import jaitools.CollectionFactory;
-import jaitools.jts.LineSmoother;
-import jaitools.jts.SmootherControl;
-import jaitools.jts.Utils;
-import jaitools.media.jai.AttributeOpImage;
-
 import java.awt.image.RenderedImage;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
@@ -41,8 +34,15 @@ import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 
 import com.vividsolutions.jts.geom.LineString;
-import jaitools.numeric.DoubleComparison;
+
+import jaitools.CollectionFactory;
+import jaitools.jts.LineSmoother;
+import jaitools.jts.SmootherControl;
+import jaitools.jts.Utils;
+import jaitools.media.jai.AttributeOpImage;
+import jaitools.numeric.CompareOp;
 import jaitools.numeric.Range;
+
 
 /**
  * Generates contours for user-specified levels of values in the source image.
@@ -675,10 +675,10 @@ public class ContourOpImage extends AttributeOpImage {
         if (!hasNonNan) return Collections.emptyList();
         
         double z = Math.floor(minVal / contourInterval) * contourInterval;
-        if (dcomp(z, minVal) < 0) z += contourInterval;
+        if (CompareOp.acompare(z, minVal) < 0) z += contourInterval;
         
         List<Double> result = new ArrayList<Double>();
-        while (dcomp(z, maxVal) <= 0) {
+        while (CompareOp.acompare(z, maxVal) <= 0) {
             result.add(z);
             z += contourInterval;
         }
@@ -721,7 +721,7 @@ public class ContourOpImage extends AttributeOpImage {
         }
 
         for (Double d : noDataNumbers) {
-            if (DoubleComparison.dequal(value, d)) {
+            if (CompareOp.aequal(value, d)) {
                 return true;
             }
         }
