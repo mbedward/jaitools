@@ -164,10 +164,7 @@ public class KernelFactory {
      */
     public static KernelJAI createCircle(int radius, ValueType type, float centreValue) {
         KernelJAI kernel = createCircle(radius, type);
-        final int width = 2 * radius + 1;
-        float[] data = kernel.getKernelData();
-        data[ width * width / 2 ] = centreValue;
-        return new KernelJAI(width, width, data);
+        return KernelUtil.setElement(kernel, radius, radius, centreValue);
     }
 
     /**
@@ -325,10 +322,7 @@ public class KernelFactory {
      */
     public static KernelJAI createAnnulus(int outerRadius, int innerRadius, ValueType type, float centreValue) {
         KernelJAI kernel = createAnnulus(outerRadius, innerRadius, type);
-        final int width = 2 * outerRadius + 1;
-        float[] data = kernel.getKernelData();
-        data[ width * width / 2 ] = centreValue;
-        return new KernelJAI(width, width, data);
+        return KernelUtil.setElement(kernel, outerRadius, outerRadius, centreValue);
     }
     
     /**
@@ -555,6 +549,7 @@ public class KernelFactory {
         if (width < 1 || height < 1) {
             throw new IllegalArgumentException("width and height must both be >= 1");
         }
+        
         float [] weights = (new KernelFactoryHelper()).makeRect(width, height, value);
         return new KernelJAI(width, height, weights);
     }
@@ -616,7 +611,7 @@ public class KernelFactory {
             int width, int height, ValueType type, int keyX, int keyY, float keyValue) {
         
         KernelJAI kernel = createRectangle(width, height, type, keyX, keyY);
-        return setElement(kernel, keyX, keyY, keyValue);
+        return KernelUtil.setElement(kernel, keyX, keyY, keyValue);
     }
 
     /**
@@ -882,39 +877,4 @@ public class KernelFactory {
         return new KernelJAI(width, height, keyX, keyY, weights);
     }
     
-    /**
-     * Creates a new kernel by copying the one provided and setting the element
-     * at {@code (x, y)} to {@code value}.
-     * 
-     * @param kernel the existing kernel
-     * @param x element X ordinate
-     * @param y element Y ordinate
-     * @param newValue new element value
-     * 
-     * @return the new kernel
-     * 
-     * @throws IllegalArgumentException if {@code kernel} is {@code null} or
-     *         {@code x} or {@code y} are out of bounds
-     */
-    public static KernelJAI setElement(KernelJAI kernel, int x, int y, float newValue) {
-        if (kernel == null) {
-            throw new IllegalArgumentException("kernel must not be null");
-        }
-        
-        float data[] = kernel.getKernelData();
-        final int w = kernel.getWidth();
-        final int h = kernel.getHeight();
-        
-        if (x < 0 || x >= w) {
-            throw new IllegalArgumentException("x out of bounds: " + x);
-        }
-        if (y < 0 || y >= w) {
-            throw new IllegalArgumentException("y out of bounds: " + y);
-        }
-        
-        int index = y * w + x;
-        data[index] = newValue;
-        return new KernelJAI(w, h, kernel.getXOrigin(), kernel.getYOrigin(), data);
-    }
-
 }

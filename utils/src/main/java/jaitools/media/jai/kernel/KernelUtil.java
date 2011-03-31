@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
 
@@ -22,8 +22,10 @@ package jaitools.media.jai.kernel;
 
 import javax.media.jai.KernelJAI;
 
+import jaitools.numeric.CompareOp;
+
 /**
- * Various utility methods that work with KernelJAI objects
+ * Static utility methods for KernelJAI objects.
  *
  * @author Michael Bedward
  * @since 1.0
@@ -58,6 +60,41 @@ public class KernelUtil {
                 kernel.getYOrigin(),
                 data);
     }
+    
+    /**
+     * Creates a new kernel by copying the one provided and setting the element
+     * at {@code (x, y)} to {@code value}.
+     * 
+     * @param kernel the existing kernel
+     * @param x element X ordinate
+     * @param y element Y ordinate
+     * @param newValue new element value
+     * 
+     * @return the new kernel
+     * 
+     * @throws IllegalArgumentException if {@code kernel} is {@code null} or
+     *         {@code x} or {@code y} are out of bounds
+     */
+    public static KernelJAI setElement(KernelJAI kernel, int x, int y, float newValue) {
+        if (kernel == null) {
+            throw new IllegalArgumentException("kernel must not be null");
+        }
+        
+        float data[] = kernel.getKernelData();
+        final int w = kernel.getWidth();
+        final int h = kernel.getHeight();
+        
+        if (x < 0 || x >= w) {
+            throw new IllegalArgumentException("x out of bounds: " + x);
+        }
+        if (y < 0 || y >= w) {
+            throw new IllegalArgumentException("y out of bounds: " + y);
+        }
+        
+        int index = y * w + x;
+        data[index] = newValue;
+        return new KernelJAI(w, h, kernel.getXOrigin(), kernel.getYOrigin(), data);
+    }
 
     /**
      * A utility function that returns a string representation of
@@ -77,7 +114,7 @@ public class KernelUtil {
 
         boolean binaryData = true;
         for (int i = 0; i < data.length && binaryData; i++) {
-            if (!(feq(data[i], 0) || feq(data[i], 1))) {
+            if (!(CompareOp.aequal(data[i], 0) || CompareOp.aequal(data[i], 1))) {
                 binaryData = false;
             }
         }
@@ -108,17 +145,4 @@ public class KernelUtil {
         return sb.toString();
     }
 
-    // round-off tolerance: used in the fcomp method below
-    private static final float TOL = 1.0e-8f;
-
-    /**
-     * Test if two float values are equal, taking into accont a
-     * round-off tolerance
-     * @param f1 first value
-     * @param f2 second value
-     * @return true if equal, false otherwise
-     */
-    private static boolean feq(float f1, float f2) {
-        return Math.abs(f1 - f2) < TOL;
-    }
 }
