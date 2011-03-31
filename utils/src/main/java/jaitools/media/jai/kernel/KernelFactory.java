@@ -46,72 +46,140 @@ import jaitools.numeric.CompareOp;
  * @version $Id$
  */
 public class KernelFactory {
+    
+    private static final double C_GAUSS = 1.0 / Math.sqrt(2 * Math.PI);
+    private static final double C_QUARTIC = 15.0 / 16.0;
+    private static final double C_TRIWEIGHT = 35.0 / 32.0;
+    private static final double PI_ON_2 = Math.PI / 2;
+    private static final double PI_ON_4 = Math.PI / 4;
+
 
     /**
-     * Kernel types.
+     * Constants specifying how kernel element values are calculated.
      */
     public static enum ValueType {
 
         /**
-         * Simple binary kernel with values of 1 or 0
+         * Inside elements have value 1.0; outside 0.0
          */
         BINARY,
+        
         /**
-         * The value of each kernel element is its distance to the
-         * kernel's key element (the element that is placed over
-         * image pixels during kernel operations).
+         * Value is {@code PI/4 * cos(uPI/2)} where {@code u} is proportional
+         * distance to the key element.
+         */
+        COSINE,
+        
+        /**
+         * Value is the distance to the kernel's key element.
          */
         DISTANCE,
+        
         /**
-         * The value of each kernel element is the inverse distance to the
-         * kernel's key element (the element that is placed over
-         * image pixels during kernel operations).
+         * Value is {@code 3(1 - u^2)/4} where {@code u} is proportional
+         * distance to the key element.
          */
-        INVERSE_DISTANCE;
+        EPANECHNIKOV,
+        
+        /**
+         * Value is {@code 1/sqrt(2PI) e^(-u^2 / 2)} where {@code u} is proportional
+         * distance to the key element.
+         */
+        GAUSSIAN,
+        
+        /**
+         * Value is the inverse distance to the kernel's key element.
+         */
+        INVERSE_DISTANCE,
+        
+        /**
+         * Also known as biweight.
+         * Value is {@code 15/16 (1 - u^2)^2} where {@code u} is proportional
+         * distance to the key element.
+         */
+        QUARTIC,
+        
+        /**
+         * Value is {@code 1 - u}  where {@code u} is proportional
+         * distance to the key element.
+         */
+        TRIANGULAR,
+        
+        /**
+         * Also known as tricubic.
+         * Value is {@code 35/32 (1 - u^2)^3} where {@code u} is proportional
+         * distance to the key element.
+         */
+        TRIWEIGHT;
+        
     };
 
     /**
-     * Create a new KernelJAI object with a circular configuration.
-     * Kernel elements within the circle will have value 1.0f; those
-     * outside will have value 0.0f.
+     * Create a circular kernel where all elements within the circle
+     * have value 1.0 while those outside have value 0.0.
+     * Kernel width is {@code 2*radius + 1}.
+     * The key element is at position {@code x=radius, y=radius}.
      * <p>
-     * This is equivalent to, but faster than, calling...
-     * <p>
-     * {@code createCircle(radius, Kernel.ValueType.BINARY, 1.0f) }
+     * This is equivalent to:
+     * <pre><code>
+     *     createCircle(radius, Kernel.ValueType.BINARY, 1.0f)
+     * </code></pre>
      *
      * @param radius radius of the circle
-     * @return a new instance of KernelJAI
+     * 
+     * @return a new {@code KernelJAI} object
      */
     public static KernelJAI createCircle(int radius) {
+        return createConstantCircle(radius, 1.0f);
+    }
+    
+    public static KernelJAI createConstantCircle(int radius, float value) {
         if (radius <= 0) {
             throw new IllegalArgumentException(
                     "Invalid radius (" + radius + "); must be > 0");
         }
 
-        KernelFactoryHelper kh = new KernelFactoryHelper();
-        float[] weights = kh.makeCircle(radius);
+        KernelFactoryHelper helper = new KernelFactoryHelper();
+        float[] weights = helper.makeCircle(radius);
+        
         int w = 2*radius + 1;
-        kh.rowFill(weights, w, w);
+        helper.rowFill(weights, w, w, value);
+        
         return new KernelJAI(w, w, weights);
     }
 
     /**
-     * Creates a new KernelJAI object with a circular configuration.
-     * The kernel width is 2*radius + 1.
-     * The kernel's key element is at position x=radius, y=radius
+     * Creates a circular kernel with width {@code 2*radius + 1}.
+     * The key element is at position {@code x=radius, y=radius}.
      *
      * @param radius the radius of the circle expressed in pixels
-     *
-     * @param type one of
-     * {@linkplain ValueType#BINARY},
-     * {@linkplain ValueType#DISTANCE} or
-     * {@linkplain ValueType#INVERSE_DISTANCE}
-     *
+     * @param type a {@link ValueType} constant
      * @param centreValue the value to assign to the kernel centre (key element)
      * 
-     * @return a new instance of KernelJAI
+     * @return a new {@code KernelJAI} object
+     * 
+     * @deprecated Please use {@link #createCircle(int, ValueType)} instead and
+     *             set the centre element value on the returned kernel if that is
+     *             required.
      */
     public static KernelJAI createCircle(int radius, ValueType type, float centreValue) {
+        KernelJAI kernel = createCircle(radius, type);
+        return KernelUtil.setElement(kernel, radius, radius, centreValue);
+    }
+
+    /**
+     * Creates a circular kernel with width {@code 2*radius + 1}.
+     * The key element is at position {@code x=radius, y=radius}.
+     * <p>
+     * If {@code type} is {@link ValueType#INVERSE_DISTANCE} the kernel's
+     * key element will be set to 1.0f.
+     *
+     * @param radius the radius of the circle expressed in pixels
+     * @param type a {@link ValueType} constant
+     * 
+     * @return a new {@code KernelJAI} object
+     */
+    public static KernelJAI createCircle(int radius, ValueType type) {
 
         if (radius <= 0) {
             throw new IllegalArgumentException(
@@ -127,19 +195,52 @@ public class KernelFactory {
         int k0 = 0;
         int k1 = weights.length - 1;
 
+        double dist2 = 0;
+        float value = 0f;
         for (int y = radius; y > 0; y--) {
             int y2 = y * y;
             for (int x = -radius; x <= radius; x++, k0++, k1--) {
-                float dist2 = x * x + y2;
-                float value = 0f;
+                dist2 = x * x + y2;
 
                 if (CompareOp.acompare(r2, dist2) >= 0) {
-                    if (type == ValueType.DISTANCE) {
-                        value = (float) Math.sqrt(dist2);
-                    } else if (type == ValueType.INVERSE_DISTANCE) {
-                        value = 1.0f / (float) Math.sqrt(dist2);
-                    } else {
-                        value = 1.0f;
+                    switch (type) {
+                        case BINARY:
+                            value = 1.0f;
+                            break;
+                            
+                        case COSINE:
+                            value = (float) (PI_ON_4 * Math.cos(PI_ON_2 * Math.sqrt(dist2) / radius));
+                            break;
+                                    
+                        case DISTANCE:
+                            value = (float) Math.sqrt(dist2);
+                            break;
+                            
+                        case EPANECHNIKOV:
+                            value = (float) (3.0 * (1.0 - dist2 / r2) / 4.0);
+                            break;
+                            
+                        case GAUSSIAN:
+                            value = (float) (C_GAUSS * Math.exp(-0.5 * dist2 / r2));
+                            break;
+                            
+                        case INVERSE_DISTANCE:
+                            value = (float) (1.0 / Math.sqrt(dist2));
+                            break;
+                            
+                        case QUARTIC:
+                            double termq = 1.0 - dist2 / r2;
+                            value = (float) (C_QUARTIC * termq * termq);
+                            break;
+                            
+                        case TRIANGULAR:
+                            value = (float) (1.0 - Math.sqrt(dist2) / radius);
+                            break;
+                            
+                        case TRIWEIGHT:
+                            double termt = 1.0 - dist2 / r2;
+                            value = (float) (C_TRIWEIGHT * termt * termt * termt);
+                            break;
                     }
 
                     weights[k0] = weights[k1] = value;
@@ -148,16 +249,47 @@ public class KernelFactory {
         }
 
         for (int x = -radius; x <= radius; x++, k0++) {
-            float value;
-            if (x == 0) {
-                value = centreValue;
+            if (x == 0 && type == ValueType.INVERSE_DISTANCE) {
+                value = 1.0f;
             } else {
-                if (type == ValueType.DISTANCE) {
-                    value = (float) Math.sqrt(x * x);
-                } else if (type == ValueType.INVERSE_DISTANCE) {
-                    value = 1.0f / (float) Math.sqrt(x * x);
-                } else {
-                    value = 1.0f;
+                switch (type) {
+                    case BINARY:
+                        value = 1.0f;
+                        break;
+                        
+                    case COSINE:
+                        value = (float) (PI_ON_4 * Math.cos(PI_ON_2 * x / radius));
+                        break;
+
+                    case DISTANCE:
+                        value = (float) Math.abs(x);
+                        break;
+                        
+                    case EPANECHNIKOV:
+                        value = (float) (3.0 * (1.0 - (double)x * x / r2) / 4.0);
+                        break;
+                        
+                    case GAUSSIAN:
+                        value = (float) (C_GAUSS * Math.exp(-0.5 * x * x / r2));
+                        break;
+                            
+                    case INVERSE_DISTANCE:
+                        value = (float) (1.0 / Math.abs(x));
+                        break;
+                        
+                    case QUARTIC:
+                        double termq = 1.0 - (double) x * x / r2;
+                        value = (float) (C_QUARTIC * termq * termq);
+                        break;
+                        
+                    case TRIANGULAR:
+                        value = (float) (1.0 - (double) Math.abs(x) / radius);
+                        break;
+                            
+                    case TRIWEIGHT:
+                        double termt = 1.0 - (double) x * x / r2;
+                        value = (float) (C_TRIWEIGHT * termt * termt * termt);
+                        break;
                 }
             }
             weights[k0] = value;
@@ -165,38 +297,99 @@ public class KernelFactory {
 
         return new KernelJAI(width, width, weights);
     }
-
+    
     /**
-     * Creates a new KernelJAI object with an annular configuration
-     * (like a doughnut).
-     *
-     * The kernel width is 2*outerRadius + 1.
-     * The kernel's key element is at position x=outerRadius, y=outerRadius
-     *
+     * Creates an annular kernel (a doughnut).
+     * The kernel width is {@code 2*outerRadius + 1}.
+     * The kernel's key element is at position {@code x=outerRadius, y=outerRadius}.
      * <p>
-     * An IllegalArgumentException will be thrown if:
-     * <ul>
-     * <li> The value of outerRadius not greater than 0
-     * <li> The value of innerRadius is not less than outerRadius
-     * </ul>
+     * Calling this method with {@code innerRadius == 0} is equivalent to
+     * calling {@link #createCircle }
      *
-     * Calling this method with innerRadius == 0 is equivalent to
-     * calling {@linkplain #createCircle }
-     *
-     * @param outerRadius the radius of the circle expressed in pixels
-     * @param innerRadius the radius of the 'hole' of the annulus
-     *
-     * @param type one of
-     * {@linkplain ValueType#BINARY},
-     * {@linkplain ValueType#DISTANCE} or
-     * {@linkplain ValueType#INVERSE_DISTANCE}
-     *
+     * @param outerRadius the radius of the annulus
+     * @param innerRadius the radius of the 'hole'
+     * @param type a {@link ValueType} constant
      * @param centreValue the value to assign to the kernel centre (key element)
      *
-     * @return a new instance of KernelJAI
+     * @return a new {@code KernelJAI} object
      *
+     * @throws IllegalArgumentException if {@code outerRadius <= 0} or 
+     *         {@code innerRadius >= outerRadius}
+     * 
+     * @deprecated Please use {@link #createAnnulua(int, int, ValueType)} instead and
+     *             set the centre element value on the returned kernel if that is
+     *             required.
      */
     public static KernelJAI createAnnulus(int outerRadius, int innerRadius, ValueType type, float centreValue) {
+        KernelJAI kernel = createAnnulus(outerRadius, innerRadius, type);
+        return KernelUtil.setElement(kernel, outerRadius, outerRadius, centreValue);
+    }
+    
+    /**
+     * Creates an annular kernel (a doughnut) where elements inside the annulus
+     * have a constant value while those outside are set to 0.
+     * <p>
+     * The kernel width is {@code 2*outerRadius + 1}.
+     * The kernel's key element is at position {@code x=outerRadius, y=outerRadius}.
+     *
+     * @param outerRadius the outer radius of the annulus
+     * @param innerRadius the radius of the 'hole'
+     * @param value element value
+     *
+     * @return a new {@code KernelJAI} object
+     *
+     * @throws IllegalArgumentException if {@code outerRadius <= 0} or 
+     *         {@code innerRadius >= outerRadius}
+     */
+    public static KernelJAI createConstantAnnulus(int outerRadius, int innerRadius, float value) {
+        if (outerRadius <= 0) {
+            throw new IllegalArgumentException("outerRadius must be > 0");
+        }
+        if (innerRadius >= outerRadius) {
+            throw new IllegalArgumentException("innerRadius must be less than outerRadius");
+        }
+
+        final int w = 2*outerRadius + 1;
+        float[] data = new float[w * w];
+        
+        double outer2 = outerRadius * outerRadius;
+        double inner2 = innerRadius * innerRadius;
+        double d2;
+        int k = 0;
+        for (int y = 0; y < w; y++) {
+            double y2 = y * y;
+            for (int x = 0; x < w; x++) {
+                d2 = y2 + x * x;
+                if (CompareOp.acompare(d2, outer2) <= 0 &&
+                        CompareOp.acompare(d2, inner2) > 0) {
+                    data[k] = value;
+                } else {
+                    data[k] = 0;
+                }
+            }
+        }
+        
+        return new KernelJAI(w, w, data);
+    }
+
+    /**
+     * Creates an annular kernel (a doughnut). If {@code innerRadius} is 0 the
+     * returned kernel will be identical to that from {@code createCircle(outerRadius, type)}.
+     * <p>
+     * The kernel width is {@code 2*outerRadius + 1}.
+     * The kernel's key element is at position {@code x=outerRadius, y=outerRadius}.
+     * <p>
+     *
+     * @param outerRadius the outer radius of the annulus
+     * @param innerRadius the radius of the 'hole'
+     * @param type a {@link ValueType} constant
+     *
+     * @return a new {@code KernelJAI} object
+     *
+     * @throws IllegalArgumentException if {@code outerRadius <= 0} or 
+     *         {@code innerRadius >= outerRadius}
+     */
+    public static KernelJAI createAnnulus(int outerRadius, int innerRadius, ValueType type) {
 
         if (innerRadius < 0) {
             throw new IllegalArgumentException(
@@ -208,57 +401,115 @@ public class KernelFactory {
         }
 
         if (innerRadius == 0) {
-            return createCircle(outerRadius, type, centreValue);
+            return createCircle(outerRadius, type);
         }
-
-        KernelFactoryHelper kh = new KernelFactoryHelper();
 
         int width = 2 * outerRadius + 1;
         float[] weights = new float[width * width];
 
-        int outer2 = outerRadius * outerRadius;
-        float inner2 = innerRadius * innerRadius;
+        double outer2 = outerRadius * outerRadius;
+        double inner2 = innerRadius * innerRadius;
+        
+        double dist2 = 0;
+        float value = 0f;
         int k0 = 0;
         int k1 = weights.length - 1;
 
         for (int y = outerRadius; y > 0; y--) {
             int y2 = y * y;
             for (int x = -outerRadius; x <= outerRadius; x++, k0++, k1--) {
-                float dist2 = x * x + y2;
-                float value = 0f;
+                dist2 = x * x + y2;
 
                 if (CompareOp.acompare(dist2, outer2) <= 0 && 
                         CompareOp.acompare(dist2, inner2) > 0) {
-                    if (type == ValueType.DISTANCE) {
-                        value = (float) Math.sqrt(dist2);
-                    } else if (type == ValueType.INVERSE_DISTANCE) {
-                        value = 1.0f / (float) Math.sqrt(dist2);
-                    } else {
-                        value = 1.0f;
-                    }
+                    
+                    switch (type) {
+                        case BINARY:
+                            value = 1.0f;
+                            break;
+                            
+                        case COSINE:
+                            value = (float) (PI_ON_4 * Math.cos(PI_ON_2 * Math.sqrt(dist2) / outerRadius));
+                            break;
+                                    
+                        case DISTANCE:
+                            value = (float) Math.sqrt(dist2);
+                            break;
+                            
+                        case EPANECHNIKOV:
+                            value = (float) (3.0 * (1.0 - dist2 / outer2) / 4.0);
+                            break;
+                            
+                        case GAUSSIAN:
+                            value = (float) (C_GAUSS * Math.exp(-0.5 * dist2 / outer2));
+                            break;
+                            
+                        case INVERSE_DISTANCE:
+                            value = (float) (1.0 / Math.sqrt(dist2));
+                            break;
+                            
+                        case QUARTIC:
+                            double termq = 1.0 - dist2 / outer2;
+                            value = (float) (C_QUARTIC * termq * termq);
+                            break;
+                            
+                        case TRIANGULAR:
+                            value = (float) (1.0 - Math.sqrt(dist2) / outerRadius);
+                            break;
 
+                        case TRIWEIGHT:
+                            double termt = 1.0 - dist2 / outer2;
+                            value = (float) (C_TRIWEIGHT * termt * termt * termt);
+                            break;
+                    }
                     weights[k0] = weights[k1] = value;
                 }
             }
         }
 
         for (int x = -outerRadius; x <= outerRadius; x++, k0++) {
-            float value = 0f;
-            if (x == 0) {
-                value = centreValue;
+            if (x < -innerRadius || x > innerRadius) {
+                switch (type) {
+                    case BINARY:
+                        value = 1.0f;
+                        break;
+                            
+                    case COSINE:
+                        value = (float) (PI_ON_4 * Math.cos(PI_ON_2 * x / outerRadius));
+                        break;
+                                    
+                    case DISTANCE:
+                        value = (float) Math.abs(x);
+                        break;
+                        
+                    case EPANECHNIKOV:
+                        value = (float) (3.0 * (1.0 - (double) x * x / outer2) / 4.0);
+                        break;
+                        
+                    case GAUSSIAN:
+                        value = (float) (C_GAUSS * Math.exp(-0.5 * x * x / outer2));
+                        break;
+                            
+                    case INVERSE_DISTANCE:
+                        value = (float) (1.0 / Math.abs(x));
+                        break;
+                        
+                    case QUARTIC:
+                        double termq = 1.0 - (double) x * x / outer2;
+                        value = (float) (C_QUARTIC * termq * termq);
+                        break;
+                            
+                    case TRIANGULAR:
+                        value = (float) (1.0 - (double) Math.abs(x) / outerRadius);
+                        break;
 
-            } else if (x < -innerRadius || x > innerRadius) {
-
-                if (type == ValueType.DISTANCE) {
-                    value = (float) Math.sqrt(x * x);
-                } else if (type == ValueType.INVERSE_DISTANCE) {
-                    value = 1.0f / (float) Math.sqrt(x * x);
-                } else {
-                    value = 1.0f;
+                    case TRIWEIGHT:
+                        double termt = 1.0 - (double) x * x / outer2;
+                        value = (float) (C_TRIWEIGHT * termt * termt * termt);
+                        break;
                 }
+                weights[k0] = value;
             }
-            
-            weights[k0] = value;
         }
 
         return new KernelJAI(width, width, weights);
@@ -266,50 +517,123 @@ public class KernelFactory {
 
 
     /**
-     * Creates a new KernelJAI object with a rectangular configuraton.
-     * An IllegalArgumentException will be thrown if width or height are less than 1.
-     * <p>
-     * This is equivalent to calling...
-     * <p>
-     * {@code createRectangle(width, height, Kernel.ValueType.BINARY, width/2, height/2, 1.0f) }
+     * Creates a rectangular kernel where all elements have value 1.0.
+     * The key element will be at {@code (width/2, height/2)}.
      *
      * @param width rectangle width
      * @param height rectangle height
      *
-     * @return a new instance of KernelJAI
+     * @return a new {@code KernelJAI} object
+     * 
+     * @throws IllegalArgumentException if either {@code width} or {@code height}
+     *         are less than 1
      */
     public static KernelJAI createRectangle(int width, int height) {
-        float [] weights = (new KernelFactoryHelper()).makeRect(width, height);
+        return createConstantRectangle(width, height, 1.0f);
+    }
+    
+    /**
+     * Creates a rectangular kernel where all elements have the same value.
+     * The key element will be at {@code (width/2, height/2)}.
+     *
+     * @param width rectangle width
+     * @param height rectangle height
+     * @param value element value
+     *
+     * @return a new {@code KernelJAI} object
+     * 
+     * @throws IllegalArgumentException if either {@code width} or {@code height}
+     *         are less than 1
+     */
+    public static KernelJAI createConstantRectangle(int width, int height, float value) {
+        if (width < 1 || height < 1) {
+            throw new IllegalArgumentException("width and height must both be >= 1");
+        }
+        
+        float [] weights = (new KernelFactoryHelper()).makeRect(width, height, value);
         return new KernelJAI(width, height, weights);
     }
 
     /**
-     * Creates a new KernelJAI object with a rectangular configuration.
-     * <p>
-     * An IllegalArgumentException will be thrown if:
-     * <ul>
-     * <li> width or height are less than 1
-     * <li> keyX is not in the range 0:width-1
-     * <li> keyY is not in the range 0:height-1
-     * </ul>
+     * Creates a rectangular kernel where all elements have the same value.
      *
      * @param width rectangle width
      * @param height rectangle height
+     * @param value element value
+     * @param keyX key element X ordinate
+     * @param keyY key element Y ordinate
      *
-     * @param type one of
-     * {@linkplain ValueType#BINARY},
-     * {@linkplain ValueType#DISTANCE} or
-     * {@linkplain ValueType#INVERSE_DISTANCE}
+     * @return a new {@code KernelJAI} object
+     * 
+     * @throws IllegalArgumentException if either {@code width} or {@code height}
+     *         are less than 1 or if the key element location is outside the
+     *         rectangle
+     */
+    public static KernelJAI createConstantRectangle(int width, int height,
+            int keyX, int keyY,  float value) {
+        
+        if (width < 1 || height < 1) {
+            throw new IllegalArgumentException("width and height must both be >= 1");
+        }
+        
+        if (keyX < 0 || keyX >= width || keyY < 0 || keyY >= height) {
+            throw new IllegalArgumentException("key element must be within the rectangle");
+        }
+        
+        float [] weights = (new KernelFactoryHelper()).makeRect(width, height, value);
+        return new KernelJAI(width, height, keyX, keyY, weights);
+    }
+
+    /**
+     * Creates a rectangular kernel. If the element value type is one that involves
+     * proportional distance, such as {@link ValueType#COSINE} or 
+     * {@link ValueType#EPANECHNIKOV}, this is calculated as the proportion of the
+     * maximum distance from the key element to a kernel edge element.
      *
-     * @param keyX x position of the key element
-     * @param keyY y position of the key element (y coords increase downwards)
+     * @param width rectangle width
+     * @param height rectangle height
+     * @param type a {@link ValueType} constant
+     * @param keyX X ordinate of the key element
+     * @param keyY Y ordinate of the key element (0 is top)
      * @param keyValue value of the key element
      *
-     * @return a new instance of KernelJAI
-     *
+     * @return a new {@code KernelJAI} object
+     * 
+     * @throws IllegalArgumentException if either {@code width} or {@code height}
+     *         are less than 1; or if {@code keyX} is not in the interval {@code [0,width)};
+     *         or if {@code keyY} is not in the interval {@code [0,height)};
+     * 
+     * @deprecated Please use {@link #createRectangle(int, int, ValueType, int, int)}
+     *             instead and set the centre element value on the returned kernel if that is
+     *             required.
      */
     public static KernelJAI createRectangle(
             int width, int height, ValueType type, int keyX, int keyY, float keyValue) {
+        
+        KernelJAI kernel = createRectangle(width, height, type, keyX, keyY);
+        return KernelUtil.setElement(kernel, keyX, keyY, keyValue);
+    }
+
+    /**
+     * Creates a rectangular kernel. If the element value type is one that involves
+     * proportional distance, such as {@link ValueType#COSINE} or 
+     * {@link ValueType#EPANECHNIKOV}, this is calculated as the proportion of the
+     * maximum distance from the key element to a kernel edge element.
+     *
+     * @param width rectangle width
+     * @param height rectangle height
+     * @param type a {@link ValueType} constant
+     * @param keyX X ordinate of the key element
+     * @param keyY Y ordinate of the key element (0 is top)
+     *
+     * @return a new {@code KernelJAI} object
+     * 
+     * @throws IllegalArgumentException if either {@code width} or {@code height}
+     *         are less than 1; or if {@code keyX} is not in the interval {@code [0,width)};
+     *         or if {@code keyY} is not in the interval {@code [0,height)};
+     */
+    public static KernelJAI createRectangle(
+            int width, int height, ValueType type, int keyX, int keyY) {
 
         if (width < 1) {
             throw new IllegalArgumentException("width must be >= 1");
@@ -328,36 +652,74 @@ public class KernelFactory {
         float weights[];
 
         if (type == ValueType.BINARY) {
-            weights = kh.makeRect(width, height);
-            weights[keyX + keyY*width] = keyValue;
+            weights = kh.makeRect(width, height, 1.0f);
             return new KernelJAI(width, height, keyX, keyY, weights);
         }
 
         weights = new float[width*height];
-
-        float dist;
         int k = 0;
+        
+        // find distance from key element to most distance edge element
+        int dx = Math.max(keyX, width - 1 - keyX);
+        int dy = Math.max(keyY, height - 1 - keyY);
+        double dmax2 = dx*dx + dy*dy;
+        double dmax = Math.sqrt(dmax2);
+        
         Point2D p = new Point(keyX, keyY);
+        double dist2 = 0;
+        
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++, k++) {
-                dist = (float) p.distance(x, y);
-                if (type == ValueType.DISTANCE) {
-                    weights[k] = dist;
-                } else {
-                    weights[k] = 1.0f / dist;
+                dist2 = (float) p.distanceSq(x, y);
+                switch (type) {
+                    case COSINE:
+                        weights[k] = (float) (PI_ON_4 * Math.cos(PI_ON_2 * Math.sqrt(dist2) / dmax));
+                        break;
+                        
+                    case DISTANCE:
+                        weights[k] = (float) Math.sqrt(dist2);
+                        break;
+                        
+                    case EPANECHNIKOV:
+                        weights[k] = (float) (3.0 * (1.0 - dist2 / dmax2) / 4.0);
+                        break;
+                        
+                    case GAUSSIAN:
+                        weights[k] = (float) (C_GAUSS * Math.exp(-0.5 * dist2 / dmax2));
+                        break;
+                            
+                    case INVERSE_DISTANCE:
+                        if (dist2 < 1.0) {
+                            weights[k] = 1.0f;
+                        } else {
+                            weights[k] = (float) (1.0 / Math.sqrt(dist2));
+                        }
+                        break;
+                        
+                    case QUARTIC:
+                        double termq = 1.0 - dist2 / dmax2;
+                        weights[k] = (float) (C_QUARTIC * termq * termq);
+                        break;
+                            
+                    case TRIANGULAR:
+                        weights[k] = (float) (1.0 - Math.sqrt(dist2) / dmax);
+                        break;
+
+                    case TRIWEIGHT:
+                        double termt = 1.0 - dist2 / dmax2;
+                        weights[k] = (float) (C_TRIWEIGHT * termt * termt * termt);
+                        break;
                 }
             }
         }
 
-        weights[keyX + keyY*width] = keyValue;
-        
         return new KernelJAI(width, height, keyX, keyY, weights);
     }
 
     /**
-     * Create a new KernelJAI object by rasterizing a shape. The shape must be a closed
-     * polygon. The rasterizing process checks whether the centre of each pixel is inside
-     * the polygon.
+     * Create a kernel by rasterizing a shape. The shape must be a closed
+     * polygon. Kernel element centre coordinates are used to test whether
+     * elements are inside the shape.
      * <p>
      * This method can cope with arbitrary shape bounds, ie. there is no need to
      * set the bounding rectangle to have origin x=0, y=0. The values of keyX and keyY,
@@ -370,13 +732,10 @@ public class KernelFactory {
      * kernel element coordinates. May be null. This is useful to scale and/or rotate
      * the shape.
      *
-     * @param type one of
-     * {@linkplain ValueType#BINARY},
-     * {@linkplain ValueType#DISTANCE} or
-     * {@linkplain ValueType#INVERSE_DISTANCE}
+     * @param type a {@link ValueType} constant
      *
-     * @param keyX the x coord of the key element
-     * @param keyY the y coord of the key element
+     * @param keyX X ordinate of the key element
+     * @param keyY Y ordinate of the key element
      * @param keyValue the value of the key element
      *
      * @return a new instance of KernelJAI
@@ -426,27 +785,89 @@ public class KernelFactory {
 
         /*
          * Now we buffer the polygon by a small amount to avoid
-         * rejection points that lie exactly on the boundary
-         * and the points that intersect with the poly
+         * rejecting points that lie exactly on the boundary
          */
         MultiPoint mp = gf.createMultiPoint(coords.toArray(new Coordinate[coords.size()]));
         Geometry inside = mp.intersection(poly.buffer(0.05, Math.max(width/2, 10)));
+        
+        final int n = inside.getNumGeometries();
+        
+        /*
+         * If required, find the maximum distance between the key element lcoation
+         * and a kernel edge element.
+         */
+        double dmax = 0, dmax2 = 0;
+        switch (type) {
+            case COSINE:
+            case EPANECHNIKOV:
+            case GAUSSIAN:
+            case QUARTIC:
+            case TRIANGULAR:
+            case TRIWEIGHT:
+                
+            for (int i = 0; i < n; i++) {
+                Geometry g = inside.getGeometryN(i);
+                Coordinate c = g.getCoordinate();
+                double d2 = Point2D.distanceSq(keyX, keyY, (int)c.x, (int)c.y);
+                if (d2 > dmax2) {
+                    dmax2 = d2;
+                }
+            }
+            dmax = Math.sqrt(dmax2);
+        }
+        
 
         /*
          * For each intersecting point we set a kernel element
          */
-        int n = inside.getNumGeometries();
+        double dist2 = 0;
         for (int i = 0; i < n; i++) {
             Geometry g = inside.getGeometryN(i);
             Coordinate c = g.getCoordinate();
             int index = (int) c.x - left + offset[(int) c.y - bottom];
+            
+            if (type != ValueType.BINARY) {
+                dist2 = Point2D.distanceSq(keyX, keyY, (int)c.x, (int)c.y);
+            }
 
-            if (type == ValueType.BINARY) {
-                weights[index] = 1.0f;
-            } else if (type == ValueType.DISTANCE) {
-                weights[index] = (float) Point2D.distance(keyX, keyY, (int)c.x, (int)c.y);
-            } else if (type == ValueType.INVERSE_DISTANCE) {
-                weights[index] = 1.0f / (float) Point2D.distance(keyX, keyY, (int)c.x, (int)c.y);
+            switch (type) {
+                case BINARY:
+                    weights[index] = 1.0f;
+                    break;
+                    
+                case COSINE:
+                    weights[index] = (float) (PI_ON_4 * Math.cos(PI_ON_2 * Math.sqrt(dist2) / dmax));
+                    break;
+                    
+                case DISTANCE:
+                    weights[index] = (float) Math.sqrt(dist2);
+                    break;
+                    
+                case EPANECHNIKOV:
+                    weights[index] = (float) (3.0 * (1.0 - dist2 / dmax2) / 4.0);
+                    break;
+
+                case GAUSSIAN:
+                    weights[index] = (float) (C_GAUSS * Math.exp(-0.5 * dist2 / dmax2));
+                    break;
+
+                case INVERSE_DISTANCE:
+                    weights[index] = (float) (1.0 / Math.sqrt(dist2));
+                    break;
+
+                case QUARTIC:
+                    double termq = 1.0 - dist2 / dmax2;
+                    weights[index] = (float) (C_QUARTIC * termq * termq);
+                    break;
+
+                case TRIANGULAR:
+                    weights[index] = (float) (1.0 - Math.sqrt(dist2) / dmax);
+                    break;
+
+                case TRIWEIGHT:
+                    double termt = 1.0 - dist2 / dmax2;
+                    weights[index] = (float) (C_TRIWEIGHT * termt * termt * termt);
+                    break;
             }
         }
 
@@ -455,4 +876,5 @@ public class KernelFactory {
 
         return new KernelJAI(width, height, keyX, keyY, weights);
     }
+    
 }
