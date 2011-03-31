@@ -246,20 +246,18 @@ public class TileCacheTest {
         System.out.println("   cache auto-flush:");
 
         RenderedOp op = helper.simpleJAIOp(2, 2);
-        cache.setAutoFlushMemoryInterval(500);
+        cache.setAutoFlushMemoryInterval(1000);
         cache.setAutoFlushMemoryEnabled(true);
-
+        
+        cache.addObserver(helper);
+        
         for (int i = 0; i < 5; i++) {
             System.out.println(String.format("    - cycle %d", i+1));
+
             op.getNewRendering().getTiles();
             assertTrue(cache.getNumResidentTiles() == 4);
 
-            try {
-                Thread.sleep(2 * cache.getAutoFlushMemoryInterval());
-            } catch (InterruptedException ex) {
-                fail("test interrupted");
-            }
-
+            helper.waitForUpdate(1, cache.getAutoFlushMemoryInterval() * 2, TimeUnit.MILLISECONDS);
             assertTrue(cache.getNumResidentTiles() == 0);
         }
     }
