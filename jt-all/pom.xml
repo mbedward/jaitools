@@ -4,10 +4,9 @@
     <parent>
         <artifactId>jaitools</artifactId>
         <groupId>com.googlecode.jaitools</groupId>
-        <version>1.1-SNAPSHOT</version>
+        <version>1.1.1</version>
     </parent>
     
-    <groupId>com.googlecode.jaitools</groupId>
     <artifactId>jt-all</artifactId>
     <packaging>jar</packaging>
     <name>Combined JAI-tools jar</name>
@@ -76,52 +75,52 @@
         <!-- JAI-tools modules to include in the uber-jar -->
         <!--                                              -->
         <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>jt-utils</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>jt-attributeop</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>jt-contour</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>jt-kernelstats</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>jt-maskedconvolve</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>jt-rangelookup</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>jt-regionalize</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>jt-vectorbinarize</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>jt-vectorize</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>jt-zonalstats</artifactId>
             <version>${project.version}</version>
         </dependency>
