@@ -1,0 +1,30 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <artifactId>operator</artifactId>
+        <groupId>com.googlecode.jaitools</groupId>
+        <version>1.2-SNAPSHOT</version>
+    </parent>
+  
+    <artifactId>jt-fractalfill</artifactId>
+    <packaging>jar</packaging>
+  
+    <name>Fractal fill operator</name>
+    <description>
+        Fills areas of an image by iterative sampling of values in the surrounding
+        area using a simple voter model.
+    </description>
+    
+    <dependencies>
+        <dependency>
+            <groupId>com.vividsolutions</groupId>
+            <artifactId>jts</artifactId>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>jt-utils</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+</project>
