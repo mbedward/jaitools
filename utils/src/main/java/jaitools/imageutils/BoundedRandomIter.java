@@ -24,6 +24,7 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
+import java.util.logging.Logger;
 
 import javax.media.jai.PlanarImage;
 
@@ -32,9 +33,11 @@ import javax.media.jai.PlanarImage;
  * 
  * @author Michael Bedward
  * @since 1.2
- * @version $Id: $
+ * @version $Id$
  */
 public class BoundedRandomIter {
+    
+    private static final Logger LOGGER = Logger.getLogger(BoundedRandomIter.class.getName());
 
     /**
      * Bounds within which this iterator will operate.
@@ -76,11 +79,21 @@ public class BoundedRandomIter {
             throw new IllegalArgumentException("Image must not be null");
         }
         
+        Rectangle imageBounds = new Rectangle(image.getMinX(), image.getMinY(),
+                        image.getWidth(), image.getHeight());
+        
         this.image = PlanarImage.wrapRenderedImage(image);
-        this.bounds = bounds == null ?
-                new Rectangle(image.getMinX(), image.getMinY(),
-                        image.getWidth(), image.getHeight())
-                : bounds;
+        if (bounds == null) {
+            this.bounds = imageBounds;
+        } else {
+            // work-around for curious Rectangle.intersection method behaviour
+            if (!bounds.intersects(imageBounds)) {
+                this.bounds = new Rectangle();
+                LOGGER.warning("Iterator bounds do not intersect with image bounds");
+            } else {
+                this.bounds = bounds.intersection(imageBounds);
+            }
+        }
         
         this.dataType = image.getSampleModel().getDataType();
         switch (this.dataType) {

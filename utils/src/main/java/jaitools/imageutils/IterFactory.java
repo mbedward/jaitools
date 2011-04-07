@@ -32,7 +32,7 @@ import java.awt.image.WritableRenderedImage;
  * 
  * @author Michael Bedward
  * @since 1.2
- * @version $Id: $
+ * @version $Id$
  */
 public class IterFactory {
 

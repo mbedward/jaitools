@@ -32,7 +32,7 @@ import jaitools.numeric.NumberOperations;
  * 
  * @author Michael Bedward
  * @since 1.2
- * @version $Id: $
+ * @version $Id$
  */
 public class WritableBoundedRandomIter extends BoundedRandomIter {
     
