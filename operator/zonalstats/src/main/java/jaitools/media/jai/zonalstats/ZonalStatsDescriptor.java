@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2010 Michael Bedward
+ * Copyright 2009-2011 Michael Bedward
  *
  * This file is part of jai-tools.
  *
@@ -20,11 +20,6 @@
 
 package jaitools.media.jai.zonalstats;
 
-import jaitools.numeric.Range;
-import jaitools.numeric.RangeComparator;
-import jaitools.numeric.RangeUtils;
-import jaitools.numeric.Statistic;
-
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Shape;
@@ -40,14 +35,29 @@ import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.ROI;
 import javax.media.jai.registry.RenderedRegistryMode;
 
+import jaitools.numeric.Range;
+import jaitools.numeric.RangeComparator;
+import jaitools.numeric.RangeUtils;
+import jaitools.numeric.Statistic;
+
+
 /**
- * Calculates a range of summary statistics, optionally for zones defined in a zone
- * image, for values in a data image. The operator can be used without a zone
- * image, in which case it will treat all data image pixels as being in the same
- * zone (labeled zone 0).
+ * Calculates a number of summary statistics, either for the whole data image or
+ * within zones defined in a separate zone image. When used without a zone
+ * image, all data image pixels are treated as belonging to a single zone 0.
+ * Optionally, an ROI can be provided to constrain which areas of the data image
+ * will be sampled for calculation of statistics.
  * <p>
- * Optionally, an ROI can be provided to define which pixels in the data image
- * will contribute to the zonal statistics.
+ * Use of this operator is similar to the standard JAI statistics operators such as
+ * {@link javax.media.jai.operator.HistogramDescriptor} where the source image is
+ * simply passed through to the destination image and the results of the operation are
+ * retrieved as a property. For this operator the property name can be reliably
+ * referred to via the {@link #ZONAL_STATS_PROPERTY} constant.
+ * <p>
+ * The operator uses the {@link jaitools.numeric.StreamingSampleStats} class for its
+ * calculations, allowing it to handle very large images for statistics other than
+ * {@link jaitools.numeric.Statistic#MEDIAN}, for which the
+ * {@link jaitools.numeric.Statistic#APPROX_MEDIAN} alternative is provided.
  * <p>
  * Note that the source names for this operator are "dataImage" and "zoneImage"
  * rather than the more typical JAI names "source0", "source1".
@@ -58,24 +68,23 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * pixels that do not have a corresponding zone image pixel are ignored, thus the
  * zone image bounds can be a subset of the data image bounds.
  * <p>
- * The user can also provide an {@linkplain AffineTransform} to map data image
+ * The user can also provide an {@link AffineTransform} to map data image
  * positions to zone image positions. For example, multiple data image pixels
  * could be mapped to a single zone image pixel.
  * <p>
  * The range of data image values that contribute to the analysis can be constrained
- * by supplying a List of {@linkplain Range} objects, each of which defines a range
- * of data values to <b>exclude</b>.
+ * in two ways: with the "ranges" parameter and the "noDataRanges" parameter.
+ * Each of these parameters take a {@code Collection} of {@link Range} objects.
  * <p>
- * Use of this operator is similar to the standard JAI statistics operators such as
- * {@linkplain javax.media.jai.operator.HistogramDescriptor} where the source image is
- * simply passed through to the destination image and the results of the operation are
- * retrieved as a property. For this operator the property name can be reliably
- * referred to via the {@linkplain #ZONAL_STATS_PROPERTY} constant.
+ * The "ranges" parameter allows you to define values to include or exclude from 
+ * the calculations, the choice being specified by the associated "rangesType" parameter.
+ * If "rangesType" is {@code Range.Type#INCLUDE} you can also request that 
+ * statistics be calculated separately for each range of values by setting the
+ * "rangeLocalStats" parameter to {@code Boolean.TRUE}.
  * <p>
- * The operator uses the {@linkplain jaitools.numeric.StreamingSampleStats} class for its
- * calculations, allowing it to handle very large images for statistics other than
- * {@linkplain jaitools.numeric.Statistic#MEDIAN}, for which the
- * {@linkplain jaitools.numeric.Statistic#APPROX_MEDIAN} alternative is provided.
+ * The "noDataRanges" parameter allows you to define values to treat as NODATA. 
+ * As well as being excluded from calculations of statistics, the frequency of 
+ * NODATA values is tracked by the operator and can be retrieved from the results.
  * <p>
  * Example of use...
  * <pre><code>
@@ -182,7 +191,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * List<Result> resultsBand2 = stats.band(2).results;
  * </code></pre>
  *
- * Excluding data values from the analysis with the "exclude" parameter:
+ * Excluding data values from the analysis with the "noDataRanges" parameter:
  * <pre><code>
  * ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
  * ...
@@ -190,7 +199,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * // exclude values between -5 and 5 inclusive
  * List&lt;Range&lt;Double>> excludeList = CollectionFactory.newList();
  * excludeList.add(Range.create(-5, true, 5, true));
- * pb.setParameter("exclude", excludeList);
+ * pb.setParameter("noDataRanges", excludeList);
  *
  * // after we run the operator and get the results we can examine
  * // how many sample values were included in the calculation
@@ -204,23 +213,41 @@ import javax.media.jai.registry.RenderedRegistryMode;
  *
  * <b>Parameters</b>
  * <table border="1">
- * <tr align="right">
- * <td>Name</td><td>Type</td><td>Default value</td>
+ * <tr>
+ * <th>Name</th><th>Type</th><th>Description</th><th>Default value</th>
  * </tr>
- * <tr align="right">
- * <td>stats</td><td>Statistic[]</td><td>NO DEFAULT</td>
+ * <tr>
+ * <td>stats</td><td>Statistic[]</td><td>Statistics to calculate</td><td>NO DEFAULT</td>
  * </tr>
- * <tr align="right">
- * <td>bands</td><td>Integer[]</td><td>{0}</td>
+ * <tr>
+ * <td>bands</td><td>Integer[]</td><td>Image bands to sample</td><td>{0}</td>
  * </tr>
- * <tr align="right">
- * <td>roi</td><td>ROI</td><td>null</td>
+ * <tr>
+ * <td>roi</td><td>ROI</td><td>An optional ROI to constrain sampling</td><td>null</td>
  * </tr>
- * <tr align="right">
- * <td>zoneTransform</td><td>AffineTransform</td><td>null (identity transform)</td>
+ * <tr>
+ * <td>zoneTransform</td><td>AffineTransform</td>
+ * <td>Maps data image positions to zone image positions</td>
+ * <td>null (identity transform)</td>
  * </tr>
- * <tr align="right">
- * <td>exclude</td><td>List&lt;Range></td><td>null (include all data values)</td>
+ * <tr>
+ * <td>ranges</td><td>Collection&lt;Range></td><td>Ranges of values to include or exclude</td><td>null (include all data values)</td>
+ * </tr>
+ * <tr>
+ * <td>rangesType</td><td>Range.Type</td>
+ * <td>How to treat values supplied via the "ranges" parameter</td>
+ * <td>Range.Type.INCLUDE</td>
+ * </tr>
+ * <tr>
+ * <td>rangeLocalStats</td><td>Boolean</td>
+ * <td>If Ranges are supplied via the "ranges" parameter, whether to calculate
+ * statistics for each of them separately</td>
+ * <td>Boolean.FALSE</td>
+ * </tr>
+ * <tr>
+ * <td>noDataRanges</td><td>Collection&lt;Range></td>
+ * <td>Ranges of values to treat specifically as NODATA
+ * </td><td>null (no NODATA values defined)</td>
  * </tr>
  * </table>
  *
@@ -258,13 +285,38 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
     static final int RANGE_LOCAL_STATS_ARG = 6;
     static final int NODATA_RANGES_ARG = 7;
 
-    private static final String[] paramNames = {"stats", "bands", "roi", "zoneTransform", "ranges", "rangesType", "rangeLocalStats", "noDataRanges"};
+    private static final String[] paramNames = {
+        "stats", 
+        "bands", 
+        "roi", 
+        "zoneTransform", 
+        "ranges", 
+        "rangesType", 
+        "rangeLocalStats", 
+        "noDataRanges"
+    };
 
-    private static final Class<?>[] paramClasses = {Statistic[].class, Integer[].class,
-            javax.media.jai.ROI.class, AffineTransform.class, List.class, Range.Type.class, Boolean.class, List.class };
+    private static final Class<?>[] paramClasses = {
+        Statistic[].class, 
+        Integer[].class,
+        javax.media.jai.ROI.class, 
+        AffineTransform.class, 
+        List.class, 
+        Range.Type.class, 
+        Boolean.class, 
+        List.class 
+    };
 
-    private static final Object[] paramDefaults = {NO_PARAMETER_DEFAULT,
-            new Integer[]{Integer.valueOf(0)}, (ROI) null, (AffineTransform) null, (List) null, Range.Type.UNDEFINED, Boolean.FALSE, (List) null};
+    private static final Object[] paramDefaults = {
+        NO_PARAMETER_DEFAULT,
+        new Integer[]{Integer.valueOf(0)}, 
+        (ROI) null, (AffineTransform) null, 
+        (List) null, 
+        Range.Type.UNDEFINED, 
+        Boolean.FALSE, 
+        (List) null
+    };
+    
 
     /** Constructor. */
     public ZonalStatsDescriptor() {
@@ -417,7 +469,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
             if (rangeObject instanceof List) {
                 Object range = ((List) rangeObject).get(0);
                 if (!(range instanceof Range)) {
-                    msg.append(paramNames[RANGES_ARG] + " arg has to be of type List<Range<Double>>");
+                    msg.append(paramNames[RANGES_ARG]).append(" arg has to be of type List<Range<Double>>");
                     ok = false;
                 } else {
                     List ranges = (List) rangeObject;
@@ -432,7 +484,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
                             RangeComparator.Result result = rc.compare(r1, r2);
                             if (RangeComparator.isIntersection(result)) {
                                 ok = false;
-                                msg.append(paramNames[RANGES_ARG] + " arg can't contain intersecting ranges");
+                                msg.append(paramNames[RANGES_ARG]).append(" arg can't contain intersecting ranges");
                                 break;
                             }
 
@@ -443,7 +495,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
             } else {
                 if (rangeObject != null) {
                     ok = false;
-                    msg.append(paramNames[RANGES_ARG] + " arg has to be of type List<Range<Double>>");
+                    msg.append(paramNames[RANGES_ARG]).append(" arg has to be of type List<Range<Double>>");
                 }
             }
             if (!ok) {
@@ -458,13 +510,13 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
             if (noDataRangeObject instanceof List) {
                 Object range = ((List) noDataRangeObject).get(0);
                 if (!(range instanceof Range)) {
-                        msg.append(paramNames[NODATA_RANGES_ARG] + " arg has to be of type List<Range<Double>>");
+                        msg.append(paramNames[NODATA_RANGES_ARG]).append(" arg has to be of type List<Range<Double>>");
                     ok = false;
                 }
             } else {
                 if (noDataRangeObject != null) {
                     ok = false;
-                    msg.append(paramNames[NODATA_RANGES_ARG] + " arg has to be of type List<Range<Double>>");
+                    msg.append(paramNames[NODATA_RANGES_ARG]).append(" arg has to be of type List<Range<Double>>");
                 }
             }
             if (!ok) {
@@ -477,7 +529,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
             if (rangesType instanceof Range.Type) {
                 Range.Type rt = (Range.Type) rangesType;
                 if (rangeObject != null && rt == Range.Type.UNDEFINED) {
-                    msg.append(paramNames[RANGES_TYPE_ARG] + " arg has to be of Type.EXCLUDED or Type.INCLUDED when specifying a Ranges List");
+                    msg.append(paramNames[RANGES_TYPE_ARG]).append(" arg has to be of Type.EXCLUDED or Type.INCLUDED when specifying a Ranges List");
                     return false;
                 }
             }
@@ -487,7 +539,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
         Object bandsObject = pb.getObjectParameter(BAND_ARG);
         Integer[] bands = null;
         if (!(bandsObject instanceof Integer[])) {
-            msg.append(paramNames[BAND_ARG] + " arg has to be of type Integer[]");
+            msg.append(paramNames[BAND_ARG]).append(" arg has to be of type Integer[]");
             return false;
         } else {
             bands = (Integer[]) bandsObject;
@@ -497,7 +549,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
         RenderedImage dataImg = pb.getRenderedSource(DATA_IMAGE);
         for( Integer band : bands ) {
             if (band < 0 || band >= dataImg.getSampleModel().getNumBands()) {
-                msg.append("band index out of bounds for source image: " + band);
+                msg.append("band index out of bounds for source image: ").append(band);
                 return false;
             }
         }
