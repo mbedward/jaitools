@@ -20,9 +20,6 @@
 
 package jaitools.media.jai.zonalstats;
 
-import jaitools.numeric.Range;
-import jaitools.numeric.Statistic;
-
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.ColorModel;
@@ -31,7 +28,7 @@ import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
 import java.awt.image.renderable.ParameterBlock;
 import java.awt.image.renderable.RenderedImageFactory;
-import java.util.List;
+import java.util.Collection;
 
 import javax.media.jai.ImageLayout;
 import javax.media.jai.ROI;
@@ -39,6 +36,9 @@ import javax.media.jai.RasterFactory;
 
 import com.sun.media.jai.opimage.RIFUtil;
 import com.sun.media.jai.util.ImageUtil;
+
+import jaitools.numeric.Range;
+import jaitools.numeric.Statistic;
 
 /**
  * The image factory for the {@link ZonalStatsOpImage} operation.
@@ -85,10 +85,10 @@ public class ZonalStatsRIF implements RenderedImageFactory {
         Boolean rangeLocalStats = localStats != null ? (Boolean) localStats : Boolean.FALSE;
 
         Object rng = paramBlock.getObjectParameter(ZonalStatsDescriptor.RANGES_ARG);
-        List<Range<Double>> ranges = rng != null ? (List<Range<Double>>) rng : null;
+        Collection<Range<Double>> ranges = rng != null ? (Collection<Range<Double>>) rng : null;
 
         Object noDataRng = paramBlock.getObjectParameter(ZonalStatsDescriptor.NODATA_RANGES_ARG);
-        List<Range<Double>> noDataRanges = noDataRng != null ? (List<Range<Double>>) noDataRng : null;
+        Collection<Range<Double>> noDataRanges = noDataRng != null ? (Collection<Range<Double>>) noDataRng : null;
 
         Object rngType = paramBlock.getObjectParameter(ZonalStatsDescriptor.RANGES_TYPE_ARG);
         Range.Type rangesType = rngType != null ? (Range.Type) rngType : rng != null ? Range.Type.EXCLUDE : Range.Type.UNDEFINED;

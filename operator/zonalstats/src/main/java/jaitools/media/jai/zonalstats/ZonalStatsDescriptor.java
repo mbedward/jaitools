@@ -21,17 +21,15 @@
 package jaitools.media.jai.zonalstats;
 
 import java.awt.Rectangle;
-import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
+import java.util.Collection;
 import java.util.List;
 
-import javax.media.jai.JAI;
 import javax.media.jai.OperationDescriptorImpl;
-import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.ROI;
 import javax.media.jai.registry.RenderedRegistryMode;
 
@@ -301,20 +299,20 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
         Integer[].class,
         javax.media.jai.ROI.class, 
         AffineTransform.class, 
-        List.class, 
+        Collection.class, 
         Range.Type.class, 
         Boolean.class, 
-        List.class 
+        Collection.class 
     };
 
     private static final Object[] paramDefaults = {
         NO_PARAMETER_DEFAULT,
         new Integer[]{Integer.valueOf(0)}, 
         (ROI) null, (AffineTransform) null, 
-        (List) null, 
+        (Collection) null, 
         Range.Type.UNDEFINED, 
         Boolean.FALSE, 
-        (List) null
+        (Collection) null
     };
     
 
@@ -351,25 +349,24 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
 
                 {
                         "arg4Desc",
-                        String.format("%s (default %s) - an optional List of Ranges "
-                                + "that define dataImage values to exclude from calculations",
+                        String.format("%s (default %s) - an optional Collection of Ranges "
+                                + "that define dataImage values to include or exclude",
                                 paramNames[RANGES_ARG], paramDefaults[RANGES_ARG])},
 
                 {
                         "arg5Desc",
-                        String.format("%s (default %s) - in case of Ranges, specify if they "
-                                + "are included or excluded in calculations",
+                        String.format("%s (default %s) - whether to include or exclude provided ranges",
                             paramNames[RANGES_TYPE_ARG], paramDefaults[RANGES_TYPE_ARG])},
 
                 {
                         "arg6Desc",
-                        String.format("%s (default %s) - an optional range argument type "
-                            + "that define whether to calculate global statistics or splitted by ranges",
+                        String.format("%s (default %s) - whether to calculate statistics separately "
+                                + "for ranges (when provided)",
                             paramNames[RANGE_LOCAL_STATS_ARG], paramDefaults[RANGE_LOCAL_STATS_ARG])},
                 {
                         "arg7Desc",
-                        String.format("%s (default %s) - an optional List of Ranges "
-                            + "that define dataImage values to be considered as noData and then be excluded from calculations",
+                        String.format("%s (default %s) - an optional Collection of Ranges "
+                            + "defining values to treat as NODATA",
                             paramNames[NODATA_RANGES_ARG], paramDefaults[NODATA_RANGES_ARG])},
 
         },
@@ -385,58 +382,6 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
     }
 
     /**
-     * Convenience method which constructs a {@link ParameterBlockJAI} and
-     * invokes {@code JAI.create("ZonalStats", params) }
-     *
-     * @param dataImage the data image
-     *
-     * @param zoneImage the zone image which must be of integral data type
-     *
-     * @param stats an array specifying the statistics required
-     *
-     * @param bands the array of bands of the data image to process (default single band == 0)
-     *
-     * @param roi optional roi (default is {@code null}) used to mask data values
-     *
-     * @param zoneTransform (default is {@code null}) an AffineTransform used to convert
-     *        dataImage pixel coords to zoneImage pixel coords
-     *
-     * @param exclude a List of Ranges defining dataImage values to exclude from the analysis
-     *        (may be empty or {@code null})
-     *
-     * @param hints an optional RenderingHints object
-     *
-     * @return a RenderedImage with a band for each requested statistic
-     */
-    public static RenderedImage create( RenderedImage dataImage, RenderedImage zoneImage,
-            Statistic[] stats, Integer[] bands, ROI roi, AffineTransform zoneTransform,
-            List<Range<Double>> ranges, RenderingHints hints ) {
-
-        return create(dataImage, zoneImage, stats, bands, roi, zoneTransform, ranges, Range.Type.EXCLUDE, false, null, hints);
-    }
-
-    public static RenderedImage create( RenderedImage dataImage, RenderedImage zoneImage,
-            Statistic[] stats, Integer[] bands, ROI roi, AffineTransform zoneTransform,
-            List<Range<Double>> ranges, Range.Type rangesType, boolean rangeLocalStats,
-            List<Range<Double>> noDataRanges, RenderingHints hints ) {
-
-        ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats", RenderedRegistryMode.MODE_NAME);
-
-        pb.setSource(srcImageNames[DATA_IMAGE], dataImage);
-        pb.setSource(srcImageNames[ZONE_IMAGE], zoneImage);
-        pb.setParameter(paramNames[STATS_ARG], stats);
-        pb.setParameter(paramNames[BAND_ARG], bands);
-        pb.setParameter(paramNames[ROI_ARG], roi);
-        pb.setParameter(paramNames[ZONE_TRANSFORM_ARG], zoneTransform);
-        pb.setParameter(paramNames[RANGES_ARG], ranges);
-        pb.setParameter(paramNames[RANGES_TYPE_ARG], rangesType);
-        pb.setParameter(paramNames[RANGE_LOCAL_STATS_ARG], rangeLocalStats);
-        pb.setParameter(paramNames[NODATA_RANGES_ARG], noDataRanges);
-
-        return JAI.create("ZonalStats", pb, hints);
-    }
-
-    /**
      * Returns true to indicate that properties are supported
      */
     @Override
@@ -445,14 +390,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
     }
 
     /**
-     * Checks parameters for the following:
-     * <ul>
-     * <li> Number of sources is 1 or 2
-     * <li> Data image bands are valid
-     * <li> Zone image, if provided, is an integral data type
-     * <li> Zone image, if provided, overlaps the data image, taking into
-     *      account any {@code AffineTransform}
-     * </ul>
+     * Checks parameters prior to them being used.
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -466,28 +404,30 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
         Object rangeObject = pb.getObjectParameter(RANGES_ARG);
         if (rangeObject != null) {
             boolean ok = true;
-            if (rangeObject instanceof List) {
-                Object range = ((List) rangeObject).get(0);
-                if (!(range instanceof Range)) {
-                    msg.append(paramNames[RANGES_ARG]).append(" arg has to be of type List<Range<Double>>");
-                    ok = false;
-                } else {
-                    List ranges = (List) rangeObject;
-                    List sortedRanges = RangeUtils.sort(ranges);
-                    final int elements = sortedRanges.size();
-                    if (elements > 1) {
-                        RangeComparator rc = new RangeComparator();
-                        List<Range> rr = (List<Range>) sortedRanges;
-                        for (int i = 0; i < elements - 1; i++) {
-                            Range r1 = rr.get(i);
-                            Range r2 = rr.get(i + 1);
-                            RangeComparator.Result result = rc.compare(r1, r2);
-                            if (RangeComparator.isIntersection(result)) {
-                                ok = false;
-                                msg.append(paramNames[RANGES_ARG]).append(" arg can't contain intersecting ranges");
-                                break;
-                            }
+            if (rangeObject instanceof Collection) {
+                Collection coll = (Collection) rangeObject;
+                if (!coll.isEmpty()) {
+                    Object range = coll.iterator().next();
+                    if (!(range instanceof Range)) {
+                        msg.append(paramNames[RANGES_ARG]).append(" arg has to be of type List<Range<Double>>");
+                        ok = false;
 
+                    } else {
+                        List sortedRanges = RangeUtils.sort(coll);
+                        final int elements = sortedRanges.size();
+                        if (elements > 1) {
+                            RangeComparator rc = new RangeComparator();
+                            List<Range> rr = (List<Range>) sortedRanges;
+                            for (int i = 0; i < elements - 1; i++) {
+                                Range r1 = rr.get(i);
+                                Range r2 = rr.get(i + 1);
+                                RangeComparator.Result result = rc.compare(r1, r2);
+                                if (RangeComparator.isIntersection(result)) {
+                                    ok = false;
+                                    msg.append(paramNames[RANGES_ARG]).append(" arg can't contain intersecting ranges");
+                                    break;
+                                }
+                            }
                         }
                     }
                 }

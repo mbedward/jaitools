@@ -30,6 +30,7 @@ import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.image.RenderedImage;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -87,7 +88,6 @@ public class ZonalStatsOpImage extends NullOpImage {
 
     private SortedSet<Integer> zones;
 
-
     /**
      * Constructor.
      *
@@ -106,57 +106,22 @@ public class ZonalStatsOpImage extends NullOpImage {
      *
      * @param roi an optional {@code ROI} for data image masking.
      *
-     * @param zoneTransform
+     * @param zoneTransform an optional {@code AffineTransform} which maps data image positions
+     *        to zone image positions
      *
-     * @param excludedRanges a {@link List} of {@link Range}s, that will be filtered out
-     *        of the process. This means that values inside the supplied ranges
-     *        will not be considered as valid and discarded.
-     *
-     * @see ZonalStatsDescriptor
-     * @see Statistic
-     */
-    public ZonalStatsOpImage(RenderedImage dataImage, RenderedImage zoneImage,
-            Map<?, ?> config,
-            ImageLayout layout,
-            Statistic[] stats,
-            Integer[] bands,
-            ROI roi,
-            AffineTransform zoneTransform,
-            List<Range<Double>> excludedRanges) {
-        this (dataImage, zoneImage, config, layout, stats, bands, roi, zoneTransform, excludedRanges, Range.Type.EXCLUDE, false, null);
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param dataImage a {@code RenderedImage} from which data values will be read.
-     *
-     * @param zoneImage an optional {@code RenderedImage} of integral data type that defines
-     *        the zones for which to calculate summary data.
-     *
-     * @param config configurable attributes of the image (see {@link AreaOpImage}).
-     *
-     * @param layout an optional {@code ImageLayout} object.
-     *
-     * @param stats an array of {@code Statistic} constants specifying the data required.
-     *
-     * @param bands the data image band to process.
-     *
-     * @param roi an optional {@code ROI} for data image masking.
-     *
-     * @param zoneTransform
-     *
-     * @param ranges a {@link List} of {@link Range}s, that will be filtered out/in
-     *        of the process. This means that values inside the supplied ranges
-     *        will be considered as invalid/valid and discarded/accepted.
-     *
-     * @param rangesType specify if the provided ranges argument should be considered
-     *        as Included or Excluded. See {@link Range.Type}.
+     * @param ranges an optional list of {@link Range} objects defining values to include or
+     *        exclude (depending on {@code rangesType} from the calculations; may be
+     *        {@code null} or empty
+     * 
+     * @param rangesType specifies whether the {@code ranges} argument defines values
+     *        to include or exclude
      *
      * @param rangeLocalStats if {@code true}, the statistics should be computed for ranges,
      *        separately.
      *
-     *
+     * @param noDataRanges an optional list of {@link Range} objects defining values to
+     *        treat as NODATA
+     * 
      * @see ZonalStatsDescriptor
      * @see Statistic
      */
@@ -167,10 +132,10 @@ public class ZonalStatsOpImage extends NullOpImage {
             Integer[] bands,
             ROI roi,
             AffineTransform zoneTransform,
-            List<Range<Double>> ranges,
+            Collection<Range<Double>> ranges,
             Range.Type rangesType,
             final boolean rangeLocalStats,
-            List<Range<Double>> noDataRanges) {
+            Collection<Range<Double>> noDataRanges) {
 
         super(dataImage, layout, config, OpImage.OP_COMPUTE_BOUND);
 
