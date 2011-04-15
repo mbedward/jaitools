@@ -32,6 +32,7 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.renderable.ParameterBlock;
 import java.awt.image.renderable.RenderedImageFactory;
 import java.util.LinkedList;
+import java.util.logging.Logger;
 
 import javax.media.jai.Interpolation;
 import javax.media.jai.JAI;
@@ -52,7 +53,6 @@ import com.vividsolutions.jts.geom.PrecisionModel;
 import com.vividsolutions.jts.geom.prep.PreparedGeometry;
 import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
-import java.util.logging.Logger;
 
 /**
  * An ROI class backed by a vector object providing precision and the ability 
