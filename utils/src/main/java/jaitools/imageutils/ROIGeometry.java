@@ -32,6 +32,7 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.renderable.ParameterBlock;
 import java.awt.image.renderable.RenderedImageFactory;
 import java.util.LinkedList;
+import java.util.logging.Logger;
 
 import javax.media.jai.Interpolation;
 import javax.media.jai.JAI;
@@ -54,7 +55,34 @@ import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
 
 /**
- * An {@code ROI} class that honours double precision coordinates when testing for inclusion.
+ * An ROI class backed by a vector object providing precision and the ability 
+ * to handle massive regions. This class overcomes to short-comings with the
+ * standard JAI {@code ROIShape} class:
+ * <ol type="1">
+ * <li>
+ * It honours floating point coordinates rather than truncating them 
+ * to integers.
+ * </li>
+ * <li>
+ * It has a minimal memory footprint allowing it to be used with massive images.
+ * </li>
+ * </ol>
+ * In addition, it provides an option of testing pixel inclusion in the ROI using
+ * either corner or centre coordinates. Corner coordinate testing is equivalent
+ * to standard integer pixel indices. Center coordinate testing is preferred in 
+ * many geo-spatial applications.
+ * <p>
+ * <strong>Note: </strong> if using this class as a drop-in replacement for 
+ * ROIShape you should choose {@link PixelCoordType#CORNER} and enable the use
+ * of fixed coordinate precision via the constructor (the default no-argument
+ * constructor also uses these settings). If instead, you are working with the
+ * {@link PixelCoordType#CENTER} option you should use one of the constructors
+ * that allows you to disable fixed coordinate precision.
+ * <p>
+ * JAI operations often involve converting ROI objects to images. This class 
+ * implements its {@link #getAsImage()} method using the JAI-tools "VectorBinarize" 
+ * operator to avoid exhausting available memory when dealing with ROIs that 
+ * cover massive image areas.
  * 
  * @author Michael Bedward
  * @author Andrea Aime
@@ -63,9 +91,24 @@ import com.vividsolutions.jts.geom.util.AffineTransformation;
  */
 public class ROIGeometry extends ROI {
     
-    private static boolean DEFAULT_ROIGEOMETRY_ANTIALISING = true;
+    private static final Logger LOGGER = Logger.getLogger(ROIGeometry.class.getName());
     
-    private static boolean DEFAULT_ROIGEOMETRY_USEFIXEDPRECISION = true;
+    /** 
+     * Default setting for use of anti-aliasing when drawing the reference
+     * {@code Geometry} during a {@link #getAsImage()} request.
+     * The default value is {@code true} which provides behaviour corresponding
+     * to that of the standard JAI {@code ROIShape} class.
+     */
+    public static boolean DEFAULT_ROIGEOMETRY_ANTIALISING = true;
+    
+    /** 
+     * Default setting for use of fixed precision ({@code true}). This is
+     * the appropriate setting for use with standard image operations that
+     * work with integer (corner) coordinates for pixels. If you are working
+     * with {@link PixelCoordType#CENTER} coordinates (e.g. for geo-spatial
+     * application) then you should disable fixed precision.
+     */
+    public static boolean DEFAULT_ROIGEOMETRY_USEFIXEDPRECISION = true;
     
     private boolean useAntialiasing = DEFAULT_ROIGEOMETRY_ANTIALISING;
     
@@ -105,17 +148,19 @@ public class ROIGeometry extends ROI {
      * as the reference against which to test inclusion of image coordinates.
      * The argument {@code geom} must be either a {@code Polygon} or
      * {@code MultiPolygon}.
+     * The input geometry is copied so subsequent changes to it will
+     * not be reflected in the {@code ROIGeometry} object.
      * <p>
      * Using this constructor will result in pixel inclusion being tested
      * with corner coordinates (equivalent to standard JAI pixel indexing).
-     * <p>
-     * Note: {@code geom} will be copied so subsequent changes to it will
-     * not be reflected in the {@code ROIGeometry} object.
+     * Other settings will use defaults 
+     * (see {@linkplain #DEFAULT_ROIGEOMETRY_ANTIALISING} and
+     * {@linkplain #DEFAULT_ROIGEOMETRY_USEFIXEDPRECISION}).
      * 
      * @param geom either a {@code Polygon} or {@code MultiPolygon} object
      *        defining the area(s) of inclusion.
      * 
-     * @throws IllegalArgumentException if {@code theGeom} is {@code null} or
+     * @throws IllegalArgumentException if {@code geom} is {@code null} or
      *         not an instance of either {@code Polygon} or {@code MultiPolygon}
      */
     public ROIGeometry(Geometry geom) {
@@ -123,23 +168,25 @@ public class ROIGeometry extends ROI {
     }
     
     /**
-     * Constructor which takes a {@code Geometry} object to be used
-     * as the reference against which to test inclusion of image coordinates.
+     * Constructor which takes a {@code Geometry} object and a {@code boolean}
+     * value for whether to use fixed coordinate precision (equivalent to
+     * working with integer pixel coordinates). 
      * The argument {@code geom} must be either a {@code Polygon} or
      * {@code MultiPolygon}.
+     * The input geometry is copied so subsequent changes to it will
+     * not be reflected in the {@code ROIGeometry} object.
      * <p>
      * Using this constructor will result in pixel inclusion being tested
-     * with corner coordinates (equivalent to standard JAI pixel indexing).
-     * <p>
-     * Note: {@code geom} will be copied so subsequent changes to it will
-     * not be reflected in the {@code ROIGeometry} object.
+     * with corner coordinates (equivalent to standard JAI pixel indexing)
+     * and the use of {@linkplain #DEFAULT_ROIGEOMETRY_ANTIALISING}.
      * 
      * @param geom either a {@code Polygon} or {@code MultiPolygon} object
      *        defining the area(s) of inclusion.
      *        
-     * @param useFixedPrecision whether to use fixedPrecision on ROIGeometry coordinates.
+     * @param useFixedPrecision whether to use fixed precision when comparing
+     *        pixel coordinates to the reference geometry
      * 
-     * @throws IllegalArgumentException if {@code theGeom} is {@code null} or
+     * @throws IllegalArgumentException if {@code geom} is {@code null} or
      *         not an instance of either {@code Polygon} or {@code MultiPolygon}
      */
     public ROIGeometry(Geometry geom, final boolean useFixedPrecision) {
@@ -147,45 +194,57 @@ public class ROIGeometry extends ROI {
     }
     
     /**
-     * Constructor which takes a {@code Geometry} object to be used
-     * as the reference against which to test inclusion of image coordinates.
+     * Constructor which takes a {@code Geometry} object and a specifier for
+     * the type of pixel coordinates to use.
      * The argument {@code geom} must be either a {@code Polygon} or
      * {@code MultiPolygon}.
-     * <p>
-     * Note: {@code geom} will be copied so subsequent changes to it will
+     * The input geometry is copied so subsequent changes to it will
      * not be reflected in the {@code ROIGeometry} object.
+     * <p>
+     * Normal image operations generally require {@link PixelCoordType#CORNER}
+     * coordinates. Geo-spatial applications may choose to work with
+     * {@link PixelCoordType#CENTER} coordinates instead. In the latter case,
+     * when testing the inclusion of a pixel at {@code (x, y)} the methods in the
+     * class will actually test {@code (x + 0.5, y + 0.5)}.
+     * <p>
+     * If {@link PixelCoordType#CENTER} is specified, fixed coordinate precision
+     * will be disabled. Anti-aliasing will be set to {@link #DEFAULT_ROIGEOMETRY_ANTIALISING}.
      * 
      * @param geom either a {@code Polygon} or {@code MultiPolygon} object
      *        defining the area(s) of inclusion.
      * 
      * @param coordType type of pixel coordinates to use when testing for inclusion
      * 
-     * @throws IllegalArgumentException if {@code theGeom} is {@code null} or
+     * @throws IllegalArgumentException if {@code geom} is {@code null} or
      *         not an instance of either {@code Polygon} or {@code MultiPolygon}
      */
     public ROIGeometry(Geometry geom, PixelCoordType coordType) {
-        this(geom, coordType, DEFAULT_ROIGEOMETRY_ANTIALISING, DEFAULT_ROIGEOMETRY_USEFIXEDPRECISION);
+        this(geom, coordType, DEFAULT_ROIGEOMETRY_ANTIALISING, 
+                coordType == PixelCoordType.CENTER ? false : DEFAULT_ROIGEOMETRY_USEFIXEDPRECISION);
     }
     
     /**
-     * Constructor which takes a {@code Geometry} object to be used
-     * as the reference against which to test inclusion of image coordinates.
+     * Fully-specified constructor.
      * The argument {@code geom} must be either a {@code Polygon} or
      * {@code MultiPolygon}.
-     * <p>
-     * Note: {@code geom} will be copied so subsequent changes to it will
+     * The input geometry is copied so subsequent changes to it will
      * not be reflected in the {@code ROIGeometry} object.
+     * <p>
+     * A warning is logged if fixed coordinate precision is enabled together
+     * with {@link PixelCoordType#CENTER}.
      * 
      * @param geom either a {@code Polygon} or {@code MultiPolygon} object
      *        defining the area(s) of inclusion.
      * 
      * @param coordType type of pixel coordinates to use when testing for inclusion
      * 
-     * @param antiAliasing whether to use antiAliasing hint when getting the geometry as an image.
+     * @param antiAliasing whether to use anti-aliasing when converting this
+     *        ROI to an image
      * 
-     * @param useFixedPrecision whether to use fixedPrecision on ROIGeometry coordinates.
+     * @param useFixedPrecision whether to use fixed precision when comparing
+     *        pixel coordinates to the reference geometry
      * 
-     * @throws IllegalArgumentException if {@code theGeom} is {@code null} or
+     * @throws IllegalArgumentException if {@code geom} is {@code null} or
      *         not an instance of either {@code Polygon} or {@code MultiPolygon}
      */
     public ROIGeometry(Geometry geom, PixelCoordType coordType, final boolean antiAliasing, 
@@ -195,9 +254,16 @@ public class ROIGeometry extends ROI {
         }
         
         if (!(geom instanceof Polygon || geom instanceof MultiPolygon)) {
-            throw new IllegalArgumentException("geom must be a Polygon, MultiPolygon or null");
+            throw new IllegalArgumentException("geom must be a Polygon, MultiPolygon");
         }
+        
+        if (useFixedPrecision && coordType == PixelCoordType.CENTER) {
+            LOGGER.warning(
+                    "Using fixed coordinate precision with CENTER coordinates is usually a mistake");
+        }
+        
         this.useFixedPrecision = useFixedPrecision;
+        
         Geometry cloned = null; 
         if (useFixedPrecision){
             geomFactory = PRECISE_FACTORY;
