@@ -27,6 +27,8 @@ package jaitools.imageutils;
  * Used with classes that honour double precision pixel coordinates such
  * as {@link ROIGeometry}.
  * 
+ * @deprecated This enum will be removed in the next major release or JAI-tools
+ * 
  * @author Michael Bedward
  * @since 1.1
  * @version $Id$

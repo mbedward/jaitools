@@ -68,6 +68,10 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * RenderedOp dest = JAI.create("VectorBinarize", pb, hints);
  * </code></pre>
  * 
+ * <strong>
+ * Note: the {@link PixelCoordType} enum has been deprecated and the
+ * "coordType" parameter will be removed from this operator in the next major release.
+ * </strong>
  * 
  * @author Michael Bedward
  * @author Andrea Aime

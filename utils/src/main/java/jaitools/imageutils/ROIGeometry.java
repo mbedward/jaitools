@@ -56,33 +56,19 @@ import com.vividsolutions.jts.geom.util.AffineTransformation;
 
 /**
  * An ROI class backed by a vector object providing precision and the ability 
- * to handle massive regions. This class overcomes to short-comings with the
- * standard JAI {@code ROIShape} class:
- * <ol type="1">
- * <li>
- * It honours floating point coordinates rather than truncating them 
- * to integers.
- * </li>
- * <li>
- * It has a minimal memory footprint allowing it to be used with massive images.
- * </li>
- * </ol>
- * In addition, it provides an option of testing pixel inclusion in the ROI using
- * either corner or centre coordinates. Corner coordinate testing is equivalent
- * to standard integer pixel indices. Center coordinate testing is preferred in 
- * many geo-spatial applications.
- * <p>
- * <strong>Note: </strong> if using this class as a drop-in replacement for 
- * ROIShape you should choose {@link PixelCoordType#CORNER} and enable the use
- * of fixed coordinate precision via the constructor (the default no-argument
- * constructor also uses these settings). If instead, you are working with the
- * {@link PixelCoordType#CENTER} option you should use one of the constructors
- * that allows you to disable fixed coordinate precision.
+ * to handle massive regions. It has a minimal memory footprint allowing it to 
+ * be used with massive images.
  * <p>
  * JAI operations often involve converting ROI objects to images. This class 
  * implements its {@link #getAsImage()} method using the JAI-tools "VectorBinarize" 
  * operator to avoid exhausting available memory when dealing with ROIs that 
  * cover massive image areas.
+ * <p>
+ * Note that this class can be used to honour floating precision pixel coordinates
+ * by setting the {@code useFixedPrecision} constructor argument to {@code false}.
+ * The effect of the default fixed coordinate precision is to provide equivalent
+ * behaviour to that of the standard {@code ROIShape}, where pixel coordinates
+ * are treated as referring to the upper-left pixel corner.
  * 
  * @author Michael Bedward
  * @author Andrea Aime
@@ -139,6 +125,7 @@ public class ROIGeometry extends ROI {
     private final CoordinateSequence2D testRectCS;
     private final Polygon testRect;
     
+    // Note: these will be removed in next major release
     private final PixelCoordType coordType;
     private final double delta;
     
@@ -150,12 +137,6 @@ public class ROIGeometry extends ROI {
      * {@code MultiPolygon}.
      * The input geometry is copied so subsequent changes to it will
      * not be reflected in the {@code ROIGeometry} object.
-     * <p>
-     * Using this constructor will result in pixel inclusion being tested
-     * with corner coordinates (equivalent to standard JAI pixel indexing).
-     * Other settings will use defaults 
-     * (see {@linkplain #DEFAULT_ROIGEOMETRY_ANTIALISING} and
-     * {@linkplain #DEFAULT_ROIGEOMETRY_USEFIXEDPRECISION}).
      * 
      * @param geom either a {@code Polygon} or {@code MultiPolygon} object
      *        defining the area(s) of inclusion.
@@ -175,10 +156,6 @@ public class ROIGeometry extends ROI {
      * {@code MultiPolygon}.
      * The input geometry is copied so subsequent changes to it will
      * not be reflected in the {@code ROIGeometry} object.
-     * <p>
-     * Using this constructor will result in pixel inclusion being tested
-     * with corner coordinates (equivalent to standard JAI pixel indexing)
-     * and the use of {@linkplain #DEFAULT_ROIGEOMETRY_ANTIALISING}.
      * 
      * @param geom either a {@code Polygon} or {@code MultiPolygon} object
      *        defining the area(s) of inclusion.
@@ -210,6 +187,10 @@ public class ROIGeometry extends ROI {
      * If {@link PixelCoordType#CENTER} is specified, fixed coordinate precision
      * will be disabled. Anti-aliasing will be set to {@link #DEFAULT_ROIGEOMETRY_ANTIALISING}.
      * 
+     * @deprecated PixelCoordType is to be removed in the next major release. Please do not
+     * use this constructor
+     * 
+     * 
      * @param geom either a {@code Polygon} or {@code MultiPolygon} object
      *        defining the area(s) of inclusion.
      * 
@@ -232,6 +213,10 @@ public class ROIGeometry extends ROI {
      * <p>
      * A warning is logged if fixed coordinate precision is enabled together
      * with {@link PixelCoordType#CENTER}.
+     * 
+     * @deprecated PixelCoordType is to be removed in the next major release and 
+     * the coordType argument will be removed from this constructor
+     * 
      * 
      * @param geom either a {@code Polygon} or {@code MultiPolygon} object
      *        defining the area(s) of inclusion.
