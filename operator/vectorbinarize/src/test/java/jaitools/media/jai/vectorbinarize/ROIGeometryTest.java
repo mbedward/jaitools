@@ -20,16 +20,10 @@
 
 package jaitools.media.jai.vectorbinarize;
 
-import static org.junit.Assert.assertEquals;
-import jaitools.imageutils.PixelCoordType;
-import jaitools.imageutils.ROIGeometry;
-import jaitools.swing.SimpleImagePane;
-
 import java.awt.GraphicsEnvironment;
 import java.awt.Shape;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.geom.Ellipse2D;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.PathIterator;
 import java.awt.image.DataBuffer;
@@ -45,10 +39,6 @@ import javax.swing.JFrame;
 import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
 
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
-
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -57,6 +47,14 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
 import com.vividsolutions.jts.io.WKTReader;
+
+import jaitools.imageutils.ROIGeometry;
+import jaitools.swing.SimpleImagePane;
+
+import static org.junit.Assert.assertEquals;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 
 
 public class ROIGeometryTest {
@@ -116,7 +114,7 @@ public class ROIGeometryTest {
                 Point p = new GeometryFactory().createPoint(new Coordinate(10, 10));
                 Geometry buffer = p.buffer(buffers[i]);
 
-                ROIGeometry g = new ROIGeometry(buffer, PixelCoordType.CORNER);
+                ROIGeometry g = new ROIGeometry(buffer);
                 ROIShape shape = getEquivalentROIShape(g);
 
                 assertROIEquivalent(g, shape, "Circle");

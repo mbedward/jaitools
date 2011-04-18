@@ -20,8 +20,6 @@
 
 package jaitools.media.jai.vectorbinarize;
 
-import jaitools.imageutils.PixelCoordType;
-import jaitools.jts.CoordinateSequence2D;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -46,6 +44,9 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.prep.PreparedGeometry;
 
+import jaitools.jts.CoordinateSequence2D;
+
+
 /**
  * Creates a binary image based on tests of pixel inclusion in a polygonal {@code Geometry}. See
  * {@link VectorBinarizeDescriptor} for details.
@@ -60,8 +61,6 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
     private final PreparedGeometry geom;
     
     private final Shape shape;
-
-    private final PixelCoordType coordType;
 
     private final CoordinateSequence2D testPointCS;
 
@@ -93,32 +92,12 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
      *        (corner or center)
      */
     public VectorBinarizeOpImage(SampleModel sm, Map configuration, int minX, int minY, int width,
-            int height, PreparedGeometry geom, PixelCoordType coordType) {
-        this(sm, configuration, minX, minY, width, height, geom, coordType, DEFAULT_ANTIALIASING);
-    }
-    
-    
-    /**
-     * Constructor.
-     * 
-     * @param sm the {@code SampleModel} used to create tiles
-     * @param configuration rendering hints
-     * @param minX origin X ordinate
-     * @param minY origin Y ordinate
-     * @param width image width
-     * @param height image height
-     * @param geom reference polygonal geometry
-     * @param coordType type of coordinates to use when testing pixel inclusion
-     *        (corner or center)
-     */
-    public VectorBinarizeOpImage(SampleModel sm, Map configuration, int minX, int minY, int width,
-            int height, PreparedGeometry geom, PixelCoordType coordType, final boolean antiAliasing) {
+            int height, PreparedGeometry geom, boolean antiAliasing) {
         super(buildLayout(minX, minY, width, height, sm), configuration, sm, minX, minY, width,
                 height);
 
         this.geom = geom;
         this.shape = new ShapeWriter().toShape(geom.getGeometry());
-        this.coordType = coordType;
         this.antiAliasing = antiAliasing;
 
         GeometryFactory gf = new GeometryFactory();
@@ -294,12 +273,11 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
      * @param y origin Y ordinate
      */
     private void updateTestRect(int x, int y) {
-        final double delta = (coordType == PixelCoordType.CENTER ? 0.5 : 0.0);
-        testRectCS.setXY(0, x + delta, y + delta);
-        testRectCS.setXY(1, x + delta, y + tileHeight - delta);
-        testRectCS.setXY(2, x + tileWidth - delta, y + tileHeight - delta);
-        testRectCS.setXY(3, x + tileWidth - delta, y + delta);
-        testRectCS.setXY(4, x + delta, y + delta);
+        testRectCS.setXY(0, x, y);
+        testRectCS.setXY(1, x, y + tileHeight);
+        testRectCS.setXY(2, x + tileWidth, y + tileHeight);
+        testRectCS.setXY(3, x + tileWidth, y);
+        testRectCS.setXY(4, x, y);
         testRect.geometryChanged();
     }
 }

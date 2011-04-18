@@ -20,13 +20,6 @@
 
 package jaitools.media.jai.vectorbinarize;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Polygonal;
-import com.vividsolutions.jts.geom.prep.PreparedGeometry;
-import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory;
-
-import jaitools.imageutils.PixelCoordType;
-
 import java.awt.Dimension;
 import java.awt.RenderingHints;
 import java.awt.image.DataBuffer;
@@ -35,8 +28,14 @@ import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
 import java.awt.image.renderable.ParameterBlock;
 import java.awt.image.renderable.RenderedImageFactory;
+
 import javax.media.jai.ImageLayout;
 import javax.media.jai.JAI;
+
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Polygonal;
+import com.vividsolutions.jts.geom.prep.PreparedGeometry;
+import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory;
 
 /**
  * The image factory for the VectorBinarize operator.
@@ -83,8 +82,6 @@ public class VectorBinarizeRIF implements RenderedImageFactory {
             throw new IllegalArgumentException("The geometry must be a JTS polygon or multipolygon");
         }
         
-        PixelCoordType coordType = (PixelCoordType) paramBlock.getObjectParameter(VectorBinarizeDescriptor.COORD_TYPE_ARG);
-        
         /**
          * TODO: this section seems to be working with respect to setting a default
          * SampleModel, but if the user provides non-default tile dimensions via an
@@ -116,6 +113,6 @@ public class VectorBinarizeRIF implements RenderedImageFactory {
         }
 
         
-        return new VectorBinarizeOpImage(sm, renderHints, minx, miny, width, height, pg, coordType, antiAliasing);
+        return new VectorBinarizeOpImage(sm, renderHints, minx, miny, width, height, pg, antiAliasing);
     }
 }

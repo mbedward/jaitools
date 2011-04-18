@@ -20,12 +20,12 @@
 
 package jaitools.media.jai.vectorbinarize;
 
-import com.vividsolutions.jts.geom.Polygonal;
-import com.vividsolutions.jts.geom.prep.PreparedGeometry;
-import jaitools.imageutils.PixelCoordType;
 import java.awt.image.renderable.ParameterBlock;
 import javax.media.jai.OperationDescriptorImpl;
 import javax.media.jai.registry.RenderedRegistryMode;
+
+import com.vividsolutions.jts.geom.Polygonal;
+import com.vividsolutions.jts.geom.prep.PreparedGeometry;
 
 /**
  * Describes the "VectorBinarize" operation which creates a binary image based
@@ -81,8 +81,7 @@ public class VectorBinarizeDescriptor extends OperationDescriptorImpl {
     static final int WIDTH_ARG = 2;
     static final int HEIGHT_ARG = 3;
     static final int GEOM_ARG = 4;
-    static final int COORD_TYPE_ARG = 5;
-    static final int ANTIALIASING_ARG = 6;
+    static final int ANTIALIASING_ARG = 5;
 
     private static final String[] paramNames = {
         "minx",
@@ -90,7 +89,6 @@ public class VectorBinarizeDescriptor extends OperationDescriptorImpl {
         "width",
         "height",
         "geometry",
-        "coordtype",
         "antiAliasing"
     };
     
@@ -100,7 +98,6 @@ public class VectorBinarizeDescriptor extends OperationDescriptorImpl {
         Integer.class,
         Integer.class,
         Object.class,
-        PixelCoordType.class,
         Boolean.class
     };
 
@@ -110,7 +107,6 @@ public class VectorBinarizeDescriptor extends OperationDescriptorImpl {
         NO_PARAMETER_DEFAULT,
         NO_PARAMETER_DEFAULT,
         NO_PARAMETER_DEFAULT,
-        PixelCoordType.CORNER,
         VectorBinarizeOpImage.DEFAULT_ANTIALIASING
     };
 
@@ -136,9 +132,7 @@ public class VectorBinarizeDescriptor extends OperationDescriptorImpl {
                     {"arg4Desc", paramNames[4] + " the reference Geometry: either a Polygon, " +
                               "a MultiPolygon or a polygonal PreparedGeometry"},
                     
-                    {"arg5Desc", paramNames[5] + " (PixelCoordType, default = CENTER) " +
-                              "the type of pixel coordinates to use"},
-                    {"arg6Desc", paramNames[6] + " (Boolean, default = false) " +
+                    {"arg6Desc", paramNames[5] + " (Boolean, default = false) " +
                               "Whether to use antiAliasing as Hints on geometry rendering" }
                 },
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
