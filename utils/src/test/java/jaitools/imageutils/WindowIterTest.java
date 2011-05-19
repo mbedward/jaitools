@@ -35,7 +35,7 @@ import static org.junit.Assert.*;
  * Unit tests for WindowIter moving window iterator.
  * 
  * @author Michael Bedward
- * @since 1.0
+ * @since 1.2
  * @version $Id$
  */
 public class WindowIterTest {

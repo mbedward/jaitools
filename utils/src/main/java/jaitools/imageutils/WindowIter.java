@@ -79,7 +79,7 @@ import javax.media.jai.iterator.RectIterFactory;
  * constructor.
  * 
  * @author Michael Bedward
- * @since 1.0
+ * @since 1.2
  * @version $Id$
  */
 public class WindowIter {
