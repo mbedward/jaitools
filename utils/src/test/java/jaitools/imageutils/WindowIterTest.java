@@ -43,6 +43,7 @@ public class WindowIterTest {
     private static final int WIDTH = 17;
     private static final int HEIGHT = 19;
     private static final int NUM_BANDS = 3;
+    private static final Integer PAD = Integer.valueOf(-1);
     
     private TiledImage image;
     
@@ -76,6 +77,65 @@ public class WindowIterTest {
         doWindowTest(new Dimension(3, 3), new Point(2, 2));
     }
 
+    @Test
+    public void getWindow3x3StepX2() {
+        doWindowTest(new Dimension(3, 3), new Point(1, 1), 2, 1);
+    }
+
+    @Test
+    public void getWindow3x3StepY2() {
+        doWindowTest(new Dimension(3, 3), new Point(1, 1), 1, 2);
+    }
+
+    @Test
+    public void getWindow3x3StepX2StepY2() {
+        doWindowTest(new Dimension(3, 3), new Point(1, 1), 2, 2);
+    }
+
+    @Test
+    public void stepDistanceGreaterThanWindowWidth() {
+        doWindowTest(new Dimension(2, 2), new Point(0, 0), 3, 1);
+    }
+
+    @Test
+    public void stepDistanceGreaterThanWindowHeight() {
+        doWindowTest(new Dimension(2, 2), new Point(0, 0), 1, 3);
+    }
+
+    @Test
+    public void stepDistanceGreaterThanWindowWidthAndHeight() {
+        doWindowTest(new Dimension(2, 2), new Point(0, 0), 3, 3);
+    }
+
+    @Test
+    public void getIteratorPositionWithDefaultSteps() {
+        doGetPosTest(1, 1);
+    }
+
+    @Test
+    public void getIteratorPositionWithSpecifiedSteps() {
+        doGetPosTest(2, 3);
+    }
+
+    private void doGetPosTest(int xstep, int ystep) {
+        WindowIter iter = new WindowIter(image, null, 
+                new Dimension(3, 3), new Point(1, 1),
+                xstep, ystep, PAD);
+
+        int x = 0;
+        int y = 0;
+        do {
+            Point pos = iter.getPos();
+            assertEquals(x, pos.x);
+            assertEquals(y, pos.y);
+            
+            x = Math.min(x + xstep, WIDTH) % WIDTH;
+            if (x == 0) {
+                y += ystep ;
+            }
+        } while (iter.next());
+    }
+
     @Test(expected=IllegalArgumentException.class)
     public void nullImage() {
         WindowIter iter = new WindowIter(null, null, new Dimension(3, 3), new Point(1, 1));
@@ -103,8 +163,12 @@ public class WindowIterTest {
     }
 
     private void doWindowTest(Dimension dim, Point key) {
+        doWindowTest(dim, key, 1, 1);
+    }
+    
+    private void doWindowTest(Dimension dim, Point key, int xstep, int ystep) {
         Rectangle bounds = new Rectangle(0, 0, WIDTH, HEIGHT);
-        WindowIter iter = new WindowIter(image, null, dim, key);
+        WindowIter iter = new WindowIter(image, null, dim, key, xstep, ystep, PAD);
 
         int[][] window = new int[dim.height][dim.width];
         int[][] expected = new int[dim.height][dim.width];
@@ -113,24 +177,22 @@ public class WindowIterTest {
         int y = 0;
         do {
             iter.getWindow(window);
-            assertWindow(window, bounds, dim, key, 0, x, y, 0);
+            assertWindow(window, bounds, dim, key, x, y, 0);
 
             for (int b = 0; b < NUM_BANDS; b++) {
                 iter.getWindow(window, b);
-                assertWindow(window, bounds, dim, key, 0, x, y, b);
+                assertWindow(window, bounds, dim, key, x, y, b);
             }
             
-            x = (x + 1) % WIDTH;
+            x = Math.min(x + xstep, WIDTH) % WIDTH;
             if (x == 0) {
-                y++ ;
+                y += ystep ;
             }
         } while (iter.next());
-
-        
     }
 
     private void assertWindow(int[][] window, Rectangle bounds, 
-            Dimension dim, Point key, int padValue, 
+            Dimension dim, Point key, 
             int x, int y, int band) {
         
         final int minx = x - key.x;
@@ -144,7 +206,7 @@ public class WindowIterTest {
                             image.getSample(imgX, imgY, band), window[winY][winX]);
                 } else {
                     assertEquals(String.format("x=%d y=%d band=%d", x, y, band),
-                            padValue, window[winY][winX]);
+                            PAD.intValue(), window[winY][winX]);
                 }
             }
         }

@@ -93,6 +93,8 @@ public class WindowIter {
     private final RectIter iter;
     private final Rectangle iterBounds;
     private final int numImageBands;
+    private final int xstep;
+    private final int ystep;
     
     private int numLinesRead;
     private boolean firstAccess;
@@ -105,9 +107,9 @@ public class WindowIter {
     // window's key element
     private int imageY;
 
-    // Number of additional buffer line advances required after all data have
-    // been read from the image
-    private int extraLineMoves;
+    // Y-ordinate (source image space) of the data line last read by
+    // the delegate RectIter
+    private int lastIterY;
 
     // Value to use for padding out-of-bounds parts of the data window
     private Number paddingValue;
@@ -208,8 +210,8 @@ public class WindowIter {
         this.bufferX = 0;
         this.imageY = iterBounds.y;
         this.numLinesRead = 0;
-        this.extraLineMoves = windowDim.height - keyElement.y - 1;
-
+        this.xstep = xstep;
+        this.ystep = ystep;
     }
 
     /**
@@ -243,14 +245,17 @@ public class WindowIter {
      */
     public boolean next() {
         if (!finished) {
-            bufferX = (bufferX + 1) % iterBounds.width;
+            bufferX = Math.min(bufferX + xstep, iterBounds.width) % iterBounds.width;
             if (bufferX == 0) {
                 if (numLinesRead < iterBounds.height) {
                     moveLinesUp();
-                    readIntoLine(windowDim.height - 1);
-                } else if (extraLineMoves > 0) {
+                    positionIter();
+                    final int topLine = ystep > windowDim.height ? 0 : windowDim.height - ystep;
+                    for (int y = topLine; y < windowDim.height; y++) {
+                        readIntoLine(y);
+                    }
+                } else if (imageY < iterBounds.y + iterBounds.height - 1) {
                     moveLinesUp();
-                    extraLineMoves-- ;
                 } else {
                     finished = true;
                 }
@@ -432,18 +437,43 @@ public class WindowIter {
     }
 
     /**
-     * Moves lines up in the data buffer.
+     * Moves lines up in the data buffer by ystep.
      */
     private void moveLinesUp() {
         for (int b = 0; b < numImageBands; b++) {
-            Number[] temp = buffers[b][0];
-            for (int i = 1; i < windowDim.height; i++) {
-                buffers[b][i - 1] = buffers[b][i];
+            if (ystep >= windowDim.height) {
+                // just fill lines with pad value
+                for (int y = 0; y < windowDim.height; y++) {
+                    Arrays.fill(buffers[b][y], paddingValue);
+                }
+            } else {
+                // shuffle lines up, avoiding cost of allocating new memory
+                for (int y = ystep, ynew = 0; y < windowDim.height; y++, ynew++) {
+                    Number[] temp = buffers[b][ynew];
+                    buffers[b][ynew] = buffers[b][y];
+                    Arrays.fill(temp, paddingValue);
+                    buffers[b][y] = temp;
+                }
             }
-            Arrays.fill(temp, paddingValue);
-            buffers[b][windowDim.height - 1] = temp;
         }
-        imageY++ ;
+
+        imageY += ystep;
+    }
+
+    /**
+     * Positions the delegate iterator at the next line to be read into
+     * the data buffers. This method only does anything if ystep is greater
+     * than the height of the data window.
+     */
+    private void positionIter() {
+        if (ystep > windowDim.height) {
+            int nSkip = ystep - windowDim.height;
+            while (nSkip > 0 && !iter.finishedLines()) { 
+                iter.nextLineDone();
+                numLinesRead++ ;
+                nSkip-- ;
+            }
+        }
     }
 
     private void checkBandArg(int band) {
