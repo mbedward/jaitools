@@ -47,7 +47,8 @@ import javax.media.jai.iterator.RectIterFactory;
  * </code></pre>
  * 
  * As with the JAI {@code RectIter.getSample} methods, alternative {@code getWindow} methods
- * are provided to return values as either integers, floats or doubles.
+ * are provided to return values as either integers, floats or doubles, optionally for a 
+ * specified image band.
  * <p>
  * Note that control of the iterator position is different to the {@code RectIter} class which
  * has separate methods to advance and reset pixel, line and band position:
@@ -57,12 +58,16 @@ import javax.media.jai.iterator.RectIterFactory;
  * X and Y directions.
  * </li>
  * <li>
+ * The iterator can be configured to move more than a single pixel / line via the {@code xstep}
+ * and {@code ystep} arguments to the full constructor.
+ * </li>
+ * <li>
  * It is always safe to call the {@code next} method speculatively, although a {@code hasNext}
- * method can also be used.
+ * method is also provided for convenience.
  * </li>
  * <li>
  * The current position of the iterator is defined as the source image pixel coordinates
- * at the data window's key element. The position can be retrieved with the {@code getPos} method.
+ * at the data window's key element. The position can be retrieved with the {@link #getPos} method.
  * </li>
  * </ul>
  * When the moving window is positioned over an edge of the image, those data window cells
@@ -75,15 +80,19 @@ import javax.media.jai.iterator.RectIterFactory;
  */
 public class WindowIter {
 
-    private static final int DEFAULT_BAND = 0;
     private static final Number DEFAULT_PADDING_VALUE = Integer.valueOf(0);
 
     private final Dimension windowDim;
     private final Point keyElement;
-    private final Number[][] buffers;
-    private final Number[] destBuffer;
+
+    // data buffer dimensions: band, line, pixel
+    private final Number[][][] buffers;
+    
+    private final Number[][] destBuffer;
+    
     private final RectIter iter;
     private final Rectangle iterBounds;
+    private final int numImageBands;
     
     private int numLinesRead;
     private boolean firstAccess;
@@ -104,8 +113,8 @@ public class WindowIter {
     private Number paddingValue;
 
     /**
-     * Creates a new iterator. The iterator will scan band 0 of the image and the data
-     * window will be padded with zeroes when required.
+     * Creates a new iterator. The iterator will advance one pixel at each
+     * step and the data window will be padded with zeroes when required.
      * 
      * @param image the source image
      * @param bounds the bounds for this iterator or {@code null} for the whole image
@@ -117,49 +126,30 @@ public class WindowIter {
      */
     public WindowIter(RenderedImage image, Rectangle bounds, 
             Dimension windowDim, Point keyElement) {
-        this(image, DEFAULT_BAND, bounds, windowDim, keyElement);
+        this(image, bounds, windowDim, keyElement, 1, 1, DEFAULT_PADDING_VALUE);
     }
 
     /**
-     * Creates a new iterator. The data window will be padded with zeroes when required.
+     * Creates a new iterator. 
      * 
      * @param image the source image
-     * @param band the band to access
      * @param bounds the bounds for this iterator or {@code null} for the whole image
      * @param windowDim the dimensions of the data window
      * @param keyElement the position of the key element in the data window
-     * 
-     * @throws IllegalArgumentException if any arguments other than bounds are {@code null};
-     *         or if {@code band} is out of range for the image;
-     *         or if {@code keyElement} does not lie within {@code windowDim}
-     */
-    public WindowIter(RenderedImage image, int band, Rectangle bounds, 
-            Dimension windowDim, Point keyElement) {
-        this(image, band, bounds, windowDim, keyElement, DEFAULT_PADDING_VALUE);
-    }
-
-    /**
-     * Creates a new iterator.
-     * 
-     * @param image the source image
-     * @param band the band to access
-     * @param bounds the bounds for this iterator or {@code null} for the whole image
-     * @param windowDim the dimensions of the data window
-     * @param keyElement the position of the key element in the data window
+     * @param xstep step distance in X-direction (pixels)
+     * @param ystep step distance in Y-direction (lines)
      * @param paddingValue value to use for padding out-of-bounds parts of the data window
      * 
      * @throws IllegalArgumentException if any arguments other than bounds are {@code null};
      *         or if {@code band} is out of range for the image;
      *         or if {@code keyElement} does not lie within {@code windowDim}
      */
-    public WindowIter(RenderedImage image, int band, Rectangle bounds, 
-            Dimension windowDim, Point keyElement, Number paddingValue) {
+    public WindowIter(RenderedImage image, Rectangle bounds, 
+            Dimension windowDim, Point keyElement,
+            int xstep, int ystep, Number paddingValue) {
 
         if (image == null) {
             throw new IllegalArgumentException("image must not be null");
-        }
-        if (band < 0 || band >= image.getSampleModel().getNumBands()) {
-            throw new IllegalArgumentException("value of band is out of range: " + band);
         }
         if (windowDim == null) {
             throw new IllegalArgumentException("windowDim must not be null");
@@ -174,17 +164,15 @@ public class WindowIter {
                   + "data window dimensions: width=%d height=%D",
                     keyElement.x, keyElement.y, windowDim.width, windowDim.height));
         }
+        if (xstep < 1 || ystep < 1) {
+            throw new IllegalArgumentException(
+                    "The value of both xstep and ystep must be 1 or greater");
+        }
         if (paddingValue == null) {
             throw new IllegalArgumentException("paddingValue must not be null");
         }
 
-        iter = RectIterFactory.create(image, bounds);
-        while (band > 0) {
-            iter.nextBand();
-            band-- ;
-        }
-        iter.startPixels();
-        iter.startLines();
+        this.iter = RectIterFactory.create(image, bounds);
 
         if (bounds == null) {
             this.iterBounds = new Rectangle(
@@ -198,14 +186,22 @@ public class WindowIter {
         this.keyElement = new Point(keyElement);
         this.paddingValue = NumberOperations.newInstance(paddingValue, paddingValue.getClass());
 
-        buffers = new Number[windowDim.height][];
-        for (int i = 0; i < windowDim.height; i++) {
-            Number[] ar = new Number[this.iterBounds.width];
-            Arrays.fill(ar, this.paddingValue);
-            buffers[i] = ar;
+        this.numImageBands = image.getSampleModel().getNumBands();
+        buffers = new Number[numImageBands][][];
+        for (int b = 0; b < numImageBands; b++) {
+            Number[][] bandBuffer = new Number[windowDim.height][];
+            for (int i = 0; i < windowDim.height; i++) {
+                Number[] ar = new Number[this.iterBounds.width];
+                Arrays.fill(ar, this.paddingValue);
+                bandBuffer[i] = ar;
+            }
+            buffers[b] = bandBuffer;
         }
 
-        this.destBuffer = new Number[windowDim.width * windowDim.height];
+        this.destBuffer = new Number[numImageBands][];
+        for (int b = 0; b < numImageBands; b++) {
+            destBuffer[b] = new Number[windowDim.width * windowDim.height];
+        }
 
         this.firstAccess = true;
         this.finished = false;
@@ -265,7 +261,7 @@ public class WindowIter {
     }
 
     /**
-     * Gets the data window for the current iterator position as integer values.
+     * Gets the data window at the current iterator position in image band 0 as integer values.
      * If {@code dest} is {@code null} or not equal in size to the data window
      * dimensions a new array will be allocated, otherwise the provided array
      * is filled. In either case, the destination array is returned for convenience.
@@ -274,22 +270,38 @@ public class WindowIter {
      * @return the filled destination array
      */
     public int[][] getWindow(int[][] dest) {
+        return getWindow(dest, 0);
+    }
+
+    /**
+     * Gets the data window at the current iterator position and specified image band 
+     * as integer values.
+     * If {@code dest} is {@code null} or not equal in size to the data window
+     * dimensions a new array will be allocated, otherwise the provided array
+     * is filled. In either case, the destination array is returned for convenience.
+     * 
+     * @param dest destination array or {@code null}
+     * @return the filled destination array
+     */
+    public int[][] getWindow(int[][] dest, int band) {
+        checkBandArg(band);
+        
         if (dest == null || dest.length != windowDim.height || dest[0].length != windowDim.width) {
             dest = new int[windowDim.height][windowDim.width];
         }
 
-        loadDestBuffer();
+        loadDestBuffer(band);
         int k = 0;
         for (int y = 0; y < windowDim.height; y++) {
             for (int x = 0; x < windowDim.width; x++) {
-                dest[y][x] = destBuffer[k++].intValue();
+                dest[y][x] = destBuffer[band][k++].intValue();
             }
         }
         return dest;
     }
 
     /**
-     * Gets the data window for the current iterator position as float values.
+     * Gets the data window at the current iterator position in image band 0 as float values.
      * If {@code dest} is {@code null} or not equal in size to the data window
      * dimensions a new array will be allocated, otherwise the provided array
      * is filled. In either case, the destination array is returned for convenience.
@@ -298,22 +310,38 @@ public class WindowIter {
      * @return the filled destination array
      */
     public float[][] getWindowFloat(float[][] dest) {
+        return getWindowFloat(dest, 0);
+    }
+
+    /**
+     * Gets the data window at the current iterator position and specified image band 
+     * as float values.
+     * If {@code dest} is {@code null} or not equal in size to the data window
+     * dimensions a new array will be allocated, otherwise the provided array
+     * is filled. In either case, the destination array is returned for convenience.
+     * 
+     * @param dest destination array or {@code null}
+     * @return the filled destination array
+     */
+    public float[][] getWindowFloat(float[][] dest, int band) {
+        checkBandArg(band);
+        
         if (dest == null || dest.length != windowDim.height || dest[0].length != windowDim.width) {
             dest = new float[windowDim.height][windowDim.width];
         }
 
-        loadDestBuffer();
+        loadDestBuffer(band);
         int k = 0;
         for (int y = 0; y < windowDim.height; y++) {
             for (int x = 0; x < windowDim.width; x++) {
-                dest[y][x] = destBuffer[k++].floatValue();
+                dest[y][x] = destBuffer[band][k++].floatValue();
             }
         }
         return dest;
     }
 
     /**
-     * Gets the data window for the current iterator position as double values.
+     * Gets the data window at the current iterator position in image band 0 as double values.
      * If {@code dest} is {@code null} or not equal in size to the data window
      * dimensions a new array will be allocated, otherwise the provided array
      * is filled. In either case, the destination array is returned for convenience.
@@ -322,15 +350,31 @@ public class WindowIter {
      * @return the filled destination array
      */
     public double[][] getWindowDouble(double[][] dest) {
+        return getWindowDouble(dest, 0);
+    }
+
+    /**
+     * Gets the data window at the current iterator position and specified image band 
+     * as double values.
+     * If {@code dest} is {@code null} or not equal in size to the data window
+     * dimensions a new array will be allocated, otherwise the provided array
+     * is filled. In either case, the destination array is returned for convenience.
+     * 
+     * @param dest destination array or {@code null}
+     * @return the filled destination array
+     */
+    public double[][] getWindowDouble(double[][] dest, int band) {
+        checkBandArg(band);
+        
         if (dest == null || dest.length != windowDim.height || dest[0].length != windowDim.width) {
             dest = new double[windowDim.height][windowDim.width];
         }
 
-        loadDestBuffer();
+        loadDestBuffer(band);
         int k = 0;
         for (int y = 0; y < windowDim.height; y++) {
             for (int x = 0; x < windowDim.width; x++) {
-                dest[y][x] = destBuffer[k++].doubleValue();
+                dest[y][x] = destBuffer[band][k++].doubleValue();
             }
         }
         return dest;
@@ -340,7 +384,7 @@ public class WindowIter {
      * Helper for the getWindow methods. Loads the destination buffer from
      * the line buffers.
      */
-    private void loadDestBuffer() {
+    private void loadDestBuffer(int band) {
         if (firstAccess) {
             int destLine = keyElement.y;
             while (destLine < windowDim.height && numLinesRead < iterBounds.height) {
@@ -355,9 +399,9 @@ public class WindowIter {
         for (int y = 0; y < windowDim.height; y++) {
             for (int x = minx, winX = 0; x <= maxx; x++, winX++) {
                 if (x >= 0 && x < iterBounds.width) {
-                    destBuffer[k] = buffers[y][x];
+                    destBuffer[band][k] = buffers[band][y][x];
                 } else {
-                    destBuffer[k] = paddingValue;
+                    destBuffer[band][k] = paddingValue;
                 }
                 k++ ;
             }
@@ -376,7 +420,10 @@ public class WindowIter {
         
         int x = 0;
         do {
-            buffers[destLine][x++] = iter.getSampleDouble();
+            for (int b = 0; b < numImageBands; b++) {
+                buffers[b][destLine][x] = iter.getSampleDouble(b);
+            }
+            x++ ;
         } while (!iter.nextPixelDone());
 
         iter.startPixels();
@@ -388,13 +435,23 @@ public class WindowIter {
      * Moves lines up in the data buffer.
      */
     private void moveLinesUp() {
-        Number[] temp = buffers[0];
-        for (int i = 1; i < windowDim.height; i++) {
-            buffers[i - 1] = buffers[i];
+        for (int b = 0; b < numImageBands; b++) {
+            Number[] temp = buffers[b][0];
+            for (int i = 1; i < windowDim.height; i++) {
+                buffers[b][i - 1] = buffers[b][i];
+            }
+            Arrays.fill(temp, paddingValue);
+            buffers[b][windowDim.height - 1] = temp;
         }
-        Arrays.fill(temp, paddingValue);
-        buffers[windowDim.height - 1] = temp;
         imageY++ ;
+    }
+
+    private void checkBandArg(int band) {
+        if (band < 0 || band >= numImageBands) {
+            throw new IllegalArgumentException( String.format(
+                    "band argument (%d) is out of range: number of image bands is %d",
+                    band, numImageBands) );
+        }
     }
 
 }
