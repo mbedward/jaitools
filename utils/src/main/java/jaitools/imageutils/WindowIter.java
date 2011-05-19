@@ -31,14 +31,14 @@ import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 
 /**
- * An image iterator that passes a moving window over a single band of an image.
+ * An image iterator that passes a moving window over an image.
  * <p>
  * Example of use:
  * <pre><code>
  * RenderedImage myImage = ...
  * // Pass a 3x3 window, with the key element at pos (1,1), over band 0
  * // of the image
- * WindowIter iter = new WindowIter(myImage(myImage, 0, null, new Dimension(3,3), new Point(1,1));
+ * WindowIter iter = new WindowIter(myImage(myImage, null, new Dimension(3,3), new Point(1,1));
  * int[][] dataWindow = new int[3][3];
  * do {
  *     iter.getWindow(dataWindow);
@@ -54,25 +54,29 @@ import javax.media.jai.iterator.RectIterFactory;
  * has separate methods to advance and reset pixel, line and band position:
  * <ul>
  * <li>
- * The iterator is advanced with the {@code next} method which handles movement in both
+ * The iterator is advanced with the {@link #next} method which handles movement in both
  * X and Y directions.
  * </li>
  * <li>
  * The iterator can be configured to move more than a single pixel / line via the {@code xstep}
- * and {@code ystep} arguments to the full constructor.
+ * and {@code ystep} arguments to the full constructor. If the step distance is larger than
+ * the corresponding window dimension then some source image pixels will be absent from
+ * the data windows returned by the iterator.
  * </li>
  * <li>
- * It is always safe to call the {@code next} method speculatively, although a {@code hasNext}
- * method is also provided for convenience.
+ * It is always safe to call the {@code next} method speculatively, although the 
+ * {@link #hasNext} method is also provided for convenience.
  * </li>
  * <li>
- * The current position of the iterator is defined as the source image pixel coordinates
- * at the data window's key element. The position can be retrieved with the {@link #getPos} method.
+ * The iterator's position is defined as the coordinates of the source image pixel 
+ * at the data window's key element. The current position can be retrieved using the 
+ * {@link #getPos} method.
  * </li>
  * </ul>
  * When the moving window is positioned over an edge of the image, those data window cells
- * beyond the image will be filled with a padding value. By default this is zero but alternative
- * values can be supplied using the full constructor.
+ * beyond the image will be filled with a padding value. By default this is zero but an
+ * alternative value can be specified via the {@code paddingValue} argument to the full
+ * constructor.
  * 
  * @author Michael Bedward
  * @since 1.0
@@ -139,8 +143,8 @@ public class WindowIter {
      * @param paddingValue value to use for padding out-of-bounds parts of the data window
      * 
      * @throws IllegalArgumentException if any arguments other than bounds are {@code null};
-     *         or if {@code band} is out of range for the image;
-     *         or if {@code keyElement} does not lie within {@code windowDim}
+     *         or if {@code keyElement} does not lie within {@code windowDim};
+     *         or if either step distance is less than 1
      */
     public WindowIter(RenderedImage image, Rectangle bounds, 
             Dimension windowDim, Point keyElement,
@@ -212,7 +216,8 @@ public class WindowIter {
 
     /**
      * Gets the source image coordinates of the pixel currently at the 
-     * window key element position.
+     * window key element position. Note that when the iterator has
+     * finished this method returns {@code null}.
      * 
      * @return the pixel coordinates
      */
@@ -234,7 +239,10 @@ public class WindowIter {
     }
 
     /**
-     * Advances the iterator.
+     * Advances the iterator using the specified X and Y step distances. 
+     * When the right-hand edge of bound rectangle is reached the iterator
+     * automatically increments its Y (line) position. If the iterator is already
+     * at the end of bounding rectangle this method safely returns {@code false}.
      * 
      * @return {@code true} if the iterator was advanced; {@code false} if it was
      *         already finished
@@ -282,6 +290,7 @@ public class WindowIter {
      * is filled. In either case, the destination array is returned for convenience.
      * 
      * @param dest destination array or {@code null}
+     * @param band the image band from which to retrieve data
      * @return the filled destination array
      */
     public int[][] getWindow(int[][] dest, int band) {
@@ -322,6 +331,7 @@ public class WindowIter {
      * is filled. In either case, the destination array is returned for convenience.
      * 
      * @param dest destination array or {@code null}
+     * @param band the image band from which to retrieve data
      * @return the filled destination array
      */
     public float[][] getWindowFloat(float[][] dest, int band) {
@@ -362,6 +372,7 @@ public class WindowIter {
      * is filled. In either case, the destination array is returned for convenience.
      * 
      * @param dest destination array or {@code null}
+     * @param band the image band from which to retrieve data
      * @return the filled destination array
      */
     public double[][] getWindowDouble(double[][] dest, int band) {
@@ -472,6 +483,11 @@ public class WindowIter {
         }
     }
 
+    /**
+     * Helper method to check that a band value is valid.
+     * 
+     * @param band band value
+     */
     private void checkBandArg(int band) {
         if (band < 0 || band >= numImageBands) {
             throw new IllegalArgumentException( String.format(
