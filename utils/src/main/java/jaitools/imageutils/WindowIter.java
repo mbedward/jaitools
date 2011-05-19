@@ -107,10 +107,6 @@ public class WindowIter {
     // window's key element
     private int imageY;
 
-    // Y-ordinate (source image space) of the data line last read by
-    // the delegate RectIter
-    private int lastIterY;
-
     // Value to use for padding out-of-bounds parts of the data window
     private Number paddingValue;
 
