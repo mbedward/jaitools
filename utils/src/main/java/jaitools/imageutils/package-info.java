@@ -19,8 +19,7 @@
  */
 
 /**
- * Various helper classes used by jai-tools image operators. 
- * Also available for general use.
+ * Helper classes used by image operators, plus general utility classes. 
  */
 
 package jaitools.imageutils;
