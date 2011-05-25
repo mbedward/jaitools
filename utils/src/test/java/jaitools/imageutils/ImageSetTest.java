@@ -37,6 +37,7 @@ public class ImageSetTest extends TestBase {
     private static final int WIDTH = 17;
     private static final int HEIGHT = 19;
     private static final int NUM_BANDS = 3;
+    private static final Integer OUTSIDE = Integer.valueOf(-1);
 
     private static final String[] NAMES = {"foo", "bar", "baz"};
     private final RenderedImage[] images = new RenderedImage[NAMES.length];
@@ -47,13 +48,13 @@ public class ImageSetTest extends TestBase {
         theSet = new ImageSet<String>();
         for (int i = 0; i < NAMES.length; i++) {
             images[i] = createSequentialImage(WIDTH, HEIGHT, NUM_BANDS, i * 10);
-            theSet.add(NAMES[i], images[i]);
+            theSet.add(NAMES[i], images[i], OUTSIDE);
         }
     }
 
     @Test
     public void getNumImages() {
-        assertEquals(NAMES.length, theSet.getNumImages());
+        assertEquals(NAMES.length, theSet.size());
     }
     
     @Test

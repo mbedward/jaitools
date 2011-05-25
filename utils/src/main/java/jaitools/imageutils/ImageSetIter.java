@@ -75,6 +75,32 @@ public class ImageSetIter<K> {
         return sample;
     }
 
+    public Map<K, Float> getSampleFloat() {
+        return getSampleFloat(0);
+    }
+    
+    public Map<K, Float> getSampleFloat(int band) {
+        Map<K, Float> sample = CollectionFactory.map();
+        
+        for (Entry<K, Delegate> e : delegates.entrySet()) {
+            sample.put(e.getKey(), e.getValue().getSampleFloat(band));
+        }
+        return sample;
+    }
+
+    public Map<K, Double> getSampleDouble() {
+        return getSampleDouble(0);
+    }
+    
+    public Map<K, Double> getSampleDouble(int band) {
+        Map<K, Double> sample = CollectionFactory.map();
+        
+        for (Entry<K, Delegate> e : delegates.entrySet()) {
+            sample.put(e.getKey(), e.getValue().getSampleDouble(band));
+        }
+        return sample;
+    }
+
     public boolean hasNext() {
         return !finished;
     }
@@ -100,7 +126,6 @@ public class ImageSetIter<K> {
 
         return !finished;
     }
-
 
     /**
      * This class wraps each of the RectIter objects used to iterate over
@@ -159,7 +184,23 @@ public class ImageSetIter<K> {
             if (inside) {
                 return iter.getSample(band);
             } else {
-                return outsideValue.intValue();
+                return outsideValue == null ? null : outsideValue.intValue();
+            }
+        }
+        
+        private Float getSampleFloat(int band) {
+            if (inside) {
+                return iter.getSampleFloat(band);
+            } else {
+                return outsideValue == null ? null : outsideValue.floatValue();
+            }
+        }
+
+        private Double getSampleDouble(int band) {
+            if (inside) {
+                return iter.getSampleDouble(band);
+            } else {
+                return outsideValue == null ? null : outsideValue.doubleValue();
             }
         }
     }
