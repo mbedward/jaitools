@@ -81,75 +81,211 @@ public class NumberOperationsTest {
     }
 
     @Test
-    public void testNewInstanceByte() {
-        System.out.println("   newInstance Byte");
+    public void copy() {
+        System.out.println("   copy");
+        Number[] numbers = {
+            Byte.valueOf((byte) 0),
+            Short.valueOf((short) 0),
+            Integer.valueOf(0),
+            Float.valueOf(0f),
+            Double.valueOf(0d)
+        };
 
-        int i = 200;
-        Integer iobj = Integer.valueOf(i);
-
-        Number result = NumberOperations.newInstance(iobj, Byte.class);
-        assertTrue((result.intValue() & 0xff) == i);
-        assertTrue(result instanceof Byte);
+        for (int i = 0; i < numbers.length; i++) {
+            Number result = NumberOperations.copy(numbers[i]);
+            assertEquals(numbers[i].getClass(), result.getClass());
+            assertEquals(numbers[i].intValue(), result.intValue());
+        }
     }
 
     @Test
-    public void testNewInstanceShort() {
-        System.out.println("   newInstance Short");
-
-        int i = 200;
-        Integer iobj = Integer.valueOf(i);
-
-        Number result = NumberOperations.newInstance(iobj, Short.class);
-        assertTrue(result.intValue() == i);
-        assertTrue(result instanceof Short);
+    public void copyWithNull() {
+        System.out.println("   copy with null arg");
+        Number result = NumberOperations.copy(null);
+        assertNull(result);
     }
 
     @Test
-    public void testNewInstanceInteger() {
-        System.out.println("   newInstance Integer");
+    public void newInstance() {
+        // Byte to Byte
+        doNewInstance(Byte.valueOf((byte) 42), Byte.class, Byte.valueOf((byte) 42));
+        
+        // Short to Byte
+        doNewInstance(Short.valueOf((short) 42), Byte.class, Byte.valueOf((byte) 42));
 
-        int i = 200;
-        Integer iobj = Integer.valueOf(i);
+        // Short to Byte with clamping
+        doNewInstance(Short.valueOf((short) 420), Byte.class, Byte.valueOf((byte) 255));
+        
+        // Short to Byte with clamping
+        doNewInstance(Short.valueOf((short) -42), Byte.class, Byte.valueOf((byte) 0));
+        
+        // Integer to Byte with no clamping
+        doNewInstance(Integer.valueOf(42), Byte.class, Byte.valueOf((byte) 42));
+        
+        // Integer to Byte with clamping
+        doNewInstance(Integer.valueOf(420), Byte.class, Byte.valueOf((byte) 255));
 
-        Number result = NumberOperations.newInstance(iobj, Integer.class);
-        assertTrue(result.intValue() == i);
-        assertTrue(result instanceof Integer);
+        // Integer to Byte with clamping
+        doNewInstance(Integer.valueOf(-42), Byte.class, Byte.valueOf((byte) 0));
+
+        // Long to Byte with no clamping
+        doNewInstance(Long.valueOf(42), Byte.class, Byte.valueOf((byte) 42));
+        
+        // Long to Byte with clamping
+        doNewInstance(Long.valueOf(420), Byte.class, Byte.valueOf((byte) 255));
+
+        // Long to Byte with clamping
+        doNewInstance(Long.valueOf(-42), Byte.class, Byte.valueOf((byte) 0));
+
+        // Float to Byte with no clamping
+        doNewInstance(Float.valueOf(42.0f), Byte.class, Byte.valueOf((byte) 42));
+        
+        // Float to Byte with clamping
+        doNewInstance(Float.valueOf(420.0f), Byte.class, Byte.valueOf((byte) 255));
+
+        // Float to Byte with clamping
+        doNewInstance(Float.valueOf(-42.0f), Byte.class, Byte.valueOf((byte) 0));
+
+        // Double to Byte with no clamping
+        doNewInstance(Double.valueOf(42.0d), Byte.class, Byte.valueOf((byte) 42));
+        
+        // Double to Byte with clamping
+        doNewInstance(Double.valueOf(420.0d), Byte.class, Byte.valueOf((byte) 255));
+
+        // Double to Byte with clamping
+        doNewInstance(Double.valueOf(-42.0d), Byte.class, Byte.valueOf((byte) 0));
+
+        // Byte to Short
+        doNewInstance(Byte.valueOf((byte) 42), Short.class, Short.valueOf((short) 42));
+        
+        // Short to Short
+        doNewInstance(Short.valueOf((short) 42), Short.class, Short.valueOf((short) 42));
+
+        // Integer to Short with no clamping
+        doNewInstance(Integer.valueOf(42), Short.class, Short.valueOf((short) 42));
+        
+        // Integer to Short with clamping
+        doNewInstance(Integer.valueOf(Short.MAX_VALUE + 1), Short.class,
+                Short.valueOf(Short.MAX_VALUE));
+
+        // Integer to Short with clamping
+        doNewInstance(Integer.valueOf(Short.MIN_VALUE - 1), Short.class,
+                Short.valueOf(Short.MIN_VALUE));
+
+        // Long to Short with no clamping
+        doNewInstance(Long.valueOf(42), Short.class, Short.valueOf((short) 42));
+        
+        // Long to Short with clamping
+        doNewInstance(Long.valueOf(Short.MAX_VALUE + 1), Short.class,
+                Short.valueOf(Short.MAX_VALUE));
+
+        // Long to Short with clamping
+        doNewInstance(Long.valueOf(Short.MIN_VALUE - 1), Short.class,
+                Short.valueOf(Short.MIN_VALUE));
+
+        // Float to Short with no clamping
+        doNewInstance(Float.valueOf(42.0f), Short.class, Short.valueOf((short) 42));
+        
+        // Float to Short with clamping
+        doNewInstance(Float.valueOf(Short.MAX_VALUE + 1), Short.class,
+                Short.valueOf(Short.MAX_VALUE));
+
+        // Float to Short with clamping
+        doNewInstance(Float.valueOf(Short.MIN_VALUE - 1), Short.class,
+                Short.valueOf(Short.MIN_VALUE));
+
+        // Double to Short with no clamping
+        doNewInstance(Double.valueOf(42.0d), Short.class, Short.valueOf((short) 42));
+        
+        // Double to Short with clamping
+        doNewInstance(Double.valueOf(Short.MAX_VALUE + 1), Short.class,
+                Short.valueOf(Short.MAX_VALUE));
+
+        // Double to Short with clamping
+        doNewInstance(Double.valueOf(Short.MIN_VALUE - 1), Short.class,
+                Short.valueOf(Short.MIN_VALUE));
+
+        // Byte to Integer
+        doNewInstance(Byte.valueOf((byte) 42), Integer.class, Integer.valueOf(42));
+        
+        // Short to Integer
+        doNewInstance(Short.valueOf((short) 42), Integer.class, Integer.valueOf(42));
+
+        // Integer to Integer
+        doNewInstance(Integer.valueOf(42), Integer.class, Integer.valueOf(42));
+        
+        // Long to Integer with no clamping
+        doNewInstance(Long.valueOf(42), Integer.class, Integer.valueOf(42));
+        
+        // Long to Integer with clamping
+        doNewInstance(Long.valueOf((long)Integer.MAX_VALUE + 1), Integer.class,
+                Integer.valueOf(Integer.MAX_VALUE));
+
+        // Long to Integer with clamping
+        doNewInstance(Long.valueOf((long)Integer.MIN_VALUE - 1), Integer.class,
+                Integer.valueOf(Integer.MIN_VALUE));
+
+        // Float to Integer with no clamping
+        doNewInstance(Float.valueOf(42.0f), Integer.class, Integer.valueOf(42));
+        
+        // Float to Integer with clamping
+        doNewInstance(Float.valueOf((float)Integer.MAX_VALUE + 1), Integer.class,
+                Integer.valueOf(Integer.MAX_VALUE));
+
+        // Float to Integer with clamping
+        doNewInstance(Float.valueOf((float)Integer.MIN_VALUE - 1), Integer.class,
+                Integer.valueOf(Integer.MIN_VALUE));
+
+        // Double to Integer with no clamping
+        doNewInstance(Double.valueOf(42.0d), Integer.class, Integer.valueOf(42));
+        
+        // Double to Integer with clamping
+        doNewInstance(Double.valueOf((double)Integer.MAX_VALUE + 1), Integer.class,
+                Integer.valueOf(Integer.MAX_VALUE));
+
+        // Double to Integer with clamping
+        doNewInstance(Double.valueOf((double)Integer.MIN_VALUE - 1), Integer.class,
+                Integer.valueOf(Integer.MIN_VALUE));
+
+        // Byte to Float
+        doNewInstance(Byte.valueOf((byte) 42), Float.class, Float.valueOf(42));
+        
+        // Short to Float
+        doNewInstance(Short.valueOf((short) 42), Float.class, Float.valueOf(42));
+
+        // Integer to Float
+        doNewInstance(Integer.valueOf(42), Float.class, Float.valueOf(42));
+        
+        // Long to Float 
+        doNewInstance(Long.valueOf(42), Float.class, Float.valueOf(42));
+        
+        // Float to Float
+        doNewInstance(Float.valueOf(42.0f), Float.class, Float.valueOf(42));
+        
+        // Double to Float with no clamping
+        doNewInstance(Double.valueOf(42.0d), Float.class, Float.valueOf(42));
+        
+        // Double to Float with clamping
+        doNewInstance(Double.valueOf((double)Float.MAX_VALUE + 1), Float.class,
+                Float.valueOf(Float.MAX_VALUE));
+
+        // Double to Float with clamping
+        doNewInstance(Double.valueOf((double)Float.MIN_VALUE - 1), Float.class,
+                Float.valueOf(Float.MIN_VALUE));
     }
 
-    @Test
-    public void testNewInstanceLong() {
-        System.out.println("   newInstance Long");
+    public void doNewInstance(Number number, Class<? extends Number> clazz, Number expected) {
+        System.out.println("   newInstance " + number.getClass().getSimpleName() +
+                " to " + clazz.getSimpleName());
 
-        int i = 200;
-        Integer iobj = Integer.valueOf(i);
-
-        Number result = NumberOperations.newInstance(iobj, Long.class);
-        assertTrue(result.longValue() == i);
-        assertTrue(result instanceof Long);
-    }
-
-    @Test
-    public void testNewInstanceFloat() {
-        System.out.println("   newInstance Float");
-
-        int i = 200;
-        Integer iobj = Integer.valueOf(i);
-
-        Number result = NumberOperations.newInstance(iobj, Float.class);
-        assertTrue(result.intValue() == i);
-        assertTrue(result instanceof Float);
-    }
-
-    @Test
-    public void testNewInstanceDouble() {
-        System.out.println("   newInstance Double");
-
-        int i = 200;
-        Integer iobj = Integer.valueOf(i);
-
-        Number result = NumberOperations.newInstance(iobj, Double.class);
-        assertTrue(result.intValue() == i);
-        assertTrue(result instanceof Double);
+        Number result = NumberOperations.newInstance(number, clazz);
+        
+        assertTrue("wrong class: expected " + expected.getClass().getSimpleName() +
+                " got " + result.getClass().getSimpleName(), 
+                result.getClass().equals(clazz));
+        
+        assertTrue("wrong value: expected " + expected + " got " + result,
+                expected.equals(result));
     }
 
     @Test

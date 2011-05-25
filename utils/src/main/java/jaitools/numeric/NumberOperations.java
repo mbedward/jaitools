@@ -476,6 +476,19 @@ public class NumberOperations {
     }
     
     /**
+     * Copies the given {@code Number} object. This is a short-cut for 
+     * {@code NumberOperations.newInstance(number, number.getClass())}.
+     * Returns {@code null} if the input is {@code null}.
+     * 
+     * @param number the number to copy
+     * @return a new instance with the same class and value as {@code number};
+     *         or {@code null}
+     */
+    public static Number copy(Number number) {
+        return (number == null ? null : newInstance(number, number.getClass()));
+    }
+    
+    /**
      * Return a new instance of class {@code clazz} taking its value from {@code number}
      *
      * @param number the number object whose value will be copied
@@ -840,7 +853,7 @@ public class NumberOperations {
     }
 
     /**
-     * Creates a new Long taking its value (possibly clamped)
+     * Creates a new Long taking its value
      * from {@code source}
      *
      * @param source the value to copy
@@ -861,13 +874,18 @@ public class NumberOperations {
      * @return a new Float object
      */
     private static Float newFloat(Number source) {
-        float value = floatValue(source);
-        return Float.valueOf(value);
+        double value = doubleValue(source);
+        if (value < Float.MIN_VALUE) {
+            value = Float.MIN_VALUE;
+        } else if (value > Float.MAX_VALUE) {
+            value = Float.MAX_VALUE;
+        }
+        
+        return new Float((float) value);
     }
 
     /**
-     * Creates a new Double taking its value (possibly clamped)
-     * from {@code source}
+     * Creates a new Double taking its value from {@code source}
      *
      * @param source the value to copy
      *
