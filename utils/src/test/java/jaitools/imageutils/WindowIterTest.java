@@ -23,7 +23,6 @@ package jaitools.imageutils;
 import java.awt.Rectangle;
 import java.awt.Dimension;
 import java.awt.Point;
-import java.util.Arrays;
 
 import javax.media.jai.TiledImage;
 
@@ -38,7 +37,7 @@ import static org.junit.Assert.*;
  * @since 1.2
  * @version $Id$
  */
-public class WindowIterTest {
+public class WindowIterTest extends TestBase {
 
     private static final int WIDTH = 17;
     private static final int HEIGHT = 19;
@@ -50,7 +49,7 @@ public class WindowIterTest {
     
     @Before
     public void setup() {
-        image = createSequentialImage();
+        image = createSequentialImage(WIDTH, HEIGHT, NUM_BANDS);
     }
 
     @Test
@@ -117,25 +116,6 @@ public class WindowIterTest {
         doGetPosTest(2, 3);
     }
 
-    private void doGetPosTest(int xstep, int ystep) {
-        WindowIter iter = new WindowIter(image, null, 
-                new Dimension(3, 3), new Point(1, 1),
-                xstep, ystep, PAD);
-
-        int x = 0;
-        int y = 0;
-        do {
-            Point pos = iter.getPos();
-            assertEquals(x, pos.x);
-            assertEquals(y, pos.y);
-            
-            x = Math.min(x + xstep, WIDTH) % WIDTH;
-            if (x == 0) {
-                y += ystep ;
-            }
-        } while (iter.next());
-    }
-
     @Test(expected=IllegalArgumentException.class)
     public void nullImage() {
         WindowIter iter = new WindowIter(null, null, new Dimension(3, 3), new Point(1, 1));
@@ -166,6 +146,25 @@ public class WindowIterTest {
         doWindowTest(dim, key, 1, 1);
     }
     
+    private void doGetPosTest(int xstep, int ystep) {
+        WindowIter iter = new WindowIter(image, null, 
+                new Dimension(3, 3), new Point(1, 1),
+                xstep, ystep, PAD);
+
+        int x = 0;
+        int y = 0;
+        do {
+            Point pos = iter.getPos();
+            assertEquals(x, pos.x);
+            assertEquals(y, pos.y);
+            
+            x = Math.min(x + xstep, WIDTH) % WIDTH;
+            if (x == 0) {
+                y += ystep ;
+            }
+        } while (iter.next());
+    }
+
     private void doWindowTest(Dimension dim, Point key, int xstep, int ystep) {
         Rectangle bounds = new Rectangle(0, 0, WIDTH, HEIGHT);
         WindowIter iter = new WindowIter(image, null, dim, key, xstep, ystep, PAD);
@@ -212,20 +211,4 @@ public class WindowIterTest {
         }
     }
 
-    private TiledImage createSequentialImage() {
-        Integer[] fillValues = new Integer[NUM_BANDS];
-        Arrays.fill(fillValues, Integer.valueOf(0));
-        TiledImage img = ImageUtils.createConstantImage(WIDTH, HEIGHT, fillValues);
-        
-        int k = 0;
-        for (int b = 0; b < NUM_BANDS; b++) {
-            for (int y = 0; y < HEIGHT; y++) {
-                for (int x = 0; x < WIDTH; x++) {
-                    img.setSample(x, y, b, k++);
-                }
-            }
-        }
-
-        return img;
-    }
 }
