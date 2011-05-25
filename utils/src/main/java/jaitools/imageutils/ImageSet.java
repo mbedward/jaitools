@@ -22,7 +22,7 @@ package jaitools.imageutils;
 
 import java.awt.Rectangle;
 import java.awt.image.RenderedImage;
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,6 +34,275 @@ import jaitools.numeric.NumberOperations;
  * @author michael
  */
 public class ImageSet<K> {
+
+    private final Map<K, Element> elements;
+
+
+    /**
+     * Creates a new, empty image set.
+     */
+    public ImageSet() {
+        elements = CollectionFactory.orderedMap();
+    }
+    
+    /**
+     * Adds an image to this set to be associated with the given key.
+     * 
+     * @param key the key
+     * @param image the image
+     * @param outsideValue the value to be returned by iterators when
+     *        positions beyond the bounds of this image (may be {@code null}
+     * 
+     * @throws IllegalArgumentException if either {@code key} or {@code image}
+     *     is {@code null}
+     */
+    public void add(K key, RenderedImage image, Number outsideValue) {
+        if (key == null) {
+            throw new IllegalArgumentException("key must not be null");
+        }
+        if (image == null) {
+            throw new IllegalArgumentException("image must not be null");
+        }
+        
+        elements.put(key, new Element(image, outsideValue));
+    }
+
+    /**
+     * Gets the number of key:image pairs in this set. Note that
+     * a single image may be mapped to more than one key.
+     * 
+     * @return the number of key:image pairs
+     */
+    public int size() {
+        return elements.size();
+    }
+
+    /**
+     * Tests if this image set is empty.
+     * 
+     * @return {@code true} if the set is empty
+     */
+    public boolean isEmpty() {
+        return elements.isEmpty();
+    }
+
+    /**
+     * Tests if this image set contains the given key.
+     * 
+     * @param key the key to search for
+     * @return {@code true} if the key is found; {@code false} otherwise
+     * @throws IllegalArgumentException if {@code key} is {@code null}
+     */
+    public boolean containsKey(K key) {
+        return elements.containsKey(key);
+    }
+
+    /**
+     * Tests if this image set contains the given image. Note
+     * that the test is merely for reference equality.
+     * 
+     * @param image the image to search for
+     * @return {@code true} is the image is in this set; {@code false} otherwise
+     */
+    public boolean containsImage(RenderedImage image) {
+        for (Element e : elements.values()) {
+            if (e.getImage() == image) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Retrieves an image from this set.
+     * 
+     * @param key the key associated with the image.
+     * @return the image or {@code null} if the key could not be found
+     */
+    public RenderedImage get(K key) {
+        return elements.get(key).getImage();
+    }
+
+    /**
+     * Removes a key:image pair from this set.
+     * 
+     * @param key the key
+     * @return the image associated with the key or {@code null} if
+     *     the key could not be found
+     */
+    public RenderedImage remove(K key) {
+        return elements.remove(key).getImage();
+    }
+
+    /**
+     * Copies all key:image pairs from {@code otherSet} into this image set.
+     * 
+     * @param other the other image set
+     * @throws IllegalArgumentException if otherSet is {@code null}
+     */
+    public void putAll(ImageSet<? extends K> otherSet) {
+        if (otherSet != this) {
+            elements.putAll(otherSet.elements);
+        }
+    }
+
+    /**
+     * Removes all key:image pairs from this image set.
+     */
+    public void clear() {
+        elements.clear();
+    }
+    
+    /**
+     * Retrieves a {@code Set} view of the keys in this image set.
+     * Note that unlike Java collection classes, this method returns an
+     * unmodifiable view of the keys.
+     * 
+     * @return keys contained in this image set
+     */
+    public Set<K> keySet() {
+        return Collections.unmodifiableSet( elements.keySet() );
+    }
+
+    /**
+     * Retrieves a {@code Set} view of the keys in this image set.
+     * Note that unlike Java collection classes, this method returns an
+     * unmodifiable view of the keys.
+     * 
+     * @return keys contained in this image set
+     */
+    public Set<RenderedImage> values() {
+        Set<RenderedImage> set = CollectionFactory.orderedSet();
+        for (Element e : elements.values()) {
+            set.add(e.getImage());
+        }
+        return Collections.unmodifiableSet(set);
+    }
+
+    /**
+     * Gets a new iterator based on the bounds of the first image added
+     * to this set or, if that has been removed, the image that has been
+     * in this set for the longest period.
+     * 
+     * @return the new iterator
+     * 
+     * @throws IllegalArgumentException if this image set is empty
+     */
+    public ImageSetIter<K> getIterator() {
+        return getIterator(elements.keySet().iterator().next());
+    }
+
+    /**
+     * Gets a new iterator based on the bounds of the image with the 
+     * specified key value.
+     * 
+     * @param referenceImageKey the key of the image to use as the reference
+     *        for the iterator
+     * 
+     * @return the new iterator
+     * 
+     * @throws IllegalArgumentException if this image set is empty or if no 
+     * image corresponds to the key value
+     */
+    public ImageSetIter<K> getIterator(K referenceImageKey) {
+        if (elements.isEmpty()) {
+            throw new IllegalArgumentException("This image set is empty");
+        }
+        
+        Rectangle bounds = getBounds(referenceImageKey);
+        return getIterator(bounds);
+    }
+
+    /**
+     * Gets a new iterator based on the bounds of the image with the 
+     * specified key value.
+     * 
+     * @param referenceImageKey the key of the image to use as the reference
+     *        for the iterator
+     * 
+     * @return the new iterator
+     * 
+     * @throws IllegalArgumentException if this image set is empty or if no 
+     * image corresponds to the key value
+     */
+    public ImageSetIter<K> getIterator(Rectangle bounds) {
+        return new ImageSetIter<K>(this, bounds);
+    }
+
+    /**
+     * Gets the bounds of the image associated with the given key.
+     * 
+     * @param key the image key
+     * @return image bounds as a new Rectangle or {@code null} if the key
+     *     could not be found
+     */
+    public Rectangle getBounds(K key) {
+        Element e = elements.get(key);
+        return e == null ? null : e.getBounds();
+    }
+
+    /**
+     * Gets the enclosing bounds of all images in this set. This is 
+     * the union of the individual image bounds. If the set is empty
+     * an empty {@code Rectangle} will be returned.
+     * 
+     * @return enclosing bounds for this image set
+     */
+    public Rectangle getUnionBounds() {
+        Rectangle r = new Rectangle();
+        for (Element e : elements.values()) {
+            r = r.union(e.getBounds());
+        }
+        return r;
+    }
+
+    /**
+     * Gets the common bounds of images in this set This is the intersection
+     * of the individual iamge bounds. An empty {@code Rectangle} will be
+     * returned if ths set is empty, or if there is no area over which all
+     * images overlap.
+     * 
+     * @return common bounds for this image set
+     */
+    public Rectangle getIntersectionBounds() {
+        Rectangle r = null;
+        for (Element e : elements.values()) {
+            r = (r == null ? e.getBounds() : r.intersection(e.getBounds()));
+            if (r.isEmpty()) {
+                break;
+            }
+        }
+        return r;
+    }
+
+    /**
+     * Gets the value that an image set iterator will return for the
+     * image associated with the given key when it is positioned 
+     * outside the bounds of that image.
+     * 
+     * @param key the key
+     * @return the value returned for out-of-bounds value requests
+     *     (may be {@code null})
+     */
+    public Number getOutsideValue(K key) {
+        assertKey(key);
+        return elements.get(key).getOutsideValue();
+    }
+
+    /**
+     * Tests that a given key is contained in this set and throws an exception if 
+     * it is not.
+     * 
+     * @param key the key
+     * @throws IllegalArgumentException if the key is not found
+     */
+    private void assertKey(K key) {
+        if (!elements.containsKey(key)) {
+            throw new IllegalArgumentException("The key does not match an image in this set");
+        }
+    }
+
+
 
     public static class Element {
         private final RenderedImage image;
@@ -52,123 +321,11 @@ public class ImageSet<K> {
             return NumberOperations.copy(outsideValue);
         }
         
-    }
-
-    Map<K, Element> images = CollectionFactory.orderedMap();
-
-    public void add(K key, RenderedImage image) {
-        add(key, image, null);
-    }
-
-    public void add(K key, RenderedImage image, Number outsideValue) {
-        if (key == null) {
-            throw new IllegalArgumentException("key must not be null");
-        }
-        if (image == null) {
-            throw new IllegalArgumentException("image must not be null");
-        }
-        
-        images.put(key, new Element(image, outsideValue));
-    }
-
-    public int getNumImages() {
-        return images.size();
-    }
-
-    public Set<K> keySet() {
-        return images.keySet();
-    }
-
-    public RenderedImage get(K key) {
-        return images.get(key).getImage();
-    }
-    
-    public RenderedImage getByIndex(int index) {
-        if (index < 0 || index >= getNumImages()) {
-            throw new IllegalArgumentException("index out of range: " + index);
-        }
-        
-        Iterator<Element> iterator = images.values().iterator();
-        while (index > 0) {
-            iterator.next();
-        }
-        return iterator.next().getImage();
-    }
-
-    /**
-     * Creates a new iterator based on the bounds of the first image added
-     * to this set or, if that has been removed, the image that has been
-     * in this set for the longest period.
-     * 
-     * @return the new iterator
-     * 
-     * @throws IllegalArgumentException if this image set is empty
-     */
-    public ImageSetIter getIterator() {
-        return getIterator(images.keySet().iterator().next());
-    }
-
-    /**
-     * Creates a new iterator based on the bounds of the image with the 
-     * specified key value.
-     * 
-     * @param referenceImageKey the key of the image to use as the reference
-     *        for the iterator
-     * 
-     * @return the new iterator
-     * 
-     * @throws IllegalArgumentException if this image set is empty or if no 
-     * image corresponds to the key value
-     */
-    public ImageSetIter getIterator(K referenceImageKey) {
-        if (images.isEmpty()) {
-            throw new IllegalArgumentException("This image set is empty");
-        }
-        
-        Rectangle bounds = getBounds(referenceImageKey);
-        return getIterator(bounds);
-    }
-
-    /**
-     * Creates a new iterator based on the bounds of the image with the 
-     * specified key value.
-     * 
-     * @param referenceImageKey the key of the image to use as the reference
-     *        for the iterator
-     * 
-     * @return the new iterator
-     * 
-     * @throws IllegalArgumentException if this image set is empty or if no 
-     * image corresponds to the key value
-     */
-    public ImageSetIter getIterator(Rectangle bounds) {
-        return new ImageSetIter<K>(this, bounds);
-    }
-
-    /**
-     * Gets the bounds of the image with the given key.
-     * 
-     * @param imageKey the image key
-     * 
-     * @return image bounds as a new Rectangle
-     * 
-     * @throws IllegalArgumentException if no image corresponds to the key value
-     */
-    public Rectangle getBounds(K imageKey) {
-        checkKey(imageKey);
-        RenderedImage image = images.get(imageKey).getImage();
-        return new Rectangle(image.getMinX(), image.getMinY(), image.getWidth(), image.getHeight());
-    }
-
-    public Number getOutsideValue(K imageKey) {
-        checkKey(imageKey);
-        return images.get(imageKey).getOutsideValue();
-    }
-
-    private void checkKey(K key) {
-        if (!images.containsKey(key)) {
-            throw new IllegalArgumentException("The key does not match an image in this set");
+        private Rectangle getBounds() {
+            return new Rectangle(image.getMinX(), image.getMinY(), 
+                    image.getWidth(), image.getHeight());
         }
     }
+
 }
 
