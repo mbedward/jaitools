@@ -474,6 +474,19 @@ public class NumberOperations {
                 return number.doubleValue();
         }
     }
+
+    /**
+     * Copies the given {@code Number} object. This is a short-cut for 
+     * {@code NumberOperations.newInstance(number, number.getClass())}.
+     * Returns {@code null} if the input is {@code null}.
+     * 
+     * @param number the number to copy
+     * @return a new instance with the same class and value as {@code number};
+     *         or {@code null}
+     */
+    public static Number copy(Number number) {
+        return (number == null ? null : newInstance(number, number.getClass()));
+    }
     
     /**
      * Return a new instance of class {@code clazz} taking its value from {@code number}
