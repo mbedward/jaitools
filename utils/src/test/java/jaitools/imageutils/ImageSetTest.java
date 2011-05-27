@@ -101,6 +101,19 @@ public class ImageSetTest extends TestBase {
         } while (iterator.next());
     }
 
+    @Test
+    public void copySet() {
+        ImageSet<String> copy = ImageSet.copy(theSet);
+        assertNotNull(copy);
+        assertEquals(theSet.size(), copy.size());
+        
+        for (String key : copy.keySet()) {
+            assertTrue(theSet.containsKey(key));
+            assertTrue(theSet.get(key) == copy.get(key));
+            assertTrue(theSet.getOutsideValue(key) == copy.getOutsideValue(key));
+        }
+    }
+
     private void assertSample(Map<String, ? extends Number> sample, int x, int y, int band) {
         assertEquals(NAMES.length, sample.size());
         for (int i = 0; i < NAMES.length; i++) {
