@@ -20,189 +20,100 @@
 
 package jaitools.imageutils;
 
-import jaitools.CollectionFactory;
-import jaitools.numeric.NumberOperations;
-import java.awt.Point;
 import java.awt.Rectangle;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
-import javax.media.jai.iterator.RectIter;
-import javax.media.jai.iterator.RectIterFactory;
+import jaitools.CollectionFactory;
+
 
 /**
  *
  * @author michael
  */
 public class ImageSetIter<K> {
-    private final Map<K, Delegate> delegates;
-    private final Rectangle bounds;
-    private final Point pos;
-    private boolean finished;
 
+    // It is more convenient to work with two lists 
+    // than a map in this class
+    private final List<K> keys;
+    private final List<SimpleIter> delegates;
+
+    /**
+     * Package-private constructor.
+     * 
+     * @param set the target image set
+     * @param bounds the bounds for this iterator
+     */
     ImageSetIter(ImageSet set, Rectangle bounds) {
-        if (set == null) {
-            throw new IllegalArgumentException("The ImageSet argument must not be null");
+        if (set == null || set.isEmpty()) {
+            throw new IllegalArgumentException("The ImageSet must not be null or empty");
         }
 
-        this.bounds = bounds;
-        this.pos = new Point(bounds.x, bounds.y);
-        this.finished = false;
+        this.keys = CollectionFactory.list();
+        this.delegates = CollectionFactory.list();
         
-        this.delegates = CollectionFactory.orderedMap();
         Set<K> keySet = set.keySet();
         for (K key : keySet) {
-            Delegate d = new Delegate(
-                    RectIterFactory.create(set.get(key), bounds),
-                    set.getBounds(key),
-                    set.getOutsideValue(key) );
-
-            delegates.put(key, d);
+            keys.add(key);
+            delegates.add(new SimpleIter(set.get(key), bounds, set.getOutsideValue(key)));
         }
-    }
-
-    public Map<K, Integer> getSample() {
-        return getSample(0);
-    }
-    
-    public Map<K, Integer> getSample(int band) {
-        Map<K, Integer> sample = CollectionFactory.map();
-        
-        for (Entry<K, Delegate> e : delegates.entrySet()) {
-            sample.put(e.getKey(), e.getValue().getSample(band));
-        }
-        return sample;
-    }
-
-    public Map<K, Float> getSampleFloat() {
-        return getSampleFloat(0);
-    }
-    
-    public Map<K, Float> getSampleFloat(int band) {
-        Map<K, Float> sample = CollectionFactory.map();
-        
-        for (Entry<K, Delegate> e : delegates.entrySet()) {
-            sample.put(e.getKey(), e.getValue().getSampleFloat(band));
-        }
-        return sample;
-    }
-
-    public Map<K, Double> getSampleDouble() {
-        return getSampleDouble(0);
-    }
-    
-    public Map<K, Double> getSampleDouble(int band) {
-        Map<K, Double> sample = CollectionFactory.map();
-        
-        for (Entry<K, Delegate> e : delegates.entrySet()) {
-            sample.put(e.getKey(), e.getValue().getSampleDouble(band));
-        }
-        return sample;
-    }
-
-    public boolean hasNext() {
-        return !finished;
-    }
-
-    public boolean next() {
-        if (!finished) {
-            pos.x = (pos.x + 1) % bounds.width;
-
-            if (pos.x == bounds.x) {
-                if (pos.y < bounds.y + bounds.height - 1) {
-                    pos.y++;
-                } else {
-                    finished = true;
-                }
-            }
-
-            if (!finished) {
-                for (Delegate d : delegates.values()) {
-                    d.setPosition(pos);
-                }
-            }
-        }
-
-        return !finished;
     }
 
     /**
-     * This class wraps each of the RectIter objects used to iterate over
-     * images in the set, and is responsible for positioning its iterator
-     * and dealing with out-of-bounds requests.
+     * Gets a value from the first band of each image in this set 
+     * and returns them as a {@code Map} of key : value pairs. 
+     * 
+     * @return image (or outside) values
      */
-    static class Delegate {
-        final RectIter iter;
-        final Rectangle bounds;
-        final Point iterPos;
-        final Number outsideValue;
-        private boolean inside;
-
-        Delegate(RectIter iter, Rectangle bounds, Number outsideValue) {
-            this.iter = iter;
-            this.bounds = bounds;
-            this.outsideValue = NumberOperations.copy(outsideValue);
-            this.iterPos = new Point(bounds.x, bounds.y);
-            this.inside = true;
-        }
-
-        RectIter getIter() {
-            return iter;
-        }
-
-        void setPosition(Point pos) {
-            inside = bounds.contains(pos);
-            if (inside) {
-                int dy = pos.y - iterPos.y;
-                if (dy < 0) {
-                    iter.startLines();
-                    dy = pos.y - bounds.y;
-                }
-                
-                while (dy > 0) {
-                    iter.nextLineDone();
-                    dy-- ;
-                }
-
-                int dx = pos.x - iterPos.x;
-                if (dx < 0) {
-                    iter.startPixels();
-                    dx = pos.x - bounds.x;
-                }
-
-                while (dx > 0) {
-                    iter.nextPixelDone();
-                    dx-- ;
-                }
-                
-                iterPos.setLocation(pos);
-            }
-        }
-
-        private Integer getSample(int band) {
-            if (inside) {
-                return iter.getSample(band);
-            } else {
-                return outsideValue == null ? null : outsideValue.intValue();
-            }
-        }
-        
-        private Float getSampleFloat(int band) {
-            if (inside) {
-                return iter.getSampleFloat(band);
-            } else {
-                return outsideValue == null ? null : outsideValue.floatValue();
-            }
-        }
-
-        private Double getSampleDouble(int band) {
-            if (inside) {
-                return iter.getSampleDouble(band);
-            } else {
-                return outsideValue == null ? null : outsideValue.doubleValue();
-            }
-        }
+    public Map<K, Number> getSample() {
+        return getSample(0);
     }
     
+    /**
+     * Gets a value from the specified band of each image in this set
+     * and returns them as a {@code Map} of key : value pairs. 
+     * 
+     * @return image (or outside) values
+     */
+    public Map<K, Number> getSample(int band) {
+        Map<K, Number> sample = CollectionFactory.map();
+        
+        for (int i = 0; i < keys.size(); i++) {
+            K key = keys.get(i);
+            Number value = delegates.get(i).getSample(band);
+            sample.put(key, value);
+        }
+        
+        return sample;
+    }
+
+    /**
+     * Tests if the iterator has any more positions to sample.
+     * 
+     * @return {@code true} if more samples are available; 
+     *     {@code false} otherwise
+     */
+    public boolean hasNext() {
+        return delegates.get(0).hasNext();
+    }
+
+    /**
+     * Advances the iterator to the next position if possible.
+     * 
+     * @return {@code true} if the iterator was moved;
+     *     {@code false} if it is at the end of its bounds
+     */
+    public boolean next() {
+        if (hasNext()) {
+            for (SimpleIter iter : delegates) {
+                iter.next();
+            }
+        
+            return true;
+        }
+        
+        return false;
+    }
+
 }
