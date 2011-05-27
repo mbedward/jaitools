@@ -22,11 +22,12 @@ package jaitools.imageutils;
 
 import java.awt.image.RenderedImage;
 import java.util.Map;
+
 import javax.media.jai.TiledImage;
 
-import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -72,7 +73,7 @@ public class ImageSetTest extends TestBase {
         int x = 0;
         int y = 0;
         do {
-            Map<String, Integer> sample = iterator.getSample();
+            Map<String, Number> sample = iterator.getSample();
             assertSample(sample, x, y, 0);
 
             x = (x + 1) % WIDTH;
@@ -90,7 +91,7 @@ public class ImageSetTest extends TestBase {
         int y = 0;
         do {
             for (int band = 0; band < NUM_BANDS; band++) {
-                Map<String, Integer> sample = iterator.getSample(band);
+                Map<String, Number> sample = iterator.getSample(band);
                 assertSample(sample, x, y, band);
             }
 

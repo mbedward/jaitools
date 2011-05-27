@@ -66,7 +66,7 @@ public class WritableSimpleIter extends AbstractSinglePixelIterator {
             throw new IllegalArgumentException("value must not be null");
         }
         
-        if (!finished && delegateBounds.contains(mainPos)) {
+        if (delegateBounds.contains(mainPos)) {
             WritableRenderedImage image = (WritableRenderedImage) imageRef.get();
             if (image == null) {
                 throw new IllegalStateException("Target image has been deleted");

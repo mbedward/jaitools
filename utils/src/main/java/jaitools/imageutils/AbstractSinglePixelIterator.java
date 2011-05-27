@@ -46,8 +46,8 @@ public abstract class AbstractSinglePixelIterator {
     
     protected final Rectangle iterBounds;
     protected final Point mainPos;
+    protected final Point lastPos;
     protected final Number outsideValue;
-    protected boolean finished;
 
     protected final RectIter delegateIter;
     protected final Rectangle delegateBounds;
@@ -84,33 +84,31 @@ public abstract class AbstractSinglePixelIterator {
         }
         
         mainPos = new Point(iterBounds.x, iterBounds.y);
-        finished = false;
+        
+        lastPos = new Point(
+                iterBounds.x + iterBounds.width - 1, 
+                iterBounds.y + iterBounds.height - 1);
         
         this.outsideValue = NumberOperations.copy(outsideValue);
     }
 
     public boolean hasNext() {
-        return !finished;
+        return (mainPos.x < lastPos.x || mainPos.y < lastPos.y);
     }
 
     public boolean next() {
-        if (!finished) {
+        if (hasNext()) {
             mainPos.x++ ;
-            if (mainPos.x == iterBounds.x + iterBounds.width) {
-                if (mainPos.y < iterBounds.y + iterBounds.height - 1) {
-                    mainPos.x = iterBounds.x;
-                    mainPos.y++;
-                } else {
-                    finished = true;
-                }
+            if (mainPos.x > lastPos.x) {
+                mainPos.x = iterBounds.x;
+                mainPos.y++;
             }
 
-            if (!finished) {
-                setDelegatePosition();
-            }
+            setDelegatePosition();
+            return true;
         }
 
-        return !finished;
+        return false;
     }
 
     public Rectangle getBounds() {
@@ -118,7 +116,7 @@ public abstract class AbstractSinglePixelIterator {
     }
 
     public Point getPos() {
-        return finished ? null : new Point(mainPos);
+        return new Point(mainPos);
     }
 
     public Number getSample() {
@@ -126,30 +124,26 @@ public abstract class AbstractSinglePixelIterator {
     }
 
     public Number getSample(int band) {
-        if (!finished) {
-            RenderedImage image = imageRef.get();
-            if (image == null) {
-                throw new IllegalStateException("Target image has been deleted");
-            }
-
-            if (delegateBounds.contains(mainPos)) {
-                switch (imageDataType) {
-                    case DataBuffer.TYPE_DOUBLE:
-                        return new Double(delegateIter.getSampleDouble(band));
-
-                    case DataBuffer.TYPE_FLOAT:
-                        return new Float(delegateIter.getSampleFloat(band));
-
-                    default:
-                        return Integer.valueOf(delegateIter.getSample(band));
-                }
-
-            } else {
-                return outsideValue;
-            }
+        RenderedImage image = imageRef.get();
+        if (image == null) {
+            throw new IllegalStateException("Target image has been deleted");
         }
 
-        return null;
+        if (delegateBounds.contains(mainPos)) {
+            switch (imageDataType) {
+                case DataBuffer.TYPE_DOUBLE:
+                    return new Double(delegateIter.getSampleDouble(band));
+
+                case DataBuffer.TYPE_FLOAT:
+                    return new Float(delegateIter.getSampleFloat(band));
+
+                default:
+                    return Integer.valueOf(delegateIter.getSample(band));
+            }
+
+        } else {
+            return outsideValue;
+        }
     }
 
     /**
