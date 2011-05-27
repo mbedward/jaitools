@@ -43,6 +43,7 @@ public abstract class TestBase {
             final int numBands) {
         return createSequentialImage(width, height, numBands, 0);
     }
+    
     /**
      * Creates an image filled with sequential integer values, ordered by pixel, line, band.
      * 
@@ -55,15 +56,30 @@ public abstract class TestBase {
      */
     protected TiledImage createSequentialImage(final int width, final int height, 
             final int numBands, final int startValue) {
+        return createSequentialImage(0, 0, width, height, numBands, startValue);
+    }
 
+    /**
+     * Creates an image filled with sequential integer values, ordered by pixel, line, band.
+     * 
+     * @param width image width
+     * @param height image height
+     * @param numBands number of bands
+     * @param startValue the starting (minimum) value at image location (0,0,0)
+     * 
+     * @return the new image
+     */
+    protected TiledImage createSequentialImage(final int minx, final int miny,
+            final int width, final int height, 
+            final int numBands, final int startValue) {
         Integer[] fillValues = new Integer[numBands];
         Arrays.fill(fillValues, Integer.valueOf(0));
-        TiledImage img = ImageUtils.createConstantImage(width, height, fillValues);
+        TiledImage img = ImageUtils.createConstantImage(minx, miny, width, height, fillValues);
         
         int k = startValue;
         for (int b = 0; b < numBands; b++) {
-            for (int y = 0; y < height; y++) {
-                for (int x = 0; x < width; x++) {
+            for (int y = miny, iy = 0; iy < height; y++, iy++) {
+                for (int x = minx, ix = 0; ix < width; x++, ix++) {
                     img.setSample(x, y, b, k++);
                 }
             }
