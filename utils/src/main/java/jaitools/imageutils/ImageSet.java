@@ -39,12 +39,34 @@ public class ImageSet<K> {
 
 
     /**
+     * Creates a new image set which will contain the same keys, images and 
+     * outside values as the input set. If the input set is {@code null} or
+     * empty, an empty image set is created.
+     * 
+     * @param set the image set to copy
+     */
+    public static <K> ImageSet<K> copy(ImageSet<K> set) {
+        ImageSet<K> newSet = new ImageSet<K>();
+
+        if (!(set == null || set.isEmpty())) {
+            for (K key : set.keySet()) {
+                RenderedImage image = set.get(key);
+                Number outsideValue = set.getOutsideValue(key);
+                newSet.add(key, image, outsideValue);
+            }
+        }
+        
+        return newSet;
+    }
+
+
+    /**
      * Creates a new, empty image set.
      */
     public ImageSet() {
         elements = CollectionFactory.orderedMap();
     }
-    
+
     /**
      * Adds an image to this set to be associated with the given key.
      * 
