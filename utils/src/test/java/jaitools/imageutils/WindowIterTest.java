@@ -49,7 +49,7 @@ public class WindowIterTest extends TestBase {
     
     @Before
     public void setup() {
-        image = createSequentialImage(WIDTH, HEIGHT, NUM_BANDS);
+        image = createSequentialImage(-3, 5, WIDTH, HEIGHT, NUM_BANDS, 0);
     }
 
     @Test
@@ -142,38 +142,39 @@ public class WindowIterTest extends TestBase {
         iter.getWindow(null, NUM_BANDS);
     }
 
-    private void doWindowTest(Dimension dim, Point key) {
-        doWindowTest(dim, key, 1, 1);
-    }
-    
     private void doGetPosTest(int xstep, int ystep) {
         WindowIter iter = new WindowIter(image, null, 
                 new Dimension(3, 3), new Point(1, 1),
                 xstep, ystep, PAD);
 
-        int x = 0;
-        int y = 0;
+        int x = image.getMinX();
+        int y = image.getMinY();
         do {
             Point pos = iter.getPos();
             assertEquals(x, pos.x);
             assertEquals(y, pos.y);
             
-            x = Math.min(x + xstep, WIDTH) % WIDTH;
-            if (x == 0) {
+            x += xstep;
+            if (x >= image.getMinX() + image.getWidth()) {
+                x = image.getMinX();
                 y += ystep ;
             }
         } while (iter.next());
     }
 
+    private void doWindowTest(Dimension dim, Point key) {
+        doWindowTest(dim, key, 1, 1);
+    }
+    
     private void doWindowTest(Dimension dim, Point key, int xstep, int ystep) {
-        Rectangle bounds = new Rectangle(0, 0, WIDTH, HEIGHT);
+        Rectangle bounds = image.getBounds();
         WindowIter iter = new WindowIter(image, null, dim, key, xstep, ystep, PAD);
 
         int[][] window = new int[dim.height][dim.width];
         int[][] expected = new int[dim.height][dim.width];
 
-        int x = 0;
-        int y = 0;
+        int x = image.getMinX();
+        int y = image.getMinY();
         do {
             iter.getWindow(window);
             assertWindow(window, bounds, dim, key, x, y, 0);
@@ -183,8 +184,9 @@ public class WindowIterTest extends TestBase {
                 assertWindow(window, bounds, dim, key, x, y, b);
             }
             
-            x = Math.min(x + xstep, WIDTH) % WIDTH;
-            if (x == 0) {
+            x += xstep;
+            if (x >= image.getMinX() + image.getWidth()) {
+                x = image.getMinX();
                 y += ystep ;
             }
         } while (iter.next());
