@@ -30,7 +30,7 @@ import javax.media.jai.iterator.RectIterFactory;
  *
  * @author michael
  */
-public class SimpleIter extends AbstractSinglePixelIterator {
+public class SimpleIterator extends AbstractSinglePixelIterator {
 
     private static class Helper implements DelegateHelper {
         
@@ -57,7 +57,7 @@ public class SimpleIter extends AbstractSinglePixelIterator {
      * @param outsideValue value to return when the iterator is positioned beyond
      *     the bounds of the target image; may be {@code null} 
      */
-    public SimpleIter(RenderedImage image, Rectangle bounds, Number outsideValue) {
+    public SimpleIterator(RenderedImage image, Rectangle bounds, Number outsideValue) {
         super(new Helper(), image, bounds, outsideValue);
     }
 

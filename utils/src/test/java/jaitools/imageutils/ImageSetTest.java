@@ -68,7 +68,7 @@ public class ImageSetTest extends TestBase {
 
     @Test
     public void getIterSample() {
-        ImageSetIter<String> iterator = theSet.getIterator();
+        ImageSetIterator<String> iterator = theSet.getIterator();
 
         int x = 0;
         int y = 0;
@@ -85,7 +85,7 @@ public class ImageSetTest extends TestBase {
 
     @Test
     public void getIterSampleByBand() {
-        ImageSetIter<String> iterator = theSet.getIterator();
+        ImageSetIterator<String> iterator = theSet.getIterator();
 
         int x = 0;
         int y = 0;

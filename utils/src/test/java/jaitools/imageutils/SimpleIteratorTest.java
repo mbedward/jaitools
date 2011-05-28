@@ -32,26 +32,26 @@ import static org.junit.Assert.*;
  *
  * @author michael
  */
-public class SimpleIterTest extends TestBase {
+public class SimpleIteratorTest extends TestBase {
 
     private static final int WIDTH = 17;
     private static final int HEIGHT = 19;
     private static final int NUM_BANDS = 3;
     private static final int OUTSIDE = -99;
 
-    private SimpleIter iter;
+    private SimpleIterator iter;
     private PlanarImage image;
 
 
     @Test(expected=IllegalArgumentException.class) 
     public void nullImageArg() {
-        iter = new SimpleIter(null, new Rectangle(0, 0, WIDTH, HEIGHT), OUTSIDE);
+        iter = new SimpleIterator(null, new Rectangle(0, 0, WIDTH, HEIGHT), OUTSIDE);
     }
     
     @Test
     public void nullBoundsMeansImageBounds() {
         image = createSequentialImage(WIDTH, HEIGHT, NUM_BANDS);
-        iter = new SimpleIter(image, null, null);
+        iter = new SimpleIterator(image, null, null);
         Rectangle imageBounds = image.getBounds();
         assertEquals(imageBounds, iter.getBounds());
     }
@@ -59,7 +59,7 @@ public class SimpleIterTest extends TestBase {
     @Test
     public void iterateOverWholeImage() {
         image = createSequentialImage(WIDTH, HEIGHT, NUM_BANDS);
-        iter = new SimpleIter(image, null, null);
+        iter = new SimpleIterator(image, null, null);
         assertSamples();
     }
 
@@ -74,14 +74,14 @@ public class SimpleIterTest extends TestBase {
                 imageBounds.x - MARGIN, imageBounds.y - MARGIN,
                 imageBounds.width + 2 * MARGIN, imageBounds.height + 2 * MARGIN);
 
-        iter = new SimpleIter(image, iterBounds, OUTSIDE);
+        iter = new SimpleIterator(image, iterBounds, OUTSIDE);
         assertSamples();
     }
 
     @Test
     public void imageWithNonZeroOrigin() {
         image = createSequentialImage(-7, 11, WIDTH, HEIGHT, NUM_BANDS, 0);
-        iter = new SimpleIter(image, null, OUTSIDE);
+        iter = new SimpleIterator(image, null, OUTSIDE);
         assertSamples();
     }
 
@@ -94,7 +94,7 @@ public class SimpleIterTest extends TestBase {
         Rectangle iterBounds = new Rectangle(imageBounds.x - MARGIN, imageBounds.y - MARGIN,
                 imageBounds.width + 2 * MARGIN, imageBounds.height + 2 * MARGIN);
 
-        iter = new SimpleIter(image, iterBounds, OUTSIDE);
+        iter = new SimpleIterator(image, iterBounds, OUTSIDE);
         assertSamples();
     }
 
@@ -107,7 +107,7 @@ public class SimpleIterTest extends TestBase {
                 imageBounds.x - 10, imageBounds.y + imageBounds.height / 4,
                 imageBounds.width + 20, imageBounds.height / 2);
 
-        iter = new SimpleIter(image, iterBounds, OUTSIDE);
+        iter = new SimpleIterator(image, iterBounds, OUTSIDE);
         assertSamples();
     }
 
@@ -120,7 +120,7 @@ public class SimpleIterTest extends TestBase {
                 imageBounds.x + imageBounds.width / 4, imageBounds.y - 10,
                 imageBounds.width / 2, imageBounds.height + 20);
 
-        iter = new SimpleIter(image, iterBounds, OUTSIDE);
+        iter = new SimpleIterator(image, iterBounds, OUTSIDE);
         assertSamples();
     }
 

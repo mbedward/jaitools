@@ -54,7 +54,7 @@ public class WindowIterTest extends TestBase {
 
     @Test
     public void allocateDestArray() {
-        WindowIter iter = new WindowIter(image, null, new Dimension(3,5), new Point(1,1));
+        WindowIterator iter = new WindowIterator(image, null, new Dimension(3,5), new Point(1,1));
         int[][] window = iter.getWindow(null);
         assertNotNull(window);
         assertEquals(5, window.length);
@@ -118,32 +118,32 @@ public class WindowIterTest extends TestBase {
 
     @Test(expected=IllegalArgumentException.class)
     public void nullImage() {
-        WindowIter iter = new WindowIter(null, null, new Dimension(3, 3), new Point(1, 1));
+        WindowIterator iter = new WindowIterator(null, null, new Dimension(3, 3), new Point(1, 1));
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void nullDimension() {
-        WindowIter iter = new WindowIter(image, null, null, new Point(1, 1));
+        WindowIterator iter = new WindowIterator(image, null, null, new Point(1, 1));
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void nullKeyPoint() {
-        WindowIter iter = new WindowIter(image, null, new Dimension(3, 3), null);
+        WindowIterator iter = new WindowIterator(image, null, new Dimension(3, 3), null);
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void keyPointOutOfWindow() {
-        WindowIter iter = new WindowIter(image, null, new Dimension(3, 3), new Point(3, 3));
+        WindowIterator iter = new WindowIterator(image, null, new Dimension(3, 3), new Point(3, 3));
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void bandOutOfRange() {
-        WindowIter iter = new WindowIter(image, null, new Dimension(3, 3), new Point(1, 1));
+        WindowIterator iter = new WindowIterator(image, null, new Dimension(3, 3), new Point(1, 1));
         iter.getWindow(null, NUM_BANDS);
     }
 
     private void doGetPosTest(int xstep, int ystep) {
-        WindowIter iter = new WindowIter(image, null, 
+        WindowIterator iter = new WindowIterator(image, null, 
                 new Dimension(3, 3), new Point(1, 1),
                 xstep, ystep, PAD);
 
@@ -168,7 +168,7 @@ public class WindowIterTest extends TestBase {
     
     private void doWindowTest(Dimension dim, Point key, int xstep, int ystep) {
         Rectangle bounds = image.getBounds();
-        WindowIter iter = new WindowIter(image, null, dim, key, xstep, ystep, PAD);
+        WindowIterator iter = new WindowIterator(image, null, dim, key, xstep, ystep, PAD);
 
         int[][] window = new int[dim.height][dim.width];
         int[][] expected = new int[dim.height][dim.width];
