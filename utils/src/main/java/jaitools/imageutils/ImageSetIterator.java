@@ -32,12 +32,12 @@ import jaitools.CollectionFactory;
  *
  * @author michael
  */
-public class ImageSetIter<K> {
+public class ImageSetIterator<K> {
 
     // It is more convenient to work with two lists 
     // than a map in this class
     private final List<K> keys;
-    private final List<SimpleIter> delegates;
+    private final List<SimpleIterator> delegates;
 
     /**
      * Package-private constructor.
@@ -45,7 +45,7 @@ public class ImageSetIter<K> {
      * @param set the target image set
      * @param bounds the bounds for this iterator
      */
-    ImageSetIter(ImageSet set, Rectangle bounds) {
+    ImageSetIterator(ImageSet set, Rectangle bounds) {
         if (set == null || set.isEmpty()) {
             throw new IllegalArgumentException("The ImageSet must not be null or empty");
         }
@@ -56,7 +56,7 @@ public class ImageSetIter<K> {
         Set<K> keySet = set.keySet();
         for (K key : keySet) {
             keys.add(key);
-            delegates.add(new SimpleIter(set.get(key), bounds, set.getOutsideValue(key)));
+            delegates.add(new SimpleIterator(set.get(key), bounds, set.getOutsideValue(key)));
         }
     }
 
@@ -106,7 +106,7 @@ public class ImageSetIter<K> {
      */
     public boolean next() {
         if (hasNext()) {
-            for (SimpleIter iter : delegates) {
+            for (SimpleIterator iter : delegates) {
                 iter.next();
             }
         

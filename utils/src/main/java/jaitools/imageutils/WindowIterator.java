@@ -82,7 +82,7 @@ import javax.media.jai.iterator.RectIterFactory;
  * @since 1.2
  * @version $Id$
  */
-public class WindowIter {
+public class WindowIterator {
 
     private static final Number DEFAULT_PADDING_VALUE = Integer.valueOf(0);
 
@@ -126,7 +126,7 @@ public class WindowIter {
      * @throws IllegalArgumentException if any arguments other than bounds are {@code null};
      *         or if {@code keyElement} does not lie within {@code windowDim}
      */
-    public WindowIter(RenderedImage image, Rectangle bounds, 
+    public WindowIterator(RenderedImage image, Rectangle bounds, 
             Dimension windowDim, Point keyElement) {
         this(image, bounds, windowDim, keyElement, 1, 1, DEFAULT_PADDING_VALUE);
     }
@@ -146,7 +146,7 @@ public class WindowIter {
      *         or if {@code keyElement} does not lie within {@code windowDim};
      *         or if either step distance is less than 1
      */
-    public WindowIter(RenderedImage image, Rectangle bounds, 
+    public WindowIterator(RenderedImage image, Rectangle bounds, 
             Dimension windowDim, Point keyElement,
             int xstep, int ystep, Number paddingValue) {
 

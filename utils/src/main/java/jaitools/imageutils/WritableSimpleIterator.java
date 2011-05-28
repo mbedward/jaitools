@@ -33,7 +33,7 @@ import javax.media.jai.iterator.WritableRectIter;
  *
  * @author michael
  */
-public class WritableSimpleIter extends AbstractSinglePixelIterator {
+public class WritableSimpleIterator extends AbstractSinglePixelIterator {
     
     private static class Helper implements DelegateHelper {
 
@@ -52,7 +52,7 @@ public class WritableSimpleIter extends AbstractSinglePixelIterator {
         
     }
 
-    public WritableSimpleIter(WritableRenderedImage image, Rectangle bounds, Number outsideValue) {
+    public WritableSimpleIterator(WritableRenderedImage image, Rectangle bounds, Number outsideValue) {
         super(new Helper(), image, bounds, outsideValue);
     }
 

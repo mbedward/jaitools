@@ -210,7 +210,7 @@ public class ImageSet<K> {
      * 
      * @throws IllegalArgumentException if this image set is empty
      */
-    public ImageSetIter<K> getIterator() {
+    public ImageSetIterator<K> getIterator() {
         return getIterator(elements.keySet().iterator().next());
     }
 
@@ -226,7 +226,7 @@ public class ImageSet<K> {
      * @throws IllegalArgumentException if this image set is empty or if no 
      * image corresponds to the key value
      */
-    public ImageSetIter<K> getIterator(K referenceImageKey) {
+    public ImageSetIterator<K> getIterator(K referenceImageKey) {
         if (elements.isEmpty()) {
             throw new IllegalArgumentException("This image set is empty");
         }
@@ -247,8 +247,8 @@ public class ImageSet<K> {
      * @throws IllegalArgumentException if this image set is empty or if no 
      * image corresponds to the key value
      */
-    public ImageSetIter<K> getIterator(Rectangle bounds) {
-        return new ImageSetIter<K>(this, bounds);
+    public ImageSetIterator<K> getIterator(Rectangle bounds) {
+        return new ImageSetIterator<K>(this, bounds);
     }
 
     /**
