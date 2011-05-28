@@ -27,11 +27,17 @@ import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 
 /**
+ * A read-only image iterator which moves by column then row (pixel then line).
  *
  * @author michael
  */
-public class SimpleIterator extends AbstractSinglePixelIterator {
+public class SimpleIterator extends AbstractSimpleIterator {
 
+    /**
+     * Provides a method to create the delegate iterator. Passing an instance of
+     * this class to the super-class constructor allows the delegate to be a
+     * final field in the super-class.
+     */
     private static class Helper implements DelegateHelper {
         
         public RectIter create(RenderedImage image, Rectangle bounds) {

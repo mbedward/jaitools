@@ -30,11 +30,17 @@ import javax.media.jai.iterator.RectIterFactory;
 import javax.media.jai.iterator.WritableRectIter;
 
 /**
- *
+ * A read-write image iterator which moves by column then row (pixel then line).
+ * 
  * @author michael
  */
-public class WritableSimpleIterator extends AbstractSinglePixelIterator {
+public class WritableSimpleIterator extends AbstractSimpleIterator {
     
+    /**
+     * Provides a method to create the delegate iterator. Passing an instance of
+     * this class to the super-class constructor allows the delegate to be a
+     * final field in the super-class.
+     */
     private static class Helper implements DelegateHelper {
 
         public RectIter create(RenderedImage image, Rectangle bounds) {
@@ -52,15 +58,46 @@ public class WritableSimpleIterator extends AbstractSinglePixelIterator {
         
     }
 
+    /**
+     * Creates a new iterator. The bounds are allowed to extend beyond the bounds
+     * of the target image. When the iterator is positioned outside the image the
+     * specified outside value will be returned.
+     * 
+     * @param image the target image
+     * @param bounds bounds for the iterator; if {@code null} the bounds of the target
+     *     image will be used
+     * @param outsideValue value to return when the iterator is positioned beyond
+     *     the bounds of the target image; may be {@code null} 
+     */
     public WritableSimpleIterator(WritableRenderedImage image, Rectangle bounds, Number outsideValue) {
         super(new Helper(), image, bounds, outsideValue);
     }
 
+    /**
+     * Sets the value in the first band of the image at the current position.
+     * If the iterator is positioned outside the image bounds, no change is made
+     * and this method returns {@code false}.
+     * 
+     * @return {@code true} if the image value was set; {@code false} if the 
+     *     iterator was positioned outside the bounds of the image
+     */
     public boolean setSample(Number value) {
         return setSample(0, value);
     }
 
 
+    /**
+     * Sets the value in the specified band of the image at the current position.
+     * If the iterator is positioned outside the image bounds, no change is made
+     * and this method returns {@code false}.
+     * 
+     * @param band image band
+     * @return {@code true} if the image value was set; {@code false} if the 
+     *     iterator was positioned outside the bounds of the image
+     * 
+     * @throws IllegalArgumentException if {@code band} is out of range for the the
+     *     target image
+     */
     public boolean setSample(int band, Number value) {
         if (value == null) {
             throw new IllegalArgumentException("value must not be null");
@@ -93,6 +130,5 @@ public class WritableSimpleIterator extends AbstractSinglePixelIterator {
             return false;
         }
     }
-    
 
 }
