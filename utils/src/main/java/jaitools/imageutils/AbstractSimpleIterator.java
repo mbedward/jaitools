@@ -28,14 +28,19 @@ import java.lang.ref.WeakReference;
 
 import javax.media.jai.iterator.RectIter;
 
-import jaitools.numeric.NumberOperations;
 
 /**
- *
+ * Base class for image iterators with row-column (line-pixel) movement.
+ * 
  * @author michael
  */
-public abstract class AbstractSinglePixelIterator {
+public abstract class AbstractSimpleIterator {
 
+    /**
+     * This is implemented by sub-classes to pass a method back to
+     * this class to create the delegate iterator. This allows the
+     * delegate to be a final field.
+     */
     protected static interface DelegateHelper {
         RectIter create(RenderedImage image, Rectangle bounds);
     }
@@ -43,6 +48,7 @@ public abstract class AbstractSinglePixelIterator {
     protected final WeakReference<RenderedImage> imageRef;
     protected final int imageDataType;
     protected final Rectangle imageBounds;
+    protected final int numImageBands;
     
     protected final Rectangle iterBounds;
     protected final Point mainPos;
@@ -54,7 +60,23 @@ public abstract class AbstractSinglePixelIterator {
     protected final Point delegatePos;
 
     
-    public AbstractSinglePixelIterator(DelegateHelper helper, RenderedImage image, 
+    /**
+     * Creates a new instance. The helper object is provided by a sub-class 
+     * to create the delegate iterator that will then be held by this class as
+     * a final field. The iterator bounds are allowed to extend beyond the 
+     * target image bounds. When the iterator is position outside the target
+     * image area it returns the specified outside value.
+     * 
+     * @param helper a helper provided by sub-class to create the delegate iterator
+     * @param image the target image
+     * @param bounds the bounds for this iterator; {@code null} means to use the
+     *     target image bounds
+     * @param outsideValue value to return when positioned outside the bounds of
+     *     the target image
+     * 
+     * @throws IllegalArgumentException if the image argument is {@code null}
+     */
+    public AbstractSimpleIterator(DelegateHelper helper, RenderedImage image, 
             Rectangle bounds, Number outsideValue) {
         
         if (image == null) {
@@ -63,6 +85,7 @@ public abstract class AbstractSinglePixelIterator {
         
         imageRef = new WeakReference<RenderedImage>(image);
         imageDataType = image.getSampleModel().getDataType();
+        numImageBands = image.getSampleModel().getNumBands();
         
         imageBounds = new Rectangle(image.getMinX(), image.getMinY(),
                 image.getWidth(), image.getHeight());
@@ -89,13 +112,27 @@ public abstract class AbstractSinglePixelIterator {
                 iterBounds.x + iterBounds.width - 1, 
                 iterBounds.y + iterBounds.height - 1);
         
-        this.outsideValue = NumberOperations.copy(outsideValue);
+        this.outsideValue = outsideValue;
     }
 
+    /**
+     * Tests if this iterator can be advanced further.
+     * 
+     * @return {@code true} if the iterator can be advanced; 
+     *     {@code false} if it is at the end of its bounds
+     */
     public boolean hasNext() {
         return (mainPos.x < lastPos.x || mainPos.y < lastPos.y);
     }
 
+    /**
+     * Advances the iterator to the next position. The iterator moves by
+     * column (pixel), then row (line). It is always safe to call this
+     * method speculatively.
+     * 
+     * @return {@code true} if the iterator was successfully advanced;
+     *     {@code false} if it was already at the end of its bounds
+     */
     public boolean next() {
         if (hasNext()) {
             mainPos.x++ ;
@@ -111,18 +148,45 @@ public abstract class AbstractSinglePixelIterator {
         return false;
     }
 
+    /**
+     * Gets the bounds of this iterator. Note that these may extend
+     * beyond the bounds of the target image.
+     * 
+     * @return the iterator bounds
+     */
     public Rectangle getBounds() {
         return new Rectangle(iterBounds);
     }
 
+    /**
+     * Gets the current iterator position. It is always safe to call
+     * this method.
+     * 
+     * @return current position
+     */
     public Point getPos() {
         return new Point(mainPos);
     }
 
+    /**
+     * Returns the value from the first band of the image at the current position,
+     * or the outside value if the iterator is positioned beyond the image bounds.
+     * 
+     * @return image or outside value
+     */
     public Number getSample() {
         return getSample(0);
     }
 
+    /**
+     * Returns the value from the specified band of the image at the current position,
+     * or the outside value if the iterator is positioned beyond the image bounds.
+     * 
+     * @param band image band
+     * @return image or outside value
+     * @throws IllegalArgumentException if {@code band} is out of range for the the
+     *     target image
+     */
     public Number getSample(int band) {
         RenderedImage image = imageRef.get();
         if (image == null) {
@@ -181,4 +245,16 @@ public abstract class AbstractSinglePixelIterator {
         }
     }
 
+    /**
+     * Helper method to check that a band value is valid.
+     * 
+     * @param band band value
+     */
+    protected void checkBandArg(int band) {
+        if (band < 0 || band >= numImageBands) {
+            throw new IllegalArgumentException( String.format(
+                    "band argument (%d) is out of range: number of image bands is %d",
+                    band, numImageBands) );
+        }
+    }
 }
