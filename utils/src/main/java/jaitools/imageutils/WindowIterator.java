@@ -20,7 +20,6 @@
 
 package jaitools.imageutils;
 
-import jaitools.numeric.NumberOperations;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Rectangle;
