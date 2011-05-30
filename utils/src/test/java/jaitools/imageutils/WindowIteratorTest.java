@@ -42,7 +42,7 @@ public class WindowIteratorTest extends TestBase {
     private static final int WIDTH = 17;
     private static final int HEIGHT = 19;
     private static final int NUM_BANDS = 3;
-    private static final Integer PAD = Integer.valueOf(-1);
+    private static final Integer OUTSIDE = Integer.valueOf(-1);
     
     private TiledImage image;
     
@@ -145,7 +145,7 @@ public class WindowIteratorTest extends TestBase {
     private void doGetPosTest(int xstep, int ystep) {
         WindowIterator iter = new WindowIterator(image, null, 
                 new Dimension(3, 3), new Point(1, 1),
-                xstep, ystep, PAD);
+                xstep, ystep, OUTSIDE);
 
         int x = image.getMinX();
         int y = image.getMinY();
@@ -168,7 +168,7 @@ public class WindowIteratorTest extends TestBase {
     
     private void doWindowTest(Dimension dim, Point key, int xstep, int ystep) {
         Rectangle bounds = image.getBounds();
-        WindowIterator iter = new WindowIterator(image, null, dim, key, xstep, ystep, PAD);
+        WindowIterator iter = new WindowIterator(image, null, dim, key, xstep, ystep, OUTSIDE);
 
         int[][] window = new int[dim.height][dim.width];
         int[][] expected = new int[dim.height][dim.width];
@@ -207,7 +207,7 @@ public class WindowIteratorTest extends TestBase {
                             image.getSample(imgX, imgY, band), window[winY][winX]);
                 } else {
                     assertEquals(String.format("x=%d y=%d band=%d", x, y, band),
-                            PAD.intValue(), window[winY][winX]);
+                            OUTSIDE.intValue(), window[winY][winX]);
                 }
             }
         }
