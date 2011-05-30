@@ -178,6 +178,52 @@ public abstract class AbstractSimpleIterator {
     }
 
     /**
+     * Sets the iterator to a new position. Note that a return value of
+     * {@code true} indicates that the new position was valid. If the new position
+     * is equal to the iterator's current position this method will still
+     * return {@code true} even though the iterator has not moved.
+     * <p>
+     * If the new position is outside this iterator's bounds, the position remains
+     * unchanged and {@code false} is returned.
+     * 
+     * @param pos the new position
+     * @return {@code true} if the new position was valid; {@code false}
+     *     otherwise
+     * 
+     * @throws IllegalArgumentException if {@code pos} is {@code null}
+     */
+    public boolean setPos(Point pos) {
+        if (pos == null) {
+            throw new IllegalArgumentException("pos must not be null");
+        }
+        return setPos(pos.x, pos.y);
+    }
+
+    /**
+     * Sets the iterator to a new position. Note that a return value of
+     * {@code true} indicates that the new position was valid. If the new position
+     * is equal to the iterator's current position this method will still
+     * return {@code true} even though the iterator has not moved.
+     * <p>
+     * If the new position is outside this iterator's bounds, the position remains
+     * unchanged and {@code false} is returned.
+     * 
+     * @param x image X position
+     * @param y image Y position
+     * @return {@code true} if the new position was valid; {@code false}
+     *     otherwise
+     */
+    public boolean setPos(int x, int y) {
+        if (iterBounds.contains(x, y)) {
+            mainPos.setLocation(x, y);
+            setDelegatePosition();
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
      * Returns the value from the first band of the image at the current position,
      * or the outside value if the iterator is positioned beyond the image bounds.
      * 
@@ -185,6 +231,48 @@ public abstract class AbstractSimpleIterator {
      */
     public Number getSample() {
         return getSample(0);
+    }
+
+    /**
+     * Returns the value from the first band of the image at the specified position,
+     * If the position is within the iterator's bounds, but outside the target
+     * image bounds, the outside value is returned. After calling this method, the
+     * iterator will be set to the specified position.
+     * <p>
+     * If the position is outside the iterator's bounds, {@code null} is returned
+     * and the iterator's position will remain unchanged.
+     * 
+     * @param pos the position to sample
+     * @return image, outside value or {@code null}
+     * 
+     * @throws IllegalArgumentException if {@code pos} is {@code null}
+     */
+    public Number getSample(Point pos) {
+        if (pos == null) {
+            throw new IllegalArgumentException("pos must not be null");
+        }
+        return getSample(pos.x, pos.y);
+    }
+
+    /**
+     * Returns the value from the first band of the image at the specified position,
+     * If the position is within the iterator's bounds, but outside the target
+     * image bounds, the outside value is returned. After calling this method, the
+     * iterator will be set to the specified position.
+     * <p>
+     * If the position is outside the iterator's bounds, {@code null} is returned
+     * and the iterator's position will remain unchanged.
+     * 
+     * @param x sampling position X-ordinate
+     * @param y sampling position Y-ordinate
+     * @return image, outside value or {@code null}
+     */
+    public Number getSample(int x, int y) {
+        if (setPos(x, y)) {
+            return getSample();
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -216,6 +304,52 @@ public abstract class AbstractSimpleIterator {
 
         } else {
             return outsideValue;
+        }
+    }
+
+    /**
+     * Returns the value from the specified band of the image at the specified position,
+     * If the position is within the iterator's bounds, but outside the target
+     * image bounds, the outside value is returned. After calling this method, the
+     * iterator will be set to the specified position.
+     * <p>
+     * If the position is outside the iterator's bounds, {@code null} is returned
+     * and the iterator's position will remain unchanged.
+     * 
+     * @param pos the position to sample
+     * @param band image band
+     * @return image, outside value or {@code null}
+     * 
+     * @throws IllegalArgumentException if {@code pos} is {@code null}
+     */
+    public Number getSample(Point pos, int band) {
+        if (pos == null) {
+            throw new IllegalArgumentException("pos must not be null");
+        }
+        return getSample(pos.x, pos.y, band);
+    }
+
+    /**
+     * Returns the value from the specified band of the image at the specified position,
+     * If the position is within the iterator's bounds, but outside the target
+     * image bounds, the outside value is returned. After calling this method, the
+     * iterator will be set to the specified position.
+     * <p>
+     * If the position is outside the iterator's bounds, {@code null} is returned
+     * and the iterator's position will remain unchanged.
+     * 
+     * @param x sampling position X-ordinate
+     * @param y sampling position Y-ordinate
+     * @param band image band
+     * @return image, outside value or {@code null}
+     * 
+     * @throws IllegalArgumentException if {@code pos} is {@code null}
+     */
+    public Number getSample(int x, int y, int band) {
+        if (setPos(x, y)) {
+            return getSample(band);
+        } else {
+            return null;
         }
     }
 
