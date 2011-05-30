@@ -20,6 +20,7 @@
 
 package jaitools.imageutils;
 
+import java.util.Random;
 import java.awt.Point;
 import java.awt.Rectangle;
 
@@ -29,10 +30,13 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
- *
+ * Tests for SimpleIterator.
+ * 
  * @author michael
  */
 public class SimpleIteratorTest extends TestBase {
+
+    private static final int NUM_RESET_TESTS = 10;
 
     private static final int WIDTH = 17;
     private static final int HEIGHT = 19;
@@ -64,16 +68,43 @@ public class SimpleIteratorTest extends TestBase {
     }
 
     @Test
-    public void iterBoundsBeyondImageBounds() {
-        final int MARGIN = 5;
-        
+    public void resetIteratorWithInnerBounds() {
         image = createSequentialImage(WIDTH, HEIGHT, NUM_BANDS);
-        Rectangle imageBounds = image.getBounds();
-        
-        Rectangle iterBounds = new Rectangle(
-                imageBounds.x - MARGIN, imageBounds.y - MARGIN,
-                imageBounds.width + 2 * MARGIN, imageBounds.height + 2 * MARGIN);
+        Rectangle iterBounds = createAdjustedBounds(-1);
+        iter = new SimpleIterator(image, iterBounds, OUTSIDE);
+        doResetTest();
+    }
 
+    @Test
+    public void resetIteratorWithOuterBounds() {
+        image = createSequentialImage(WIDTH, HEIGHT, NUM_BANDS);
+        Rectangle iterBounds = createAdjustedBounds(1);
+        iter = new SimpleIterator(image, iterBounds, OUTSIDE);
+        doResetTest();
+    }
+
+    private void doResetTest() {
+        // advance to the end of the iter bounds, then reset
+        final int N = WIDTH * HEIGHT;
+        Random rand = new Random();
+        for (int i = 0; i < NUM_RESET_TESTS; i++) {
+            // Advance the iterator
+            int n = rand.nextInt(N) + 1;
+            while (n > 0) {
+                iter.next();
+                n-- ;
+            }
+
+            // Reset and test samples
+            iter.reset();
+            assertSamples();
+        }
+    }
+
+    @Test
+    public void iterBoundsBeyondImageBounds() {
+        image = createSequentialImage(WIDTH, HEIGHT, NUM_BANDS);
+        Rectangle iterBounds = createAdjustedBounds(5);
         iter = new SimpleIterator(image, iterBounds, OUTSIDE);
         assertSamples();
     }
@@ -145,4 +176,18 @@ public class SimpleIteratorTest extends TestBase {
 
         } while (iter.next());
     }
+
+    private Rectangle createAdjustedBounds(int delta) {
+        if (image == null) {
+            throw new IllegalStateException("You forgot to create the image first");
+        }
+        Rectangle imageBounds = image.getBounds();
+        
+        Rectangle iterBounds = new Rectangle(
+                imageBounds.x - delta, imageBounds.y - delta,
+                imageBounds.width + 2 * delta, imageBounds.height + 2 * delta);
+
+        return iterBounds;
+    }
+
 }

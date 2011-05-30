@@ -122,7 +122,7 @@ public abstract class AbstractSimpleIterator {
      *     {@code false} if it is at the end of its bounds
      */
     public boolean hasNext() {
-        return (mainPos.x < lastPos.x || mainPos.y < lastPos.y);
+        return (delegateIter != null && mainPos.x < lastPos.x || mainPos.y < lastPos.y);
     }
 
     /**
@@ -146,6 +146,15 @@ public abstract class AbstractSimpleIterator {
         }
 
         return false;
+    }
+
+    /**
+     * Resets the iterator to its first position.
+     */
+    public void reset() {
+        mainPos.x = iterBounds.x;
+        mainPos.y = iterBounds.y;
+        setDelegatePosition();
     }
 
     /**
