@@ -101,7 +101,6 @@ public class WindowIterator {
     
     private int numLinesRead;
     private boolean firstAccess;
-    private boolean finished;
 
     // X position (from 0) in the buffer
     private int bufferX;
@@ -207,7 +206,6 @@ public class WindowIterator {
         }
 
         this.firstAccess = true;
-        this.finished = false;
         this.bufferX = 0;
         this.imageY = iterBounds.y;
         this.numLinesRead = 0;
@@ -223,11 +221,7 @@ public class WindowIterator {
      * @return the pixel coordinates
      */
     public Point getPos() {
-        Point p = null;
-        if (!finished) {
-            p = new Point(iterBounds.x + bufferX, imageY);
-        }
-        return p;
+        return new Point(iterBounds.x + bufferX, imageY);
     }
 
     /**
@@ -236,7 +230,7 @@ public class WindowIterator {
      * @return {@code true} if more data are available; {@code false} otherwise
      */
     public boolean hasNext() {
-        return !finished;
+        return (bufferX + xstep < iterBounds.width) || (imageY < iterBounds.y + iterBounds.height - 1);
     }
 
     /**
@@ -249,7 +243,7 @@ public class WindowIterator {
      *         already finished
      */
     public boolean next() {
-        if (!finished) {
+        if (hasNext()) {
             bufferX = Math.min(bufferX + xstep, iterBounds.width) % iterBounds.width;
             if (bufferX == 0) {
                 if (numLinesRead < iterBounds.height) {
@@ -261,13 +255,13 @@ public class WindowIterator {
                     }
                 } else if (imageY < iterBounds.y + iterBounds.height - 1) {
                     moveLinesUp();
-                } else {
-                    finished = true;
                 }
             }
+
+            return true;
         }
         
-        return !finished;
+        return false;
     }
 
     /**
