@@ -62,6 +62,21 @@ public class WindowIteratorTest extends TestBase {
     }
 
     @Test
+    public void hasNextVsNext() {
+        WindowIterator iter = new WindowIterator(image, null, new Dimension(3, 3), new Point(1,1));
+        do {
+            assertTrue(iter.next());
+        } while (iter.hasNext());
+
+        // now test the other way round
+        iter = new WindowIterator(image, null, new Dimension(3, 3), new Point(1,1));
+        do {
+            // do nothing
+        } while (iter.next());
+        assertFalse(iter.hasNext());
+    }
+
+    @Test
     public void getWindow3x3() {
         doWindowTest(new Dimension(3, 3), new Point(1, 1));
     }
