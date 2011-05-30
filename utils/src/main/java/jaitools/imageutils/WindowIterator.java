@@ -74,8 +74,8 @@ import javax.media.jai.iterator.RectIterFactory;
  * </li>
  * </ul>
  * When the moving window is positioned over an edge of the image, those data window cells
- * beyond the image will be filled with a padding value. By default this is zero but an
- * alternative value can be specified via the {@code paddingValue} argument to the full
+ * beyond the image will be filled with a specified outside value. By default this is zero
+ * but an alternative value can be provided via the {@code outsideValue} argument to the full
  * constructor.
  * 
  * @author Michael Bedward
@@ -84,7 +84,7 @@ import javax.media.jai.iterator.RectIterFactory;
  */
 public class WindowIterator {
 
-    private static final Number DEFAULT_PADDING_VALUE = Integer.valueOf(0);
+    private static final Number DEFAULT_OUTSIDE_VALUE = Integer.valueOf(0);
 
     private final Dimension windowDim;
     private final Point keyElement;
@@ -111,12 +111,13 @@ public class WindowIterator {
     // window's key element
     private int imageY;
 
-    // Value to use for padding out-of-bounds parts of the data window
-    private Number paddingValue;
+    // Value to use for out-of-bounds parts of the data window
+    private Number outsideValue;
 
     /**
      * Creates a new iterator. The iterator will advance one pixel at each
-     * step and the data window will be padded with zeroes when required.
+     * step and parts of the data window which are outside the image bounds
+     * will be filled with zeroes.
      * 
      * @param image the source image
      * @param bounds the bounds for this iterator or {@code null} for the whole image
@@ -128,7 +129,7 @@ public class WindowIterator {
      */
     public WindowIterator(RenderedImage image, Rectangle bounds, 
             Dimension windowDim, Point keyElement) {
-        this(image, bounds, windowDim, keyElement, 1, 1, DEFAULT_PADDING_VALUE);
+        this(image, bounds, windowDim, keyElement, 1, 1, DEFAULT_OUTSIDE_VALUE);
     }
 
     /**
@@ -140,7 +141,8 @@ public class WindowIterator {
      * @param keyElement the position of the key element in the data window
      * @param xstep step distance in X-direction (pixels)
      * @param ystep step distance in Y-direction (lines)
-     * @param paddingValue value to use for padding out-of-bounds parts of the data window
+     * @param outsideValue value to return for any parts of the data window that are
+     *     beyond the bounds of the image
      * 
      * @throws IllegalArgumentException if any arguments other than bounds are {@code null};
      *         or if {@code keyElement} does not lie within {@code windowDim};
@@ -148,7 +150,7 @@ public class WindowIterator {
      */
     public WindowIterator(RenderedImage image, Rectangle bounds, 
             Dimension windowDim, Point keyElement,
-            int xstep, int ystep, Number paddingValue) {
+            int xstep, int ystep, Number outsideValue) {
 
         if (image == null) {
             throw new IllegalArgumentException("image must not be null");
@@ -170,8 +172,8 @@ public class WindowIterator {
             throw new IllegalArgumentException(
                     "The value of both xstep and ystep must be 1 or greater");
         }
-        if (paddingValue == null) {
-            throw new IllegalArgumentException("paddingValue must not be null");
+        if (outsideValue == null) {
+            throw new IllegalArgumentException("outsideValue must not be null");
         }
 
         this.iter = RectIterFactory.create(image, bounds);
@@ -186,7 +188,7 @@ public class WindowIterator {
 
         this.windowDim = new Dimension(windowDim);
         this.keyElement = new Point(keyElement);
-        this.paddingValue = NumberOperations.newInstance(paddingValue, paddingValue.getClass());
+        this.outsideValue = outsideValue;
 
         this.numImageBands = image.getSampleModel().getNumBands();
         buffers = new Number[numImageBands][][];
@@ -194,7 +196,7 @@ public class WindowIterator {
             Number[][] bandBuffer = new Number[windowDim.height][];
             for (int i = 0; i < windowDim.height; i++) {
                 Number[] ar = new Number[this.iterBounds.width];
-                Arrays.fill(ar, this.paddingValue);
+                Arrays.fill(ar, this.outsideValue);
                 bandBuffer[i] = ar;
             }
             buffers[b] = bandBuffer;
@@ -413,7 +415,7 @@ public class WindowIterator {
                 if (x >= 0 && x < iterBounds.width) {
                     destBuffer[band][k] = buffers[band][y][x];
                 } else {
-                    destBuffer[band][k] = paddingValue;
+                    destBuffer[band][k] = outsideValue;
                 }
                 k++ ;
             }
@@ -449,16 +451,16 @@ public class WindowIterator {
     private void moveLinesUp() {
         for (int b = 0; b < numImageBands; b++) {
             if (ystep >= windowDim.height) {
-                // just fill lines with pad value
+                // just fill lines with the outside value
                 for (int y = 0; y < windowDim.height; y++) {
-                    Arrays.fill(buffers[b][y], paddingValue);
+                    Arrays.fill(buffers[b][y], outsideValue);
                 }
             } else {
                 // shuffle lines up, avoiding cost of allocating new memory
                 for (int y = ystep, ynew = 0; y < windowDim.height; y++, ynew++) {
                     Number[] temp = buffers[b][ynew];
                     buffers[b][ynew] = buffers[b][y];
-                    Arrays.fill(temp, paddingValue);
+                    Arrays.fill(temp, outsideValue);
                     buffers[b][y] = temp;
                 }
             }
