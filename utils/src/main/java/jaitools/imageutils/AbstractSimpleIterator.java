@@ -64,7 +64,7 @@ public abstract class AbstractSimpleIterator {
      * Creates a new instance. The helper object is provided by a sub-class 
      * to create the delegate iterator that will then be held by this class as
      * a final field. The iterator bounds are allowed to extend beyond the 
-     * target image bounds. When the iterator is position outside the target
+     * target image bounds. When the iterator is positioned outside the target
      * image area it returns the specified outside value.
      * 
      * @param helper a helper provided by sub-class to create the delegate iterator
@@ -116,7 +116,18 @@ public abstract class AbstractSimpleIterator {
     }
 
     /**
-     * Tests if this iterator can be advanced further.
+     * Gets the bounds of this iterator. Note that these may extend
+     * beyond the bounds of the target image.
+     * 
+     * @return the iterator bounds
+     */
+    public Rectangle getBounds() {
+        return new Rectangle(iterBounds);
+    }
+
+    /**
+     * Tests if this iterator can be advanced further, ie. if a call to 
+     * {@link #next()} would return {@code true}.
      * 
      * @return {@code true} if the iterator can be advanced; 
      *     {@code false} if it is at the end of its bounds
@@ -155,16 +166,6 @@ public abstract class AbstractSimpleIterator {
         mainPos.x = iterBounds.x;
         mainPos.y = iterBounds.y;
         setDelegatePosition();
-    }
-
-    /**
-     * Gets the bounds of this iterator. Note that these may extend
-     * beyond the bounds of the target image.
-     * 
-     * @return the iterator bounds
-     */
-    public Rectangle getBounds() {
-        return new Rectangle(iterBounds);
     }
 
     /**
@@ -320,7 +321,8 @@ public abstract class AbstractSimpleIterator {
      * @param band image band
      * @return image, outside value or {@code null}
      * 
-     * @throws IllegalArgumentException if {@code pos} is {@code null}
+     * @throws IllegalArgumentException if {@code pos} is {@code null} or
+     *     {@code band} is out of range
      */
     public Number getSample(Point pos, int band) {
         if (pos == null) {
@@ -343,7 +345,7 @@ public abstract class AbstractSimpleIterator {
      * @param band image band
      * @return image, outside value or {@code null}
      * 
-     * @throws IllegalArgumentException if {@code pos} is {@code null}
+     * @throws IllegalArgumentException if {@code band} is out of range
      */
     public Number getSample(int x, int y, int band) {
         if (setPos(x, y)) {

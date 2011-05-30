@@ -20,6 +20,7 @@
 
 package jaitools.imageutils;
 
+import java.awt.Rectangle;
 import java.util.Arrays;
 import javax.media.jai.TiledImage;
 
@@ -86,5 +87,26 @@ public abstract class TestBase {
         }
 
         return img;
+    }
+
+    protected Rectangle createAdjustedBounds(Rectangle src, int delta) {
+        Rectangle dest = new Rectangle(
+                src.x - delta, src.y - delta,
+                src.width + 2 * delta, src.height + 2 * delta);
+
+        return dest;
+    }
+
+    protected void moveToEnd(AbstractSimpleIterator iter) {
+        if (iter == null) {
+            throw new IllegalStateException("You forgot to create the iterator first");
+        }
+        
+        Rectangle bounds = iter.getBounds();
+        int n = bounds.width * bounds.height;
+        while (n > 0) {
+            iter.next();
+            n-- ;
+        }
     }
 }
