@@ -20,21 +20,48 @@
 
 package jaitools.imageutils;
 
+import jaitools.CollectionFactory;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
 import java.lang.ref.WeakReference;
+import java.util.List;
 
 import javax.media.jai.iterator.RectIter;
 
 
 /**
  * Base class for image iterators with row-column (line-pixel) movement.
- *
+ * 
  * @author michael
  */
 public abstract class AbstractSimpleIterator {
+
+    /** 
+     * Constants defining the visiting order that the iterator will
+     * follow when moved with the {@code next()} method. Choices are:
+     * <ul>
+     * <li>{@linkplain Order#IMAGE_X_Y}
+     * <li>{@linkplain Order#TILE_X_Y}
+     * </ul>
+     */
+    public static enum Order {
+        /** 
+         * The iterator will move by X (pixel) then Y (line) across
+         * the whole image.
+         */
+        IMAGE_X_Y,
+
+        /** 
+         * The iterator will move by X (pixel) then Y (line) within
+         * each tile of the image in turn. The tiles are visited in 
+         * X (tile grid column) then Y (tile grid row) order. This
+         * movement order is most efficient when dealing with large
+         * images because it minimizes tile-swapping in memory.
+         */ 
+        TILE_X_Y;
+    }
 
     /**
      * This is implemented by sub-classes to pass a method back to
@@ -50,10 +77,17 @@ public abstract class AbstractSimpleIterator {
     protected final Rectangle imageBounds;
     protected final int numImageBands;
     
-    protected final Rectangle iterBounds;
-    protected final Point mainPos;
-    protected final Point lastPos;
+    protected final Order order;
     protected final Number outsideValue;
+
+    protected final Rectangle iterBounds;
+    private final List<Rectangle> subBoundList;
+    private int   currentSubBound;
+    private final int lastSubBound;
+    
+    private final Point firstPos;
+    private final Point lastPos;
+    private final Point mainPos;
 
     protected final RectIter delegateIter;
     protected final Rectangle delegateBounds;
@@ -73,14 +107,18 @@ public abstract class AbstractSimpleIterator {
      *     target image bounds
      * @param outsideValue value to return when positioned outside the bounds of
      *     the target image
+     * @param order order of movement for this iterator
      * 
      * @throws IllegalArgumentException if the image argument is {@code null}
      */
     public AbstractSimpleIterator(DelegateHelper helper, RenderedImage image, 
-            Rectangle bounds, Number outsideValue) {
+            Rectangle bounds, Number outsideValue, Order order) {
         
         if (image == null) {
             throw new IllegalArgumentException("image must not be null");
+        }
+        if (order == null) {
+            throw new IllegalArgumentException("order must not be null");
         }
         
         imageRef = new WeakReference<RenderedImage>(image);
@@ -108,11 +146,15 @@ public abstract class AbstractSimpleIterator {
         
         mainPos = new Point(iterBounds.x, iterBounds.y);
         
-        lastPos = new Point(
-                iterBounds.x + iterBounds.width - 1, 
-                iterBounds.y + iterBounds.height - 1);
-        
         this.outsideValue = outsideValue;
+        this.order = order;
+        
+        this.firstPos = new Point();
+        this.lastPos = new Point();
+        
+        subBoundList = buildSubBoundList(image);
+        lastSubBound = subBoundList.size() - 1;
+        setCurrentSubBound(0);
     }
 
     /**
@@ -133,7 +175,7 @@ public abstract class AbstractSimpleIterator {
      *     {@code false} if it is at the end of its bounds
      */
     public boolean hasNext() {
-        return (delegateIter != null && mainPos.x < lastPos.x || mainPos.y < lastPos.y);
+        return (currentSubBound < lastSubBound || mainPos.x < lastPos.x || mainPos.y < lastPos.y);
     }
 
     /**
@@ -148,10 +190,14 @@ public abstract class AbstractSimpleIterator {
         if (hasNext()) {
             mainPos.x++ ;
             if (mainPos.x > lastPos.x) {
-                mainPos.x = iterBounds.x;
-                mainPos.y++;
+                mainPos.x = firstPos.x;
+                mainPos.y++ ;
+                
+                if (mainPos.y > lastPos.y) {
+                    setCurrentSubBound(currentSubBound + 1);
+                    mainPos.setLocation(firstPos);
+                }
             }
-
             setDelegatePosition();
             return true;
         }
@@ -163,9 +209,7 @@ public abstract class AbstractSimpleIterator {
      * Resets the iterator to its first position.
      */
     public void reset() {
-        mainPos.x = iterBounds.x;
-        mainPos.y = iterBounds.y;
-        setDelegatePosition();
+        setPos(iterBounds.x, iterBounds.y);
     }
 
     /**
@@ -216,6 +260,8 @@ public abstract class AbstractSimpleIterator {
      */
     public boolean setPos(int x, int y) {
         if (iterBounds.contains(x, y)) {
+            int index = findSubBound(x, y);
+            setCurrentSubBound(index);
             mainPos.setLocation(x, y);
             setDelegatePosition();
             return true;
@@ -360,8 +406,7 @@ public abstract class AbstractSimpleIterator {
      * the target image bounds, the delegate iterator does not move.
      */
     protected void setDelegatePosition() {
-        boolean inside = delegateBounds.contains(mainPos);
-        if (inside) {
+        if (isInsideDelegateBounds()) {
             int dy = mainPos.y - delegatePos.y;
             if (dy < 0) {
                 delegateIter.startLines();
@@ -391,6 +436,17 @@ public abstract class AbstractSimpleIterator {
     }
 
     /**
+     * Tests if the iterator is currently positioned inside the delegate
+     * iterator's area (which must lie within the image bounds).
+     * 
+     * @return {@code true} if the current position is inside the delegate's bounds;
+     *     {@code false} otherwise
+     */
+    protected boolean isInsideDelegateBounds() {
+        return delegateIter != null && delegateBounds.contains(mainPos);
+    }
+
+    /**
      * Helper method to check that a band value is valid.
      * 
      * @param band band value
@@ -400,6 +456,125 @@ public abstract class AbstractSimpleIterator {
             throw new IllegalArgumentException( String.format(
                     "band argument (%d) is out of range: number of image bands is %d",
                     band, numImageBands) );
-}
+        }
     }
+
+    /**
+     * Builds the list of sub-bounds, each of which is a Rectangle to (possibly)
+     * be processed by this iterator.
+     * 
+     * @param image the source image
+     * @return the list of sub-bounds
+     */
+    private List<Rectangle> buildSubBoundList(RenderedImage image) {
+        List<Rectangle> boundsList = CollectionFactory.list();
+        
+        switch (order) {
+            case IMAGE_X_Y:
+                boundsList.add(iterBounds);
+                break;
+                
+            case TILE_X_Y:
+                getIntersectingTileBounds(image, boundsList);
+                break;
+                
+            default:
+                throw new IllegalArgumentException("Unrecognized iterator order: " + order);
+        }
+
+        return boundsList;
+    }
+
+    /**
+     * Sets the sub-bound that the iterator is to process next.
+     * 
+     * @param index position in the list of sub-bounds
+     */
+    private void setCurrentSubBound(int index) {
+        Rectangle r = subBoundList.get(index);
+        firstPos.setLocation(r.x, r.y);
+        lastPos.setLocation(r.x + r.width - 1, r.y + r.height - 1);
+        currentSubBound = index;
+    }
+
+    /**
+     * Finds the iterator sub-bound which contains the given pixel position.
+     * Note: the position might lie outside the image bounds.
+     * 
+     * @param x pixel X ordinate
+     * @param y pixel Y ordinate
+     * @return the corresponding sub-bound or -1 if the position is outside
+     *     any sub-bound
+     */
+    private int findSubBound(int x, int y) {
+        for (int i = 0; i < subBoundList.size(); i++) {
+            if (subBoundList.get(i).contains(x, y)) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+    
+    /**
+     * Builds a list of Rectangles, each of which is the intersection of the iterator
+     * bounds and a tile's bounds. These are termed sub-bounds.
+     * <p>
+     * If the iterator bounds extend beyond the iamge bounds some of the resulting 
+     * rectangles may be for non-existent tiles.
+     * 
+     * @param image the source image
+     * @param destList the list to receive the sub-bounds
+     */
+    private void getIntersectingTileBounds(RenderedImage image, List<Rectangle> destList) {
+        final int tw = image.getTileWidth();
+        final int th = image.getTileHeight();
+        final int ox = image.getTileGridXOffset();
+        final int oy = image.getTileGridYOffset();
+
+        final int lastX = iterBounds.x + iterBounds.width - 1;
+        final int lastY = iterBounds.y + iterBounds.height - 1;
+
+        boolean moreY = true;
+        for (int y = iterBounds.y; moreY; y = Math.min(y + th, lastY)) {
+            moreY = y < lastY;
+            
+            boolean moreX = true;
+            for (int x = iterBounds.x; moreX; x = Math.min(x + tw, lastX)) {
+                moreX = x < lastX;
+
+                // Get tile X and Y ordinates. Remember that the tile might 
+                // not exist in the image if the iterator's bounds lie beyond the
+                // image bounds, but we allow this.
+                int tileX = pixelToTileOrdinate(x, ox, tw);
+                int tileY = pixelToTileOrdinate(y, oy, th);
+
+                Rectangle tileRect = new Rectangle(
+                        tileX * tw + ox, tileY * th + oy, tw, th);
+
+                Rectangle within = tileRect.intersection(iterBounds);
+
+                if (!within.isEmpty()) {
+                    destList.add(within);
+                }
+            }
+        }
+    }
+
+    /**
+     * Converts a pixel X or Y ordinate to the corresponding tile X or Y ordinate.
+     * 
+     * @param ordinate the pixel ordinate
+     * @param offset the pixel offset (origin tile's upper-left pixel ordinate)
+     * @param dim tile width (for X ordinate) or height (for Y ordinate)
+     * @return tile ordinate
+     */
+    private int pixelToTileOrdinate(int ordinate, int offset, int dim) {
+        ordinate -= offset;
+        if (ordinate < 0) {
+            ordinate += 1 - dim;
+        }
+        return ordinate / dim;
+    }
+
 }

@@ -51,7 +51,7 @@ public class SimpleIteratorTest extends TestBase {
     public void nullImageArg() {
         iter = new SimpleIterator(null, new Rectangle(0, 0, WIDTH, HEIGHT), OUTSIDE);
     }
-    
+
     @Test
     public void nullBoundsMeansImageBounds() {
         image = createSequentialImage(WIDTH, HEIGHT, NUM_BANDS);
@@ -61,9 +61,16 @@ public class SimpleIteratorTest extends TestBase {
     }
     
     @Test
-    public void iterateOverWholeImage() {
+    public void iterateOverImage() {
         image = createSequentialImage(WIDTH, HEIGHT, NUM_BANDS);
         iter = new SimpleIterator(image, null, null);
+        assertSamples();
+    }
+
+    @Test
+    public void iterateByTile() {
+        image = createSequentialTiledImage(0, 0, WIDTH, HEIGHT, WIDTH / 2, HEIGHT / 2, NUM_BANDS, 0);
+        iter = new SimpleIterator(image, null, null, SimpleIterator.Order.TILE_X_Y);
         assertSamples();
     }
 
@@ -76,9 +83,25 @@ public class SimpleIteratorTest extends TestBase {
     }
 
     @Test
+    public void iterBoundsBeyondImageBounds_ByTile() {
+        image = createSequentialTiledImage(0, 0, WIDTH, HEIGHT, WIDTH / 2, HEIGHT / 2, NUM_BANDS, 0);
+        Rectangle iterBounds = createAdjustedBounds(image.getBounds(), 5);
+        iter = new SimpleIterator(image, iterBounds, OUTSIDE, SimpleIterator.Order.TILE_X_Y);
+        assertSamples();
+    }
+
+    @Test
     public void imageWithNonZeroOrigin() {
         image = createSequentialImage(-7, 11, WIDTH, HEIGHT, NUM_BANDS, 0);
         iter = new SimpleIterator(image, null, OUTSIDE);
+        assertSamples();
+    }
+
+    @Test
+    public void tiledImageWithNonZeroOrigin() {
+        image = createSequentialTiledImage(
+                -7, 11, WIDTH, HEIGHT, WIDTH / 2, HEIGHT / 2, NUM_BANDS, 0);
+        iter = new SimpleIterator(image, null, OUTSIDE, SimpleIterator.Order.TILE_X_Y);
         assertSamples();
     }
 
@@ -96,6 +119,20 @@ public class SimpleIteratorTest extends TestBase {
     }
 
     @Test
+    public void iterBoundsOutsideImageWithNonZeroOrigin_ByTile() {
+        image = createSequentialTiledImage(
+                -7, 11, WIDTH, HEIGHT, WIDTH / 2, HEIGHT / 2, NUM_BANDS, 0);
+
+        final int MARGIN = 5;
+        Rectangle imageBounds = image.getBounds();
+        Rectangle iterBounds = new Rectangle(imageBounds.x - MARGIN, imageBounds.y - MARGIN,
+                imageBounds.width + 2 * MARGIN, imageBounds.height + 2 * MARGIN);
+
+        iter = new SimpleIterator(image, iterBounds, OUTSIDE, SimpleIterator.Order.TILE_X_Y);
+        assertSamples();
+    }
+
+    @Test
     public void iterBoundsShortAndWide() {
         image = createSequentialImage(WIDTH, HEIGHT, NUM_BANDS);
 
@@ -105,6 +142,20 @@ public class SimpleIteratorTest extends TestBase {
                 imageBounds.width + 20, imageBounds.height / 2);
 
         iter = new SimpleIterator(image, iterBounds, OUTSIDE);
+        assertSamples();
+    }
+
+    @Test
+    public void iterBoundsShortAndWide_ByTile() {
+        image = createSequentialTiledImage(
+                0, 0, WIDTH, HEIGHT, WIDTH / 2, HEIGHT / 2, NUM_BANDS, 0);
+
+        Rectangle imageBounds = image.getBounds();
+        Rectangle iterBounds = new Rectangle(
+                imageBounds.x - 10, imageBounds.y + imageBounds.height / 4,
+                imageBounds.width + 20, imageBounds.height / 2);
+
+        iter = new SimpleIterator(image, iterBounds, OUTSIDE, SimpleIterator.Order.TILE_X_Y);
         assertSamples();
     }
 
@@ -122,6 +173,20 @@ public class SimpleIteratorTest extends TestBase {
     }
 
     @Test
+    public void iterBoundsTallAndThin_ByTile() {
+        image = createSequentialTiledImage(
+                0, 0, WIDTH, HEIGHT, WIDTH / 2, HEIGHT / 2, NUM_BANDS, 0);
+
+        Rectangle imageBounds = image.getBounds();
+        Rectangle iterBounds = new Rectangle(
+                imageBounds.x + imageBounds.width / 4, imageBounds.y - 10,
+                imageBounds.width / 2, imageBounds.height + 20);
+
+        iter = new SimpleIterator(image, iterBounds, OUTSIDE, SimpleIterator.Order.TILE_X_Y);
+        assertSamples();
+    }
+
+    @Test
     public void resetIteratorWithInnerBounds() {
         image = createSequentialImage(WIDTH, HEIGHT, NUM_BANDS);
         Rectangle iterBounds = createAdjustedBounds(image.getBounds(), -1);
@@ -130,10 +195,28 @@ public class SimpleIteratorTest extends TestBase {
     }
 
     @Test
+    public void resetIteratorWithInnerBounds_ByTile() {
+        image = createSequentialTiledImage(
+                0, 0, WIDTH, HEIGHT, WIDTH / 2, HEIGHT / 2, NUM_BANDS, 0);
+        Rectangle iterBounds = createAdjustedBounds(image.getBounds(), -1);
+        iter = new SimpleIterator(image, iterBounds, OUTSIDE, SimpleIterator.Order.TILE_X_Y);
+        doResetTest();
+    }
+
+    @Test
     public void resetIteratorWithOuterBounds() {
         image = createSequentialImage(WIDTH, HEIGHT, NUM_BANDS);
         Rectangle iterBounds = createAdjustedBounds(image.getBounds(), 1);
         iter = new SimpleIterator(image, iterBounds, OUTSIDE);
+        doResetTest();
+    }
+
+    @Test
+    public void resetIteratorWithOuterBounds_ByTile() {
+        image = createSequentialTiledImage(
+                0, 0, WIDTH, HEIGHT, WIDTH / 2, HEIGHT / 2, NUM_BANDS, 0);
+        Rectangle iterBounds = createAdjustedBounds(image.getBounds(), 1);
+        iter = new SimpleIterator(image, iterBounds, OUTSIDE, SimpleIterator.Order.TILE_X_Y);
         doResetTest();
     }
 

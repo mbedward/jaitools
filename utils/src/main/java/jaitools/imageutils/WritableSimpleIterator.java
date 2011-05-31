@@ -32,7 +32,7 @@ import javax.media.jai.iterator.WritableRectIter;
 
 /**
  * A read-write image iterator which moves by column then row (pixel then line).
- * 
+ *
  * @author michael
  */
 public class WritableSimpleIterator extends AbstractSimpleIterator {
@@ -71,7 +71,7 @@ public class WritableSimpleIterator extends AbstractSimpleIterator {
      *     the bounds of the target image; may be {@code null} 
      */
     public WritableSimpleIterator(WritableRenderedImage image, Rectangle bounds, Number outsideValue) {
-        super(new Helper(), image, bounds, outsideValue);
+        super(new Helper(), image, bounds, outsideValue, Order.IMAGE_X_Y);
     }
 
     /**
@@ -143,7 +143,7 @@ public class WritableSimpleIterator extends AbstractSimpleIterator {
             throw new IllegalArgumentException("value must not be null");
         }
         
-        if (delegateBounds.contains(mainPos)) {
+        if (isInsideDelegateBounds()) {
             WritableRenderedImage image = (WritableRenderedImage) imageRef.get();
             if (image == null) {
                 throw new IllegalStateException("Target image has been deleted");

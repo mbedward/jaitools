@@ -28,7 +28,7 @@ import javax.media.jai.iterator.RectIterFactory;
 
 /**
  * A read-only image iterator which moves by column then row (pixel then line).
- *
+ * 
  * @author michael
  */
 public class SimpleIterator extends AbstractSimpleIterator {
@@ -64,7 +64,25 @@ public class SimpleIterator extends AbstractSimpleIterator {
      *     the bounds of the target image; may be {@code null} 
      */
     public SimpleIterator(RenderedImage image, Rectangle bounds, Number outsideValue) {
-        super(new Helper(), image, bounds, outsideValue);
+        super(new Helper(), image, bounds, outsideValue, Order.IMAGE_X_Y);
+    }
+
+    /**
+     * Creates a new iterator. The bounds are allowed to extend beyond the bounds
+     * of the target image. When the iterator is positioned outside the image the
+     * specified outside value will be returned.
+     * 
+     * @param image the target image
+     * @param bounds bounds for the iterator; if {@code null} the bounds of the target
+     *     image will be used
+     * @param outsideValue value to return when the iterator is positioned beyond
+     *     the bounds of the target image; may be {@code null} 
+     * @param order processing order for this iterator when using the {@link #next()}
+     *     method
+     */
+    public SimpleIterator(RenderedImage image, Rectangle bounds, 
+            Number outsideValue, Order order) {
+        super(new Helper(), image, bounds, outsideValue, order);
     }
 
 }

@@ -44,7 +44,7 @@ public abstract class TestBase {
             final int numBands) {
         return createSequentialImage(width, height, numBands, 0);
     }
-    
+
     /**
      * Creates an image filled with sequential integer values, ordered by pixel, line, band.
      * 
@@ -73,9 +73,21 @@ public abstract class TestBase {
     protected TiledImage createSequentialImage(final int minx, final int miny,
             final int width, final int height, 
             final int numBands, final int startValue) {
+
+        return createSequentialTiledImage(
+                minx, miny, width, height, width, height, numBands, startValue);
+    }
+
+    protected TiledImage createSequentialTiledImage(
+            final int minx, final int miny, final int width, final int height,
+            final int tileWidth, final int tileHeight, final int numBands,
+            final int startValue) {
+        
         Integer[] fillValues = new Integer[numBands];
         Arrays.fill(fillValues, Integer.valueOf(0));
-        TiledImage img = ImageUtils.createConstantImage(minx, miny, width, height, fillValues);
+        
+        TiledImage img = ImageUtils.createConstantImage(
+                minx, miny, width, height, tileWidth, tileHeight, fillValues);
         
         int k = startValue;
         for (int b = 0; b < numBands; b++) {
@@ -88,7 +100,7 @@ public abstract class TestBase {
 
         return img;
     }
-
+    
     protected Rectangle createAdjustedBounds(Rectangle src, int delta) {
         Rectangle dest = new Rectangle(
                 src.x - delta, src.y - delta,
