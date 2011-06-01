@@ -26,6 +26,9 @@ import java.awt.Rectangle;
 import java.awt.image.RenderedImage;
 import java.util.Arrays;
 
+import javax.media.jai.iterator.RectIter;
+import javax.media.jai.iterator.RectIterFactory;
+
 /**
  * An image iterator that passes a moving window over an image.
  * <p>
@@ -90,7 +93,7 @@ public class WindowIterator {
     
     private final Number[][] destBuffer;
     
-    private final SimpleIterator delegate;
+    private final RectIter iter;
     private final Rectangle iterBounds;
     private final int numImageBands;
     private final int xstep;
@@ -171,15 +174,15 @@ public class WindowIterator {
             throw new IllegalArgumentException("outsideValue must not be null");
         }
 
+        this.iter = RectIterFactory.create(image, bounds);
 
         if (bounds == null) {
             this.iterBounds = new Rectangle(
                     image.getMinX(), image.getMinY(), image.getWidth(), image.getHeight());
+
         } else {
             this.iterBounds = new Rectangle(bounds);
         }
-        
-        this.delegate = new SimpleIterator(image, bounds, outsideValue);
 
         this.windowDim = new Dimension(windowDim);
         this.keyElement = new Point(keyElement);
@@ -418,16 +421,21 @@ public class WindowIterator {
      * @param destLine index of the data buffer to receive the data
      */
     private void readIntoLine(int destLine) {
-        if (delegate.hasNext()) {
-            for (int x = 0; x < iterBounds.width; x++) {
-                for (int b = 0; b < numImageBands; b++) {
-                    buffers[b][destLine][x] = delegate.getSample(b).doubleValue();
-                }
-                delegate.next();
-            }
-
-            numLinesRead++;
+        if (iter.finishedLines()) {
+            return;
         }
+        
+        int x = 0;
+        do {
+            for (int b = 0; b < numImageBands; b++) {
+                buffers[b][destLine][x] = iter.getSampleDouble(b);
+            }
+            x++ ;
+        } while (!iter.nextPixelDone());
+
+        iter.startPixels();
+        iter.nextLineDone();
+        numLinesRead++ ;
     }
 
     /**
@@ -462,9 +470,11 @@ public class WindowIterator {
     private void positionIter() {
         if (ystep > windowDim.height) {
             int nSkip = ystep - windowDim.height;
-            Point pos = delegate.getPos();
-            pos.y = Math.min(pos.y + nSkip, delegate.getEndPos());
+            while (nSkip > 0 && !iter.finishedLines()) { 
+                iter.nextLineDone();
                 numLinesRead++ ;
+                nSkip-- ;
+            }
         }
     }
 
