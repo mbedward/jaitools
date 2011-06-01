@@ -46,10 +46,91 @@ public class SimpleIteratorTest extends TestBase {
     private SimpleIterator iter;
     private PlanarImage image;
 
-
     @Test(expected=IllegalArgumentException.class) 
     public void nullImageArg() {
         iter = new SimpleIterator(null, new Rectangle(0, 0, WIDTH, HEIGHT), OUTSIDE);
+    }
+
+    @Test(expected=IllegalArgumentException.class)
+    public void nullOrderArg() {
+        image = createSequentialImage(WIDTH, HEIGHT, 1);
+        iter = new SimpleIterator(image, image.getBounds(), OUTSIDE, null);
+    }
+
+    @Test
+    public void nullToGetSample() {
+        image = createSequentialImage(WIDTH, HEIGHT, 1);
+        iter = new SimpleIterator(image, null, OUTSIDE);
+        boolean gotEx = false;
+        try {
+            iter.getSample(null);
+        } catch (IllegalArgumentException ex) {
+            gotEx = true;
+        }
+        assertTrue(gotEx);
+    }
+
+    @Test
+    public void nullToSetPosPoint() {
+        image = createSequentialImage(WIDTH, HEIGHT, 1);
+        iter = new SimpleIterator(image, null, OUTSIDE);
+        boolean gotEx = false;
+        try {
+            iter.setPos(null);
+        } catch (IllegalArgumentException ex) {
+            gotEx = true;
+        }
+        assertTrue(gotEx);
+    }
+
+    @Test
+    public void getSampleOutsideBoundsReturnsNull() {
+        image = createSequentialImage(WIDTH, HEIGHT, 1);
+        iter = new SimpleIterator(image, null, OUTSIDE);
+        assertNull(iter.getSample(-1, -1));
+    }
+
+    @Test
+    public void setPosOutsideBoundsReturnsFalse() {
+        image = createSequentialImage(WIDTH, HEIGHT, 1);
+        iter = new SimpleIterator(image, null, OUTSIDE);
+        assertFalse(iter.setPos(-1, -1));
+    }
+
+    @Test
+    public void getImage() {
+        image = createSequentialImage(WIDTH, HEIGHT, NUM_BANDS);
+        iter = new SimpleIterator(image, null, OUTSIDE);
+        assertTrue(image == iter.getImage());
+    }
+
+    @Test
+    public void getStartPos() {
+        final Point origin = new Point(-7, 11);
+        image = createSequentialImage(origin.x, origin.y, WIDTH, HEIGHT, NUM_BANDS, 0);
+        iter = new SimpleIterator(image, null, OUTSIDE);
+        assertEquals(origin, iter.getStartPos());
+    }
+
+    @Test
+    public void getEndPos() {
+        final Point origin = new Point(-7, 11);
+        final Point endPos = new Point(origin.x + WIDTH - 1, origin.y + HEIGHT - 1);
+        image = createSequentialImage(origin.x, origin.y, WIDTH, HEIGHT, NUM_BANDS, 0);
+        iter = new SimpleIterator(image, null, OUTSIDE);
+        assertEquals(endPos, iter.getEndPos());
+    }
+
+    @Test
+    public void isWithinImage() {
+        image = createSequentialImage(WIDTH, HEIGHT, 1);
+        final Rectangle imageBounds = image.getBounds();
+        final Rectangle iterBounds = createAdjustedBounds(imageBounds, 5);
+        iter = new SimpleIterator(image, iterBounds, OUTSIDE);
+
+        do {
+            assertEquals(imageBounds.contains(iter.getPos()), iter.isWithinImage());
+        } while (iter.next());
     }
 
     @Test
@@ -59,7 +140,7 @@ public class SimpleIteratorTest extends TestBase {
         Rectangle imageBounds = image.getBounds();
         assertEquals(imageBounds, iter.getBounds());
     }
-    
+
     @Test
     public void iterateOverImage() {
         image = createSequentialImage(WIDTH, HEIGHT, NUM_BANDS);
@@ -74,6 +155,14 @@ public class SimpleIteratorTest extends TestBase {
         assertSamples();
     }
 
+    @Test
+    public void boundsWhollyOutsideImage() {
+        image = createSequentialImage(WIDTH, HEIGHT, NUM_BANDS);
+        Rectangle iterBounds = new Rectangle(-WIDTH, -HEIGHT, WIDTH, HEIGHT);
+        iter = new SimpleIterator(image, iterBounds, OUTSIDE);
+        assertSamples();
+    }
+    
     @Test
     public void iterBoundsBeyondImageBounds() {
         image = createSequentialImage(WIDTH, HEIGHT, NUM_BANDS);
