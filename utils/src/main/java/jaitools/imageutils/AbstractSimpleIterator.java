@@ -72,26 +72,56 @@ public abstract class AbstractSimpleIterator {
         RectIter create(RenderedImage image, Rectangle bounds);
     }
     
-    protected final WeakReference<RenderedImage> imageRef;
-    protected final int imageDataType;
-    protected final Rectangle imageBounds;
-    protected final int numImageBands;
     
-    protected final Order order;
-    protected final Number outsideValue;
+    /** A weak reference to the target image. */
+    protected final WeakReference<RenderedImage> imageRef;
 
+    /** The data type of the target image (value of a DataBuffer constant). */
+    protected final int imageDataType;
+
+    /** The bounds of this iterator */
     protected final Rectangle iterBounds;
+
+    /** The delegate iterator. */
+    protected final RectIter delegateIter;
+
+
+    // number of bands in the target image
+    private final int numImageBands;
+    
+    // visiting order for this iterator
+    private final Order order;
+
+    // the value to return when the iterator is positioned beyond
+    // the bounds of the target image
+    private final Number outsideValue;
+
+    // list of sub-bounds (a single rectangle for image-wise iteration or
+    // a series of tile portions for tile-wise iteration)
     private final List<Rectangle> subBoundList;
+
+    // index of the current sub-bound being processed
     private int   currentSubBound;
+
+    // index of the final sub-bound to process
     private final int lastSubBound;
     
-    private final Point firstPos;
-    private final Point lastPos;
+    // start position in the current sub-bounds
+    private final Point startSubPos;
+
+    // end position in the current sub-bounds
+    private final Point endSubPos;
+
+    // this iterator's current position (will differ from delegate
+    // iterator's position when outside target image bounds)
     private final Point mainPos;
 
-    protected final RectIter delegateIter;
-    protected final Rectangle delegateBounds;
-    protected final Point delegatePos;
+    // bounds of the delegate iterator (intersection of iterBounds
+    // and the bounds of the target image)
+    private final Rectangle delegateBounds;
+
+    // the current delegate position
+    private final Point delegatePos;
 
     
     /**
@@ -125,7 +155,7 @@ public abstract class AbstractSimpleIterator {
         imageDataType = image.getSampleModel().getDataType();
         numImageBands = image.getSampleModel().getNumBands();
         
-        imageBounds = new Rectangle(image.getMinX(), image.getMinY(),
+        final Rectangle imageBounds = new Rectangle(image.getMinX(), image.getMinY(),
                 image.getWidth(), image.getHeight());
         
         if (bounds == null) {
@@ -149,12 +179,23 @@ public abstract class AbstractSimpleIterator {
         this.outsideValue = outsideValue;
         this.order = order;
         
-        this.firstPos = new Point();
-        this.lastPos = new Point();
+        this.startSubPos = new Point();
+        this.endSubPos = new Point();
         
         subBoundList = buildSubBoundList(image);
         lastSubBound = subBoundList.size() - 1;
         setCurrentSubBound(0);
+    }
+
+    /**
+     * Returns the image that this iterator is working with. Note
+     * that the iterator only maintains a {@linkplain WeakReference} to
+     * the image so it is possible for this method to return {@code null}.
+     * 
+     * @return the image that this iterator is working with
+     */
+    public RenderedImage getImage() {
+        return imageRef.get();
     }
 
     /**
@@ -168,6 +209,38 @@ public abstract class AbstractSimpleIterator {
     }
 
     /**
+     * Gets the starting position for this iterator. This is the upper-left
+     * point of the iterator's bounding rectangle. Note that it may lie
+     * outside the target image.
+     * 
+     * @return the starting position
+     */
+    public Point getStartPos() {
+        return new Point(iterBounds.x, iterBounds.y);
+    }
+
+    /**
+     * Gets the final position for this iterator. This is the lower-right
+     * point of the iterator's bounding rectangle. Note that it may lie
+     * outside the target image.
+     * 
+     * @return the end position
+     */
+    public Point getEndPos() {
+        return new Point(iterBounds.x + iterBounds.width - 1, iterBounds.y + iterBounds.height - 1);
+    }
+
+    /**
+     * Tests whether the iterator is currently positioned within the bounds of 
+     * the target image.
+     * 
+     * @return {@code true} if within the target image; {@code false} otherwise
+     */
+    public boolean isWithinImage() {
+        return delegatePos != null && mainPos.equals(delegatePos);
+    }
+
+    /**
      * Tests if this iterator can be advanced further, ie. if a call to 
      * {@link #next()} would return {@code true}.
      * 
@@ -175,7 +248,7 @@ public abstract class AbstractSimpleIterator {
      *     {@code false} if it is at the end of its bounds
      */
     public boolean hasNext() {
-        return (currentSubBound < lastSubBound || mainPos.x < lastPos.x || mainPos.y < lastPos.y);
+        return (currentSubBound < lastSubBound || mainPos.x < endSubPos.x || mainPos.y < endSubPos.y);
     }
 
     /**
@@ -189,13 +262,13 @@ public abstract class AbstractSimpleIterator {
     public boolean next() {
         if (hasNext()) {
             mainPos.x++ ;
-            if (mainPos.x > lastPos.x) {
-                mainPos.x = firstPos.x;
+            if (mainPos.x > endSubPos.x) {
+                mainPos.x = startSubPos.x;
                 mainPos.y++ ;
                 
-                if (mainPos.y > lastPos.y) {
+                if (mainPos.y > endSubPos.y) {
                     setCurrentSubBound(currentSubBound + 1);
-                    mainPos.setLocation(firstPos);
+                    mainPos.setLocation(startSubPos);
                 }
             }
             setDelegatePosition();
@@ -463,7 +536,7 @@ public abstract class AbstractSimpleIterator {
      * Builds the list of sub-bounds, each of which is a Rectangle to (possibly)
      * be processed by this iterator.
      * 
-     * @param image the source image
+     * @param image the target image
      * @return the list of sub-bounds
      */
     private List<Rectangle> buildSubBoundList(RenderedImage image) {
@@ -492,8 +565,8 @@ public abstract class AbstractSimpleIterator {
      */
     private void setCurrentSubBound(int index) {
         Rectangle r = subBoundList.get(index);
-        firstPos.setLocation(r.x, r.y);
-        lastPos.setLocation(r.x + r.width - 1, r.y + r.height - 1);
+        startSubPos.setLocation(r.x, r.y);
+        endSubPos.setLocation(r.x + r.width - 1, r.y + r.height - 1);
         currentSubBound = index;
     }
 
@@ -523,7 +596,7 @@ public abstract class AbstractSimpleIterator {
      * If the iterator bounds extend beyond the iamge bounds some of the resulting 
      * rectangles may be for non-existent tiles.
      * 
-     * @param image the source image
+     * @param image the target image
      * @param destList the list to receive the sub-bounds
      */
     private void getIntersectingTileBounds(RenderedImage image, List<Rectangle> destList) {
