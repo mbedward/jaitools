@@ -131,6 +131,39 @@ public class WindowIteratorTest extends TestBase {
         doGetPosTest(2, 3);
     }
 
+    @Test
+    public void iterBoundsBeyondImageBounds() {
+        Rectangle bounds = createAdjustedBounds(image.getBounds(), 5);
+        Dimension winDim = new Dimension(3, 3);
+        Point key = new Point(1, 1);
+        WindowIterator iter = new WindowIterator(image, bounds, winDim, key, 1, 1, OUTSIDE);
+        doWindowTest(iter, bounds, winDim, key, 1, 1);
+    }
+
+    @Test
+    public void iterBoundsWiderAndShorter() {
+        Rectangle iterBounds = new Rectangle(
+                image.getMinX() - WIDTH / 2, image.getMinY() + HEIGHT / 4,
+                WIDTH * 2, HEIGHT / 2);
+        
+        Dimension winDim = new Dimension(3, 3);
+        Point key = new Point(1, 1);
+        WindowIterator iter = new WindowIterator(image, iterBounds, winDim, key, 1, 1, OUTSIDE);
+        doWindowTest(iter, iterBounds, winDim, key, 1, 1);
+    }
+
+    @Test
+    public void iterBoundsNarrowerAndTaller() {
+        Rectangle iterBounds = new Rectangle(
+                image.getMinX() + WIDTH / 4, image.getMinY() - HEIGHT / 2,
+                WIDTH / 2, HEIGHT * 2);
+        
+        Dimension winDim = new Dimension(3, 3);
+        Point key = new Point(1, 1);
+        WindowIterator iter = new WindowIterator(image, iterBounds, winDim, key, 1, 1, OUTSIDE);
+        doWindowTest(iter, iterBounds, winDim, key, 1, 1);
+    }
+
     @Test(expected=IllegalArgumentException.class)
     public void nullImage() {
         WindowIterator iter = new WindowIterator(null, null, new Dimension(3, 3), new Point(1, 1));
@@ -184,44 +217,52 @@ public class WindowIteratorTest extends TestBase {
     private void doWindowTest(Dimension dim, Point key, int xstep, int ystep) {
         Rectangle bounds = image.getBounds();
         WindowIterator iter = new WindowIterator(image, null, dim, key, xstep, ystep, OUTSIDE);
+        doWindowTest(iter, bounds, dim, key, xstep, ystep);
+    }
+    
+    private void doWindowTest(WindowIterator iter, Rectangle iterBounds,
+                Dimension dim, Point key, int xstep, int ystep) {
 
         int[][] window = new int[dim.height][dim.width];
-        int[][] expected = new int[dim.height][dim.width];
-
-        int x = image.getMinX();
-        int y = image.getMinY();
+        int x = iterBounds.x;
+        int y = iterBounds.y;
+        int lastX = iterBounds.x + iterBounds.width - 1; 
+        
         do {
             iter.getWindow(window);
-            assertWindow(window, bounds, dim, key, x, y, 0);
+            assertWindow(window, dim, key, x, y, 0);
 
             for (int b = 0; b < NUM_BANDS; b++) {
                 iter.getWindow(window, b);
-                assertWindow(window, bounds, dim, key, x, y, b);
+                assertWindow(window, dim, key, x, y, b);
             }
             
             x += xstep;
-            if (x >= image.getMinX() + image.getWidth()) {
-                x = image.getMinX();
+            if (x > lastX) {
+                x = iterBounds.x;
                 y += ystep ;
             }
         } while (iter.next());
     }
 
-    private void assertWindow(int[][] window, Rectangle bounds, 
-            Dimension dim, Point key, 
-            int x, int y, int band) {
+    private void assertWindow(int[][] window, Dimension dim, Point key, 
+            int keyX, int keyY, int band) {
         
-        final int minx = x - key.x;
-        final int maxx = x + dim.width - key.x - 1;
-        final int miny = y - key.y;
-        final int maxy = y + dim.height - key.y - 1;
-        for (int imgY = miny, winY = 0; imgY <= maxy; imgY++, winY++) { 
-            for (int imgX = minx, winX = 0; imgX <= maxx; imgX++, winX++) {
-                if (bounds.contains(imgX, imgY)) {
-                    assertEquals(String.format("x=%d y=%d band=%d", x, y, band),
-                            image.getSample(imgX, imgY, band), window[winY][winX]);
+        final Rectangle imageBounds = image.getBounds();
+        final int minx = keyX - key.x;
+        final int maxx = keyX + dim.width - key.x - 1;
+        final int miny = keyY - key.y;
+        final int maxy = keyY + dim.height - key.y - 1;
+        
+        for (int y = miny, winY = 0; y <= maxy; y++, winY++) { 
+            for (int x = minx, winX = 0; x <= maxx; x++, winX++) {
+                if (imageBounds.contains(x, y)) {
+                    assertEquals(String.format(
+                            "key=(%d,%d) x=%d y=%d band=%d", keyX, keyY, x, y, band),
+                            image.getSample(x, y, band), window[winY][winX]);
                 } else {
-                    assertEquals(String.format("x=%d y=%d band=%d", x, y, band),
+                    assertEquals(String.format(
+                            "key=(%d,%d) x=%d y=%d band=%d", keyX, keyY, x, y, band),
                             OUTSIDE.intValue(), window[winY][winX]);
                 }
             }
