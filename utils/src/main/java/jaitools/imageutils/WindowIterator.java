@@ -26,9 +26,6 @@ import java.awt.Rectangle;
 import java.awt.image.RenderedImage;
 import java.util.Arrays;
 
-import javax.media.jai.iterator.RectIter;
-import javax.media.jai.iterator.RectIterFactory;
-
 /**
  * An image iterator that passes a moving window over an image.
  * <p>
@@ -59,7 +56,7 @@ import javax.media.jai.iterator.RectIterFactory;
  * <li>
  * The iterator can be configured to move more than a single pixel / line via the {@code xstep}
  * and {@code ystep} arguments to the full constructor. If the step distance is larger than
- * the corresponding window dimension then some source image pixels will be absent from
+ * the corresponding window dimension then some target image pixels will be absent from
  * the data windows returned by the iterator.
  * </li>
  * <li>
@@ -67,7 +64,7 @@ import javax.media.jai.iterator.RectIterFactory;
  * {@link #hasNext} method is also provided for convenience.
  * </li>
  * <li>
- * The iterator's position is defined as the coordinates of the source image pixel 
+ * The iterator's position is defined as the coordinates of the target image pixel 
  * at the data window's key element. The current position can be retrieved using the 
  * {@link #getPos} method.
  * </li>
@@ -87,28 +84,27 @@ public class WindowIterator {
 
     private final Dimension windowDim;
     private final Point keyElement;
+    private final int leftPadding;
+    private final int rightPadding;
+    private final int topPadding;
+    private final int bottomPadding;
 
     // data buffer dimensions: band, line, pixel
     private final Number[][][] buffers;
     
     private final Number[][] destBuffer;
+    private final int bufferWidth;
     
-    private final RectIter iter;
     private final Rectangle iterBounds;
     private final int numImageBands;
     private final int xstep;
     private final int ystep;
+
+    private final Point mainPos;
+    private final Point lowerRightPos;
     
-    private int numLinesRead;
-    private boolean firstAccess;
-
-    // X position (from 0) in the buffer
-    private int bufferX;
-
-    // Y-ordinate (source image space) of the data line positioned at the 
-    // window's key element
-    private int imageY;
-
+    private final SimpleIterator delegate;
+    
     // Value to use for out-of-bounds parts of the data window
     private Number outsideValue;
 
@@ -117,7 +113,7 @@ public class WindowIterator {
      * step and parts of the data window which are outside the image bounds
      * will be filled with zeroes.
      * 
-     * @param image the source image
+     * @param image the target image
      * @param bounds the bounds for this iterator or {@code null} for the whole image
      * @param windowDim the dimensions of the data window
      * @param keyElement the position of the key element in the data window
@@ -133,7 +129,7 @@ public class WindowIterator {
     /**
      * Creates a new iterator. 
      * 
-     * @param image the source image
+     * @param image the target image
      * @param bounds the bounds for this iterator or {@code null} for the whole image
      * @param windowDim the dimensions of the data window
      * @param keyElement the position of the key element in the data window
@@ -174,26 +170,41 @@ public class WindowIterator {
             throw new IllegalArgumentException("outsideValue must not be null");
         }
 
-        this.iter = RectIterFactory.create(image, bounds);
-
         if (bounds == null) {
             this.iterBounds = new Rectangle(
                     image.getMinX(), image.getMinY(), image.getWidth(), image.getHeight());
-
         } else {
             this.iterBounds = new Rectangle(bounds);
         }
+
+        leftPadding = keyElement.x;
+        rightPadding = windowDim.width - keyElement.x - 1;
+        topPadding = keyElement.y;
+        bottomPadding = windowDim.height - keyElement.y - 1;
+
+        // The delegate terator's bounds take into account the position of
+        // the ke element in the data window
+        Rectangle delegateBounds = new Rectangle(
+                iterBounds.x - leftPadding, iterBounds.y - topPadding,
+                iterBounds.width + leftPadding + rightPadding,
+                iterBounds.height + topPadding + bottomPadding);
+
+        this.delegate = new SimpleIterator(
+                image, delegateBounds, outsideValue, SimpleIterator.Order.IMAGE_X_Y);
 
         this.windowDim = new Dimension(windowDim);
         this.keyElement = new Point(keyElement);
         this.outsideValue = outsideValue;
 
         this.numImageBands = image.getSampleModel().getNumBands();
+
+        bufferWidth = iterBounds.width + leftPadding + rightPadding;
         buffers = new Number[numImageBands][][];
+
         for (int b = 0; b < numImageBands; b++) {
             Number[][] bandBuffer = new Number[windowDim.height][];
             for (int i = 0; i < windowDim.height; i++) {
-                Number[] ar = new Number[this.iterBounds.width];
+                Number[] ar = new Number[bufferWidth];
                 Arrays.fill(ar, this.outsideValue);
                 bandBuffer[i] = ar;
             }
@@ -205,23 +216,25 @@ public class WindowIterator {
             destBuffer[b] = new Number[windowDim.width * windowDim.height];
         }
 
-        this.firstAccess = true;
-        this.bufferX = 0;
-        this.imageY = iterBounds.y;
-        this.numLinesRead = 0;
         this.xstep = xstep;
         this.ystep = ystep;
+        
+        readData(0);
+        mainPos = new Point(iterBounds.x, iterBounds.y);
+        lowerRightPos = new Point(
+                iterBounds.x + iterBounds.width - 1,
+                iterBounds.y + iterBounds.height - 1);
     }
 
     /**
-     * Gets the source image coordinates of the pixel currently at the 
+     * Gets the target image coordinates of the pixel currently at the 
      * window key element position. Note that when the iterator has
      * finished this method returns {@code null}.
      * 
      * @return the pixel coordinates
      */
     public Point getPos() {
-        return new Point(iterBounds.x + bufferX, imageY);
+        return new Point(mainPos);
     }
 
     /**
@@ -230,7 +243,7 @@ public class WindowIterator {
      * @return {@code true} if more data are available; {@code false} otherwise
      */
     public boolean hasNext() {
-        return (bufferX + xstep < iterBounds.width) || (imageY < iterBounds.y + iterBounds.height - 1);
+        return (mainPos.x + xstep <= lowerRightPos.x || mainPos.y + ystep <= lowerRightPos.y );
     }
 
     /**
@@ -244,18 +257,11 @@ public class WindowIterator {
      */
     public boolean next() {
         if (hasNext()) {
-            bufferX = Math.min(bufferX + xstep, iterBounds.width) % iterBounds.width;
-            if (bufferX == 0) {
-                if (numLinesRead < iterBounds.height) {
-                    moveLinesUp();
-                    positionIter();
-                    final int topLine = ystep > windowDim.height ? 0 : windowDim.height - ystep;
-                    for (int y = topLine; y < windowDim.height; y++) {
-                        readIntoLine(y);
-                    }
-                } else if (imageY < iterBounds.y + iterBounds.height - 1) {
-                    moveLinesUp();
-                }
+            mainPos.x += xstep;
+            if (mainPos.x > lowerRightPos.x) {
+                mainPos.x = iterBounds.x;
+                mainPos.y += ystep;
+                readNextData();
             }
 
             return true;
@@ -392,52 +398,44 @@ public class WindowIterator {
      * the line buffers.
      */
     private void loadDestBuffer(int band) {
-        if (firstAccess) {
-            int destLine = keyElement.y;
-            while (destLine < windowDim.height && numLinesRead < iterBounds.height) {
-                readIntoLine(destLine++); 
-            }
-            firstAccess = false;
-        }
+        final int minx = mainPos.x - iterBounds.x;
+        final int bufx = minx + leftPadding;
+        final int maxx = bufx + rightPadding;
 
-        final int minx = bufferX - keyElement.x;
-        final int maxx = bufferX + windowDim.width - keyElement.x - 1;
         int k = 0;
         for (int y = 0; y < windowDim.height; y++) {
             for (int x = minx, winX = 0; x <= maxx; x++, winX++) {
-                if (x >= 0 && x < iterBounds.width) {
-                    destBuffer[band][k] = buffers[band][y][x];
-                } else {
-                    destBuffer[band][k] = outsideValue;
+                destBuffer[band][k++] = buffers[band][y][x];
+            }
+        }
+    }
+
+    private void readNextData() {
+        moveLinesUp();
+        skipImageLines();
+        int topBufferLine = Math.max(windowDim.height - ystep, 0);
+        readData(topBufferLine);
+    }
+
+    private void readData(int topBufferLine) {
+        for (int line = topBufferLine; line < windowDim.height; line++) {
+            for (int x = 0; x < bufferWidth; x++) {
+                for (int b = 0; b < numImageBands; b++) {
+                    buffers[b][line][x] = delegate.getSample(b).doubleValue();
                 }
-                k++ ;
+                delegate.next();
             }
         }
     }
 
-    /**
-     * Reads a line of image data into the specified data buffer.
-     * 
-     * @param destLine index of the data buffer to receive the data
-     */
-    private void readIntoLine(int destLine) {
-        if (iter.finishedLines()) {
-            return;
+    private void skipImageLines() {
+        int nlines = ystep - windowDim.height;
+        if (nlines > 0) {
+            Point pos = delegate.getPos();
+            delegate.setPos(pos.x, pos.y + nlines);
         }
-        
-        int x = 0;
-        do {
-            for (int b = 0; b < numImageBands; b++) {
-                buffers[b][destLine][x] = iter.getSampleDouble(b);
-            }
-            x++ ;
-        } while (!iter.nextPixelDone());
-
-        iter.startPixels();
-        iter.nextLineDone();
-        numLinesRead++ ;
     }
-
+    
     /**
      * Moves lines up in the data buffer by ystep.
      */
@@ -456,24 +454,6 @@ public class WindowIterator {
                     Arrays.fill(temp, outsideValue);
                     buffers[b][y] = temp;
                 }
-            }
-        }
-
-        imageY += ystep;
-    }
-
-    /**
-     * Positions the delegate iterator at the next line to be read into
-     * the data buffers. This method only does anything if ystep is greater
-     * than the height of the data window.
-     */
-    private void positionIter() {
-        if (ystep > windowDim.height) {
-            int nSkip = ystep - windowDim.height;
-            while (nSkip > 0 && !iter.finishedLines()) { 
-                iter.nextLineDone();
-                numLinesRead++ ;
-                nSkip-- ;
             }
         }
     }
