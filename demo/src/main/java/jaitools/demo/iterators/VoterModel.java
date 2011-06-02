@@ -20,6 +20,7 @@
 
 package jaitools.demo.iterators;
 
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.image.RenderedImage;
@@ -27,16 +28,14 @@ import java.awt.image.WritableRenderedImage;
 import java.util.Random;
 
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import jaitools.imageutils.ImageUtils;
 import jaitools.imageutils.WindowIterator;
 import jaitools.imageutils.WritableSimpleIterator;
 import jaitools.swing.SimpleImagePane;
-import java.awt.BorderLayout;
-import java.awt.Rectangle;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
  
 
 /**
@@ -109,7 +108,7 @@ public class VoterModel {
             writeIter = new WritableSimpleIterator(images[destImage], null, null);
 
             do {
-                dataWindow = winIter.getWindow(dataWindow);
+                dataWindow = winIter.getWindowInt(dataWindow);
                 Point nbr = getRandomNbr(winDim, keyElement);
                 writeIter.setSample(dataWindow[nbr.y][nbr.x]);
             } while (winIter.next() && writeIter.next());
