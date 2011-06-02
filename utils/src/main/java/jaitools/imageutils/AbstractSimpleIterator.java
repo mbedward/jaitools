@@ -93,8 +93,11 @@ public abstract class AbstractSimpleIterator {
     private final Order order;
 
     // the value to return when the iterator is positioned beyond
-    // the bounds of the target image
-    private final Number outsideValue;
+    // the bounds of the target image; three types are created to
+    // save time a little in the getSample method
+    private final Integer outsideValue_Integer;
+    private final Float outsideValue_Float;
+    private final Double outsideValue_Double;
 
     // list of sub-bounds (a single rectangle for image-wise iteration or
     // a series of tile portions for tile-wise iteration)
@@ -176,14 +179,16 @@ public abstract class AbstractSimpleIterator {
         
         mainPos = new Point(iterBounds.x, iterBounds.y);
         
-        this.outsideValue = outsideValue;
-        this.order = order;
+        this.outsideValue_Integer = outsideValue == null ? null : outsideValue.intValue();
+        this.outsideValue_Float = outsideValue == null ? null : outsideValue.floatValue();
+        this.outsideValue_Double = outsideValue == null ? null : outsideValue.doubleValue();
         
+        this.order = order;
         this.startSubPos = new Point();
         this.endSubPos = new Point();
-        
         subBoundList = buildSubBoundList(image);
         lastSubBound = subBoundList.size() - 1;
+
         setCurrentSubBound(0);
     }
 
@@ -410,21 +415,35 @@ public abstract class AbstractSimpleIterator {
             throw new IllegalStateException("Target image has been deleted");
         }
 
-        if (delegateBounds.contains(mainPos)) {
-            switch (imageDataType) {
-                case DataBuffer.TYPE_DOUBLE:
-                    return new Double(delegateIter.getSampleDouble(band));
+        final boolean inside = delegateBounds.contains(mainPos);
+        Number value;
 
-                case DataBuffer.TYPE_FLOAT:
-                    return new Float(delegateIter.getSampleFloat(band));
+        switch (imageDataType) {
+            case DataBuffer.TYPE_DOUBLE:
+                if (inside) {
+                    value = new Double(delegateIter.getSampleDouble(band));
+                } else {
+                    value = outsideValue_Double;
+                }
+                break;
 
-                default:
-                    return Integer.valueOf(delegateIter.getSample(band));
-            }
+            case DataBuffer.TYPE_FLOAT:
+                if (inside) {
+                    value = new Float(delegateIter.getSampleFloat(band));
+                } else {
+                    value = outsideValue_Float;
+                }
+                break;
 
-        } else {
-            return outsideValue;
+            default:
+                if (inside) {
+                    value = Integer.valueOf(delegateIter.getSample(band));
+                } else {
+                    value = outsideValue_Integer;
+                }
         }
+
+        return value;
     }
 
     /**

@@ -83,7 +83,6 @@ public class WindowIterator {
     private static final Number DEFAULT_OUTSIDE_VALUE = Integer.valueOf(0);
 
     private final Dimension windowDim;
-    private final Point keyElement;
     private final int leftPadding;
     private final int rightPadding;
     private final int topPadding;
@@ -143,7 +142,7 @@ public class WindowIterator {
      */
     public WindowIterator(RenderedImage image, Rectangle bounds, 
             Dimension windowDim, Point keyElement, Number outsideValue) {
-        this(image, bounds, windowDim, keyElement, 1, 1, DEFAULT_OUTSIDE_VALUE);
+        this(image, bounds, windowDim, keyElement, 1, 1, outsideValue);
     }
 
     /**
@@ -213,7 +212,6 @@ public class WindowIterator {
                 image, delegateBounds, outsideValue, SimpleIterator.Order.IMAGE_X_Y);
 
         this.windowDim = new Dimension(windowDim);
-        this.keyElement = new Point(keyElement);
         this.outsideValue = outsideValue;
 
         this.numImageBands = image.getSampleModel().getNumBands();
@@ -291,6 +289,47 @@ public class WindowIterator {
     }
 
     /**
+     * Gets the data window at the current iterator position in image band 0 as Number values.
+     * If {@code dest} is {@code null} or not equal in size to the data window
+     * dimensions a new array will be allocated, otherwise the provided array
+     * is filled. In either case, the destination array is returned for convenience.
+     * 
+     * @param dest destination array or {@code null}
+     * @return the filled destination array
+     */
+    public Number[][] getWindow(Number[][] dest) {
+        return getWindow(dest, 0);
+    }
+
+    /**
+     * Gets the data window at the current iterator position and specified image band 
+     * as Number values.
+     * If {@code dest} is {@code null} or not equal in size to the data window
+     * dimensions a new array will be allocated, otherwise the provided array
+     * is filled. In either case, the destination array is returned for convenience.
+     * 
+     * @param dest destination array or {@code null}
+     * @param band the image band from which to retrieve data
+     * @return the filled destination array
+     */
+    public Number[][] getWindow(Number[][] dest, int band) {
+        checkBandArg(band);
+        
+        if (dest == null || dest.length != windowDim.height || dest[0].length != windowDim.width) {
+            dest = new Number[windowDim.height][windowDim.width];
+        }
+
+        loadDestBuffer(band);
+        int k = 0;
+        for (int y = 0; y < windowDim.height; y++) {
+            for (int x = 0; x < windowDim.width; x++) {
+                dest[y][x] = destBuffer[band][k++];
+            }
+        }
+        return dest;
+    }
+
+    /**
      * Gets the data window at the current iterator position in image band 0 as integer values.
      * If {@code dest} is {@code null} or not equal in size to the data window
      * dimensions a new array will be allocated, otherwise the provided array
@@ -299,8 +338,8 @@ public class WindowIterator {
      * @param dest destination array or {@code null}
      * @return the filled destination array
      */
-    public int[][] getWindow(int[][] dest) {
-        return getWindow(dest, 0);
+    public int[][] getWindowInt(int[][] dest) {
+        return getWindowInt(dest, 0);
     }
 
     /**
@@ -314,7 +353,7 @@ public class WindowIterator {
      * @param band the image band from which to retrieve data
      * @return the filled destination array
      */
-    public int[][] getWindow(int[][] dest, int band) {
+    public int[][] getWindowInt(int[][] dest, int band) {
         checkBandArg(band);
         
         if (dest == null || dest.length != windowDim.height || dest[0].length != windowDim.width) {
@@ -441,7 +480,7 @@ public class WindowIterator {
         for (int line = topBufferLine; line < windowDim.height; line++) {
             for (int x = 0; x < bufferWidth; x++) {
                 for (int b = 0; b < numImageBands; b++) {
-                    buffers[b][line][x] = delegate.getSample(b).doubleValue();
+                    buffers[b][line][x] = delegate.getSample(b);
                 }
                 delegate.next();
             }
