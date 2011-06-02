@@ -123,6 +123,26 @@ public class WindowIterator {
      */
     public WindowIterator(RenderedImage image, Rectangle bounds, 
             Dimension windowDim, Point keyElement) {
+        this(image, bounds, windowDim, keyElement, DEFAULT_OUTSIDE_VALUE);
+    }
+
+    /**
+     * Creates a new iterator. The iterator will advance one pixel at each
+     * step and parts of the data window which are outside the image bounds
+     * will be filled with the specified outside value.
+     * 
+     * @param image the target image
+     * @param bounds the bounds for this iterator or {@code null} for the whole image
+     * @param windowDim the dimensions of the data window
+     * @param keyElement the position of the key element in the data window
+     * @param outsideValue value to return for any parts of the data window that are
+     *     beyond the bounds of the image
+     * 
+     * @throws IllegalArgumentException if any arguments other than bounds are {@code null};
+     *         or if {@code keyElement} does not lie within {@code windowDim}
+     */
+    public WindowIterator(RenderedImage image, Rectangle bounds, 
+            Dimension windowDim, Point keyElement, Number outsideValue) {
         this(image, bounds, windowDim, keyElement, 1, 1, DEFAULT_OUTSIDE_VALUE);
     }
 
