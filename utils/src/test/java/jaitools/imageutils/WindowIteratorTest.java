@@ -26,7 +26,6 @@ import java.awt.Point;
 
 import javax.media.jai.TiledImage;
 
-import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -39,6 +38,8 @@ import static org.junit.Assert.*;
  */
 public class WindowIteratorTest extends TestBase {
 
+    private static final int OX = -3;
+    private static final int OY = 5;
     private static final int WIDTH = 17;
     private static final int HEIGHT = 19;
     private static final int NUM_BANDS = 3;
@@ -47,15 +48,11 @@ public class WindowIteratorTest extends TestBase {
     private TiledImage image;
     
     
-    @Before
-    public void setup() {
-        image = createSequentialImage(-3, 5, WIDTH, HEIGHT, NUM_BANDS, 0);
-    }
-
     @Test
     public void allocateDestArray() {
+        image = createSequentialImage(OX, OY, WIDTH, HEIGHT, 1, 0);
         WindowIterator iter = new WindowIterator(image, null, new Dimension(3,5), new Point(1,1));
-        int[][] window = iter.getWindow(null);
+        int[][] window = iter.getWindowInt(null);
         assertNotNull(window);
         assertEquals(5, window.length);
         assertEquals(3, window[0].length);
@@ -63,6 +60,7 @@ public class WindowIteratorTest extends TestBase {
 
     @Test
     public void hasNextVsNext() {
+        image = createSequentialImage(OX, OY, WIDTH, HEIGHT, 1, 0);
         WindowIterator iter = new WindowIterator(image, null, new Dimension(3, 3), new Point(1,1));
         do {
             assertTrue(iter.next());
@@ -78,47 +76,47 @@ public class WindowIteratorTest extends TestBase {
 
     @Test
     public void getWindow3x3() {
-        doWindowTest(new Dimension(3, 3), new Point(1, 1));
+        doWindowIntTest(new Dimension(3, 3), new Point(1, 1));
     }
      
     @Test
     public void getWindow5x7() {
-        doWindowTest(new Dimension(5, 7), new Point(2, 2));   
+        doWindowIntTest(new Dimension(5, 7), new Point(2, 2));   
     }
 
     @Test
     public void keyElementAtWindowCorner() {
-        doWindowTest(new Dimension(3, 3), new Point(2, 2));
+        doWindowIntTest(new Dimension(3, 3), new Point(2, 2));
     }
 
     @Test
     public void getWindow3x3StepX2() {
-        doWindowTest(new Dimension(3, 3), new Point(1, 1), 2, 1);
+        doWindowIntTest(new Dimension(3, 3), new Point(1, 1), 2, 1);
     }
 
     @Test
     public void getWindow3x3StepY2() {
-        doWindowTest(new Dimension(3, 3), new Point(1, 1), 1, 2);
+        doWindowIntTest(new Dimension(3, 3), new Point(1, 1), 1, 2);
     }
 
     @Test
     public void getWindow3x3StepX2StepY2() {
-        doWindowTest(new Dimension(3, 3), new Point(1, 1), 2, 2);
+        doWindowIntTest(new Dimension(3, 3), new Point(1, 1), 2, 2);
     }
 
     @Test
     public void stepDistanceGreaterThanWindowWidth() {
-        doWindowTest(new Dimension(2, 2), new Point(0, 0), 3, 1);
+        doWindowIntTest(new Dimension(2, 2), new Point(0, 0), 3, 1);
     }
 
     @Test
     public void stepDistanceGreaterThanWindowHeight() {
-        doWindowTest(new Dimension(2, 2), new Point(0, 0), 1, 3);
+        doWindowIntTest(new Dimension(2, 2), new Point(0, 0), 1, 3);
     }
 
     @Test
     public void stepDistanceGreaterThanWindowWidthAndHeight() {
-        doWindowTest(new Dimension(2, 2), new Point(0, 0), 3, 3);
+        doWindowIntTest(new Dimension(2, 2), new Point(0, 0), 3, 3);
     }
 
     @Test
@@ -133,35 +131,86 @@ public class WindowIteratorTest extends TestBase {
 
     @Test
     public void iterBoundsBeyondImageBounds() {
+        image = createSequentialImage(OX, OY, WIDTH, HEIGHT, NUM_BANDS, 0);
+
         Rectangle bounds = createAdjustedBounds(image.getBounds(), 5);
         Dimension winDim = new Dimension(3, 3);
         Point key = new Point(1, 1);
-        WindowIterator iter = new WindowIterator(image, bounds, winDim, key, 1, 1, OUTSIDE);
-        doWindowTest(iter, bounds, winDim, key, 1, 1);
+        WindowIterator iter = new WindowIterator(image, bounds, winDim, key, OUTSIDE);
+        doWindowIntTest(iter, bounds, winDim, key, 1, 1);
     }
 
     @Test
     public void iterBoundsWiderAndShorter() {
+        image = createSequentialImage(OX, OY, WIDTH, HEIGHT, NUM_BANDS, 0);
+
         Rectangle iterBounds = new Rectangle(
                 image.getMinX() - WIDTH / 2, image.getMinY() + HEIGHT / 4,
                 WIDTH * 2, HEIGHT / 2);
         
         Dimension winDim = new Dimension(3, 3);
         Point key = new Point(1, 1);
-        WindowIterator iter = new WindowIterator(image, iterBounds, winDim, key, 1, 1, OUTSIDE);
-        doWindowTest(iter, iterBounds, winDim, key, 1, 1);
+        WindowIterator iter = new WindowIterator(image, iterBounds, winDim, key, OUTSIDE);
+        doWindowIntTest(iter, iterBounds, winDim, key, 1, 1);
     }
 
     @Test
     public void iterBoundsNarrowerAndTaller() {
+        image = createSequentialImage(OX, OY, WIDTH, HEIGHT, NUM_BANDS, 0);
+
         Rectangle iterBounds = new Rectangle(
                 image.getMinX() + WIDTH / 4, image.getMinY() - HEIGHT / 2,
                 WIDTH / 2, HEIGHT * 2);
         
         Dimension winDim = new Dimension(3, 3);
         Point key = new Point(1, 1);
-        WindowIterator iter = new WindowIterator(image, iterBounds, winDim, key, 1, 1, OUTSIDE);
-        doWindowTest(iter, iterBounds, winDim, key, 1, 1);
+        WindowIterator iter = new WindowIterator(image, iterBounds, winDim, key, OUTSIDE);
+        doWindowIntTest(iter, iterBounds, winDim, key, 1, 1);
+    }
+
+    @Test
+    public void dataWindowNumber_IntImage() {
+        image = ImageUtils.createConstantImage(WIDTH, HEIGHT, Integer.valueOf(0));
+        Dimension winDim = new Dimension(3, 3);
+        Point key = new Point(1, 1);
+        WindowIterator iter = new WindowIterator(image, null, winDim, key, OUTSIDE);
+        
+        Number[][] window = iter.getWindow(null);
+
+        // Both the key element (image) value and the upper-left (outside) value
+        // should be Integers
+        assertTrue(window[0][0] instanceof Integer);
+        assertTrue(window[key.y][key.x] instanceof Integer);
+    }
+
+    @Test
+    public void dataWindowNumber_FloatImage() {
+        image = ImageUtils.createConstantImage(WIDTH, HEIGHT, Float.valueOf(0f));
+        Dimension winDim = new Dimension(3, 3);
+        Point key = new Point(1, 1);
+        WindowIterator iter = new WindowIterator(image, null, winDim, key, OUTSIDE);
+        
+        Number[][] window = iter.getWindow(null);
+
+        // Both the key element (image) value and the upper-left (outside) value
+        // should be Floats
+        assertTrue(window[0][0] instanceof Float);
+        assertTrue(window[key.y][key.x] instanceof Float);
+    }
+
+    @Test
+    public void dataWindowNumber_DoubleImage() {
+        image = ImageUtils.createConstantImage(WIDTH, HEIGHT, Double.valueOf(0d));
+        Dimension winDim = new Dimension(3, 3);
+        Point key = new Point(1, 1);
+        WindowIterator iter = new WindowIterator(image, null, winDim, key, OUTSIDE);
+        
+        Number[][] window = iter.getWindow(null);
+
+        // Both the key element (image) value and the upper-left (outside) value
+        // should be Doubles
+        assertTrue(window[0][0] instanceof Double);
+        assertTrue(window[key.y][key.x] instanceof Double);
     }
 
     @Test(expected=IllegalArgumentException.class)
@@ -171,26 +220,33 @@ public class WindowIteratorTest extends TestBase {
 
     @Test(expected=IllegalArgumentException.class)
     public void nullDimension() {
+        image = ImageUtils.createConstantImage(WIDTH, HEIGHT, 0);
         WindowIterator iter = new WindowIterator(image, null, null, new Point(1, 1));
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void nullKeyPoint() {
+        image = ImageUtils.createConstantImage(WIDTH, HEIGHT, 0);
         WindowIterator iter = new WindowIterator(image, null, new Dimension(3, 3), null);
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void keyPointOutOfWindow() {
+        image = ImageUtils.createConstantImage(WIDTH, HEIGHT, 0);
         WindowIterator iter = new WindowIterator(image, null, new Dimension(3, 3), new Point(3, 3));
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void bandOutOfRange() {
+        // 3 band image
+        image = ImageUtils.createConstantImage(WIDTH, HEIGHT, new Integer[]{0, 0, 0});
+
         WindowIterator iter = new WindowIterator(image, null, new Dimension(3, 3), new Point(1, 1));
-        iter.getWindow(null, NUM_BANDS);
+        iter.getWindowInt(null, 3); // out of range band arg
     }
 
     private void doGetPosTest(int xstep, int ystep) {
+        image = createSequentialImage(OX, OY, WIDTH, HEIGHT, 1, 0);
         WindowIterator iter = new WindowIterator(image, null, 
                 new Dimension(3, 3), new Point(1, 1),
                 xstep, ystep, OUTSIDE);
@@ -210,18 +266,23 @@ public class WindowIteratorTest extends TestBase {
         } while (iter.next());
     }
 
-    private void doWindowTest(Dimension dim, Point key) {
-        doWindowTest(dim, key, 1, 1);
+    private void doWindowIntTest(Dimension dim, Point key) {
+        doWindowIntTest(dim, key, 1, 1);
     }
     
-    private void doWindowTest(Dimension dim, Point key, int xstep, int ystep) {
+    private void doWindowIntTest(Dimension dim, Point key, int xstep, int ystep) {
+        image = createSequentialImage(OX, OY, WIDTH, HEIGHT, NUM_BANDS, 0);
         Rectangle bounds = image.getBounds();
         WindowIterator iter = new WindowIterator(image, null, dim, key, xstep, ystep, OUTSIDE);
-        doWindowTest(iter, bounds, dim, key, xstep, ystep);
+        doWindowIntTest(iter, bounds, dim, key, xstep, ystep);
     }
     
-    private void doWindowTest(WindowIterator iter, Rectangle iterBounds,
+    private void doWindowIntTest(WindowIterator iter, Rectangle iterBounds,
                 Dimension dim, Point key, int xstep, int ystep) {
+
+        if (image == null) {
+            throw new IllegalStateException("You forgot to create the image first");
+        }
 
         int[][] window = new int[dim.height][dim.width];
         int x = iterBounds.x;
@@ -229,11 +290,11 @@ public class WindowIteratorTest extends TestBase {
         int lastX = iterBounds.x + iterBounds.width - 1; 
         
         do {
-            iter.getWindow(window);
+            iter.getWindowInt(window);
             assertWindow(window, dim, key, x, y, 0);
 
             for (int b = 0; b < NUM_BANDS; b++) {
-                iter.getWindow(window, b);
+                iter.getWindowInt(window, b);
                 assertWindow(window, dim, key, x, y, b);
             }
             
