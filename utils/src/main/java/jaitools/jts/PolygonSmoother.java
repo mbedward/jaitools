@@ -25,12 +25,14 @@
 
 package jaitools.jts;
 
+import java.util.List;
+
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
-import java.util.ArrayList;
-import java.util.List;
+
+import jaitools.CollectionFactory;
 
 
 /**
@@ -152,10 +154,11 @@ public class PolygonSmoother extends AbstractSmoother {
     public Polygon smooth(Polygon p, double alpha) {
         Coordinate[] coords = p.getExteriorRing().getCoordinates();
         final int N = coords.length - 1;  // first coord == last coord
+        final int LAST = N - 1;
         
         Coordinate[][] controlPoints = getControlPoints(coords, N, alpha);
         
-        List<Coordinate> smoothCoords = new ArrayList<Coordinate>();
+        List<Coordinate> smoothCoords = CollectionFactory.list();
         double dist;
         for (int i = 0; i < N; i++) {
             int next = (i + 1) % N;
@@ -164,6 +167,12 @@ public class PolygonSmoother extends AbstractSmoother {
             if (dist < control.getMinLength()) {
                 // segment too short - just copy input coordinate
                 smoothCoords.add(new Coordinate(coords[i]));
+
+                // if this was the last vertex we also need to add
+                // the closing vertex
+                if (i == LAST) {
+                    smoothCoords.add(new Coordinate(coords[0]));
+                }
                 
             } else {
                 int smoothN = control.getNumVertices(dist);
@@ -172,7 +181,7 @@ public class PolygonSmoother extends AbstractSmoother {
                         controlPoints[i][1], controlPoints[next][0],
                         smoothN);
             
-                int copyN = i < N - 1 ? segment.length - 1 : segment.length;
+                int copyN = i == LAST ? segment.length : segment.length - 1;
                 for (int k = 0; k < copyN; k++) {
                     smoothCoords.add(segment[k]);
                 }

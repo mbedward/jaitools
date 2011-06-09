@@ -30,7 +30,6 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.io.WKTReader;
 
-import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -45,19 +44,14 @@ public class PolygonSmootherTest {
     
     private static final GeometryFactory gf = new GeometryFactory();
     private static final WKTReader reader = new WKTReader(gf);
-    private PolygonSmoother smoother;
     
-    @Before
-    public void setup() {
-        smoother = new PolygonSmoother(gf);
-    }
-
     /**
      * Smooth a very simple polygon. Check that the output polygon covers the 
      * input polygon and contains all of the input's vertices.
      */
     @Test
     public void squarePoly() throws Exception {
+        PolygonSmoother smoother = new PolygonSmoother(gf);
         Polygon p = (Polygon) reader.read("POLYGON((0 0, 0 100, 100 100, 100 0, 0 0))");
         Polygon ps = smoother.smooth(p, 0.0);
         
@@ -85,6 +79,7 @@ public class PolygonSmootherTest {
      */
     @Test
     public void squarePolyTight() throws Exception {
+        PolygonSmoother smoother = new PolygonSmoother(gf);
         Polygon p = (Polygon) reader.read("POLYGON((0 0, 0 100, 100 100, 100 0, 0 0))");
         Polygon ps = smoother.smooth(p, 0.9);
         
@@ -103,5 +98,43 @@ public class PolygonSmootherTest {
             
             assertTrue(found);
         }
+    }
+
+    @Test
+    public void lastSegmentShorterThanControlDistance() throws Exception {
+        final double MIN_LEN = 1.0;
+        
+        // Create triangle where the base is shorter than the smoother control
+        // min length
+        final double base = MIN_LEN / 2.0;
+        final double height = 10.0 * MIN_LEN;
+        String wkt = String.format("POLYGON((0 0, %f %f, %f 0, 0 0))",
+                base / 2.0, height, base);
+        Polygon p = (Polygon) reader.read(wkt);
+
+        // Create a smoother using MIN_LEN as its minimum inter-vertex distance
+        PolygonSmoother smoother = new PolygonSmoother(gf);
+        smoother.setControl(new SmootherControl() {
+            
+            public double getMinLength() {
+                return MIN_LEN;
+            }
+
+            public int getNumVertices(double length) {
+                return 10;
+            }
+        });
+        
+        Polygon ps = null;
+        try {
+            ps = smoother.smooth(p, 0);
+        } catch (Exception ex) {
+            // If an exception was thrown the smoother did not return
+            // a closed LinearRing
+            fail("Smoother did not return a valid polygon");
+        }
+
+        // double check
+        assertTrue(!ps.isEmpty() && ps.isValid());
     }
 }
