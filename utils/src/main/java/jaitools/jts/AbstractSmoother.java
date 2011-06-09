@@ -25,11 +25,13 @@
 
 package jaitools.jts;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.GeometryFactory;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.GeometryFactory;
+
 
 /**
  * Base class for Bezier smoothing of JTS Geometry objects.
@@ -45,7 +47,7 @@ public abstract class AbstractSmoother {
      * vertex distance and a constant number of points
      * per smoothed segment.
      */
-    protected SmootherControl DEFAULT_CONTROL = new SmootherControl() {
+    public static final SmootherControl DEFAULT_CONTROL = new SmootherControl() {
         public double getMinLength() {
             return 0.0;
         }
