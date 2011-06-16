@@ -23,18 +23,21 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.kernelstats;
+package org.jaitools.media.jai.kernelstats;
 
-import jaitools.numeric.Statistic;
 import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
+
 import javax.media.jai.JAI;
 import javax.media.jai.KernelJAI;
 import javax.media.jai.OperationDescriptorImpl;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.ROI;
 import javax.media.jai.registry.RenderedRegistryMode;
+
+import org.jaitools.numeric.Statistic;
+
 
 /**
  * An {@code OperationDescriptor} for the "KernelStats" operation.
@@ -105,7 +108,7 @@ public class KernelStatsDescriptor extends OperationDescriptorImpl {
         super(new String[][]{
                     {"GlobalName", "KernelStats"},
                     {"LocalName", "KernelStats"},
-                    {"Vendor", "jaitools.media.jai"},
+                    {"Vendor", "org.jaitools.media.jai"},
                     {"Description", "Calculate neighbourhood statistics"},
                     {"DocURL", "http://code.google.com/p/jai-tools/"},
                     {"Version", "1.0.0"},

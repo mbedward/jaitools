@@ -22,7 +22,7 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
-package jaitools.media.jai.kernelstats;
+package org.jaitools.media.jai.kernelstats;
 
 import java.awt.RenderingHints;
 import java.awt.image.DataBuffer;
@@ -38,8 +38,8 @@ import javax.media.jai.iterator.RandomIterFactory;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 
-import jaitools.numeric.Statistic;
-import jaitools.numeric.SampleStats;
+import org.jaitools.numeric.Statistic;
+import org.jaitools.numeric.SampleStats;
 
 import org.junit.Test;
 import static org.junit.Assert.*;

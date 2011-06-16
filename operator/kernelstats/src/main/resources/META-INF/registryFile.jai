@@ -1,10 +1,10 @@
 #
 # Image operation descriptors :
 #
-descriptor  jaitools.media.jai.kernelstats.KernelStatsDescriptor
+descriptor  org.jaitools.media.jai.kernelstats.KernelStatsDescriptor
 
 
 #
 # "rendered" factory objects
 #
-rendered  jaitools.media.jai.kernelstats.KernelStatsRIF  jaitools.media.jai  KernelStats  KernelStats
+rendered  org.jaitools.media.jai.kernelstats.KernelStatsRIF  org.jaitools.media.jai  KernelStats  KernelStats

@@ -23,7 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.kernelstats;
+package org.jaitools.media.jai.kernelstats;
 
 import java.util.Random;
 import javax.media.jai.ImageFunction;

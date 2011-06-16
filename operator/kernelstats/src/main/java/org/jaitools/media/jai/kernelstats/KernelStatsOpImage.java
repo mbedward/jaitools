@@ -23,16 +23,15 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.kernelstats;
+package org.jaitools.media.jai.kernelstats;
 
-import jaitools.numeric.SampleStats;
-import jaitools.numeric.Statistic;
 import java.awt.Rectangle;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.awt.image.WritableRaster;
 import java.util.Map;
+
 import javax.media.jai.AreaOpImage;
 import javax.media.jai.BorderExtender;
 import javax.media.jai.ImageLayout;
@@ -40,6 +39,10 @@ import javax.media.jai.KernelJAI;
 import javax.media.jai.ROI;
 import javax.media.jai.RasterAccessor;
 import javax.media.jai.RasterFormatTag;
+
+import org.jaitools.numeric.SampleStats;
+import org.jaitools.numeric.Statistic;
+
 
 /**
  * An operator to calculate neighbourhood statistics on a source image.
