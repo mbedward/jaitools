@@ -9,7 +9,7 @@
     <artifactId>jt-demo</artifactId>
     <packaging>jar</packaging>
     <name>Demo programs</name>
-    <description>Small apps to demonstrate use of JAI-tools components</description>
+    <description>Small apps to demonstrate use of JAITools components</description>
     <build>
     </build>
     <dependencies>

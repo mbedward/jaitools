@@ -3,16 +3,16 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>jaitools</artifactId>
-        <groupId>com.googlecode.jaitools</groupId>
+        <groupId>org.jaitools</groupId>
         <version>2.0-SNAPSHOT</version>
     </parent>
     
     <artifactId>jt-all</artifactId>
     <packaging>jar</packaging>
-    <name>Combined JAI-tools jar</name>
+    <name>Combined JAITools jar</name>
     
     <description>
-        Provides a single jar containing all JAI-tools modules which you can
+        Provides a single jar containing all JAITools modules which you can
         use instead of including individual modules in your project. Note:
         It does not include the Jiffle scripting language or Jiffle image 
         operator.
@@ -32,7 +32,7 @@
                         <configuration>
                             <artifactSet>
                                 <excludes>
-                                    <exclude>com.googlecode.jaitools:jt-demo</exclude>
+                                    <exclude>org.jaitools:jt-demo</exclude>
                                     <exclude>com.vividsolutions:jts</exclude>
                                     <exclude>junit:junit</exclude>
                                     <exclude>xerces:xercesImpl</exclude>
@@ -60,7 +60,7 @@
                         <configuration>
                             <includeDependencySources>true</includeDependencySources>
                             <dependencySourceIncludes>
-                                <dependencySourceInclude>com.googlecode.jaitools:*</dependencySourceInclude>
+                                <dependencySourceInclude>org.jaitools:*</dependencySourceInclude>
                             </dependencySourceIncludes>                        
                             <excludePackageNames>jaitools.demo.*</excludePackageNames>
                         </configuration>
@@ -72,7 +72,7 @@
     
     <dependencies>
         <!--                                              -->
-        <!-- JAI-tools modules to include in the uber-jar -->
+        <!-- JAITools modules to include in the uber-jar -->
         <!--                                              -->
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -131,7 +131,7 @@
         <dependency>
             <groupId>com.vividsolutions</groupId>
             <artifactId>jts</artifactId>
-            <!-- version is specified in parent jai-tools pom -->
+            <!-- version is specified in parent pom -->
         </dependency>
         
     </dependencies>

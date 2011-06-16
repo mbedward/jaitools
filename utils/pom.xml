@@ -10,7 +10,7 @@
     <artifactId>jt-utils</artifactId>
     <name>Support and utility classes</name>
 
-    <description>Support and utility classes used by other JAI-tools components and
+    <description>Support and utility classes used by other JAITools components and
       available for general use.</description>
 
     <build>
