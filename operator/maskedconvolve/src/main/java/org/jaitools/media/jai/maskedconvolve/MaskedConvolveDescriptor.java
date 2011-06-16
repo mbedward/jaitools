@@ -23,11 +23,12 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.maskedconvolve;
+package org.jaitools.media.jai.maskedconvolve;
 
 import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
+
 import javax.media.jai.JAI;
 import javax.media.jai.KernelJAI;
 import javax.media.jai.OperationDescriptorImpl;
@@ -35,6 +36,7 @@ import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.ROI;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.registry.RenderedRegistryMode;
+
 
 /**
  * An {@code OperationDescriptor} describing the "MaskedConvolve" operation.
@@ -162,7 +164,7 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
         super(new String[][]{
                     {"GlobalName", "MaskedConvolve"},
                     {"LocalName", "MaskedConvolve"},
-                    {"Vendor", "jaitools.media.jai"},
+                    {"Vendor", "org.jaitools.media.jai"},
                     {"Description", "Convolve a rendered image masked by an associated ROI"},
                     {"DocURL", "http://code.google.com/p/jai-tools/"},
                     {"Version", "1.0.0"},

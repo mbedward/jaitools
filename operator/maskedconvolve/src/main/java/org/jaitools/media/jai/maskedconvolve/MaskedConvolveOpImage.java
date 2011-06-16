@@ -23,7 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.maskedconvolve;
+package org.jaitools.media.jai.maskedconvolve;
 
 import java.awt.Rectangle;
 import java.awt.image.DataBuffer;
@@ -32,6 +32,7 @@ import java.awt.image.RenderedImage;
 import java.awt.image.WritableRaster;
 import java.lang.reflect.Constructor;
 import java.util.Map;
+
 import javax.media.jai.AreaOpImage;
 import javax.media.jai.BorderExtender;
 import javax.media.jai.ImageLayout;
@@ -39,6 +40,7 @@ import javax.media.jai.KernelJAI;
 import javax.media.jai.ROI;
 import javax.media.jai.RasterAccessor;
 import javax.media.jai.RasterFormatTag;
+
 
 /**
  * An operator to perform masked convolution on a source image.

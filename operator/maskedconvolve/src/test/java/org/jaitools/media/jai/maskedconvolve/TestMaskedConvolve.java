@@ -22,12 +22,13 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
-package jaitools.media.jai.maskedconvolve;
+package org.jaitools.media.jai.maskedconvolve;
 
 import java.awt.Dimension;
 import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
 import java.util.Properties;
+
 import javax.media.jai.BorderExtender;
 import javax.media.jai.JAI;
 import javax.media.jai.KernelJAI;
@@ -39,8 +40,10 @@ import javax.media.jai.RenderedOp;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 import javax.media.jai.registry.RenderedRegistryMode;
+
 import org.junit.Test;
 import static org.junit.Assert.*;
+
 
 /**
  * Unit tests for the MaskedConvolve operator

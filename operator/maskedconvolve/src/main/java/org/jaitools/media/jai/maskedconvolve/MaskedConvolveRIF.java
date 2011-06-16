@@ -23,17 +23,20 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.maskedconvolve;
+package org.jaitools.media.jai.maskedconvolve;
 
-import com.sun.media.jai.opimage.RIFUtil;
 import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
 import java.awt.image.renderable.RenderedImageFactory;
+
 import javax.media.jai.BorderExtender;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.KernelJAI;
 import javax.media.jai.ROI;
+
+import com.sun.media.jai.opimage.RIFUtil;
+
 
 /**
  * The image factory for the {@link MaskedConvolveOpImage} operation.

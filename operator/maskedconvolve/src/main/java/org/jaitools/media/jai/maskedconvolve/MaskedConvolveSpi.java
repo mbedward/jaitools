@@ -23,13 +23,15 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.maskedconvolve;
+package org.jaitools.media.jai.maskedconvolve;
 
 import java.awt.image.renderable.RenderedImageFactory;
+
 import javax.media.jai.OperationDescriptor;
 import javax.media.jai.OperationRegistry;
 import javax.media.jai.OperationRegistrySpi;
 import javax.media.jai.registry.RenderedRegistryMode;
+
 
 /**
  * OperationRegistrySpi implementation to register the "MaskedConvolve"
@@ -42,7 +44,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
 public class MaskedConvolveSpi implements OperationRegistrySpi {
 
     /** The name of the product to which these operations belong. */
-    private String productName = "jaitools.media.jai.maskedconvolve";
+    private String productName = "org.jaitools.media.jai.maskedconvolve";
  
     /** Default constructor. */
     public MaskedConvolveSpi() {}
