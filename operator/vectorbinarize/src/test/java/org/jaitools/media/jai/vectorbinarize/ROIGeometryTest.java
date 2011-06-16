@@ -23,7 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.vectorbinarize;
+package org.jaitools.media.jai.vectorbinarize;
 
 import java.awt.GraphicsEnvironment;
 import java.awt.Shape;
@@ -53,13 +53,13 @@ import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
 import com.vividsolutions.jts.io.WKTReader;
 
-import jaitools.imageutils.ROIGeometry;
-import jaitools.swing.SimpleImagePane;
+import org.jaitools.imageutils.ROIGeometry;
+import org.jaitools.swing.SimpleImagePane;
 
-import static org.junit.Assert.assertEquals;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 
 public class ROIGeometryTest {

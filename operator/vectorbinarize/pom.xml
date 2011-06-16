@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>operator</artifactId>
-        <groupId>com.googlecode.jaitools</groupId>
+        <groupId>org.jaitools</groupId>
         <version>2.0-SNAPSHOT</version>
     </parent>
     <artifactId>jt-vectorbinarize</artifactId>

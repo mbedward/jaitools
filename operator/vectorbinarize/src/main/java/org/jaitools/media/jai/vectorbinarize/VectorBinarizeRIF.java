@@ -23,7 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.vectorbinarize;
+package org.jaitools.media.jai.vectorbinarize;
 
 import java.awt.Dimension;
 import java.awt.RenderingHints;

@@ -23,8 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.vectorbinarize;
-
+package org.jaitools.media.jai.vectorbinarize;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -49,7 +48,7 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.prep.PreparedGeometry;
 
-import jaitools.jts.CoordinateSequence2D;
+import org.jaitools.jts.CoordinateSequence2D;
 
 
 /**
