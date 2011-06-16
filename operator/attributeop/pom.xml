@@ -3,7 +3,7 @@
   
     <parent>
         <artifactId>operator</artifactId>
-        <groupId>com.googlecode.jaitools</groupId>
+        <groupId>org.jaitools</groupId>
         <version>2.0-SNAPSHOT</version>
     </parent>
   
