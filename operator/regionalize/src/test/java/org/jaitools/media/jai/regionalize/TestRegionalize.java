@@ -22,9 +22,8 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
-package jaitools.media.jai.regionalize;
+package org.jaitools.media.jai.regionalize;
 
-import jaitools.tiledimage.DiskMemImage;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -32,15 +31,20 @@ import java.awt.image.ColorModel;
 import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
 import java.util.List;
+
 import javax.media.jai.ImageFunction;
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
+
+import org.jaitools.tiledimage.DiskMemImage;
+
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
+
 
 /**
  * Unit tests for the Regionalize operator

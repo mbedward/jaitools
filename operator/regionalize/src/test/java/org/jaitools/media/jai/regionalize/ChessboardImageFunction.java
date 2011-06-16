@@ -23,7 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.regionalize;
+package org.jaitools.media.jai.regionalize;
 
 import javax.media.jai.ImageFunction;
 

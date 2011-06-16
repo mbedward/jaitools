@@ -22,13 +22,7 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
-package jaitools.media.jai.regionalize;
-
-import jaitools.CollectionFactory;
-import jaitools.imageutils.FillResult;
-import jaitools.imageutils.FloodFiller;
-import jaitools.tilecache.DiskMemTileCache;
-import jaitools.tiledimage.DiskMemImage;
+package org.jaitools.media.jai.regionalize;
 
 import java.awt.Rectangle;
 import java.awt.image.DataBuffer;
@@ -42,10 +36,17 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
 import javax.media.jai.AreaOpImage;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.PointOpImage;
 import javax.media.jai.TileCache;
+
+import org.jaitools.CollectionFactory;
+import org.jaitools.imageutils.FillResult;
+import org.jaitools.imageutils.FloodFiller;
+import org.jaitools.tilecache.DiskMemTileCache;
+import org.jaitools.tiledimage.DiskMemImage;
 
 /**
  * An operator to identify regions of uniform value, within
