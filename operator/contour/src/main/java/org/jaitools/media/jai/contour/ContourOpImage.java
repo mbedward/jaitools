@@ -22,7 +22,7 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
-package jaitools.media.jai.contour;
+package org.jaitools.media.jai.contour;
 
 import java.awt.image.RenderedImage;
 import java.lang.ref.SoftReference;
@@ -40,13 +40,13 @@ import javax.media.jai.iterator.RectIterFactory;
 
 import com.vividsolutions.jts.geom.LineString;
 
-import jaitools.CollectionFactory;
-import jaitools.jts.LineSmoother;
-import jaitools.jts.SmootherControl;
-import jaitools.jts.Utils;
-import jaitools.media.jai.AttributeOpImage;
-import jaitools.numeric.CompareOp;
-import jaitools.numeric.Range;
+import org.jaitools.CollectionFactory;
+import org.jaitools.jts.LineSmoother;
+import org.jaitools.jts.SmootherControl;
+import org.jaitools.jts.Utils;
+import org.jaitools.media.jai.AttributeOpImage;
+import org.jaitools.numeric.CompareOp;
+import org.jaitools.numeric.Range;
 
 
 /**

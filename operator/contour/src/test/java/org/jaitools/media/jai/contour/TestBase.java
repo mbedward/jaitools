@@ -23,7 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.contour;
+package org.jaitools.media.jai.contour;
 
 import java.util.Collection;
 import java.util.List;
@@ -38,8 +38,8 @@ import javax.media.jai.TiledImage;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.LineString;
 
-import jaitools.CollectionFactory;
-import jaitools.imageutils.ImageUtils;
+import org.jaitools.CollectionFactory;
+import org.jaitools.imageutils.ImageUtils;
 
 import static org.junit.Assert.*;
 

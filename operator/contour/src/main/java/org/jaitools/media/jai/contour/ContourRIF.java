@@ -23,7 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.contour;
+package org.jaitools.media.jai.contour;
 
 import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
