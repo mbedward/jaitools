@@ -23,10 +23,11 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.rangelookup;
+package org.jaitools.media.jai.rangelookup;
 
 import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
+
 import javax.media.jai.JAI;
 import javax.media.jai.OperationDescriptorImpl;
 import javax.media.jai.ParameterBlockJAI;
@@ -69,7 +70,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * RenderedImage luImg = JAI.create("rangelookup", pb);
  * </code></pre>
  *
- * @see jaitools.numeric.Range
+ * @see org.jaitools.numeric.Range
  * @see RangeLookupTable
  * 
  * @author Michael Bedward
@@ -94,7 +95,7 @@ public class RangeLookupDescriptor extends OperationDescriptorImpl {
         super(new String[][]{
                     {"GlobalName", "RangeLookup"},
                     {"LocalName", "RangeLookup"},
-                    {"Vendor", "jaitools.media.jai"},
+                    {"Vendor", "org.jaitools.media.jai"},
                     {"Description", "Maps source image value ranges to destination image values"},
                     {"DocURL", "http://code.google.com/p/jai-tools/"},
                     {"Version", "1.0.0"},

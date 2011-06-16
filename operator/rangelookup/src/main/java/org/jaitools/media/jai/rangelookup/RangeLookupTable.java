@@ -22,14 +22,15 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
-package jaitools.media.jai.rangelookup;
+package org.jaitools.media.jai.rangelookup;
 
+import java.util.Collections;
 import java.util.List;
 
-import jaitools.CollectionFactory;
-import jaitools.numeric.Range;
-import jaitools.numeric.RangeUtils;
-import java.util.Collections;
+import org.jaitools.CollectionFactory;
+import org.jaitools.numeric.Range;
+import org.jaitools.numeric.RangeUtils;
+
 
 /**
  * Holds a collection of source image value ranges and their corresponding

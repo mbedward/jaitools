@@ -23,11 +23,13 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.rangelookup;
+package org.jaitools.media.jai.rangelookup;
 
-import jaitools.numeric.Range;
-import static org.junit.Assert.*;
+import org.jaitools.numeric.Range;
+
 import org.junit.Test;
+import static org.junit.Assert.*;
+
 
 /**
  * Tests for RangeLookupTable. We don't do comprehensive testing of source

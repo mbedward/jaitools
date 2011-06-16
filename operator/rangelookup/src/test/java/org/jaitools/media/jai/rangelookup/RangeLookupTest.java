@@ -23,22 +23,22 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.rangelookup;
+package org.jaitools.media.jai.rangelookup;
 
 import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
 
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
-
-import jaitools.imageutils.ImageUtils;
-import jaitools.numeric.NumberOperations;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 
-import static org.junit.Assert.*;
+import org.jaitools.imageutils.ImageUtils;
+import org.jaitools.numeric.NumberOperations;
+
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  * Tests for the RangeLookup operation.

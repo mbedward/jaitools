@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2009, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2011, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -23,48 +23,50 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.rangelookup;
+package org.jaitools.media.jai.rangelookup;
 
-import java.awt.image.renderable.RenderedImageFactory;
-import javax.media.jai.OperationDescriptor;
-import javax.media.jai.OperationRegistry;
-import javax.media.jai.OperationRegistrySpi;
-import javax.media.jai.registry.RenderedRegistryMode;
+import org.jaitools.numeric.Range;
 
 /**
- * OperationRegistrySpi implementation to register the "RangeLookup"
- * operation and its associated image factories.
+ * Base class for unit tests.
  *
  * @author Michael Bedward
  * @since 1.0
  * @version $Id$
  */
-public class RangeLookupSpi implements OperationRegistrySpi {
-
-    /** The name of the product to which these operations belong. */
-    private String productName = "jaitools.media.jai.rangelookup";
-
-    /** Default constructor. */
-    public RangeLookupSpi() {}
-
+public abstract class TestBase {
     /**
-     * Registers the RangeLookup operation and its
-     * associated image factories across all supported operation modes.
-     *
-     * @param registry The registry with which to register the operations
-     * and their factories.
+     * Creates a lookup table.
+     * @param breaks array of breakpoints for source image values
+     * @param values array of lookup values for destination image value
+     * 
+     * @return the lookup table
      */
-    public void updateRegistry(OperationRegistry registry) {
-        OperationDescriptor op = new RangeLookupDescriptor();
-        registry.registerDescriptor(op);
-        String descName = op.getName();
-
-        RenderedImageFactory rif = new RangeLookupRIF();
-
-        registry.registerFactory(RenderedRegistryMode.MODE_NAME,
-                                 descName,
-                                 productName,
-                                 rif);
-
+    protected <T extends Number & Comparable<? super T>, 
+             U extends Number & Comparable<? super U>> 
+            RangeLookupTable<T, U> createTable(T[] breaks, U[] values) {
+        
+        final int N = breaks.length;
+        if (values.length != N + 1) {
+            throw new IllegalArgumentException(
+                    "values array length should be breaks array length + 1");
+        }
+        
+        RangeLookupTable<T, U> table = new RangeLookupTable<T, U>();
+        Range<T> r;
+        
+        r = Range.create(null, false, breaks[0], false);
+        table.add(r, values[0]);
+        
+        for (int i = 1; i < N; i++) {
+            r = Range.create(breaks[i-1], true, breaks[i], false);
+            table.add(r, values[i]);
+        }
+        
+        r = Range.create(breaks[N-1], true, null, false);
+        table.add(r, values[N]);
+        
+        return table;
     }
+
 }
