@@ -23,16 +23,17 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.zonalstats;
-
-import jaitools.CollectionFactory;
-import jaitools.numeric.Range;
-import jaitools.numeric.Statistic;
-import jaitools.numeric.StreamingSampleStats;
+package org.jaitools.media.jai.zonalstats;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.SortedSet;
+
+import org.jaitools.CollectionFactory;
+import org.jaitools.numeric.Range;
+import org.jaitools.numeric.Statistic;
+import org.jaitools.numeric.StreamingSampleStats;
+
 
 /**
  * Holds the results of the ZonalStats operator.

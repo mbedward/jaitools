@@ -23,11 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.zonalstats;
-
-import jaitools.CollectionFactory;
-import jaitools.numeric.Range;
-import jaitools.numeric.Statistic;
+package org.jaitools.media.jai.zonalstats;
 
 import java.awt.Point;
 import java.awt.RenderingHints;
@@ -51,6 +47,11 @@ import javax.media.jai.TiledImage;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 import javax.media.jai.iterator.WritableRectIter;
+
+import org.jaitools.CollectionFactory;
+import org.jaitools.numeric.Range;
+import org.jaitools.numeric.Statistic;
+
 import org.junit.Test;
 import static org.junit.Assert.*;
 

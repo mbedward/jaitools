@@ -23,7 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.zonalstats;
+package org.jaitools.media.jai.zonalstats;
 
 import java.awt.Rectangle;
 import java.awt.Shape;
@@ -38,10 +38,10 @@ import javax.media.jai.OperationDescriptorImpl;
 import javax.media.jai.ROI;
 import javax.media.jai.registry.RenderedRegistryMode;
 
-import jaitools.numeric.Range;
-import jaitools.numeric.RangeComparator;
-import jaitools.numeric.RangeUtils;
-import jaitools.numeric.Statistic;
+import org.jaitools.numeric.Range;
+import org.jaitools.numeric.RangeComparator;
+import org.jaitools.numeric.RangeUtils;
+import org.jaitools.numeric.Statistic;
 
 
 /**
@@ -57,10 +57,10 @@ import jaitools.numeric.Statistic;
  * retrieved as a property. For this operator the property name can be reliably
  * referred to via the {@link #ZONAL_STATS_PROPERTY} constant.
  * <p>
- * The operator uses the {@link jaitools.numeric.StreamingSampleStats} class for its
+ * The operator uses the {@link org.jaitools.numeric.StreamingSampleStats} class for its
  * calculations, allowing it to handle very large images for statistics other than
- * {@link jaitools.numeric.Statistic#MEDIAN}, for which the
- * {@link jaitools.numeric.Statistic#APPROX_MEDIAN} alternative is provided.
+ * {@link org.jaitools.numeric.Statistic#MEDIAN}, for which the
+ * {@link org.jaitools.numeric.Statistic#APPROX_MEDIAN} alternative is provided.
  * <p>
  * Note that the source names for this operator are "dataImage" and "zoneImage"
  * rather than the more typical JAI names "source0", "source1".
@@ -255,8 +255,8 @@ import jaitools.numeric.Statistic;
  * </table>
  *
  * @see Result
- * @see jaitools.numeric.Statistic
- * @see jaitools.numeric.StreamingSampleStats
+ * @see Statistic
+ * @see org.jaitools.numeric.StreamingSampleStats
  * @see ZonalStats
  *
  * @author Michael Bedward
@@ -326,7 +326,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
         super(new String[][]{
                 {"GlobalName", "ZonalStats"},
                 {"LocalName", "ZonalStats"},
-                {"Vendor", "jaitools.media.jai"},
+                {"Vendor", "org.jaitools.media.jai"},
                 {"Description", "Calculate neighbourhood statistics"},
                 {"DocURL", "http://code.google.com/p/jai-tools/"},
                 {"Version", "1.0.0"},

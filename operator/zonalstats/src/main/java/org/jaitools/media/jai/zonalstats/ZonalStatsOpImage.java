@@ -23,13 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.zonalstats;
-
-import jaitools.CollectionFactory;
-import jaitools.numeric.Range;
-import jaitools.numeric.RangeUtils;
-import jaitools.numeric.Statistic;
-import jaitools.numeric.StreamingSampleStats;
+package org.jaitools.media.jai.zonalstats;
 
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
@@ -51,6 +45,13 @@ import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
+
+import org.jaitools.CollectionFactory;
+import org.jaitools.numeric.Range;
+import org.jaitools.numeric.RangeUtils;
+import org.jaitools.numeric.Statistic;
+import org.jaitools.numeric.StreamingSampleStats;
+
 
 /**
  * Calculates image summary statistics for a data image within zones defined by
