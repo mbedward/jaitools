@@ -22,7 +22,7 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
-package jaitools.demo.zonalstats;
+package org.jaitools.demo.zonalstats;
 
 import java.awt.image.RenderedImage;
 
@@ -30,10 +30,10 @@ import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
 
-import jaitools.demo.DemoImages;
-import jaitools.media.jai.zonalstats.ZonalStats;
-import jaitools.media.jai.zonalstats.ZonalStatsDescriptor;
-import jaitools.numeric.Statistic;
+import org.jaitools.demo.DemoImages;
+import org.jaitools.media.jai.zonalstats.ZonalStats;
+import org.jaitools.media.jai.zonalstats.ZonalStatsDescriptor;
+import org.jaitools.numeric.Statistic;
 
 /**
  * Demonstrates using the ZonalStats operator to calculate summary statistics of values

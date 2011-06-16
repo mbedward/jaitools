@@ -24,8 +24,8 @@
  */   
 
 /**
- * Example application for the "Vectorize" operation which traces outer
- * pixel boundaries of regions in the source image with uniform value.
+ * Example application for the "Contour" operation which traces contours at
+ * user-specified levels based on values in a source image.
  */
 
-package jaitools.demo.vectorize;
+package org.jaitools.demo.contour;

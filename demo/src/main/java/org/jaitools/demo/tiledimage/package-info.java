@@ -24,9 +24,9 @@
  */   
 
 /**
- * Example application for the "Regionalize" operation which identifies 
- * regions of uniform value in a source image, allocates each region a 
- * unique ID value, and produces an output image of these IDs.
+ * Example applications for the {@code DiskMemImage} class which is a 
+ * writable image (similar to the standard JAI {@code TiledImage} class)
+ * but backed by a {@code DiskMemTileCache}.
  */
 
-package jaitools.demo.regionalize;
+package org.jaitools.demo.tiledimage;

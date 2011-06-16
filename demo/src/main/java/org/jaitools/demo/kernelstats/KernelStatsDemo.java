@@ -23,7 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.demo.kernelstats;
+package org.jaitools.demo.kernelstats;
 
 import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
@@ -34,11 +34,11 @@ import javax.media.jai.JAI;
 import javax.media.jai.KernelJAI;
 import javax.media.jai.ParameterBlockJAI;
 
-import jaitools.demo.DemoImages;
-import jaitools.imageutils.ImageUtils;
-import jaitools.media.jai.kernel.KernelFactory;
-import jaitools.numeric.Statistic;
-import jaitools.swing.ImageFrame;
+import org.jaitools.demo.DemoImages;
+import org.jaitools.media.jai.kernel.KernelFactory;
+import org.jaitools.imageutils.ImageUtils;
+import org.jaitools.numeric.Statistic;
+import org.jaitools.swing.ImageFrame;
 
 /**
  * Demonstrates using the KernelStats operator to calculate summary

@@ -28,4 +28,4 @@
  * store image tile data on disk as well as in memory.
  */
 
-package jaitools.demo.tilecache;
+package org.jaitools.demo.tilecache;

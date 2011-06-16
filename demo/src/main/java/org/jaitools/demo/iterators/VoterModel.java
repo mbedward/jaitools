@@ -23,7 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.demo.iterators;
+package org.jaitools.demo.iterators;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -37,10 +37,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import jaitools.imageutils.ImageUtils;
-import jaitools.imageutils.WindowIterator;
-import jaitools.imageutils.WritableSimpleIterator;
-import jaitools.swing.SimpleImagePane;
+import org.jaitools.imageutils.ImageUtils;
+import org.jaitools.imageutils.WindowIterator;
+import org.jaitools.imageutils.WritableSimpleIterator;
+import org.jaitools.swing.SimpleImagePane;
  
 
 /**

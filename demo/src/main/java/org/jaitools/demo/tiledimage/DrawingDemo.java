@@ -23,10 +23,8 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.demo.tiledimage;
+package org.jaitools.demo.tiledimage;
 
-import jaitools.swing.ImageFrame;
-import jaitools.tiledimage.DiskMemImage;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
@@ -37,13 +35,17 @@ import java.awt.Shape;
 import java.awt.image.ColorModel;
 import java.awt.image.SampleModel;
 
+import org.jaitools.swing.ImageFrame;
+import org.jaitools.tiledimage.DiskMemImage;
+
+
 /**
  * Demonstrates drawing into a <code>DiskMemImage</code> using
  * Graphics2D methods. See comments in the source code for more
  * details.
  *
- * @see jaitools.tiledimage.DiskMemImage
- * @see jaitools.tiledimage.DiskMemImageGraphics
+ * @see org.jaitools.tiledimage.DiskMemImage
+ * @see org.jaitools.tiledimage.DiskMemImageGraphics
  * 
  * @author Michael Bedward
  * @since 1.0
@@ -73,8 +75,8 @@ public class DrawingDemo {
 
         /*
          * The createGraphics methods returns an instance of
-         * jaitools.tiledimage.DiskMemImageGraphics which provides a
-         * bridge to Graphics2D drawing methods
+         * DiskMemImageGraphics which provides a bridge to 
+         * Graphics2D drawing methods
          */
         Graphics2D gr = img.createGraphics();
         gr.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -108,7 +110,7 @@ public class DrawingDemo {
         gr.drawLine(0, 128, 255, 128);
 
         /*
-         * We display the results using jaitools.utils.ImageFrame widget
+         * We display the results using the ImageFrame widget
          */
         ImageFrame frame = new ImageFrame(img, "Image of 4 square tiles");
         frame.setSize(300, 300);

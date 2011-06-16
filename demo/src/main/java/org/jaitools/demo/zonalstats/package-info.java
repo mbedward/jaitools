@@ -24,9 +24,9 @@
  */   
 
 /**
- * Example applications for the {@code DiskMemImage} class which is a 
- * writable image (similar to the standard JAI {@code TiledImage} class)
- * but backed by a {@code DiskMemTileCache}.
+ * Example application for the "ZonalStats" operation which can calculate
+ * a range of summary statistics for a source image, optionally stratified
+ * by regions (zones) in an overlying integer zone image.
  */
 
-package jaitools.demo.tiledimage;
+package org.jaitools.demo.zonalstats;
