@@ -23,9 +23,10 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.vectorize;
+package org.jaitools.media.jai.vectorize;
 
 import java.awt.image.renderable.RenderedImageFactory;
+
 import javax.media.jai.OperationDescriptor;
 import javax.media.jai.OperationRegistry;
 import javax.media.jai.OperationRegistrySpi;
@@ -42,7 +43,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
 public class VectorizeSpi implements OperationRegistrySpi {
 
     /** The name of the product to which these operations belong. */
-    private String productName = "jaitools.media.jai.vectorize";
+    private String productName = "org.jaitools.media.jai.vectorize";
  
     /** Default constructor. */
     public VectorizeSpi() {}

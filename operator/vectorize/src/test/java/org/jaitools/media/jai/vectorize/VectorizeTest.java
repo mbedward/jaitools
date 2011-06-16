@@ -23,7 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.vectorize;
+package org.jaitools.media.jai.vectorize;
 
 import java.awt.Rectangle;
 import java.awt.image.RenderedImage;
@@ -45,7 +45,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
 
 import com.vividsolutions.jts.geom.Polygon;
 
-import jaitools.imageutils.ImageUtils;
+import org.jaitools.imageutils.ImageUtils;
 
 import org.junit.Before;
 import org.junit.Test;
