@@ -24,7 +24,7 @@
  */   
 
 /**
- * Example applications for jai-tools image operators.
+ * Example applications for JAITools image operators.
  */
 
 package org.jaitools.demo;

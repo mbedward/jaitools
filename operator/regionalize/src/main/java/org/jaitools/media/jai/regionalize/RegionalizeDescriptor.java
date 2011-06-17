@@ -149,7 +149,7 @@ public class RegionalizeDescriptor extends OperationDescriptorImpl {
                     {"LocalName", "Regionalize"},
                     {"Vendor", "org.jaitools.media.jai"},
                     {"Description", "Identifies sufficiently uniform regions in a source image"},
-                    {"DocURL", "http://code.google.com/p/jai-tools/"},
+                    {"DocURL", "http://code.google.com/p/jaitools/"},
                     {"Version", "1.0.0"},
                     {"arg0Desc", "band (int) - the band to regionalize"},
                     {"arg1Desc", "tolerance (double) - tolerance for pixel value comparison"},

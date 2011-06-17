@@ -125,7 +125,7 @@ public class VectorBinarizeDescriptor extends OperationDescriptorImpl {
                     {"LocalName", "VectorBinarize"},
                     {"Vendor", "org.jaitools.media.jai"},
                     {"Description", "Creates a binary image based on the inclusion of pixels within a polygonal Geometry"},
-                    {"DocURL", "http://code.google.com/p/jai-tools/"},
+                    {"DocURL", "http://code.google.com/p/jaitools/"},
                     {"Version", "1.1.0"},
                     
                     {"arg0Desc", paramNames[0] + " (Integer, default = 0) min image X"},

@@ -232,7 +232,7 @@ public class VectorizeDescriptor extends OperationDescriptorImpl {
                     {"LocalName", "Vectorize"},
                     {"Vendor", "org.jaitools.media.jai"},
                     {"Description", "Vecotirze boundaries of regions of uniform value"},
-                    {"DocURL", "http://code.google.com/p/jai-tools/"},
+                    {"DocURL", "http://code.google.com/p/jaitools/"},
                     {"Version", "1.1.0"},
                     
                     {"arg0Desc", paramNames[0] + " an optional ROI"},

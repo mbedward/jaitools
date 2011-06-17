@@ -70,7 +70,7 @@ public class VMCAFillDescriptor extends OperationDescriptorImpl {
                     {"LocalName", "VMCAFill"},
                     {"Vendor", "jaitools.media.jai"},
                     {"Description", "Voter Model Cellular Automaton: a fractal gap filling algorithm"},
-                    {"DocURL", "http://code.google.com/p/jai-tools/"},
+                    {"DocURL", "http://code.google.com/p/jaitools/"},
                     {"Version", "1.0.0"},
                     {"arg0Desc", paramNames[0] + " - a JAI Kernel object"},
                     {"arg1Desc", paramNames[1] + " - an ROI object"},
