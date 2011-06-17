@@ -23,10 +23,12 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.regionalize;
+package org.jaitools.media.jai.regionalize;
 
-import jaitools.imageutils.FillResult;
 import java.awt.Rectangle;
+
+import org.jaitools.imageutils.FillResult;
+
 
 /**
  * Holds summary data for a single region of uniform value identified in the image

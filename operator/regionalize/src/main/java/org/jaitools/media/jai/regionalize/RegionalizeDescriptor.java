@@ -23,10 +23,11 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.regionalize;
+package org.jaitools.media.jai.regionalize;
 
 import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
+
 import javax.media.jai.JAI;
 import javax.media.jai.OperationDescriptorImpl;
 import javax.media.jai.ParameterBlockJAI;
@@ -79,8 +80,6 @@ import javax.media.jai.registry.RenderedRegistryMode;
  *
  * // have a look at the image (this will force rendering and
  * // the calculation of region data)
- * jaitools.utils.ImageFrame frame = new jaitools.utils.ImageFrame();
- * frame.displayImage(op, "Regions");
  *
  * // print the summary data
  * RegionData regData =
@@ -148,7 +147,7 @@ public class RegionalizeDescriptor extends OperationDescriptorImpl {
         super(new String[][]{
                     {"GlobalName", "Regionalize"},
                     {"LocalName", "Regionalize"},
-                    {"Vendor", "jaitools.media.jai"},
+                    {"Vendor", "org.jaitools.media.jai"},
                     {"Description", "Identifies sufficiently uniform regions in a source image"},
                     {"DocURL", "http://code.google.com/p/jai-tools/"},
                     {"Version", "1.0.0"},

@@ -1,10 +1,10 @@
 #
 # Image operation descriptors :
 #
-descriptor  jaitools.media.jai.regionalize.RegionalizeDescriptor
+descriptor  org.jaitools.media.jai.regionalize.RegionalizeDescriptor
 
 
 #
 # "rendered" factory objects
 #
-rendered  jaitools.media.jai.regionalize.RegionalizeRIF  jaitools.media.jai  Regionalize  Regionalize
+rendered  org.jaitools.media.jai.regionalize.RegionalizeRIF  org.jaitools.media.jai  Regionalize  Regionalize

@@ -23,9 +23,8 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.regionalize;
+package org.jaitools.media.jai.regionalize;
 
-import com.sun.media.jai.opimage.RIFUtil;
 import java.awt.RenderingHints;
 import java.awt.image.ComponentSampleModel;
 import java.awt.image.DataBuffer;
@@ -33,9 +32,13 @@ import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
 import java.awt.image.renderable.ParameterBlock;
 import java.awt.image.renderable.RenderedImageFactory;
+
 import javax.media.jai.BorderExtender;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.JAI;
+
+import com.sun.media.jai.opimage.RIFUtil;
+
 
 /**
  * The image factory for the Regionalize operation.
