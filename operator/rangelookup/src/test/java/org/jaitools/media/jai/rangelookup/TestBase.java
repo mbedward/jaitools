@@ -23,9 +23,9 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.rangelookup;
+package org.jaitools.media.jai.rangelookup;
 
-import jaitools.numeric.Range;
+import org.jaitools.numeric.Range;
 
 /**
  * Base class for unit tests.

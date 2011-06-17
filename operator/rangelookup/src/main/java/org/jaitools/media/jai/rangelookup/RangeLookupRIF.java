@@ -22,10 +22,7 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
-package jaitools.media.jai.rangelookup;
-
-import com.sun.media.jai.opimage.RIFUtil;
-import com.sun.media.jai.util.JDKWorkarounds;
+package org.jaitools.media.jai.rangelookup;
 
 import java.awt.RenderingHints;
 import java.awt.image.ColorModel;
@@ -39,6 +36,10 @@ import java.util.List;
 import javax.media.jai.BorderExtender;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.RasterFactory;
+
+import com.sun.media.jai.opimage.RIFUtil;
+import com.sun.media.jai.util.JDKWorkarounds;
+
 
 /**
  * The image factory for the RangeLookup operation.
