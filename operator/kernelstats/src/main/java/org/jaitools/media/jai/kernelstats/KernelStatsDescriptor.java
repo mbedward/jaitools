@@ -56,6 +56,77 @@ import org.jaitools.numeric.Statistic;
  * </ul>
  * The two options may be used together.
  *
+ * <p>
+ * <b>Summary of parameters:</b>
+ * <table border="1", cellpadding="3">
+ * <tr>
+ * <th>Name</th>
+ * <th>Class</th>
+ * <th>Default</th>
+ * <th>Description</th>
+ * </tr>
+ * 
+ * <tr>
+ * <td>stats</td>
+ * <td>Array of {@link Statistic}</td>
+ * <td>No default</td>
+ * <td>The statistics to calculate</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>kernel</td>
+ * <td>KernelJAI</td>
+ * <td>No default</td>
+ * <td>Kernel defining the neighbourhood</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>band</td>
+ * <td>Integer</td>
+ * <td>0</td>
+ * <td>Source image band to process</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>roi</td>
+ * <td>ROI</td>
+ * <td>null</td>
+ * <td>An optional ROI defining the area to process</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>maskSource</td>
+ * <td>Boolean</td>
+ * <td>false</td>
+ * <td>If true, only neighbourhood pixels within the ROI are used in calculations</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>maskDest</td>
+ * <td>Boolean</td>
+ * <td>false</td>
+ * <td>if true, NaN is returned for any pixels not within the ROI</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>ignoreNaN</td>
+ * <td>Boolean</td>
+ * <td>true</td>
+ * <td>
+ * if true, any Float or Double NaN values in the source image are ignored;
+ * if false, nilValue is returned when there are any NaN values in a neighbourhood
+ * </td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>nilValue</td>
+ * <td>Number</td>
+ * <td>0</td>
+ * <td>value to return for no result</td>
+ * </tr>
+ * 
+ * </table>
+ * 
  * @author Michael Bedward
  * @since 1.0
  * @version $Id$
