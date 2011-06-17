@@ -111,7 +111,7 @@ public class RangeUtils {
      *
      * @return a list of {@code Ranges} which form the complement (may be empty)
      *
-     * @see #createComplement(jaitools.numeric.Range)
+     * @see #createComplement(Range)
      */
     public static <T extends Number & Comparable> List<Range<T>> createComplement(Collection<Range<T>> ranges) {
         List<Range<T>> inputs = simplify(ranges);

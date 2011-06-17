@@ -37,7 +37,7 @@ import java.util.Properties;
 public class JAITools {
 
     /**
-     * Gets the JAI-tools version string
+     * Gets the JAITools version string
      * 
      * @return the version string
      */

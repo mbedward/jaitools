@@ -89,7 +89,7 @@ import org.jaitools.CollectionFactory;
  */
 public class StreamingSampleStats {
 
-    private static final Logger LOGGER = Logger.getLogger("jaitools.numeric");
+    private static final Logger LOGGER = Logger.getLogger("org.jaitools.numeric");
     
     private ProcessorFactory factory = new ProcessorFactory();
     private List<Processor> processors;
@@ -196,7 +196,7 @@ public class StreamingSampleStats {
      *
      * @param noData the value to be treated as NoData
      *
-     * @see #addNoDataRange(jaitools.numeric.Range)
+     * @see #addNoDataRange(Range)
      */
     public void addNoDataValue(Double noData) {
         if (noData != null && !noData.isNaN()) {

@@ -31,7 +31,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Abstract base class for jai-tools object factories.
+ * Abstract base class for JAITools object factories.
  *
  * @author Michael Bedward
  * @since 1.0

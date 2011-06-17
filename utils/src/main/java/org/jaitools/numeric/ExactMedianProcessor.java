@@ -78,7 +78,7 @@ public class ExactMedianProcessor extends AbstractProcessor {
         if (getNumAccepted() >= Integer.MAX_VALUE) {
             // only log a warning for the first extraneous value
             if (getNumOffered() == Integer.MAX_VALUE) {
-                Logger.getLogger("jaitools.numeric").log(
+                Logger.getLogger("org.jaitools.numeric").log(
                         Level.WARNING, "Too many values for exact median calculation");
             }
         }

@@ -35,7 +35,7 @@ import javax.swing.SwingUtilities;
 
 /**
  * A progress bar in a frame with a title and optional label.
- * This was written to be used with jai-tools demonstration
+ * This was written to be used with JAITools demonstration
  * programs.
  * <p>
  * The update methods {@linkplain #setProgress(float progress)}

@@ -70,7 +70,7 @@ import org.jaitools.DaemonThreadFactory;
  * 
  * Unlike the standard JAI {@code TileCache} implementation, resident tiles are cached
  * using strong references. This is to support the use of this class with
- * {@linkplain jaitools.tiledimage.DiskMemImage} as well as operations that need to
+ * {@linkplain org.jaitools.tiledimage.DiskMemImage} as well as operations that need to
  * cache tiles that are expensive to create (e.g. output of a time-consuming analysis).
  * A disadvantage of this design is that when the cache is being used for easily
  * generated tiles it can end up unnecessarily holding memory that is more urgently

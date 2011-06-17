@@ -25,7 +25,7 @@
 
 /**
  * A writable tiled image class similar to JAI's {@code TiledImage} but backed
- * by {@link jaitools.tilecache.DiskMemTileCache} to handle very large images 
+ * by {@link org.jaitools.tilecache.DiskMemTileCache} to handle very large images 
  * within limited memory.
  */
 

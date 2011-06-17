@@ -508,7 +508,7 @@ public class RangeComparator<T extends Number & Comparable> {
 
 
     /**
-     * Helper for {@link #compare(jaitools.numeric.Range, jaitools.numeric.Range) } used
+     * Helper for {@link #compare(Range, Range) } used
      * when one or both of the intervals are degenerate (point) intervals.
      *
      * @param r1 first interval

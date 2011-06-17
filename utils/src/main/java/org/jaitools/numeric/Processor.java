@@ -168,7 +168,7 @@ public interface Processor {
      *
      * @return number of NoData samples
      *
-     * @see #addNoDataRange(jaitools.numeric.Range)
+     * @see #addNoDataRange(org.jaitools.numeric.Range)
      * @see #addNoDataValue(java.lang.Double)
      */
     public long getNumNoData();

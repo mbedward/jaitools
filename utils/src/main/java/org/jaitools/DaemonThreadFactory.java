@@ -31,7 +31,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Simple ThreadFactory implementation to supply daemon threads with 
- * specified priority. Used by JAI-tools classes that run polling services
+ * specified priority. Used by JAITools classes that run polling services
  * on background threads to avoid blocking application exit.
  * 
  * @author Michael Bedward

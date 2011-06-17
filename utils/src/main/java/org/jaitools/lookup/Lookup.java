@@ -34,12 +34,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * This class offers minimal Service Provider Interface lookup functions.
- * Within jai-tools it is used to find implementations of non-operator interfaces
- * such as {@code jaitools.numeric.Processor}. Class names are read from registry
+ * Within JAITools it is used to find implementations of non-operator interfaces
+ * such as {@code org.jaitools.numeric.Processor}. Class names are read from registry
  * files in the META-INF/services folder. Each registry file name corresponds to a
  * fully qualified interface name. File format is one class name per line. Comment
  * lines are prefixed with a hash (#) character. Blank lines are permitted.
@@ -56,7 +57,7 @@ import java.util.logging.Logger;
 public class Lookup {
 
     private static final String prefix = "META-INF/services/";
-    private static final Logger LOGGER = Logger.getLogger("jaitools.lookup");
+    private static final Logger LOGGER = Logger.getLogger("org.jaitools.lookup");
 
     private static HashMap<String, WeakReference<List<Class>>> cache = new HashMap<String, WeakReference<List<Class>>>();
 
@@ -141,12 +142,12 @@ public class Lookup {
                             try {
                                 providers.add(Class.forName(text));
                             } catch (ClassNotFoundException ex) {
-                                LOGGER.warning("Class not found: " + text);
+                                LOGGER.log(Level.WARNING, "Class not found: {0}", text);
                             }
                         }
                     }
                 } catch (IOException ex) {
-                    LOGGER.severe("Problem reading services file: " + spiName);
+                    LOGGER.log(Level.SEVERE, "Problem reading services file: {0}", spiName);
                 } finally {
                     
                     try {
@@ -164,7 +165,7 @@ public class Lookup {
                     }    
                 }
             } else {
-                LOGGER.severe("Could not find " + prefix + spiName);
+                LOGGER.log(Level.SEVERE,"Could not find " + prefix + "{0}", spiName);
             }
         }
 
