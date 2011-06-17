@@ -23,7 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.contour;
+package org.jaitools.media.jai.contour;
 
 import java.awt.Point;
 import java.awt.Transparency;
@@ -50,8 +50,8 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.io.WKTReader;
 
-import jaitools.imageutils.ImageUtils;
-import jaitools.numeric.Range;
+import org.jaitools.imageutils.ImageUtils;
+import org.jaitools.numeric.Range;
 
 import static org.junit.Assert.*;
 import org.junit.Before;

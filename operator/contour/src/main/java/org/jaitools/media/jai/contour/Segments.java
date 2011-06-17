@@ -23,9 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.contour;
-
-import jaitools.jts.Utils;
+package org.jaitools.media.jai.contour;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,6 +32,9 @@ import java.util.List;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.operation.linemerge.LineMerger;
+
+import org.jaitools.jts.Utils;
+
 
 /**
  * A container for the segments collected by ContourOpImage. 

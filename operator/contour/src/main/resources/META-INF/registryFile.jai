@@ -1,10 +1,10 @@
 #
 # Image operation descriptors :
 #
-descriptor  jaitools.media.jai.contour.ContourDescriptor
+descriptor  org.jaitools.media.jai.contour.ContourDescriptor
 
 
 #
 # "rendered" factory objects
 #
-rendered  jaitools.media.jai.contour.ContourRIF  jaitools.media.jai  Contour  Contour
+rendered  org.jaitools.media.jai.contour.ContourRIF  org.jaitools.media.jai  Contour  Contour

@@ -23,9 +23,47 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-/**
- * Performs the "Contour" operation, tracing smooth contours at specified
- * levels by interpolation of values in a band of the source image.
- */
+package org.jaitools.media.jai.contour;
 
-package jaitools.media.jai.contour;
+import java.awt.image.renderable.RenderedImageFactory;
+import javax.media.jai.OperationDescriptor;
+import javax.media.jai.OperationRegistry;
+import javax.media.jai.OperationRegistrySpi;
+import javax.media.jai.registry.RenderedRegistryMode;
+
+/**
+ * OperationRegistrySpi implementation to register the "Contour"
+ * operation and its associated image factories.
+ *
+ * @author Michael Bedward
+ * @since 1.1
+ * @version $Id$
+ */
+public class ContourSpi implements OperationRegistrySpi {
+
+    /** The name of the product to which these operations belong. */
+    private String productName = "org.jaitools.media.jai.contour";
+ 
+    /** Default constructor. */
+    public ContourSpi() {}
+
+    /**
+     * Registers the Contour operation and its
+     * associated image factories across all supported operation modes.
+     *
+     * @param registry The registry with which to register the operations
+     * and their factories.
+     */
+    public void updateRegistry(OperationRegistry registry) {
+        OperationDescriptor op = new ContourDescriptor();
+        registry.registerDescriptor(op);
+        String descName = op.getName();
+        
+        RenderedImageFactory rif = new ContourRIF();
+
+        registry.registerFactory(RenderedRegistryMode.MODE_NAME,
+                                 descName,
+                                 productName,
+                                 rif);
+    }
+}

@@ -23,15 +23,17 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.contour;
+package org.jaitools.media.jai.contour;
 
-import jaitools.numeric.Range;
 import java.awt.image.renderable.ParameterBlock;
 import java.util.Arrays;
 import java.util.Collection;
+
 import javax.media.jai.OperationDescriptorImpl;
 import javax.media.jai.ROI;
 import javax.media.jai.registry.RenderedRegistryMode;
+
+import org.jaitools.numeric.Range;
 
 /**
  * Describes the "Contour" operation in which contour lines are interpolated
@@ -149,7 +151,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * </td>
  * <td>
  * Values to be treated as NO_DATA. A value can be either a Number or a 
- * {@link jaitools.numeric.Range} (mixtures of both are permitted).
+ * {@link org.jaitools.numeric.Range} (mixtures of both are permitted).
  * </td>
  * </tr>
  * 
@@ -240,7 +242,7 @@ public class ContourDescriptor extends OperationDescriptorImpl {
         super(new String[][]{
                     {"GlobalName", "Contour"},
                     {"LocalName", "Contour"},
-                    {"Vendor", "jaitools.media.jai"},
+                    {"Vendor", "org.jaitools.media.jai"},
                     {"Description", "Traces contours based on source image values"},
                     {"DocURL", "http://code.google.com/p/jai-tools/"},
                     {"Version", "1.1.0"},
