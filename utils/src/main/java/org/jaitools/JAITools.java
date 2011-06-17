@@ -42,7 +42,7 @@ public class JAITools {
      * @return the version string
      */
     public static String getVersion() {
-        return "2.0.0";
+        return "1.3.0";
     }
 
     /**
