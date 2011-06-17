@@ -23,9 +23,10 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.kernelstats;
+package org.jaitools.media.jai.kernelstats;
 
 import java.awt.image.renderable.RenderedImageFactory;
+
 import javax.media.jai.OperationDescriptor;
 import javax.media.jai.OperationRegistry;
 import javax.media.jai.OperationRegistrySpi;
@@ -42,7 +43,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
 public class KernelStatsSpi implements OperationRegistrySpi {
 
     /** The name of the product to which these operations belong. */
-    private String productName = "jaitools.media.jai";
+    private String productName = "org.jaitools.media.jai";
  
     /** Default constructor. */
     public KernelStatsSpi() {}

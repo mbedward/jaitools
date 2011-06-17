@@ -23,11 +23,8 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.kernelstats;
+package org.jaitools.media.jai.kernelstats;
 
-import jaitools.numeric.Statistic;
-import com.sun.media.jai.opimage.RIFUtil;
-import com.sun.media.jai.util.ImageUtil;
 import java.awt.RenderingHints;
 import java.awt.image.ColorModel;
 import java.awt.image.DataBuffer;
@@ -35,11 +32,17 @@ import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
 import java.awt.image.renderable.ParameterBlock;
 import java.awt.image.renderable.RenderedImageFactory;
+
 import javax.media.jai.BorderExtender;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.KernelJAI;
 import javax.media.jai.ROI;
 import javax.media.jai.RasterFactory;
+
+import com.sun.media.jai.opimage.RIFUtil;
+import com.sun.media.jai.util.ImageUtil;
+
+import org.jaitools.numeric.Statistic;
 
 /**
  * The image factory for the {@link KernelStatsOpImage} operation.
