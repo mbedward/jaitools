@@ -66,7 +66,7 @@ import org.jaitools.jts.CoordinateSequence2D;
  * be used with massive images.
  * <p>
  * JAI operations often involve converting ROI objects to images. This class 
- * implements its {@link #getAsImage()} method using the JAI-tools "VectorBinarize" 
+ * implements its {@link #getAsImage()} method using the JAITools "VectorBinarize" 
  * operator to avoid exhausting available memory when dealing with ROIs that 
  * cover massive image areas.
  * <p>
@@ -398,7 +398,7 @@ public class ROIGeometry extends ROI {
      * resulting image has a small memory footprint.
      * 
      * @return a new image representing this ROI
-     * @see jaitools.media.jai.vectorbinarize.VectorBinarizeDescriptor
+     * @see org.jaitools.media.jai.vectorbinarize.VectorBinarizeDescriptor
      */
     @Override
     public PlanarImage getAsImage() {
