@@ -23,7 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai;
+package org.jaitools.media.jai;
 
 import java.awt.Point;
 import java.awt.Rectangle;
