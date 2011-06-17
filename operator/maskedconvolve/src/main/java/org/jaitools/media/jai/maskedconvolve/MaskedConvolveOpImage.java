@@ -101,20 +101,34 @@ public class MaskedConvolveOpImage extends AreaOpImage {
     private int minKernelCells;
 
     /**
-     * Constructor
-     * @param source a RenderedImage.
-     * @param extender a BorderExtender, or null.
+     * Creates a new instance.
+     * 
+     * @param source the source image to convolve
+     * 
+     * @param extender an optional {@code BorderExtender}, or {@code null}
+     * 
      * @param config configurable attributes of the image (see {@link AreaOpImage})
-     * @param layout an ImageLayout optionally containing the tile grid layout,
-     *        SampleModel, and ColorModel, or null.
+     * 
+     * @param layout an optional {@code ImageLayout} specifying destination image
+     *     parameters, or {@code null}
+     * 
      * @param kernel the convolution kernel
+     * 
      * @param roi the ROI used to control masking; must contain the source image bounds
+     * 
      * @param maskSrc if true, exclude masked pixels ({@code roi.contains == false}) from
      * convolution kernel calculation
+     * 
      * @param maskDest if true, do not place kernel over masked pixels (dest will be 0)
+     * 
+     * @param nilValue value to write to the destination image for pixels where
+     *        there is no convolution result
+     *
+     * @param minCells the minimum number of non-zero kernel cells that be positioned over
+     *        unmasked source image cells for convolution to be performed for the target cell
+     * 
      * @throws IllegalArgumentException if the roi's bounds do not contain the entire
      * source image
-     * @see MaskedConvolveDescriptor
      */
     public MaskedConvolveOpImage(RenderedImage source,
             BorderExtender extender,
