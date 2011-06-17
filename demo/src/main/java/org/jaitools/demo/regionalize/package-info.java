@@ -24,9 +24,9 @@
  */   
 
 /**
- * Example application for the "ZonalStats" operation which can calculate
- * a range of summary statistics for a source image, optionally stratified
- * by regions (zones) in an overlying integer zone image.
+ * Example application for the "Regionalize" operation which identifies 
+ * regions of uniform value in a source image, allocates each region a 
+ * unique ID value, and produces an output image of these IDs.
  */
 
-package jaitools.demo.zonalstats;
+package org.jaitools.demo.regionalize;

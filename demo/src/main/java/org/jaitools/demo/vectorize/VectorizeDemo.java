@@ -22,11 +22,8 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
-package jaitools.demo.vectorize;
+package org.jaitools.demo.vectorize;
 
-import com.vividsolutions.jts.geom.Polygon;
-import jaitools.imageutils.ImageUtils;
-import jaitools.media.jai.vectorize.VectorizeDescriptor;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.image.RenderedImage;
@@ -36,12 +33,19 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.ROI;
 import javax.media.jai.ROIShape;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.TiledImage;
+
+import com.vividsolutions.jts.geom.Polygon;
+
+import org.jaitools.imageutils.ImageUtils;
+import org.jaitools.media.jai.vectorize.VectorizeDescriptor;
+
 
 /**
  * Demonstrates the Vectorize operator which generates JTS Polygons representing

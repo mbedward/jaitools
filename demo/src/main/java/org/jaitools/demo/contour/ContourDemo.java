@@ -23,7 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.demo.contour;
+package org.jaitools.demo.contour;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -38,10 +38,10 @@ import javax.media.jai.RenderedOp;
 
 import com.vividsolutions.jts.geom.LineString;
 
-import jaitools.demo.DemoImages;
-import jaitools.media.jai.contour.ContourDescriptor;
-import jaitools.swing.ImageFrame;
-import jaitools.swing.JTSFrame;
+import org.jaitools.demo.DemoImages;
+import org.jaitools.media.jai.contour.ContourDescriptor;
+import org.jaitools.swing.ImageFrame;
+import org.jaitools.swing.JTSFrame;
 
 /**
  * Demonstrates the Contour operator. 

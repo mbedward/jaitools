@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>jaitools</artifactId>
-        <groupId>com.googlecode.jaitools</groupId>
+        <groupId>org.jaitools</groupId>
         <version>1.2-SNAPSHOT</version>
     </parent>
     
@@ -32,7 +32,7 @@
                         <configuration>
                             <artifactSet>
                                 <excludes>
-                                    <exclude>com.googlecode.jaitools:jt-demo</exclude>
+                                    <exclude>org.jaitools:jt-demo</exclude>
                                     <exclude>com.vividsolutions:jts</exclude>
                                     <exclude>junit:junit</exclude>
                                     <exclude>xerces:xercesImpl</exclude>
@@ -60,7 +60,7 @@
                         <configuration>
                             <includeDependencySources>true</includeDependencySources>
                             <dependencySourceIncludes>
-                                <dependencySourceInclude>com.googlecode.jaitools:*</dependencySourceInclude>
+                                <dependencySourceInclude>org.jaitools:*</dependencySourceInclude>
                             </dependencySourceIncludes>                        
                             <excludePackageNames>jaitools.demo.*</excludePackageNames>
                         </configuration>

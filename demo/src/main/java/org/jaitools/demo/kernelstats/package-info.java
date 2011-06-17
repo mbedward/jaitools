@@ -24,8 +24,8 @@
  */   
 
 /**
- * Example application for the "Contour" operation which traces contours at
- * user-specified levels based on values in a source image.
+ * Example application for the "KernelStats" operation which calculates summary 
+ * statistics for a neighbourhood around each pixel in the source image.
  */
 
-package jaitools.demo.contour;
+package org.jaitools.demo.kernelstats;

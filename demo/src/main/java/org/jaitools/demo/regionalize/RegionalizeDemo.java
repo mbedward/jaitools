@@ -22,23 +22,23 @@
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
-package jaitools.demo.regionalize;
+package org.jaitools.demo.regionalize;
 
-import jaitools.CollectionFactory;
 import java.awt.Color;
 import java.awt.image.RenderedImage;
 import java.util.List;
+import java.util.Map;
 
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
 
-import jaitools.demo.DemoImages;
-import jaitools.imageutils.ImageUtils;
-import jaitools.media.jai.regionalize.Region;
-import jaitools.media.jai.regionalize.RegionalizeDescriptor;
-import jaitools.swing.ImageFrame;
-import java.util.Map;
+import org.jaitools.CollectionFactory;
+import org.jaitools.demo.DemoImages;
+import org.jaitools.imageutils.ImageUtils;
+import org.jaitools.media.jai.regionalize.Region;
+import org.jaitools.media.jai.regionalize.RegionalizeDescriptor;
+import org.jaitools.swing.ImageFrame;
 
 /**
  * Demonstrates using the Regionalize operation to identify regions

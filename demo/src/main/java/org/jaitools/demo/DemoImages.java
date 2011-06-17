@@ -23,14 +23,14 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.demo;
+package org.jaitools.demo;
 
 import java.awt.image.RenderedImage;
+import java.util.Random;
 
 import javax.media.jai.TiledImage;
 
-import jaitools.imageutils.ImageUtils;
-import java.util.Random;
+import org.jaitools.imageutils.ImageUtils;
 
 /**
  * Serves images to the demo applications.

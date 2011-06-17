@@ -24,8 +24,8 @@
  */   
 
 /**
- * Example application for the "KernelStats" operation which calculates summary 
- * statistics for a neighbourhood around each pixel in the source image.
+ * Example application for the "Vectorize" operation which traces outer
+ * pixel boundaries of regions in the source image with uniform value.
  */
 
-package jaitools.demo.kernelstats;
+package org.jaitools.demo.vectorize;

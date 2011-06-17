@@ -23,20 +23,23 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.demo.tilecache;
+package org.jaitools.demo.tilecache;
 
-import jaitools.tilecache.DiskCachedTile;
-import jaitools.tilecache.DiskMemTileCache;
 import java.awt.RenderingHints;
 import java.awt.image.Raster;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
+
 import javax.media.jai.ImageLayout;
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
+
+import org.jaitools.tilecache.DiskCachedTile;
+import org.jaitools.tilecache.DiskMemTileCache;
+
 
 /**
  * Demonstrates basic use of {@code DiskMemTileCache}.
