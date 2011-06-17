@@ -3,18 +3,18 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.googlecode.jaitools</groupId>
+        <groupId>org.jaitools</groupId>
         <artifactId>jaitools</artifactId>
         <version>1.2-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.googlecode.jaitools</groupId>
     <artifactId>operator</artifactId>
     <packaging>pom</packaging>
 
-    <name>JAI-tools - image operators</name>
+    <name>JAITools - image operators</name>
 
-    <description>Image perators for the Java Advanced Imaging library
+    <description>
+        Image operators compatible with Java Advanced Imaging (JAI)
     </description>
 
     <modules>
