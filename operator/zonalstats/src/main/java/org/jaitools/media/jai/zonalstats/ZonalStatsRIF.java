@@ -23,7 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.zonalstats;
+package org.jaitools.media.jai.zonalstats;
 
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
@@ -42,8 +42,8 @@ import javax.media.jai.RasterFactory;
 import com.sun.media.jai.opimage.RIFUtil;
 import com.sun.media.jai.util.ImageUtil;
 
-import jaitools.numeric.Range;
-import jaitools.numeric.Statistic;
+import org.jaitools.numeric.Range;
+import org.jaitools.numeric.Statistic;
 
 /**
  * The image factory for the {@link ZonalStatsOpImage} operation.

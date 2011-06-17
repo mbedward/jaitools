@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.googlecode.jaitools</groupId>
+        <groupId>org.jaitools</groupId>
         <artifactId>operator</artifactId>
         <version>1.2-SNAPSHOT</version>
     </parent>
@@ -16,7 +16,7 @@ a zone image, for values in a data image
 
     <dependencies>
         <dependency>
-            <groupId>com.googlecode.jaitools</groupId>
+            <groupId>org.jaitools</groupId>
             <artifactId>jt-utils</artifactId>
             <version>${project.version}</version>
         </dependency>

@@ -1,10 +1,10 @@
 #
 # Image operation descriptors :
 #
-descriptor  jaitools.media.jai.zonalstats.ZonalStatsDescriptor
+descriptor  org.jaitools.media.jai.zonalstats.ZonalStatsDescriptor
 
 
 #
 # "rendered" factory objects
 #
-rendered  jaitools.media.jai.zonalstats.ZonalStatsRIF  jaitools.media.jai  ZonalStats  ZonalStats
+rendered  org.jaitools.media.jai.zonalstats.ZonalStatsRIF  org.jaitools.media.jai  ZonalStats  ZonalStats

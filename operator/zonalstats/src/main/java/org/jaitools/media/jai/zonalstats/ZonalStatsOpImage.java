@@ -23,13 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.zonalstats;
-
-import jaitools.CollectionFactory;
-import jaitools.numeric.Range;
-import jaitools.numeric.RangeUtils;
-import jaitools.numeric.Statistic;
-import jaitools.numeric.StreamingSampleStats;
+package org.jaitools.media.jai.zonalstats;
 
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
@@ -51,6 +45,13 @@ import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
+
+import org.jaitools.CollectionFactory;
+import org.jaitools.numeric.Range;
+import org.jaitools.numeric.RangeUtils;
+import org.jaitools.numeric.Statistic;
+import org.jaitools.numeric.StreamingSampleStats;
+
 
 /**
  * Calculates image summary statistics for a data image within zones defined by
@@ -92,44 +93,6 @@ public class ZonalStatsOpImage extends NullOpImage {
     private Range.Type rangesType;
 
     private SortedSet<Integer> zones;
-
-
-    /**
-     * Constructor.
-     *
-     * @param dataImage a {@code RenderedImage} from which data values will be read.
-     *
-     * @param zoneImage an optional {@code RenderedImage} of integral data type that defines
-     *        the zones for which to calculate summary data.
-     *
-     * @param config configurable attributes of the image (see {@link AreaOpImage}).
-     *
-     * @param layout an optional {@code ImageLayout} object.
-     *
-     * @param stats an array of {@code Statistic} constants specifying the data required.
-     *
-     * @param bands the data image band to process.
-     *
-     * @param roi an optional {@code ROI} for data image masking.
-     *
-     * @param zoneTransform an optional {@code AffineTransform} which maps data image positions
-     *        to zone image positions
-     *
-     * @param excludedRanges an optional list of {@link Range} objects defining values to exclude
-     *        from calculations; may be {@code null} or empty
-     * 
-     * @deprecated This constructor will be removed in version 1.2
-     */
-    public ZonalStatsOpImage(RenderedImage dataImage, RenderedImage zoneImage,
-            Map<?, ?> config,
-            ImageLayout layout,
-            Statistic[] stats,
-            Integer[] bands,
-            ROI roi,
-            AffineTransform zoneTransform,
-            Collection<Range<Double>> excludedRanges) {
-        this (dataImage, zoneImage, config, layout, stats, bands, roi, zoneTransform, excludedRanges, Range.Type.EXCLUDE, false, null);
-    }
 
     /**
      * Constructor.

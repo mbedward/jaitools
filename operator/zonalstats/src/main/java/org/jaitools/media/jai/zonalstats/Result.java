@@ -23,14 +23,15 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.zonalstats;
-
-import jaitools.numeric.Range;
-import jaitools.numeric.Statistic;
+package org.jaitools.media.jai.zonalstats;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+
+import org.jaitools.numeric.Range;
+import org.jaitools.numeric.Statistic;
+
 
 /**
  * Holds the result for a a given combination of image band / zone / statistic.

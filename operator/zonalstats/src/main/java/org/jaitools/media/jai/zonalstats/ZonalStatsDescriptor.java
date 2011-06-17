@@ -23,28 +23,25 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.zonalstats;
+package org.jaitools.media.jai.zonalstats;
 
 import java.awt.Rectangle;
-import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
+import java.util.Collection;
 import java.util.List;
 
-import javax.media.jai.JAI;
 import javax.media.jai.OperationDescriptorImpl;
-import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.ROI;
 import javax.media.jai.registry.RenderedRegistryMode;
 
-import jaitools.numeric.Range;
-import jaitools.numeric.RangeComparator;
-import jaitools.numeric.RangeUtils;
-import jaitools.numeric.Statistic;
-import java.util.Collection;
+import org.jaitools.numeric.Range;
+import org.jaitools.numeric.RangeComparator;
+import org.jaitools.numeric.RangeUtils;
+import org.jaitools.numeric.Statistic;
 
 
 /**
@@ -60,10 +57,10 @@ import java.util.Collection;
  * retrieved as a property. For this operator the property name can be reliably
  * referred to via the {@link #ZONAL_STATS_PROPERTY} constant.
  * <p>
- * The operator uses the {@link jaitools.numeric.StreamingSampleStats} class for its
+ * The operator uses the {@link org.jaitools.numeric.StreamingSampleStats} class for its
  * calculations, allowing it to handle very large images for statistics other than
- * {@link jaitools.numeric.Statistic#MEDIAN}, for which the
- * {@link jaitools.numeric.Statistic#APPROX_MEDIAN} alternative is provided.
+ * {@link org.jaitools.numeric.Statistic#MEDIAN}, for which the
+ * {@link org.jaitools.numeric.Statistic#APPROX_MEDIAN} alternative is provided.
  * <p>
  * Note that the source names for this operator are "dataImage" and "zoneImage"
  * rather than the more typical JAI names "source0", "source1".
@@ -258,8 +255,8 @@ import java.util.Collection;
  * </table>
  *
  * @see Result
- * @see jaitools.numeric.Statistic
- * @see jaitools.numeric.StreamingSampleStats
+ * @see Statistic
+ * @see org.jaitools.numeric.StreamingSampleStats
  * @see ZonalStats
  *
  * @author Michael Bedward
@@ -329,7 +326,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
         super(new String[][]{
                 {"GlobalName", "ZonalStats"},
                 {"LocalName", "ZonalStats"},
-                {"Vendor", "jaitools.media.jai"},
+                {"Vendor", "org.jaitools.media.jai"},
                 {"Description", "Calculate neighbourhood statistics"},
                 {"DocURL", "http://code.google.com/p/jai-tools/"},
                 {"Version", "1.0.0"},
@@ -390,63 +387,6 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
     }
 
     /**
-     * Convenience method which constructs a {@link ParameterBlockJAI} and
-     * invokes {@code JAI.create("ZonalStats", params) }
-     *
-     * @param dataImage the data image
-     *
-     * @param zoneImage the zone image which must be of integral data type
-     *
-     * @param stats an array specifying the statistics required
-     *
-     * @param bands the array of bands of the data image to process (default single band == 0)
-     *
-     * @param roi optional roi (default is {@code null}) used to mask data values
-     *
-     * @param zoneTransform (default is {@code null}) an AffineTransform used to convert
-     *        dataImage pixel coords to zoneImage pixel coords
-     *
-     * @param exclude a List of Ranges defining dataImage values to exclude from the analysis
-     *        (may be empty or {@code null})
-     *
-     * @param hints an optional RenderingHints object
-     *
-     * @return a RenderedImage with a band for each requested statistic
-     * 
-     * @deprecated This method will be removed in version 1.2
-     */
-    public static RenderedImage create( RenderedImage dataImage, RenderedImage zoneImage,
-            Statistic[] stats, Integer[] bands, ROI roi, AffineTransform zoneTransform,
-            List<Range<Double>> ranges, RenderingHints hints ) {
-
-        return create(dataImage, zoneImage, stats, bands, roi, zoneTransform, ranges, Range.Type.EXCLUDE, false, null, hints);
-    }
-
-    /**
-     * @deprecated This method will be removed in version 1.2
-     */
-    public static RenderedImage create( RenderedImage dataImage, RenderedImage zoneImage,
-            Statistic[] stats, Integer[] bands, ROI roi, AffineTransform zoneTransform,
-            List<Range<Double>> ranges, Range.Type rangesType, boolean rangeLocalStats,
-            List<Range<Double>> noDataRanges, RenderingHints hints ) {
-
-        ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats", RenderedRegistryMode.MODE_NAME);
-
-        pb.setSource(srcImageNames[DATA_IMAGE], dataImage);
-        pb.setSource(srcImageNames[ZONE_IMAGE], zoneImage);
-        pb.setParameter(paramNames[STATS_ARG], stats);
-        pb.setParameter(paramNames[BAND_ARG], bands);
-        pb.setParameter(paramNames[ROI_ARG], roi);
-        pb.setParameter(paramNames[ZONE_TRANSFORM_ARG], zoneTransform);
-        pb.setParameter(paramNames[RANGES_ARG], ranges);
-        pb.setParameter(paramNames[RANGES_TYPE_ARG], rangesType);
-        pb.setParameter(paramNames[RANGE_LOCAL_STATS_ARG], rangeLocalStats);
-        pb.setParameter(paramNames[NODATA_RANGES_ARG], noDataRanges);
-
-        return JAI.create("ZonalStats", pb, hints);
-    }
-
-    /**
      * Returns true to indicate that properties are supported
      */
     @Override
@@ -455,14 +395,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
     }
 
     /**
-     * Checks parameters for the following:
-     * <ul>
-     * <li> Number of sources is 1 or 2
-     * <li> Data image bands are valid
-     * <li> Zone image, if provided, is an integral data type
-     * <li> Zone image, if provided, overlaps the data image, taking into
-     *      account any {@code AffineTransform}
-     * </ul>
+     * Checks parameters prior to them being used.
      */
     @SuppressWarnings("unchecked")
     @Override
