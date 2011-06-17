@@ -15,7 +15,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.jaitools</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>jt-utils</artifactId>
             <version>${project.version}</version>
         </dependency>
