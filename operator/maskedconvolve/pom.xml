@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.googlecode.jaitools</groupId>
+        <groupId>org.jaitools</groupId>
         <artifactId>operator</artifactId>
         <version>1.2-SNAPSHOT</version>
     </parent>
