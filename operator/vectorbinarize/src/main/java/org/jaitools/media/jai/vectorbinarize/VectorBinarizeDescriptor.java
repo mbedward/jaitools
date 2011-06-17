@@ -23,14 +23,18 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.vectorbinarize;
+package org.jaitools.media.jai.vectorbinarize;
+
+import java.awt.image.renderable.ParameterBlock;
+
+import javax.media.jai.OperationDescriptorImpl;
+import javax.media.jai.registry.RenderedRegistryMode;
 
 import com.vividsolutions.jts.geom.Polygonal;
 import com.vividsolutions.jts.geom.prep.PreparedGeometry;
-import jaitools.imageutils.PixelCoordType;
-import java.awt.image.renderable.ParameterBlock;
-import javax.media.jai.OperationDescriptorImpl;
-import javax.media.jai.registry.RenderedRegistryMode;
+
+import org.jaitools.imageutils.PixelCoordType;
+
 
 /**
  * Describes the "VectorBinarize" operation which creates a binary image based
@@ -75,7 +79,8 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * 
  * <strong>
  * Note: the {@link PixelCoordType} enum has been deprecated and the
- * "coordType" parameter will be removed from this operator in the next major release.
+ * "coordType" parameter will be removed from this operator in the next version
+ * of JAITools.
  * </strong>
  * 
  * @author Michael Bedward
@@ -129,9 +134,9 @@ public class VectorBinarizeDescriptor extends OperationDescriptorImpl {
         super(new String[][]{
                     {"GlobalName", "VectorBinarize"},
                     {"LocalName", "VectorBinarize"},
-                    {"Vendor", "jaitools.media.jai"},
+                    {"Vendor", "org.jaitools.media.jai"},
                     {"Description", "Creates a binary image based on the inclusion of pixels within a polygonal Geometry"},
-                    {"DocURL", "http://code.google.com/p/jai-tools/"},
+                    {"DocURL", "http://code.google.com/p/jaitools/"},
                     {"Version", "1.1.0"},
                     
                     {"arg0Desc", paramNames[0] + " (Integer, default = 0) min image X"},

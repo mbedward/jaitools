@@ -23,10 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.vectorbinarize;
-
-import jaitools.imageutils.PixelCoordType;
-import jaitools.jts.CoordinateSequence2D;
+package org.jaitools.media.jai.vectorbinarize;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -50,6 +47,10 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.prep.PreparedGeometry;
+
+import org.jaitools.imageutils.PixelCoordType;
+import org.jaitools.jts.CoordinateSequence2D;
+
 
 /**
  * Creates a binary image based on tests of pixel inclusion in a polygonal {@code Geometry}. See

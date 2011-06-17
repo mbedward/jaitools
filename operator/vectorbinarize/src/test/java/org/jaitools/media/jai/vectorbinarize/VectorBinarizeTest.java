@@ -23,10 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.vectorbinarize;
-
-import static org.junit.Assert.*;
-import jaitools.jts.CoordinateSequence2D;
+package org.jaitools.media.jai.vectorbinarize;
 
 import java.awt.Dimension;
 import java.awt.image.Raster;
@@ -35,13 +32,17 @@ import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
 
-import org.junit.Before;
-import org.junit.Test;
-
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.io.WKTReader;
+
+import org.jaitools.jts.CoordinateSequence2D;
+
+import org.junit.Before;
+import org.junit.Test;
+import static org.junit.Assert.*;
+
 
 /**
  * Unit tests for the VectorBinarize operation.

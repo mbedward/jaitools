@@ -23,18 +23,12 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.vectorbinarize;
-
-import static org.junit.Assert.assertEquals;
-import jaitools.imageutils.PixelCoordType;
-import jaitools.imageutils.ROIGeometry;
-import jaitools.swing.SimpleImagePane;
+package org.jaitools.media.jai.vectorbinarize;
 
 import java.awt.GraphicsEnvironment;
 import java.awt.Shape;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.geom.Ellipse2D;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.PathIterator;
 import java.awt.image.DataBuffer;
@@ -50,10 +44,6 @@ import javax.swing.JFrame;
 import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
 
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
-
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -62,6 +52,15 @@ import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
 import com.vividsolutions.jts.io.WKTReader;
+
+import org.jaitools.imageutils.PixelCoordType;
+import org.jaitools.imageutils.ROIGeometry;
+import org.jaitools.swing.SimpleImagePane;
+
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
 
 public class ROIGeometryTest {

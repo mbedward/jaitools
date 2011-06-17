@@ -23,9 +23,10 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.vectorbinarize;
+package org.jaitools.media.jai.vectorbinarize;
 
 import java.awt.image.renderable.RenderedImageFactory;
+
 import javax.media.jai.OperationDescriptor;
 import javax.media.jai.OperationRegistry;
 import javax.media.jai.OperationRegistrySpi;
@@ -43,7 +44,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
 public class VectorBinarizeSpi implements OperationRegistrySpi {
 
     /** The name of the product to which these operations belong. */
-    private String productName = "jaitools.media.jai.vectorbinarize";
+    private String productName = "org.jaitools.media.jai.vectorbinarize";
  
     /** Default constructor. */
     public VectorBinarizeSpi() {}
