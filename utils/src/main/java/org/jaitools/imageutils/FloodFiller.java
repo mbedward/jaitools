@@ -50,7 +50,7 @@ import org.jaitools.numeric.CompareOp;
  * <p>
  * The code is adapted from an algorithm published in C# by J. Dunlap at:
  * <pre>   http://www.codeproject.com/KB/GDI-plus/queuelinearfloodfill.aspx</pre>
- * which was subsequently ported to Java by Owen Kaluza. The JAI-tools implementation
+ * which was subsequently ported to Java by Owen Kaluza. The JAITools implementation
  * is substantially different and any bugs should not be blamed on the above authors.
  * <p>
  * This version works with a source {@code RenderedImage} and a destination

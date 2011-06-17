@@ -244,7 +244,7 @@ public class ContourDescriptor extends OperationDescriptorImpl {
                     {"LocalName", "Contour"},
                     {"Vendor", "org.jaitools.media.jai"},
                     {"Description", "Traces contours based on source image values"},
-                    {"DocURL", "http://code.google.com/p/jai-tools/"},
+                    {"DocURL", "http://code.google.com/p/jaitools/"},
                     {"Version", "1.1.0"},
                     
                     {"arg0Desc", paramNames[0] + " an optional ROI"},

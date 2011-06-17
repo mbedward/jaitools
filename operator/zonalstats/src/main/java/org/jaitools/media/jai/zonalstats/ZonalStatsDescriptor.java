@@ -328,8 +328,8 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
                 {"LocalName", "ZonalStats"},
                 {"Vendor", "org.jaitools.media.jai"},
                 {"Description", "Calculate neighbourhood statistics"},
-                {"DocURL", "http://code.google.com/p/jai-tools/"},
-                {"Version", "1.0.0"},
+                {"DocURL", "http://code.google.com/p/jaitools/"},
+                {"Version", "1.2.0"},
 
                 {
                         "arg0Desc",

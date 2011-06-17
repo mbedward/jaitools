@@ -97,7 +97,7 @@ public class RangeLookupDescriptor extends OperationDescriptorImpl {
                     {"LocalName", "RangeLookup"},
                     {"Vendor", "org.jaitools.media.jai"},
                     {"Description", "Maps source image value ranges to destination image values"},
-                    {"DocURL", "http://code.google.com/p/jai-tools/"},
+                    {"DocURL", "http://code.google.com/p/jaitools/"},
                     {"Version", "1.0.0"},
                     {"arg0Desc", "table (RangeLookupTable)"}
                 },
