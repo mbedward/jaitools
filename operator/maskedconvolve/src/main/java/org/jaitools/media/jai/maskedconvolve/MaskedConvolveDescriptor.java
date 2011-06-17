@@ -23,11 +23,12 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.maskedconvolve;
+package org.jaitools.media.jai.maskedconvolve;
 
 import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
+
 import javax.media.jai.JAI;
 import javax.media.jai.KernelJAI;
 import javax.media.jai.OperationDescriptorImpl;
@@ -53,18 +54,27 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * <p>
  * If there is no convolution result for a destination image pixel, either because it
  * was not included in a destination mask or had no kernel values included in a
- * source mask, it will be set to a flag value. This can be set using the {@code nilValue}
+ * source mask, it will be set to a flag value. This can be set with the {@code nilValue}
  * parameter (default is 0).
-     * @param minCells the minimum number of non-zero kernel cells that be positioned over
-     *        unmasked source image cells for convolution to be performed for the target cell;
-     *        any of the following are accepted: <ol type = "1">
-     *        <li> "ANY" (case-insensitive) (or the constant {@linkplain #MIN_CELLS_ANY});
-     *             this is the default
-     *        <li> "ALL" (case-insensitive) (or the constant {@linkplain #MIN_CELLS_ALL});
-     *        <li> a {@code Number} with value between one and the number of non-zero kernel
-     *             cells (inclusive)
-     *        <li> a {@code String} representing a numeric value
-     *        </ol>
+ * <p>
+ * You can specify the minimum number of non-zero kernel cells that must be positioned over
+ * unmasked source image cells for convolution to be performed for the target cell with
+ * the {@code minCells} parameter. Any of the following are accepted: 
+ * <ol type = "1">
+ * <li> 
+ * "ANY" (case-insensitive) (or the constant {@linkplain #MIN_CELLS_ANY}).
+ * This is the default.
+ * </li>
+ * <li> 
+ * "ALL" (case-insensitive) (or the constant {@linkplain #MIN_CELLS_ALL}).
+ * </li>
+ * <li> 
+ * A {@code Number} with value between one and the number of non-zero kernel cells (inclusive).
+ * </li>
+ * <li> 
+ * A {@code String} representing a numeric value.
+ * </li>
+ * </ol>
  *
  * Example of use:
  * <pre><code>
@@ -95,9 +105,6 @@ import javax.media.jai.registry.RenderedRegistryMode;
  *
  * RenderedOp dest = JAI.create("maskedconvolve", pb, hints);
  *</code></pre>
- * 
- * @see <a href="http://java.sun.com/products/java-media/jai/forDevelopers/jai-apidocs/javax/media/jai/operator/ConvolveDescriptor.html">
- * ConvolveDescriptor</a>
  * 
  * @author Michael Bedward
  * @since 1.0
@@ -162,9 +169,9 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
         super(new String[][]{
                     {"GlobalName", "MaskedConvolve"},
                     {"LocalName", "MaskedConvolve"},
-                    {"Vendor", "jaitools.media.jai"},
+                    {"Vendor", "org.jaitools.media.jai"},
                     {"Description", "Convolve a rendered image masked by an associated ROI"},
-                    {"DocURL", "http://code.google.com/p/jai-tools/"},
+                    {"DocURL", "http://code.google.com/p/jaitools/"},
                     {"Version", "1.0.0"},
                     {"arg0Desc", paramNames[0] + " - a JAI Kernel object"},
                     {"arg1Desc", paramNames[1] + " - an ROI object which must have the same " +
