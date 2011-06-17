@@ -23,7 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.vectorize;
+package org.jaitools.media.jai.vectorize;
 
 import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
@@ -32,6 +32,7 @@ import java.awt.image.renderable.RenderedImageFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
 import javax.media.jai.ROI;
 
 /**

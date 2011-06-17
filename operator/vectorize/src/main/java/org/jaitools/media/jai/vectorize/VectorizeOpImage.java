@@ -23,7 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.vectorize;
+package org.jaitools.media.jai.vectorize;
 
 import java.awt.image.RenderedImage;
 import java.lang.ref.SoftReference;
@@ -54,9 +54,9 @@ import com.vividsolutions.jts.geom.impl.PackedCoordinateSequenceFactory;
 import com.vividsolutions.jts.index.quadtree.Quadtree;
 import com.vividsolutions.jts.operation.polygonize.Polygonizer;
 
-import jaitools.CollectionFactory;
-import jaitools.jts.Utils;
-import jaitools.media.jai.AttributeOpImage;
+import org.jaitools.CollectionFactory;
+import org.jaitools.jts.Utils;
+import org.jaitools.media.jai.AttributeOpImage;
 
 /**
  * Vectorize regions of uniform value in an image.

@@ -23,7 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.vectorize;
+package org.jaitools.media.jai.vectorize;
 
 import java.awt.image.RenderedImage;
 import java.util.ArrayList;
@@ -40,7 +40,7 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.io.WKTReader;
 import com.vividsolutions.jts.geom.Polygon;
 
-import jaitools.numeric.NumberOperations;
+import org.jaitools.numeric.NumberOperations;
 
 import static org.junit.Assert.*;
 

@@ -23,7 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.vectorize;
+package org.jaitools.media.jai.vectorize;
 
 import java.awt.image.renderable.ParameterBlock;
 import java.util.Collection;
@@ -158,8 +158,8 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * </table>
  * 
  * @see com.vividsolutions.jts.geom.Polygon
- * @see jaitools.media.jai.regionalizeRegionalizeDescriptor
- * @see jaitools.media.jai.rangelookup.RangeLookupDescriptor
+ * @see org.jaitools.media.jai.regionalizeRegionalizeDescriptor
+ * @see org.jaitools.media.jai.rangelookup.RangeLookupDescriptor
  * 
  * @author Michael Bedward
  * @since 1.1
@@ -230,7 +230,7 @@ public class VectorizeDescriptor extends OperationDescriptorImpl {
         super(new String[][]{
                     {"GlobalName", "Vectorize"},
                     {"LocalName", "Vectorize"},
-                    {"Vendor", "jaitools.media.jai"},
+                    {"Vendor", "org.jaitools.media.jai"},
                     {"Description", "Vecotirze boundaries of regions of uniform value"},
                     {"DocURL", "http://code.google.com/p/jai-tools/"},
                     {"Version", "1.1.0"},

@@ -23,7 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package jaitools.media.jai.vectorize;
+package org.jaitools.media.jai.vectorize;
 
 import java.awt.image.RenderedImage;
 import java.util.Collections;
@@ -34,12 +34,13 @@ import javax.media.jai.RenderedOp;
 
 import com.vividsolutions.jts.geom.Polygon;
 
-import jaitools.CollectionFactory;
-import jaitools.imageutils.ImageUtils;
+import org.jaitools.CollectionFactory;
+import org.jaitools.imageutils.ImageUtils;
 
-import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
+import static org.junit.Assert.*;
+
 
 /**
  * Unit tests for filtering small polygons.
