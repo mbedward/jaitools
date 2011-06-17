@@ -40,7 +40,8 @@ import javax.swing.JPanel;
 
 
 /**
- * A very basic Swing widget to display a {@code RenderedImage}.
+ * A basic Swing widget to display a {@code RenderedImage}. Used with JAITools
+ * example applications.
  * 
  * @author Michael Bedward
  * @since 1.1
@@ -56,7 +57,9 @@ public class SimpleImagePane extends JPanel {
     private final Object lock = new Object();
     
 
-    
+    /**
+     * Creatss a new instance.
+     */
     public SimpleImagePane() {
         margin = 0;
         
@@ -69,41 +72,87 @@ public class SimpleImagePane extends JPanel {
         });
     }
     
+    /**
+     * Sets the image to display and repaints.
+     * 
+     * @param image the image to display
+     */
     public void setImage(RenderedImage image) {
         this.image = image;
         setTransform();
         repaint();
     }
     
+    /**
+     * Removes the current display image and repaints.
+     */
     public void clear() {
         image = null;
         repaint();
     }
     
+    /**
+     * Forces recalculation of the {@code AffineTransform} used to
+     * scale the image display.
+     */
     public void resetTransform() {
         setTransform();
     }
     
+    /**
+     * Converts a window position into the corresponding image position.
+     * If {@code imageCoords} is not {@code null} it will be set to the
+     * image position, otherwise a new {@code Point} object will be created.
+     * In either case, the image position is returned for convenience.
+     * <p>
+     * If no image is currently set, {@code null} is returned.
+     * 
+     * @param paneCoords window position
+     * @param imageCoords object to receive image position, or {@code null}
+     * 
+     * @return image position or {@code null} if no image is set
+     */
     public Point getImageCoords(Point paneCoords, Point imageCoords) {
-        Point2D p = displayToImage.transform(paneCoords, null);
-        
-        if (imageCoords != null) {
-            imageCoords.x = (int) p.getX();
-            imageCoords.y = (int) p.getY();
-            return imageCoords;
+        if (image != null) {
+            Point2D p = displayToImage.transform(paneCoords, null);
+
+            if (imageCoords != null) {
+                imageCoords.x = (int) p.getX();
+                imageCoords.y = (int) p.getY();
+                return imageCoords;
+            }
+            return new Point((int) p.getX(), (int) p.getY());
         }
-        return new Point((int)p.getX(), (int)p.getY());
+
+        return null;
     }
     
+    /**
+     * Converts an image position into the corresponding window position.
+     * If {@code paneCoords} is not {@code null} it will be set to the
+     * window position, otherwise a new {@code Point} object will be created.
+     * In either case, the window position is returned for convenience.
+     * <p>
+     * If no image is currently set, {@code null} is returned.
+     * 
+     * @param imageCoords image position
+     * @param paneCoords object to receive window position, or {@code null}
+     * 
+     * @return window position or {@code null} if no image is set
+     */
     public Point getPaneCoords(Point imageCoords, Point paneCoords) {
-        Point2D p = imageToDisplay.transform(imageCoords, null);
-        
-        if (paneCoords != null) {
-            paneCoords.x = (int) p.getX();
-            paneCoords.y = (int) p.getY();
-            return paneCoords;
+        if (image != null) {
+            Point2D p = imageToDisplay.transform(imageCoords, null);
+
+            if (paneCoords != null) {
+                paneCoords.x = (int) p.getX();
+                paneCoords.y = (int) p.getY();
+                return paneCoords;
+            }
+            return new Point((int) p.getX(), (int) p.getY());
         }
-        return new Point((int)p.getX(), (int)p.getY());
+
+        return null;
     }
     
     @Override
