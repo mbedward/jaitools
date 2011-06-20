@@ -1,10 +1,10 @@
 #
 # Image operation descriptors :
 #
-descriptor  jaitools.media.jai.vmcafill.VMCAFillDescriptor
+descriptor  org.jaitools.media.jai.fractalfill.FractalFillDescriptor
 
 
 #
 # "rendered" factory objects
 #
-rendered  jaitools.media.jai.vmcafill.VMCAFillRIF  jaitools.media.jai  VMCAFill  VMCAFill
+rendered  org.jaitools.media.jai.fractalfill.FractalFillRIF  org.jaitools.media.jai  FractalFill  FractalFill
