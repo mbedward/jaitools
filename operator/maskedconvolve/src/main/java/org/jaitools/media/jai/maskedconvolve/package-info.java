@@ -24,8 +24,10 @@
  */   
 
 /**
- * Extends the standard JAI Convolve operator with source and/or
- * destination masking
+ * Performs the "MaskedConvolve" operation, convolution with the ability to
+ * selectively include source and/or destination pixels based on an ROI.
+ * See {@link org.jaitools.media.jai.maskedconvolve.MaskedConvolveDescriptor}
+ * for details.
  */
 
 package org.jaitools.media.jai.maskedconvolve;

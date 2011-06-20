@@ -24,7 +24,8 @@
  */   
 
 /**
- * "KernelStats" operator: calculates summary statistics for pixel neighbourhoods
+ * Performs the "KernelStats" operation, calculating summary statistics for pixel neighbourhoods.
+ * See {@link org.jaitools.media.jai.kernelstats.KernelStatsDescriptor} for details.
  */
 
 package org.jaitools.media.jai.kernelstats;

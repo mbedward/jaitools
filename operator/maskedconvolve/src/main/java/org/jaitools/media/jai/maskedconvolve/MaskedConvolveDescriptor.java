@@ -38,35 +38,59 @@ import javax.media.jai.RenderedOp;
 import javax.media.jai.registry.RenderedRegistryMode;
 
 /**
- * An {@code OperationDescriptor} describing the "MaskedConvolve" operation.
- * This is a variant of JAI's {@code convolve} operator which constrains the
- * convolution to pixels that are included in an {@link ROI}. 
+ * The "MaskedConvolve" operation extends JAI's {@code convolve} operator by providing
+ * the option to select which source and or destination pixels are included in processing
+ * using an associated {@code ROI} object.
  * <p>
  * Two masking options are provided: 
  * <ul type="1">
- * <li><b>source masking</b>, in which the ROI is used
- * to constrain which source image pixels contribute to the kernel calculation;
- * <li><b>destination masking</b> in which the ROI constrains the positioning of 
- * the convolution kernel such that destination image value will be 0 if a source
- * pixel is not contained in the ROI. 
- * </ul>The two options may be used together. If neither masking option
- * is required it is prefereable to use the "Convolve" operator for faster processing.
+ * <li>
+ * <b>source masking</b>, in which the ROI is used to constrain which source image 
+ * pixels contribute to the kernel calculation;
+ * </li>
+ * <li>
+ * <b>destination masking</b> in which the convolution kernel will only be placed
+ * over pixels that are within the ROI.
+ * </li>
+ * </ul>
+ * 
+ * The two options may be used together. If neither masking option
+ * is required it is better to use the standard "Convolve" operator as it will
+ * be faster.
  * <p>
- * If there is no convolution result for a destination image pixel, either because it
- * was not included in a destination mask or had no kernel values included in a
- * source mask, it will be set to a flag value. This can be set with the {@code nilValue}
- * parameter (default is 0).
+ * 
+ * With this operator, a given destination pixel will have a <i>nil</i> result if any
+ * of the following are true:
+ * <ul>
+ * <li>
+ * The pixel was not included in a destination mask.
+ * </li>
+ * <li>
+ * The pixel had no kernel values included in a source mask.
+ * </li>
+ * <li>
+ * The requirement for the minimum number of unmasked source image values was not met
+ * (explained below in relation to the {@code minCells} parameter).
+ * </li>
+ * </ul>
+ * A flag value is returned for such pixels which you can specify with the {@code nilValue}
+ * parameter (the default is 0).
  * <p>
+ * 
  * You can specify the minimum number of non-zero kernel cells that must be positioned over
- * unmasked source image cells for convolution to be performed for the target cell with
- * the {@code minCells} parameter. Any of the following are accepted: 
+ * unmasked source image cells for convolution to be performed via the {@code minCells} 
+ * parameter. Any of the following are accepted: 
  * <ol type = "1">
  * <li> 
  * "ANY" (case-insensitive) (or the constant {@linkplain #MIN_CELLS_ANY}).
+ * With this option, convolution will be performed if there is at least one
+ * unmasked source image value in the pixel neighbourhood.
  * This is the default.
  * </li>
  * <li> 
  * "ALL" (case-insensitive) (or the constant {@linkplain #MIN_CELLS_ALL}).
+ * Convolution will only be performed if all source image pixels in the neighbourhood
+ * are unmasked.
  * </li>
  * <li> 
  * A {@code Number} with value between one and the number of non-zero kernel cells (inclusive).
@@ -105,6 +129,63 @@ import javax.media.jai.registry.RenderedRegistryMode;
  *
  * RenderedOp dest = JAI.create("maskedconvolve", pb, hints);
  *</code></pre>
+ * 
+ * <b>Summary of parameters:</b>
+ * <table border="1", cellpadding="3">
+ * <tr>
+ * <th>Name</th>
+ * <th>Class</th>
+ * <th>Default</th>
+ * <th>Description</th>
+ * </tr>
+ * 
+ * <tr>
+ * <td>kernel</td>
+ * <td>KernelJAI</td>
+ * <td>No default</td>
+ * <td>Kernel defining the convolution neighbourhood</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>roi</td>
+ * <td>ROI</td>
+ * <td>No default</td>
+ * <td>ROI to use for source and/or destination masking</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>maskSource</td>
+ * <td>Boolean</td>
+ * <td>true</td>
+ * <td>Whether to apply source masking</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>maskDest</td>
+ * <td>Boolean</td>
+ * <td>true</td>
+ * <td>Whether to apply destination masking</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>nilValue</td>
+ * <td>Number</td>
+ * <td>0</td>
+ * <td>Value to return for pixels with no convolution result</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>minCells</td>
+ * <td>See note above</td>
+ * <td>MIN_CELLS_ANY</td>
+ * <td>
+ * Minimun number of non-zero kernel cells over unmasked source image pixels
+ * for convolution to be performed
+ * </td>
+ * </tr>
+ * </table>
+ * 
+ * @see org.jaitools.media.jai.kernel.KernelFactory
  * 
  * @author Michael Bedward
  * @since 1.0
@@ -203,67 +284,11 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
     }
 
     /**
-     * Constructs a {@link ParameterBlockJAI} and
-     * invokes {@code JAI.create("maskedconvolve", params) }.
-     * <p>
-     * <b>Note:</b> with this method only integer values can be passed for the {@code minCells}
-     * argument. To use the Strings "ANY" or "ALL" or the constants described in the class docs
-     * use the {@code JAI.create} method with a parameter block rather than this method.
+     * Validates the supplied parameters.
      * 
-     * @param source0 the image to be convolved
-     *
-     * @param kernel convolution kernel
-     *
-     * @param roi the roi controlling convolution (must have the same pixel bounds
-     *        as the source image)
-     *
-     * @param maskSource if TRUE only the values of source pixels where
-     *        {@code roi.contains} is true contribute to the convolution
-     *
-     * @param maskDest if TRUE convolution is only performed for pixels where
-     *        {@code roi.contains} is true
-     *
-     * @param nilValue value to write to the destination image for pixels where
-     *        there is no convolution result
-     *
-     * @param minCells the minimum number of non-zero kernel cells that be positioned over
-     *        unmasked source image cells for convolution to be performed for the target cell
-     * 
-     * @param hints useful for specifying a border extender; may be null
-     *
-     * @return the RenderedOp destination
-     * @throws IllegalArgumentException if any args are null
-     */
-    public static RenderedOp create(
-            RenderedImage source0,
-            KernelJAI kernel,
-            ROI roi,
-            Boolean maskSource,
-            Boolean maskDest,
-            Number nilValue,
-            int minCells,
-            RenderingHints hints) {
-        ParameterBlockJAI pb =
-                new ParameterBlockJAI("MaskedConvolve",
-                RenderedRegistryMode.MODE_NAME);
-
-        pb.setSource("source0", source0);
-        pb.setParameter(paramNames[KERNEL_ARG], kernel);
-        pb.setParameter(paramNames[ROI_ARG], roi);
-        pb.setParameter(paramNames[MASKSRC_ARG], maskSource);
-        pb.setParameter(paramNames[MASKDEST_ARG], maskDest);
-        pb.setParameter(paramNames[NIL_VALUE_ARG], nilValue);
-        pb.setParameter(paramNames[MIN_CELLS_ARG], Integer.valueOf(minCells));
-
-        return JAI.create("MaskedConvolve", pb, hints);
-    }
-
-    /**
-     * Validates the input parameters.
-     * 
-     * @param modeName rendering mode
-     * @param pb parameters block
-     * @param msg destination for error messages
+     * @param modeName the rendering mode
+     * @param pb the input parameters
+     * @param msg a {@code StringBuffer} instance to receive error messages
      * 
      * @return {@code true} if parameters are valid; {@code false} otherwise
      */
