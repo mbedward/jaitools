@@ -26,6 +26,7 @@
 /**
  * Performs the "Contour" operation, tracing smooth contours at specified
  * levels by interpolation of values in a band of the source image.
+ * See {@link org.jaitools.media.jai.contour.ContourDescriptor} for details.
  */
 
 package org.jaitools.media.jai.contour;
