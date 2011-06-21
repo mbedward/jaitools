@@ -25,17 +25,15 @@
 
 package org.jaitools.media.jai.maskedconvolve;
 
-import java.awt.RenderingHints;
-import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
+import java.util.Collection;
 
-import javax.media.jai.JAI;
 import javax.media.jai.KernelJAI;
 import javax.media.jai.OperationDescriptorImpl;
-import javax.media.jai.ParameterBlockJAI;
-import javax.media.jai.ROI;
-import javax.media.jai.RenderedOp;
 import javax.media.jai.registry.RenderedRegistryMode;
+
+import org.jaitools.numeric.Range;
+
 
 /**
  * The "MaskedConvolve" operation extends JAI's {@code convolve} operator by providing
@@ -78,8 +76,10 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * <p>
  * 
  * You can specify the minimum number of non-zero kernel cells that must be positioned over
- * unmasked source image cells for convolution to be performed via the {@code minCells} 
- * parameter. Any of the following are accepted: 
+ * unmasked source image pixels for convolution to be performed via the {@code minCells} 
+ * parameter. If there are NO_DATA values defined (see {@code nodata} parameter below) then
+ * this parameter refers to the number of unmasked source image pixels with data.
+ * Any of the following are accepted: 
  * <ol type = "1">
  * <li> 
  * "ANY" (case-insensitive) (or the constant {@linkplain #MIN_CELLS_ANY}).
@@ -183,6 +183,17 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * for convolution to be performed
  * </td>
  * </tr>
+ * 
+ * <tr>
+ * <td>nodata</td>
+ * <td>Collection</td>
+ * <td>null</td>
+ * <td>
+ * Values to be treated as NO_DATA. A value can be either a Number or a 
+ * {@link org.jaitools.numeric.Range} (mixtures of both are permitted).
+ * </td>
+ * </tr>
+ * 
  * </table>
  * 
  * @see org.jaitools.media.jai.kernel.KernelFactory
@@ -217,6 +228,7 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
     static final int MASKDEST_ARG = 3;
     static final int NIL_VALUE_ARG = 4;
     static final int MIN_CELLS_ARG = 5;
+    static final int NO_DATA_ARG = 6;
 
     private static final String[] paramNames = {
         "kernel",
@@ -224,7 +236,8 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
         "maskSource",
         "maskDest",
         "nilValue",
-        "minCells"
+        "minCells",
+        "nodata"
     };
 
     private static final Class[] paramClasses = {
@@ -233,7 +246,8 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
          Boolean.class,
          Boolean.class,
          Number.class,
-         Object.class
+         Object.class,
+         Collection.class
     };
 
     private static final Object[] paramDefaults = {
@@ -242,7 +256,8 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
          Boolean.TRUE,
          Boolean.TRUE,
          DEFAULT_NIL_VALUE,
-         MIN_CELLS_ANY
+         MIN_CELLS_ANY,
+         (Collection) null
     };
 
     /** Constructor. */
@@ -268,7 +283,10 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
                              "there is no convolution result"},
                     {"arg5Desc", paramNames[5] + " (String or Number, default=MIN_CELLS_ANY):" +
                              "the minimum number of non-zero kernel cells that must overlap" +
-                             "unmasked source image cells for convolution to be performed"}
+                             "unmasked source image cells for convolution to be performed"},
+                    {"arg6Desc", paramNames[6] + " (Collection) " +
+                             "values to be treated as NO_DATA; elements can be Number and/or" +
+                             " Range"}
 
                 },
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
@@ -298,6 +316,9 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
         final String minCellsErrorMsg = "minCells must be ANY, ALL or a numeric value" +
                 " between 1 and the number of non-zero kernel cells";
 
+        final String nodataErrorMsg =
+                "nodata parameter must be a Collection of Numbers and/or Ranges";
+        
         boolean ok = super.validateParameters(modeName, pb, msg);
         if (ok) {
             KernelJAI kernel = (KernelJAI) pb.getObjectParameter(KERNEL_ARG);
@@ -309,6 +330,23 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
             } else {
                 msg.append(minCellsErrorMsg);
                 ok = false;
+            }
+            
+            Object objc = pb.getObjectParameter(NO_DATA_ARG);
+            if (objc != null) {
+                if (!(objc instanceof Collection)) {
+                    msg.append(nodataErrorMsg);
+                    ok = false;
+                } else {
+                    Collection col = (Collection) objc;
+                    for (Object oelem : col) {
+                        if (!(oelem instanceof Number || oelem instanceof Range)) {
+                            msg.append(nodataErrorMsg);
+                            ok = false;
+                            break;
+                        }
+                    }
+                }
             }
         }
         return ok;
