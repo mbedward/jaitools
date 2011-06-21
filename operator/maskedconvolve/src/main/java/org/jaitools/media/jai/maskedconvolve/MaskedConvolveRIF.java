@@ -29,6 +29,7 @@ import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
 import java.awt.image.renderable.RenderedImageFactory;
+import java.util.Collection;
 
 import javax.media.jai.BorderExtender;
 import javax.media.jai.ImageLayout;
@@ -85,6 +86,8 @@ public class MaskedConvolveRIF implements RenderedImageFactory {
 
         int minCells = paramBlock.getIntParameter(MaskedConvolveDescriptor.MIN_CELLS_ARG);
         
+        Collection noDataValues = (Collection) paramBlock.getObjectParameter(MaskedConvolveDescriptor.NO_DATA_ARG);
+        
         return new MaskedConvolveOpImage(paramBlock.getRenderedSource(0),
                 extender,
                 renderHints,
@@ -94,7 +97,8 @@ public class MaskedConvolveRIF implements RenderedImageFactory {
                 maskSrc,
                 maskDest,
                 nilValue,
-                minCells);
+                minCells,
+                noDataValues);
     }
 }
 

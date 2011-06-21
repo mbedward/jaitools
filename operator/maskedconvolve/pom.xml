@@ -16,5 +16,12 @@ be used to control which source image pixels are convolved and/or
 which neighbourhood pixels are included in the convolution.
     </description>
 
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>jt-utils</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 </project>
 
