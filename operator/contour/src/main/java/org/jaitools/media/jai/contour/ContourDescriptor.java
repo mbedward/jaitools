@@ -190,6 +190,10 @@ import org.jaitools.numeric.Range;
  * @version $Id$
  */
 public class ContourDescriptor extends OperationDescriptorImpl {
+    
+    /**
+     * Constant identifying the image property that will hold the generated contours.
+     */
     public final static String CONTOUR_PROPERTY_NAME = "contours";
     
     static final int ROI_ARG = 0;
@@ -238,6 +242,9 @@ public class ContourDescriptor extends OperationDescriptorImpl {
 
     
 
+    /**
+     * Creates a new instance.
+     */
     public ContourDescriptor() {
         super(new String[][]{
                     {"GlobalName", "Contour"},
@@ -282,6 +289,15 @@ public class ContourDescriptor extends OperationDescriptorImpl {
                 );    
     }
 
+    /**
+     * Validates supplied parameters.
+     * 
+     * @param modeName the rendering mode
+     * @param pb the parameter block
+     * @param msg a {@code StringBuffer} to receive error messages
+     * 
+     * @return {@code true} if parameters are valid; {@code false} otherwise
+     */
     @Override
     protected boolean validateParameters(String modeName, ParameterBlock pb, StringBuffer msg) {
         final String nodataErrorMsg =
