@@ -137,20 +137,27 @@ public class ContourOpImage extends AttributeOpImage {
      * @param source the source image
      * 
      * @param roi an optional {@code ROI} to constrain the areas for which
-     *        contours are generated
+     *     contours are generated
      * 
      * @param band the band of the source image to process
      * 
      * @param levels values for which to generate contours
      * 
      * @param interval interval between contour levels (ignored if {@code levels}
-     *        is supplied)
+     *     is supplied)
+     * 
+     * @param noDataValues an optional {@code Collection} of values and/or {@code Ranges}
+     *     to treat as NO_DATA
      * 
      * @param simplify whether to simplify contour lines by removing
-     *        colinear vertices
+     *     colinear vertices
+     * 
+     * @param strictNodata if {@code true} any NO_DATA values in a 2x2 data window will
+     *     cause that window to be skipped; if {@code false} a single NO_DATA value 
+     *     is permitted
      * 
      * @param smooth whether contour lines should be smoothed using
-     *        Bezier interpolation
+     *     Bezier interpolation
      */
     public ContourOpImage(RenderedImage source, 
             ROI roi, 
@@ -245,7 +252,8 @@ public class ContourOpImage extends AttributeOpImage {
     }
 
     /**
-     * {@inheritDoc }
+     * Returns the class of the specified attribute. For
+     * {@link ContourDescriptor#CONTOUR_PROPERTY_NAME} this will be {@code List}.
      */
     @Override
     protected Class<?> getAttributeClass(String name) {

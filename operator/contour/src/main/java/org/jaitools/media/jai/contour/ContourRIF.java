@@ -43,9 +43,6 @@ import javax.media.jai.ROI;
  */
 public class ContourRIF implements RenderedImageFactory {
 
-    public ContourRIF() {
-    }
-
     /**
      * Creates a new instance of ContourOpImage in the rendered layer.
      *
