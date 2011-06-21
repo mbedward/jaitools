@@ -208,10 +208,22 @@ public abstract class AttributeOpImage extends OpImage {
      */
     protected abstract Object getAttribute(String name);
     
+    /**
+     * Returns the class of the specified attribute. This
+     * default implementation always returns class Object.
+     * 
+     * @param name attribute name
+     * @return the attribute class
+     */
     protected Class<?> getAttributeClass(String name) {
         return Object.class;
     }
 
+    /**
+     * Returns the names of available attributes.
+     * 
+     * @return attribute names
+     */
     protected abstract String[] getAttributeNames();
     
     private boolean isAttributeName(String name) {
