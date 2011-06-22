@@ -239,6 +239,8 @@ public class KernelStatsDescriptor extends OperationDescriptorImpl {
      * @param hints useful for specifying a border extender; may be null
      * @return a RenderedImages a band for each requested statistic
      * @throws IllegalArgumentException if any args are null
+     * 
+     * @deprecated This method will be removed in JAITools version 1.3
      */
     public static RenderedImage create(
             RenderedImage source0,

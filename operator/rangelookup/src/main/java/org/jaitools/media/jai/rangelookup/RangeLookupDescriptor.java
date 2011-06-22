@@ -130,6 +130,8 @@ public class RangeLookupDescriptor extends OperationDescriptorImpl {
      * source image value ranges to destination image values
      * @param hints rendering hints (may be null)
      * @return the RenderedOp destination
+     * 
+     * @deprecated This method will be removed in JAITools version 1.3
      */
     public static RenderedOp create(
             RenderedImage source0,
