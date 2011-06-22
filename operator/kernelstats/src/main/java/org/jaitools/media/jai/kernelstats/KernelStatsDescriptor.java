@@ -218,57 +218,6 @@ public class KernelStatsDescriptor extends OperationDescriptorImpl {
                 );
     }
 
-    /**
-     * Convenience method which constructs a {@link ParameterBlockJAI} and
-     * invokes {@code JAI.create("kernelstats", params) }
-     * @param source0 the image for which neighbourhood statistics are required
-     * @param stats an array specifying the statistics required
-     * @param kernel a kernel defining the neighbourhood
-     * @param band the source image band to process (default 0)
-     * @param roi optional roi (default is null) used for source and/or destination
-     * masking
-     * @param maskSource if TRUE only the values of source pixels where
-     * {@code roi.contains} is true contribute to the calculation
-     * @param maskDest if TRUE the statistic is only calculated for pixels where
-     * {@code roi.contains} is true; when false the destination pixel is set
-     * to NaN
-     * @param ignoreNaN if TRUE, NaN values in input float or double images
-     * are ignored in calculations
-     * @param nilValue value to write to destination when there is no calculated
-     * statistic for a pixel (e.g. due to destination masking or NaNs in neighbourhood)
-     * @param hints useful for specifying a border extender; may be null
-     * @return a RenderedImages a band for each requested statistic
-     * @throws IllegalArgumentException if any args are null
-     */
-    public static RenderedImage create(
-            RenderedImage source0,
-            Statistic[] stats,
-            KernelJAI kernel,
-            int band,
-            ROI roi,
-            Boolean maskSource,
-            Boolean maskDest,
-            Boolean ignoreNaN,
-            Number nilValue,
-            RenderingHints hints) {
-
-        ParameterBlockJAI pb =
-                new ParameterBlockJAI("KernelStats",
-                RenderedRegistryMode.MODE_NAME);
-
-        pb.setSource("source0", source0);
-        pb.setParameter("stats", stats);
-        pb.setParameter("kernel", kernel);
-        pb.setParameter("band", band);
-        pb.setParameter("roi", roi);
-        pb.setParameter("maskSource", maskSource);
-        pb.setParameter("maskDest", maskDest);
-        pb.setParameter("ignoreNaN", ignoreNaN);
-        pb.setParameter("nilValue", nilValue);
-
-        return JAI.create("KernelStats", pb, hints);
-    }
-
     @Override
     public boolean validateArguments(String modeName, ParameterBlock pb, StringBuffer msg) {
         if (!super.validateArguments(modeName, pb, msg)) {

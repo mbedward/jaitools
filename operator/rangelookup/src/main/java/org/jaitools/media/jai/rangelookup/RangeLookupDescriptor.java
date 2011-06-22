@@ -121,28 +121,5 @@ public class RangeLookupDescriptor extends OperationDescriptorImpl {
         return true;
     }
 
-    /**
-     * Convenience method which constructs a {@link ParameterBlockJAI} and
-     * invokes {@code JAI.create("RangeLookup", params) }.
-     *
-     * @param source0 the source image
-     * @param table an instance of RangeLookupTable defining the mappings from
-     * source image value ranges to destination image values
-     * @param hints rendering hints (may be null)
-     * @return the RenderedOp destination
-     */
-    public static RenderedOp create(
-            RenderedImage source0,
-            RangeLookupTable table,
-            RenderingHints hints) {
-        ParameterBlockJAI pb =
-                new ParameterBlockJAI("RangeLookup",
-                RenderedRegistryMode.MODE_NAME);
-
-        pb.setSource("source0", source0);
-        pb.setParameter(paramNames[TABLE_ARG_INDEX], table);
-
-        return JAI.create("RangeLookup", pb, hints);
-    }
 }
 
