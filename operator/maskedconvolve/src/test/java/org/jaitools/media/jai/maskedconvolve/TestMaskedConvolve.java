@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2009, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2009-2011, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -25,24 +25,32 @@
 package org.jaitools.media.jai.maskedconvolve;
 
 import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
-import java.util.Properties;
+import java.util.Collections;
 
 import javax.media.jai.BorderExtender;
+import javax.media.jai.BorderExtenderConstant;
 import javax.media.jai.JAI;
 import javax.media.jai.KernelJAI;
 import javax.media.jai.LookupTableJAI;
 import javax.media.jai.OperationRegistry;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.ROI;
+import javax.media.jai.ROIShape;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 import javax.media.jai.registry.RenderedRegistryMode;
+import org.jaitools.imageutils.ImageUtils;
+import org.jaitools.imageutils.SimpleIterator;
+import org.jaitools.numeric.CompareOp;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+
 
 /**
  * Unit tests for the MaskedConvolve operator
@@ -54,9 +62,9 @@ public class TestMaskedConvolve {
     // round off tolerance for float comparisons
     private static final float FTOL = 1.0e-4f;
 
-    public TestMaskedConvolve() {
+    @BeforeClass
+    public static void setupClass() {
         ensureRegistered();
-        fixForOSX();
     }
 
     /**
@@ -66,8 +74,6 @@ public class TestMaskedConvolve {
      */
     @Test
     public void testSymmetric() {
-        System.out.println("   testing symmetric kernel");
-
         int tileW = 128;
         JAI.setDefaultTileSize(new Dimension(tileW, tileW));
         RenderedImage testImg = getBorderTestImage(2*tileW, tileW);
@@ -88,8 +94,6 @@ public class TestMaskedConvolve {
      */
     @Test
     public void testAsymmetric() {
-        System.out.println("   testing asymmetric kernel");
-
         int tileW = 128;
         JAI.setDefaultTileSize(new Dimension(tileW, tileW));
         RenderedImage testImg = getBorderTestImage(2*tileW, tileW);
@@ -110,8 +114,6 @@ public class TestMaskedConvolve {
      */
     @Test
     public void testMaskSource() {
-        System.out.println("   testing source masking");
-
         int tileW = 128;
         JAI.setDefaultTileSize(new Dimension(tileW, tileW));
         RenderedImage testImg = getRandomTestImage(1.0f, 5.0f, 2*tileW, tileW);
@@ -144,7 +146,7 @@ public class TestMaskedConvolve {
 
         /*
          * Now we repeat the masked convolve as we would with JAI's standard
-         * operators - note the amount of additional code required :)
+         * operators 
          */
 
         // binarize on the same threshold used above
@@ -185,8 +187,6 @@ public class TestMaskedConvolve {
      */
     @Test
     public void testMaskDest() {
-        System.out.println("   testing destination masking");
-
         int tileW = 128;
         JAI.setDefaultTileSize(new Dimension(tileW, tileW));
         RenderedImage testImg = getRandomTestImage(1.0f, 5.0f, 2*tileW, tileW);
@@ -222,7 +222,7 @@ public class TestMaskedConvolve {
 
         /*
          * Now we repeat the masked convolve as we would with JAI's standard
-         * operators - note the amount of additional code required :)
+         * operators
          */
 
         // binarize on the same threshold used above
@@ -263,8 +263,6 @@ public class TestMaskedConvolve {
      */
     @Test
     public void testMaskSourceAndDest() {
-        System.out.println("   testing source and destination masking");
-
         int tileW = 128;
         JAI.setDefaultTileSize(new Dimension(tileW, tileW));
         RenderedImage testImg = getRandomTestImage(1.0f, 5.0f, 2*tileW, tileW);
@@ -300,7 +298,7 @@ public class TestMaskedConvolve {
 
         /*
          * Now we repeat the masked convolve as we would with JAI's standard
-         * operators - note the amount of additional code required :)
+         * operators
          */
 
         // binarize on the same threshold used above
@@ -338,6 +336,94 @@ public class TestMaskedConvolve {
          * Now compare the results of the two convolutions
          */
         compareImages(finalImg, maskedConvImg);
+    }
+
+    @Test
+    public void strictNodata() {
+        final float NIL = 0f;
+        final float ND = 99f; // nodata
+        
+        Float[] indata = {
+            1f, 1f, 1f, 1f, 1f,
+            1f, 1f, 1f, 1f, 1f,
+            1f, 1f, ND, 1f, 1f,
+            1f, 1f, 1f, 1f, 1f,
+            1f, 1f, 1f, 1f, 1f,
+        };
+
+        float[] expected = {
+            5f,  5f,  5f,  5f, 5f,
+            5f,  5f, NIL,  5f, 5f,
+            5f, NIL, NIL, NIL, 5f,
+            5f,  5f, NIL,  5f, 5f,
+            5f,  5f,  5f,  5f, 5f,
+        };
+
+        BorderExtender border = new BorderExtenderConstant(new double[]{1});
+        testNodata(5, 5, indata, border, expected, NIL, ND, true);
+    }
+
+    @Test
+    public void nonStrictNodata() {
+        final float NIL = 0f;
+        final float ND = 99f; // nodata
+        
+        Float[] indata = {
+            1f, 1f, 1f, 1f, 1f,
+            1f, 1f, 1f, 1f, 1f,
+            1f, 1f, ND, 1f, 1f,
+            1f, 1f, 1f, 1f, 1f,
+            1f, 1f, 1f, 1f, 1f,
+        };
+
+        float[] expected = {
+            5f,  5f,  5f,  5f, 5f,
+            5f,  5f,  4f,  5f, 5f,
+            5f,  4f,  4f,  4f, 5f,
+            5f,  5f,  4f,  5f, 5f,
+            5f,  5f,  5f,  5f, 5f,
+        };
+
+        BorderExtender border = new BorderExtenderConstant(new double[]{1});
+        testNodata(5, 5, indata, border, expected, NIL, ND, false);
+    }
+
+    private void testNodata(int w, int h, Float[] indata, 
+            BorderExtender border,
+            float[] expected, 
+            float nilValue, 
+            float nodataValue,
+            boolean strict) {
+        
+        RenderedImage image = ImageUtils.createImageFromArray(indata, 5, 5);
+
+        KernelJAI kernel = new KernelJAI(3, 3, 1, 1, new float[] {
+            0f, 1f, 0f,
+            1f, 1f, 1f,
+            0f, 1f, 0f
+        });
+
+        ROI roi = new ROIShape(new Rectangle(0, 0, 5, 5));
+                
+        ParameterBlockJAI pb = new ParameterBlockJAI("MaskedConvolve");
+        pb.setSource("source0", image);
+        pb.setParameter("kernel", kernel);
+        pb.setParameter("roi", roi);
+        pb.setParameter("maskSource", false);
+        pb.setParameter("maskDest", false);
+        pb.setParameter("nodata", Collections.singleton(nodataValue));
+        pb.setParameter("strictNodata", strict);
+        pb.setParameter("nilValue", nilValue);
+
+        RenderingHints hints = new RenderingHints(JAI.KEY_BORDER_EXTENDER, border);
+        RenderedOp op = JAI.create("MaskedConvolve", pb, hints);
+
+        SimpleIterator iter = new SimpleIterator(op, null, null);
+        int k = 0;
+        do {
+            float value = iter.getSample().floatValue();
+            assertTrue(CompareOp.aequal(expected[k++], value, FTOL));
+        } while (iter.next());
     }
 
 
@@ -452,7 +538,7 @@ public class TestMaskedConvolve {
     /**
      * Register the operator with JAI if it is not already registered
      */
-    private void ensureRegistered() {
+    private static void ensureRegistered() {
         OperationRegistry reg = JAI.getDefaultInstance().getOperationRegistry();
         String[] names = reg.getDescriptorNames(RenderedRegistryMode.MODE_NAME);
         MaskedConvolveDescriptor desc = new MaskedConvolveDescriptor();
@@ -467,17 +553,4 @@ public class TestMaskedConvolve {
         spi.updateRegistry(reg);
     }
 
-    /**
-     * If we are running on OSX, turn off native acceleration
-     * for JAI operations so that operators work properly
-     * with float and double data rasters.
-     */
-    private void fixForOSX() {
-        Properties sys = new Properties(System.getProperties());
-        if (sys.getProperty("os.name").compareToIgnoreCase("mac os x") == 0) {
-            sys.put("com.sun.media.jai.disableMediaLib", "true");
-        }
-        System.setProperties(sys);
-    }
-    
 }

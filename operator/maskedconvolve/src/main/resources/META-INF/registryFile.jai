@@ -1,10 +1,10 @@
 #
 # Image operation descriptors :
 #
-descriptor  jaitools.media.jai.maskedconvolve.MaskedConvolveDescriptor
+descriptor  org.jaitools.media.jai.maskedconvolve.MaskedConvolveDescriptor
 
 
 #
 # "rendered" factory objects
 #
-rendered  jaitools.media.jai.maskedconvolve.MaskedConvolveRIF  jaitools.media.jai  MaskedConvolve  MaskedConvolve
+rendered  org.jaitools.media.jai.maskedconvolve.MaskedConvolveRIF  org.jaitools.media.jai  MaskedConvolve  MaskedConvolve
