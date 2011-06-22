@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2009, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2009-2011, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -86,7 +86,11 @@ public class MaskedConvolveRIF implements RenderedImageFactory {
 
         int minCells = paramBlock.getIntParameter(MaskedConvolveDescriptor.MIN_CELLS_ARG);
         
-        Collection noDataValues = (Collection) paramBlock.getObjectParameter(MaskedConvolveDescriptor.NO_DATA_ARG);
+        Collection noDataValues = (Collection) 
+                paramBlock.getObjectParameter(MaskedConvolveDescriptor.NO_DATA_ARG);
+
+        Boolean strictNodata = (Boolean) 
+                paramBlock.getObjectParameter(MaskedConvolveDescriptor.STRICT_NO_DATA_ARG);
         
         return new MaskedConvolveOpImage(paramBlock.getRenderedSource(0),
                 extender,
@@ -98,7 +102,8 @@ public class MaskedConvolveRIF implements RenderedImageFactory {
                 maskDest,
                 nilValue,
                 minCells,
-                noDataValues);
+                noDataValues,
+                strictNodata);
     }
 }
 

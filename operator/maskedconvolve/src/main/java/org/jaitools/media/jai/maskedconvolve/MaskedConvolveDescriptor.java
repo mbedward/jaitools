@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2009, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2009-2011, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -194,6 +194,18 @@ import org.jaitools.numeric.Range;
  * </td>
  * </tr>
  * 
+ * <tr>
+ * <td>strictNodata</td>
+ * <td>Boolean</td>
+ * <td>false</td>
+ * <td>
+ * If {@code true}, convolution will no be performed for a target pixel with
+ * any NODATA values in its neighbourhood (non-zero kernel cells); if {@code false}
+ * convolution can occur, subject to masking and {@code minCells} criteria, with 
+ * NODATA values being ignored.
+ * </td>
+ * </tr>
+ * 
  * </table>
  * 
  * @see org.jaitools.media.jai.kernel.KernelFactory
@@ -229,6 +241,7 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
     static final int NIL_VALUE_ARG = 4;
     static final int MIN_CELLS_ARG = 5;
     static final int NO_DATA_ARG = 6;
+    static final int STRICT_NO_DATA_ARG = 7;
 
     private static final String[] paramNames = {
         "kernel",
@@ -237,7 +250,8 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
         "maskDest",
         "nilValue",
         "minCells",
-        "nodata"
+        "nodata",
+        "strictNodata"
     };
 
     private static final Class[] paramClasses = {
@@ -247,7 +261,8 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
          Boolean.class,
          Number.class,
          Object.class,
-         Collection.class
+         Collection.class,
+         Boolean.class
     };
 
     private static final Object[] paramDefaults = {
@@ -257,7 +272,8 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
          Boolean.TRUE,
          DEFAULT_NIL_VALUE,
          MIN_CELLS_ANY,
-         (Collection) null
+         (Collection) null,
+         Boolean.FALSE
     };
 
     /** Constructor. */
@@ -269,22 +285,35 @@ public class MaskedConvolveDescriptor extends OperationDescriptorImpl {
                     {"Description", "Convolve a rendered image masked by an associated ROI"},
                     {"DocURL", "http://code.google.com/p/jaitools/"},
                     {"Version", "1.0.0"},
-                    {"arg0Desc", paramNames[0] + " - a JAI Kernel object"},
-                    {"arg1Desc", paramNames[1] + " - an ROI object which must have the same " +
+                    
+                    {"arg0Desc", paramNames[KERNEL_ARG] + " - a JAI Kernel object"},
+                    
+                    {"arg1Desc", paramNames[ROI_ARG] + 
+                             " - an ROI object which must have the same " +
                              "pixel bounds as the source iamge"},
-                    {"arg2Desc", paramNames[2] + " (Boolean, default=true):" +
+                    
+                    {"arg2Desc", paramNames[MASKSRC_ARG] + " (Boolean, default=true):" +
                              "if TRUE (default) only the values of source pixels where" +
                              "roi.contains is true contribute to the convolution"},
-                    {"arg3Desc", paramNames[3] + " (Boolean): " +
+
+                    {"arg3Desc", paramNames[MASKDEST_ARG] + " (Boolean): " +
                              "if TRUE (default) convolution is only performed" +
                              "for pixels where roi.contains is true"},
-                    {"arg4Desc", paramNames[4] + " (Number): " +
+
+                    {"arg4Desc", paramNames[NIL_VALUE_ARG] + " (Number): " +
                              "the value to write to the destination image for pixels where " +
                              "there is no convolution result"},
-                    {"arg5Desc", paramNames[5] + " (String or Number, default=MIN_CELLS_ANY):" +
+
+                    {"arg5Desc", paramNames[MIN_CELLS_ARG] + 
+                             " (String or Number, default=MIN_CELLS_ANY):" +
                              "the minimum number of non-zero kernel cells that must overlap" +
                              "unmasked source image cells for convolution to be performed"},
-                    {"arg6Desc", paramNames[6] + " (Collection) " +
+
+                    {"arg6Desc", paramNames[NO_DATA_ARG] + " (Collection) " +
+                             "values to be treated as NO_DATA; elements can be Number and/or" +
+                             " Range"},
+
+                    {"arg6Desc", paramNames[STRICT_NO_DATA_ARG] + " (Collection) " +
                              "values to be treated as NO_DATA; elements can be Number and/or" +
                              " Range"}
 
