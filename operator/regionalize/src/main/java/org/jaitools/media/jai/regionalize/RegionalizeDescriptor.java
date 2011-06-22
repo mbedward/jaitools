@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2009, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2009-2011, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -100,19 +100,38 @@ import javax.media.jai.registry.RenderedRegistryMode;
  *         r.getMaxY() ));
  * </code></pre>
  *
- * <b>Parameters</b>
- * <table border="1">
- * <tr align="right">
- * <td>Name</td><td>Type</td><td>Default value</td>
+ * <b>Summary of parameters:</b>
+ * <table border="1", cellpadding="3">
+ * <tr>
+ * <th>Name</th>
+ * <th>Class</th>
+ * <th>Default</th>
+ * <th>Description</th>
  * </tr>
- * <tr align="right">
- * <td>band</td><td>int</td><td>0</td>
  * </tr>
- * <tr align="right">
- * <td>tolerance</td><td>double</td><td>0d</td>
+ * 
+ * <tr>
+ * <td>band</td>
+ * <td>int</td>
+ * <td>0</td>
+ * <td>The source image band to process</td>
  * </tr>
- * <tr align="right">
- * <td>diagonal</td><td>boolean</td><td>false</td>
+ * 
+ * <tr>
+ * <td>tolerance</td>
+ * <td>double</td>
+ * <td>0</td>
+ * <td>Tolerance for comparison of image values</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>diagonal</td>
+ * <td>boolean</td>
+ * <td>false</td>
+ * <td>
+ * If {@code true} diagonal connections are allowed; if {@code false}
+ * only orthogonal connections are allowed
+ * </td>
  * </tr>
  * </table>
  *
@@ -191,6 +210,8 @@ public class RegionalizeDescriptor extends OperationDescriptorImpl {
      * orthogonal connections
      * @param hints rendering hints (may be null)
      * @return the RenderedOp destination
+     * 
+     * @deprecated This method will be removed in JAITools version 1.3
      */
     public static RenderedOp create(
             RenderedImage source0,
