@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2009, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2009-2011, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -100,19 +100,38 @@ import javax.media.jai.registry.RenderedRegistryMode;
  *         r.getMaxY() ));
  * </code></pre>
  *
- * <b>Parameters</b>
- * <table border="1">
- * <tr align="right">
- * <td>Name</td><td>Type</td><td>Default value</td>
+ * <b>Summary of parameters:</b>
+ * <table border="1", cellpadding="3">
+ * <tr>
+ * <th>Name</th>
+ * <th>Class</th>
+ * <th>Default</th>
+ * <th>Description</th>
  * </tr>
- * <tr align="right">
- * <td>band</td><td>int</td><td>0</td>
  * </tr>
- * <tr align="right">
- * <td>tolerance</td><td>double</td><td>0d</td>
+ * 
+ * <tr>
+ * <td>band</td>
+ * <td>int</td>
+ * <td>0</td>
+ * <td>The source image band to process</td>
  * </tr>
- * <tr align="right">
- * <td>diagonal</td><td>boolean</td><td>false</td>
+ * 
+ * <tr>
+ * <td>tolerance</td>
+ * <td>double</td>
+ * <td>0</td>
+ * <td>Tolerance for comparison of image values</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>diagonal</td>
+ * <td>boolean</td>
+ * <td>false</td>
+ * <td>
+ * If {@code true} diagonal connections are allowed; if {@code false}
+ * only orthogonal connections are allowed
+ * </td>
  * </tr>
  * </table>
  *
@@ -176,38 +195,5 @@ public class RegionalizeDescriptor extends OperationDescriptorImpl {
         return true;
     }
 
-    /**
-     * Convenience method which constructs a {@link ParameterBlockJAI} and
-     * invokes {@code JAI.create("regionalize", params) }.
-     * If an ImageLayout object is included in the RenderingHints passed to
-     * this method, any specification of the SampleModel for the destination
-     * image will be overridden such that the destination will always be
-     * TYPE_INT.
-     *
-     * @param source0 the image to be regionalized
-     * @param band the band to process
-     * @param tolerance tolerance for pixel value comparisons
-     * @param diagonal true to include diagonal connections; false for only
-     * orthogonal connections
-     * @param hints rendering hints (may be null)
-     * @return the RenderedOp destination
-     */
-    public static RenderedOp create(
-            RenderedImage source0,
-            int band,
-            double tolerance,
-            boolean diagonal,
-            RenderingHints hints) {
-        ParameterBlockJAI pb =
-                new ParameterBlockJAI("Regionalize",
-                RenderedRegistryMode.MODE_NAME);
-
-        pb.setSource("source0", source0);
-        pb.setParameter(paramNames[BAND_ARG_INDEX], band);
-        pb.setParameter(paramNames[TOLERANCE_ARG_INDEX], tolerance);
-        pb.setParameter(paramNames[DIAGONAL_ARG_INDEX], diagonal);
-
-        return JAI.create("Regionalize", pb, hints);
-    }
 }
 
