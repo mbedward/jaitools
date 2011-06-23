@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2010, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2010-2011, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -77,14 +77,67 @@ import org.jaitools.imageutils.PixelCoordType;
  * RenderedOp dest = JAI.create("VectorBinarize", pb, hints);
  * </code></pre>
  * 
- * <strong>
- * Note: the {@link PixelCoordType} enum has been deprecated and the
- * "coordType" parameter will be removed from this operator in the next version
- * of JAITools.
- * </strong>
+ * <b>Summary of parameters:</b>
+ * <table border="1", cellpadding="3">
+ * <tr>
+ * <th>Name</th>
+ * <th>Class</th>
+ * <th>Default</th>
+ * <th>Description</th>
+ * </tr>
  * 
- * @author Michael Bedward
- * @author Andrea Aime
+ * <tr>
+ * <td>minx</td>
+ * <td>int</td>
+ * <td>0</td>
+ * <td>Min image X ordinate</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>miny</td>
+ * <td>int</td>
+ * <td>0</td>
+ * <td>Min image Y ordinate</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>width</td>
+ * <td>int</td>
+ * <td>No default</td>
+ * <td>Image width</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>height</td>
+ * <td>int</td>
+ * <td>No default</td>
+ * <td>Image height</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>geometry</td>
+ * <td>Geometry or PreparedGeometry</td>
+ * <td>No default</td>
+ * <td>The reference polygonal geometry</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>coordType</td>
+ * <td>{@linkplain PixelCoordType}</td>
+ * <td>{@linkplain PixelCoordType#Corner}</td>
+ * <td>Deprecated: please do not use</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>antiAliasing</td>
+ * <td>Boolean</td>
+ * <td>{@linkplain VectorBinarizeOpImage#DEFAULT_ANTIALIASING}</td>
+ * <td>Whether to use anti-aliasing when rendering (pixellating) the reference geometry</td>
+ * </tr>
+ * </table>
+ * 
+ * @author Michael Bedward.
+ * @author Andrea Aime, GeoSolutions.
  * @since 1.1
  * @version $Id$
  */
@@ -129,7 +182,9 @@ public class VectorBinarizeDescriptor extends OperationDescriptorImpl {
     };
 
     
-
+    /**
+     * Creates a new instance.
+     */
     public VectorBinarizeDescriptor() {
         super(new String[][]{
                     {"GlobalName", "VectorBinarize"},
@@ -167,6 +222,15 @@ public class VectorBinarizeDescriptor extends OperationDescriptorImpl {
                 );    
     }
 
+    /**
+     * Validates supplied parameters.
+     * 
+     * @param modeName the rendering mode
+     * @param pb the parameter block
+     * @param msg a {@code StringBuffer} to receive error messages
+     * 
+     * @return {@code true} if parameters are valid; {@code false} otherwise
+     */
     @Override
     protected boolean validateParameters(String modeName, ParameterBlock pb, StringBuffer msg) {
         boolean ok = super.validateParameters(modeName, pb, msg);

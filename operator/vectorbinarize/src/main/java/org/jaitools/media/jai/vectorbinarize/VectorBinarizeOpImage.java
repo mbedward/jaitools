@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2010, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2010-2011, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -81,7 +81,8 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
     
     private Raster blankTile;
     
-    static boolean DEFAULT_ANTIALIASING = false;
+    /** Default setting for anti-aliasing (false). */
+    public static boolean DEFAULT_ANTIALIASING = false;
     
     private boolean antiAliasing = DEFAULT_ANTIALIASING; 
 
@@ -116,6 +117,7 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
      * @param geom reference polygonal geometry
      * @param coordType type of coordinates to use when testing pixel inclusion
      *        (corner or center)
+     * @param antiAliasing whether to use anti-aliasing when rendering the reference geometry 
      */
     public VectorBinarizeOpImage(SampleModel sm, Map configuration, int minX, int minY, int width,
             int height, PreparedGeometry geom, PixelCoordType coordType, final boolean antiAliasing) {

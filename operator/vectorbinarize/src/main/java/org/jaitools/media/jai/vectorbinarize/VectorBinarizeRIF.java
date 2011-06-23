@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2010, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2010-2011, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -54,9 +54,6 @@ import org.jaitools.imageutils.PixelCoordType;
  * @version $Id$
  */
 public class VectorBinarizeRIF implements RenderedImageFactory {
-
-    public VectorBinarizeRIF() {
-    }
 
     /**
      * Creates a new instance of VectorBinarizeOpImage in the rendered layer.
