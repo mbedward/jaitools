@@ -175,7 +175,8 @@ public class KernelStatsOpImage extends AreaOpImage {
             }
         }
 
-        this.stats = stats;
+        this.stats = new Statistic[stats.length];
+        System.arraycopy(stats, 0, this.stats, 0, stats.length);
 
         this.roi = roi;
         if (roi == null) {
