@@ -30,6 +30,9 @@ import org.jaitools.numeric.Range;
 /**
  * Used by {@link RangeLookupTable} to define a single lookup range and return value.
  * 
+ * @param <T> type of the source range
+ * @param <U> type of the return value
+ * 
  * @author Michael Bedward
  * @author Simone Giannecchini, GeoSolutions
  * @since 1.1
