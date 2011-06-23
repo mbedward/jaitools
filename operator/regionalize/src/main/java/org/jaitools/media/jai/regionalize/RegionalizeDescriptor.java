@@ -190,11 +190,6 @@ public class RegionalizeDescriptor extends OperationDescriptorImpl {
 
     }
 
-    @Override
-    public boolean arePropertiesSupported() {
-        return true;
-    }
-
     /**
      * Convenience method which constructs a {@link ParameterBlockJAI} and
      * invokes {@code JAI.create("regionalize", params) }.
