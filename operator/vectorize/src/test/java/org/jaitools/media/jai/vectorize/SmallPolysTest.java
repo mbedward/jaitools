@@ -51,7 +51,7 @@ import static org.junit.Assert.*;
  */
 public class SmallPolysTest extends TestBase {
     
-    private final Integer[] DATA = {
+    private static final Integer[] DATA = {
         1, 1, 1, 1, 1, 1,
         1, 1, 1, 1, 1, 1,
         1, 1, 1, 3, 1, 1,
@@ -60,8 +60,8 @@ public class SmallPolysTest extends TestBase {
         2, 2, 2, 2, 2, 2
     };
     
-    private final int WIDTH = 6;
-    private final int NUM_SMALL = 5;
+    private static final int WIDTH = 6;
+    private static final int NUM_SMALL = 5;
     
     private Map<String, Object> args;
     
