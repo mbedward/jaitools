@@ -25,13 +25,7 @@
 
 package org.jaitools.media.jai.regionalize;
 
-import java.awt.RenderingHints;
-import java.awt.image.RenderedImage;
-
-import javax.media.jai.JAI;
 import javax.media.jai.OperationDescriptorImpl;
-import javax.media.jai.ParameterBlockJAI;
-import javax.media.jai.RenderedOp;
 import javax.media.jai.registry.RenderedRegistryMode;
 
 /**
