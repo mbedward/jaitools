@@ -116,10 +116,5 @@ public class RangeLookupDescriptor extends OperationDescriptorImpl {
 
     }
 
-    @Override
-    public boolean arePropertiesSupported() {
-        return true;
-    }
-
 }
 

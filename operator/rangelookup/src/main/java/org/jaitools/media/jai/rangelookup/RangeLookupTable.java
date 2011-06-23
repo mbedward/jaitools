@@ -36,6 +36,9 @@ import org.jaitools.numeric.RangeUtils;
  * Holds a collection of source image value ranges and their corresponding
  * destination image values for the RangeLookup operation.
  * 
+ * @param <T> type of the source range
+ * @param <U> type of the return value
+ * 
  * @author Michael Bedward
  * @author Simone Giannecchini, GeoSolutions
  * @since 1.0
@@ -138,10 +141,10 @@ public class RangeLookupTable<T extends Number & Comparable<? super T>, U extend
      * </pre>
      * In this case the value 5 will not match any range.
      * 
-     * @param overlap whether to allow overlapping ranges to be added to the table
+     * @param overlap overlap setting 
      */
-    public void setOverlapAllowed(boolean b) {
-        overlapAllowed = b;
+    public void setOverlapAllowed(boolean overlap) {
+        overlapAllowed = overlap;
     }
     
     /**
