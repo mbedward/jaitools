@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2009, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2009-2011, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -77,7 +77,7 @@ import org.jaitools.tiledimage.DiskMemImage;
 public class RegionalizeOpImage extends PointOpImage {
 
     /**
-     * Destingation value indicating that the pixel does not
+     * Destination value indicating that a pixel does not
      * belong to a region
      */
     public static final int NO_REGION = 0;
@@ -87,11 +87,11 @@ public class RegionalizeOpImage extends PointOpImage {
     private int band;
     private double tolerance;
 
-    private final DiskMemImage regionImage;
     private FloodFiller filler;
     private Map<Integer, Region> regions;
-    int currentID;
+    private int currentID;
 
+    private final DiskMemImage regionImage;
     private final ExecutorService executor;
     private final Object getTileLock = new Object();
     private final Object computeTileLock = new Object();
@@ -115,16 +115,21 @@ public class RegionalizeOpImage extends PointOpImage {
     }
 
     /**
-     * Constructor
-     * @param source a RenderedImage.
+     * Creates a new instance.
+     * 
+     * @param source the source image
+     * 
      * @param config configurable attributes of the image (see {@link AreaOpImage})
-     * @param layout an ImageLayout optionally containing the tile grid layout,
-     *        SampleModel, and ColorModel, or null.
-     * @param band the band to process
-     * @param tolerance max absolute difference in value between the starting pixel for
-     * a region and any pixel added to that region
-     * @param diagonal true to include sub-regions with only diagonal connectedness;
-     * false to require orthogonal connectedness
+     * 
+     * @param layout an optional {@code ImageLayout} or {@code null}
+     * 
+     * @param band the source image band to process
+     * 
+     * @param tolerance the maximum absolute difference in value between the starting 
+     *     pixel for a region and other subsequent pixels added to it
+     * 
+     * @param diagonal if {@code true} include sub-regions with only diagonal connectedness;
+     *     if {@code false} require orthogonal connectedness
      * 
      * @see RegionalizeDescriptor
      */
@@ -170,7 +175,7 @@ public class RegionalizeOpImage extends PointOpImage {
     }
 
     /**
-     * Get a property associated with this operator. Use this
+     * Gets a property associated with this operator. Use this
      * to retrieve the {@linkplain RegionData} object with the
      * property name {@linkplain RegionalizeDescriptor#REGION_DATA_PROPERTY}
      *
@@ -190,8 +195,10 @@ public class RegionalizeOpImage extends PointOpImage {
     }
 
     /**
-     * Get the properties for this operator. These will
-     * include the {@linkplain RegionData} object
+     * Gets the properties for this operator. These will
+     * include the {@linkplain RegionData} object.
+     * 
+     * @return the properties
      */
     @Override
     public Hashtable getProperties() {
@@ -204,7 +211,7 @@ public class RegionalizeOpImage extends PointOpImage {
     }
 
     /**
-     * For internal use
+     * {@inheritDoc}
      */
     @Override
     public Class<?> getPropertyClass(String name) {
@@ -217,7 +224,7 @@ public class RegionalizeOpImage extends PointOpImage {
     }
 
     /**
-     * For internal use
+     * {@inheritDoc}
      */
     @Override
     public String[] getPropertyNames() {
@@ -237,9 +244,9 @@ public class RegionalizeOpImage extends PointOpImage {
     }
 
     /**
-     * Returns a tile of this image as a <code>Raster</code>.  If the
+     * Returns a tile of this image as a {@code Raster}.  If the
      * requested tile is completely outside of this image's bounds,
-     * this method returns <code>null</code>.
+     * this method returns {@code null}.
      * <p>
      * The nature of the regionalizing algorithm means that to compute
      * <i>any</i> tile other than the first (top left) we must compute
@@ -278,6 +285,9 @@ public class RegionalizeOpImage extends PointOpImage {
         return tile;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Raster computeTile(int tileX, int tileY) {
         Rectangle destRect = getTileRect(tileX, tileY);
@@ -304,9 +314,11 @@ public class RegionalizeOpImage extends PointOpImage {
 
 
     /**
-     * Convenience method to calculate a single value tile coordinate
+     * Calculates a single value tile coordinate.
+     * 
      * @param tileX tile X coordinate
      * @param tileY tile Y coordinate
+     * 
      * @return single integer coordinate used to index fields in this class
      */
     private int getTileIndex(int tileX, int tileY) {
@@ -314,10 +326,13 @@ public class RegionalizeOpImage extends PointOpImage {
     }
 
     /**
-     * This method is overridden to prevent it being used because the
-     * {@code RegionalizeOpImage} object should be soley responsible for
-     * creating tiles and caching them. If invoked an
-     * {@linkplain UnsupportedOperationException} will be thrown.
+     * This method is overridden to prevent it being used by clients.
+     * 
+     * @param tileX tile X ordinate
+     * @param tileY tile Y ordinate
+     * @param tile the tile 
+     * 
+     * @throws UnsupportedOperationException if called
      */
     @Override
     protected void addTileToCache(int tileX, int tileY, Raster tile) {
@@ -332,6 +347,7 @@ public class RegionalizeOpImage extends PointOpImage {
      *
      * @param tileX tile X coordinate
      * @param tileY tile Y coordinate
+     * 
      * @return the requested tile
      */
     @Override

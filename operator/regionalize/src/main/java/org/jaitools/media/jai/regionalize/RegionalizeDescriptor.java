@@ -190,10 +190,5 @@ public class RegionalizeDescriptor extends OperationDescriptorImpl {
 
     }
 
-    @Override
-    public boolean arePropertiesSupported() {
-        return true;
-    }
-
 }
 

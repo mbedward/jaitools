@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2009, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2009-2011, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -55,14 +55,16 @@ public class Region {
     }
 
     /**
-     * Get the unique integer ID of this region
+     * Getss the unique integer ID of this region.
+     * 
+     * @return the ID value
      */
     public int getId() {
         return id;
     }
 
     /**
-     * Get the bounding pixel coordinates of this region
+     * Gets the bounding pixel coordinates of this region.
      *
      * @return a copy of the region's bounding rectangle
      */
@@ -71,16 +73,20 @@ public class Region {
     }
 
     /**
-     * Get the number of pixels within this region
+     * Gets the number of pixels within this region.
+     * 
+     * @return number of pixels
      */
     public int getNumPixels() {
         return numPixels;
     }
 
     /**
-     * Get the reference value for this region as a double.
+     * Gets the reference value for this region as a double.
      * This is the value of the first pixel that was identified
      * within the region.
+     * 
+     * @return reference (starting) value
      */
     public double getRefValue() {
         return refValue;
