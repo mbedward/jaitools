@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2010, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2010-2011, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -75,9 +75,60 @@ import com.vividsolutions.jts.geom.prep.PreparedGeometry;
  * RenderedOp dest = JAI.create("VectorBinarize", pb, hints);
  * </code></pre>
  * 
+ * <b>Summary of parameters:</b>
+ * <table border="1", cellpadding="3">
+ * <tr>
+ * <th>Name</th>
+ * <th>Class</th>
+ * <th>Default</th>
+ * <th>Description</th>
+ * </tr>
  * 
- * @author Michael Bedward
- * @author Andrea Aime
+ * <tr>
+ * <td>minx</td>
+ * <td>int</td>
+ * <td>0</td>
+ * <td>Min image X ordinate</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>miny</td>
+ * <td>int</td>
+ * <td>0</td>
+ * <td>Min image Y ordinate</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>width</td>
+ * <td>int</td>
+ * <td>No default</td>
+ * <td>Image width</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>height</td>
+ * <td>int</td>
+ * <td>No default</td>
+ * <td>Image height</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>geometry</td>
+ * <td>Geometry or PreparedGeometry</td>
+ * <td>No default</td>
+ * <td>The reference polygonal geometry</td>
+ * </tr>
+ * 
+ * <tr>
+ * <td>antiAliasing</td>
+ * <td>Boolean</td>
+ * <td>{@linkplain VectorBinarizeOpImage#DEFAULT_ANTIALIASING}</td>
+ * <td>Whether to use anti-aliasing when rendering (pixellating) the reference geometry</td>
+ * </tr>
+ * </table>
+ * 
+ * @author Michael Bedward.
+ * @author Andrea Aime, GeoSolutions.
  * @since 1.1
  * @version $Id$
  */
@@ -118,30 +169,34 @@ public class VectorBinarizeDescriptor extends OperationDescriptorImpl {
     };
 
     
-
+    /**
+     * Creates a new instance.
+     */
     public VectorBinarizeDescriptor() {
         super(new String[][]{
                     {"GlobalName", "VectorBinarize"},
                     {"LocalName", "VectorBinarize"},
                     {"Vendor", "org.jaitools.media.jai"},
-                    {"Description", "Creates a binary image based on the inclusion of pixels within a polygonal Geometry"},
+                    {"Description", "Creates a binary image based on the inclusion of " +
+                            "pixels within a polygonal Geometry"},
                     {"DocURL", "http://code.google.com/p/jaitools/"},
-                    {"Version", "1.1.0"},
+                    {"Version", "1.3.0"},
                     
-                    {"arg0Desc", paramNames[0] + " (Integer, default = 0) min image X"},
+                    {"arg0Desc", paramNames[MINX_ARG] + " (Integer, default = 0) min image X"},
                     
-                    {"arg1Desc", paramNames[1] + " (Integer, default = 0) min image Y"},
+                    {"arg1Desc", paramNames[MINY_ARG] + " (Integer, default = 0) min image Y"},
                     
-                    {"arg2Desc", paramNames[2] + " (Integer) image width"},
+                    {"arg2Desc", paramNames[WIDTH_ARG] + " (Integer) image width"},
                     
-                    {"arg3Desc", paramNames[3] + " (Integer) image height"},
+                    {"arg3Desc", paramNames[HEIGHT_ARG] + " (Integer) image height"},
                     
-                    {"arg4Desc", paramNames[4] + " the reference Geometry: either a Polygon, " +
-                              "a MultiPolygon or a polygonal PreparedGeometry"},
+                    {"arg4Desc", paramNames[GEOM_ARG] + " the reference Geometry: " + 
+                              "either a Polygon, a MultiPolygon or a polygonal PreparedGeometry"},
                     
-                    {"arg6Desc", paramNames[5] + " (Boolean, default = false) " +
+                    {"arg6Desc", paramNames[ANTIALIASING_ARG] + " (Boolean, default = false) " +
                               "Whether to use antiAliasing as Hints on geometry rendering" }
                 },
+                
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
                 
                 0,                                              // number of sources
@@ -154,6 +209,15 @@ public class VectorBinarizeDescriptor extends OperationDescriptorImpl {
                 );    
     }
 
+    /**
+     * Validates supplied parameters.
+     * 
+     * @param modeName the rendering mode
+     * @param pb the parameter block
+     * @param msg a {@code StringBuffer} to receive error messages
+     * 
+     * @return {@code true} if parameters are valid; {@code false} otherwise
+     */
     @Override
     protected boolean validateParameters(String modeName, ParameterBlock pb, StringBuffer msg) {
         boolean ok = super.validateParameters(modeName, pb, msg);
