@@ -32,7 +32,7 @@ package org.jaitools.imageutils;
  * Used with classes that honour double precision pixel coordinates such
  * as {@link ROIGeometry}.
  * 
- * @deprecated This enum will be removed in the next major release or JAITools
+ * @deprecated This enum will be removed in JAITools version 1.3
  * 
  * @author Michael Bedward
  * @since 1.1
