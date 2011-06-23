@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2009, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2009-2011, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -89,18 +89,40 @@ public class KernelStatsOpImage extends AreaOpImage {
 
 
     /**
-     * Constructor
-     * @param source a RenderedImage.
-     * @param extender a BorderExtender, or null.
+     * Creates a new instance.
+     * 
+     * @param source the source image
+     * 
+     * @param extender an optional {@code BorderExtender} or {@code null}
+     * 
      * @param config configurable attributes of the image (see {@link AreaOpImage})
+     * 
      * @param layout an optional ImageLayout object; if the layout specifies a SampleModel
-     * and / or ColorModel that are not valid for the requested statistics (e.g. wrong number
-     * of bands) these will be overridden.
-     * @param band the source image band to process
+     *     and / or ColorModel that are invalid for the requested statistics (e.g. wrong 
+     *     number of bands) these will be overridden
+     * 
+     * @param stats an array of Statistic constants
+     * 
      * @param kernel the convolution kernel
-     * @param stats an array of Statistic constants naming the statistics required
-     * @throws IllegalArgumentException if the roi's bounds do not contain the entire
-     * source image
+     * 
+     * @param band the source image band to process
+     * 
+     * @param roi an optional {@code ROI} or {@code null}
+     * 
+     * @param ignoreNaN if {@code true} NaN values are ignored; otherwise any NaN
+     *     values in a pixels neighbourhood cause {@code nilValue} to be returned
+     * 
+     * @param maskSrc if {@code true} only neighbourhood pixels within the {@code ROI}
+     *     are used in calculations
+     * 
+     * @param maskDest if {@code true}, {@code nilValue} is returned for any pixels
+     *     outside the {@code ROI}
+     * 
+     * @param nilValue value to return for pixels with no result
+     * 
+     * @throws IllegalArgumentException if the ROI's bounds do not contain the entire
+     *     source image
+     * 
      * @see KernelStatsDescriptor
      * @see Statistic
      */

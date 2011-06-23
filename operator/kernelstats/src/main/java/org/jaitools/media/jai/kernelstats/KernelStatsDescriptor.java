@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2009, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2009-2011, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -271,6 +271,15 @@ public class KernelStatsDescriptor extends OperationDescriptorImpl {
         return JAI.create("KernelStats", pb, hints);
     }
 
+    /**
+     * Validates supplied parameters.
+     * 
+     * @param modeName the rendering mode
+     * @param pb the parameter block
+     * @param msg a {@code StringBuffer} to receive error messages
+     * 
+     * @return {@code true} if parameters are valid; {@code false} otherwise
+     */
     @Override
     public boolean validateArguments(String modeName, ParameterBlock pb, StringBuffer msg) {
         if (!super.validateArguments(modeName, pb, msg)) {
@@ -279,7 +288,7 @@ public class KernelStatsDescriptor extends OperationDescriptorImpl {
 
         int band = pb.getIntParameter(BAND_ARG_INDEX);
         if (band < 0 || band >= pb.getNumSources()) {
-            msg.append("band arg out of bounds for source image: " + band);
+            msg.append("band arg out of bounds for source image: ").append(band);
             return false;
         }
 
