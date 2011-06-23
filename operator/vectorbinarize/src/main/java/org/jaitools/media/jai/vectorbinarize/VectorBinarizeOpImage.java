@@ -82,7 +82,7 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
     private Raster blankTile;
     
     /** Default setting for anti-aliasing (false). */
-    public static boolean DEFAULT_ANTIALIASING = false;
+    public static final boolean DEFAULT_ANTIALIASING = false;
     
     private boolean antiAliasing = DEFAULT_ANTIALIASING; 
 
