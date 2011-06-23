@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2009-2010, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2009-2011, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -152,8 +152,12 @@ public class ZonalStatsOpImage extends NullOpImage {
                 dataImage.getMinX(), dataImage.getMinY(),
                 dataImage.getWidth(), dataImage.getHeight());
 
-        this.stats = stats;
-        this.srcBands = bands;
+        this.stats = new Statistic[stats.length];
+        System.arraycopy(stats, 0, this.stats, 0, stats.length);
+        
+        this.srcBands = new Integer[bands.length];
+        System.arraycopy(bands, 0, this.srcBands, 0, bands.length);
+        
         this.roi = roi;
         this.zoneTransform = zoneTransform;
         this.rangeLocalStats = rangeLocalStats;
@@ -310,7 +314,7 @@ public class ZonalStatsOpImage extends NullOpImage {
             do {
                 dataPos.x = dataImage.getMinX();
                 do {
-                    if (roi == null | roi.contains(dataPos)) {
+                    if (roi == null || roi.contains(dataPos)) {
                         dataIter.getPixel(sampleValues);
                         zoneTransform.transform(dataPos, zonePos);
 

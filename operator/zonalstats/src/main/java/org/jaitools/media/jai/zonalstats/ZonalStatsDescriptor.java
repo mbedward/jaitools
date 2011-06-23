@@ -270,7 +270,7 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
     private static final long serialVersionUID = -526208282980300507L;
 
     /** Property name used to retrieve the results */
-    public static String ZONAL_STATS_PROPERTY = "ZonalStatsProperty";
+    public static final String ZONAL_STATS_PROPERTY = "ZonalStatsProperty";
 
     static final int DATA_IMAGE = 0;
     static final int ZONE_IMAGE = 1;
@@ -387,17 +387,14 @@ public class ZonalStatsDescriptor extends OperationDescriptorImpl {
     }
 
     /**
-     * Returns true to indicate that properties are supported
+     * Validates supplied parameters.
+     * 
+     * @param modeName the rendering mode
+     * @param pb the parameter block
+     * @param msg a {@code StringBuffer} to receive error messages
+     * 
+     * @return {@code true} if parameters are valid; {@code false} otherwise
      */
-    @Override
-    public boolean arePropertiesSupported() {
-        return true;
-    }
-
-    /**
-     * Checks parameters prior to them being used.
-     */
-    @SuppressWarnings("unchecked")
     @Override
     public boolean validateArguments( String modeName, ParameterBlock pb, StringBuffer msg ) {
         if (pb.getNumSources() == 0 || pb.getNumSources() > 2) {
