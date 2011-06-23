@@ -328,7 +328,7 @@ public class VectorizeTest extends TestBase {
         RenderedImage src = createChessboardImage(IMAGE_WIDTH, SQUARE_WIDTH, valuer);
         args.put("insideEdges", Boolean.FALSE);
         RenderedOp dest = doOp(src, args);
-        List<Polygon> polys = getPolygons(dest, 1);
+        getPolygons(dest, 1);
     }
 
     /**
