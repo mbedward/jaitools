@@ -43,6 +43,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -241,7 +242,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
     // whether to send cache diagnostics to observers
     private boolean diagnosticsEnabled;
     
-    
+    // Lock for tile access
+    private final ReentrantLock tileLock = new ReentrantLock();
 
     // Variables used for auto-flushing of resident tiles
     private ScheduledExecutorService flushService;
@@ -350,21 +352,22 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * @param data the tile data
      * @param tileCacheMetric optional tile cache metric (may be {@code null}
      */
-    public synchronized void add(RenderedImage owner,
+    public void add(RenderedImage owner,
                 int tileX,
                 int tileY,
                 Raster data,
                 Object tileCacheMetric) {
 
-        okToFlush.set(false);
-
-        Object key = getTileId(owner, tileX, tileY);
-        if (tiles.containsKey(key)) {
-            // tile is already cached
-            return;
-        }
+        tileLock.lock();
 
         try {
+            okToFlush.set(false);
+            Object key = getTileId(owner, tileX, tileY);
+            if (tiles.containsKey(key)) {
+                // tile is already cached
+                return;
+            }
+
             DiskCachedTile tile = new DiskCachedTile(
                     key, owner, tileX, tileY, data, writeNewTilesToDisk, tileCacheMetric);
             tiles.put(key, tile);
@@ -383,6 +386,9 @@ public class DiskMemTileCache extends Observable implements TileCache {
         } catch (IOException ex) {
             Logger.getLogger(DiskMemTileCache.class.getName())
                     .log(Level.SEVERE, "Unable to cache this tile on disk", ex);
+            
+        } finally {
+            tileLock.unlock();
         }
     }
 
@@ -393,42 +399,47 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * @param tileX the tile column
      * @param tileY the tile row
      */
-    public synchronized void remove(RenderedImage owner, int tileX, int tileY) {
-        okToFlush.set(false);
+    public void remove(RenderedImage owner, int tileX, int tileY) {
+        tileLock.lock();
 
-        Object key = getTileId(owner, tileX, tileY);
-        DiskCachedTile tile = tiles.get(key);
+        try {
+            okToFlush.set(false);
+            Object key = getTileId(owner, tileX, tileY);
+            DiskCachedTile tile = tiles.get(key);
 
-        if (tile == null) {
-            return;
-        }
-
-        if (residentTiles.containsKey(key)) {
-            try {
-                removeResidentTile(key, false);
-
-            } catch (DiskCacheFailedException ex) {
-                /*
-                 * It would be nicer to just throw this exception
-                 * upwards but we can't in the overidden method
-                 */
-                Logger.getLogger(DiskMemTileCache.class.getName()).
-                        log(Level.SEVERE, null, ex);
+            if (tile == null) {
+                return;
             }
+
+            if (residentTiles.containsKey(key)) {
+                try {
+                    removeResidentTile(key, false);
+
+                } catch (DiskCacheFailedException ex) {
+                    /*
+                     * It would be nicer to just throw this exception
+                     * upwards but we can't in the overidden method
+                     */
+                    Logger.getLogger(DiskMemTileCache.class.getName()).
+                            log(Level.SEVERE, null, ex);
+                }
+            }
+
+            tile.deleteDiskCopy();
+
+            tile.setAction(DiskCachedTile.TileAction.ACTION_REMOVED);
+            if (diagnosticsEnabled) {
+                setChanged();
+                notifyObservers(tile);
+            }
+
+            tiles.remove(key);
+            
+        } finally {
+            tileLock.unlock();
         }
-
-        tile.deleteDiskCopy();
-
-        tile.setAction(DiskCachedTile.TileAction.ACTION_REMOVED);
-        if (diagnosticsEnabled) {
-            setChanged();
-            notifyObservers(tile);
-        }
-
-        tiles.remove(key);
     }
 
-    
     /**
      * Gets the specified tile from the cache if present. If the tile is
      * cached but not resident in memory it will be read from the cache's
@@ -439,48 +450,54 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * @param tileY the tile row
      * @return the requested tile or {@code null} if the tile was not cached
      */
-    public synchronized Raster getTile(RenderedImage owner, int tileX, int tileY) {
-        okToFlush.set(false);
-        Raster r = null;
-        Object key = getTileId(owner, tileX, tileY);
+    public Raster getTile(RenderedImage owner, int tileX, int tileY) {
+        tileLock.lock();
 
-        DiskCachedTile tile = tiles.get(key);
-        if (tile != null) {
+        try {
+            okToFlush.set(false);
+            Raster r = null;
+            Object key = getTileId(owner, tileX, tileY);
 
-            // is the tile resident ?
-            r = residentTiles.get(key);
-            if (r == null) {
-                /*
-                 * The tile is not resident. Attempt
-                 * to read it from the disk.
-                 */
-                r = tile.readData();
+            DiskCachedTile tile = tiles.get(key);
+            if (tile != null) {
+
+                // is the tile resident ?
+                r = residentTiles.get(key);
                 if (r == null) {
-                    /* The tile was not cached on disk. It may have
-                     * been resident only, and then flushed.
+                    /*
+                     * The tile is not resident. Attempt
+                     * to read it from the disk.
                      */
-                    return null;
-                }
-                
-                if (makeResident(tile, r)) {
-                    tile.setAction(DiskCachedTile.TileAction.ACTION_RESIDENT);
-                    if (diagnosticsEnabled) {
-                        setChanged();
-                        notifyObservers(tile);
+                    r = tile.readData();
+                    if (r == null) {
+                        /* The tile was not cached on disk. It may have
+                         * been resident only, and then flushed.
+                         */
+                        return null;
+                    }
+
+                    if (makeResident(tile, r)) {
+                        tile.setAction(DiskCachedTile.TileAction.ACTION_RESIDENT);
+                        if (diagnosticsEnabled) {
+                            setChanged();
+                            notifyObservers(tile);
+                        }
                     }
                 }
+
+                tile.setAction(DiskCachedTile.TileAction.ACTION_ACCESSED);
+                tile.setTileTimeStamp(System.currentTimeMillis());
+
+                if (diagnosticsEnabled) {
+                    setChanged();
+                    notifyObservers(tile);
+                }
             }
 
-            tile.setAction(DiskCachedTile.TileAction.ACTION_ACCESSED);
-            tile.setTileTimeStamp(System.currentTimeMillis());
-
-            if (diagnosticsEnabled) {
-                setChanged();
-                notifyObservers(tile);
-            }
+            return r;
+        } finally {
+            tileLock.unlock();
         }
-
-        return r;
     }
 
     /**
@@ -490,43 +507,51 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * @param owner the image for which tiles are requested
      * @return an array of tile Rasters
      */
-    public synchronized Raster[] getTiles(RenderedImage owner) {
-        okToFlush.set(false);
+    public Raster[] getTiles(RenderedImage owner) {
+        tileLock.lock();
 
-        int minX = owner.getMinTileX();
-        int minY = owner.getMinTileY();
-        int numX = owner.getNumXTiles();
-        int numY = owner.getNumYTiles();
-        
-        List<Object> keys = new ArrayList<Object>();
-        for (int y = minY, ny=0; ny < numY; y++, ny++) {
-            for (int x = minX, nx = 0; nx < numX; x++, nx++) {
-                Object key = getTileId(owner, x, y);
-                if (tiles.containsKey(key)) keys.add(key);
+        try {
+            okToFlush.set(false);
+            int minX = owner.getMinTileX();
+            int minY = owner.getMinTileY();
+            int numX = owner.getNumXTiles();
+            int numY = owner.getNumYTiles();
+
+            List<Object> keys = new ArrayList<Object>();
+            for (int y = minY, ny = 0; ny < numY; y++, ny++) {
+                for (int x = minX, nx = 0; nx < numX; x++, nx++) {
+                    Object key = getTileId(owner, x, y);
+                    if (tiles.containsKey(key)) {
+                        keys.add(key);
+                    }
+                }
             }
+
+            Raster[] rasters = new Raster[keys.size()];
+            int k = 0;
+            for (Object key : keys) {
+                DiskCachedTile tile = tiles.get(key);
+                Raster r = residentTiles.get(tile.getTileId());
+                if (r == null) {
+                    r = tile.readData();
+                    makeResident(tile, r);
+                }
+
+                rasters[k++] = r;
+
+                tile.setTileTimeStamp(System.currentTimeMillis());
+                tile.setAction(DiskCachedTile.TileAction.ACTION_ACCESSED);
+                if (diagnosticsEnabled) {
+                    setChanged();
+                    notifyObservers(tile);
+                }
+            }
+
+            return rasters;
+            
+        } finally {
+            tileLock.unlock();
         }
-
-        Raster[] rasters = new Raster[keys.size()];
-        int k = 0;
-        for (Object key : keys) {
-            DiskCachedTile tile = tiles.get(key);
-            Raster r = residentTiles.get(tile.getTileId());
-            if (r == null) {
-                r = tile.readData();
-                makeResident(tile, r);
-            }
-
-            rasters[k++] = r;
-
-            tile.setTileTimeStamp(System.currentTimeMillis());
-            tile.setAction(DiskCachedTile.TileAction.ACTION_ACCESSED);
-            if (diagnosticsEnabled) {
-                setChanged();
-                notifyObservers(tile);
-            }
-        }
-
-        return rasters;
     }
 
     /**
@@ -535,10 +560,15 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * @param owner the image owning the tiles to be removed
      */
     public void removeTiles(RenderedImage owner) {
-        for (int y = owner.getMinTileY(), ny=0; ny < owner.getNumYTiles(); y++, ny++) {
-            for (int x = owner.getMinTileX(), nx=0; nx < owner.getNumXTiles(); x++, nx++) {
-                remove(owner, x, y);
+        tileLock.lock();
+        try {
+            for (int y = owner.getMinTileY(), ny = 0; ny < owner.getNumYTiles(); y++, ny++) {
+                for (int x = owner.getMinTileX(), nx = 0; nx < owner.getNumXTiles(); x++, nx++) {
+                    remove(owner, x, y);
+                }
             }
+        } finally {
+            tileLock.unlock();
         }
     }
 
@@ -605,23 +635,32 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * garbage collected) and, if so, removes them from the cache.
      */
     private void removeNullTiles() {
-        Set<Object> nullTileKeys = CollectionFactory.set();
-        for (Object key : tiles.keySet()) {
-            DiskCachedTile tile = tiles.get(key);
-            if (tile.getOwner() == null) {
-                nullTileKeys.add(key);
-            }
+        if (!tileLock.tryLock()) {  // jumps the queue of waiting threads
+            return;
         }
 
-        for (Object key : nullTileKeys) {
-            DiskCachedTile tile = tiles.get(key);
-            tile.deleteDiskCopy();
-            if (residentTiles.containsKey(key)) {
-                residentTiles.remove(key);
-                sortedResidentTiles.remove(tile);
-                curMemory -= tile.getTileSize();
+        try {
+            Set<Object> nullTileKeys = CollectionFactory.set();
+            for (Object key : tiles.keySet()) {
+                DiskCachedTile tile = tiles.get(key);
+                if (tile.getOwner() == null) {
+                    nullTileKeys.add(key);
+                }
             }
-            tiles.remove(key);
+
+            for (Object key : nullTileKeys) {
+                DiskCachedTile tile = tiles.get(key);
+                tile.deleteDiskCopy();
+                if (residentTiles.containsKey(key)) {
+                    residentTiles.remove(key);
+                    sortedResidentTiles.remove(tile);
+                    curMemory -= tile.getTileSize();
+                }
+                tiles.remove(key);
+            }
+
+        } finally {
+            tileLock.unlock();
         }
     }
 
@@ -634,17 +673,24 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * @param tiles tile data in the form of Raster objects
      * @param tileCacheMetric optional metric (may be {@code null})
      */
-    public synchronized void addTiles(RenderedImage owner,
+    public void addTiles(RenderedImage owner,
                      Point[] tileIndices,
                      Raster[] tiles,
                      Object tileCacheMetric) {
 
         if (tileIndices.length != tiles.length) {
-            throw new IllegalArgumentException("tileIndices and tiles args must be the same length");
+            throw new IllegalArgumentException(
+                    "tileIndices and tiles args must be the same length");
         }
 
-        for (int i = 0; i < tiles.length; i++) {
-            add(owner, tileIndices[i].x, tileIndices[i].y, tiles[i], tileCacheMetric);
+        tileLock.lock();
+        try {
+            for (int i = 0; i < tiles.length; i++) {
+                add(owner, tileIndices[i].x, tileIndices[i].y, tiles[i], tileCacheMetric);
+            }
+            
+        } finally {
+            tileLock.unlock();
         }
     }
 
@@ -656,17 +702,23 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * of each tile
      * @return data for the requested tiles as Raster objects
      */
-    public synchronized Raster[] getTiles(RenderedImage owner, Point[] tileIndices) {
-        Raster[] r = null;
-
-        if (tileIndices.length > 0) {
-            r = new Raster[tileIndices.length];
-            for (int i = 0; i < tileIndices.length; i++) {
-                r[i] = getTile(owner, tileIndices[i].x, tileIndices[i].y);
+    public Raster[] getTiles(RenderedImage owner, Point[] tileIndices) {
+        tileLock.lock();
+        try {
+            Raster[] r = null;
+            
+            if (tileIndices.length > 0) {
+                r = new Raster[tileIndices.length];
+                for (int i = 0; i < tileIndices.length; i++) {
+                    r[i] = getTile(owner, tileIndices[i].x, tileIndices[i].y);
+                }
             }
-        }
 
-        return r;
+            return r;
+
+        } finally {
+            tileLock.unlock();
+        }
     }
 
     /**
@@ -676,28 +728,41 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * <p>
      * The update action of each tile will be set to {@linkplain DiskCachedTile#ACTION_REMOVED}.
      */
-    public synchronized void flush() {
-        flushMemory();
-        
-        for (DiskCachedTile tile : tiles.values()) {
-            tile.deleteDiskCopy();
-            tile.setAction(DiskCachedTile.TileAction.ACTION_REMOVED);
-            if (diagnosticsEnabled) {
-                setChanged();
-                notifyObservers(tile);
+    public void flush() {
+        tileLock.lock();
+
+        try {
+            flushMemory();
+
+            for (DiskCachedTile tile : tiles.values()) {
+                tile.deleteDiskCopy();
+                tile.setAction(DiskCachedTile.TileAction.ACTION_REMOVED);
+                if (diagnosticsEnabled) {
+                    setChanged();
+                    notifyObservers(tile);
+                }
             }
+            tiles.clear();
+
+        } finally {
+            tileLock.unlock();
         }
-        tiles.clear();
     }
 
     /**
      * Removes all resident tiles from memory. No rewriting of tile data
      * to disk is done.
      */
-    public synchronized void flushMemory() {
-        residentTiles.clear();
-        sortedResidentTiles.clear();
-        curMemory = 0;
+    public void flushMemory() {
+        tileLock.lock();
+        try {
+            residentTiles.clear();
+            sortedResidentTiles.clear();
+            curMemory = 0;
+            
+        } finally {
+            tileLock.unlock();
+        }
     }
 
     /**
@@ -706,11 +771,16 @@ public class DiskMemTileCache extends Observable implements TileCache {
      *
      * @see DiskMemTileCache#setMemoryThreshold(float)
      */
-    public synchronized void memoryControl() {
-        long maxUsed = (long)(memThreshold * memCapacity);
-        long toFree = curMemory - maxUsed;
-        if (toFree > 0) {
-            defaultMemoryControl( toFree );
+    public void memoryControl() {
+        tileLock.lock();
+        try {
+            long maxUsed = (long) (memThreshold * memCapacity);
+            long toFree = curMemory - maxUsed;
+            if (toFree > 0) {
+                defaultMemoryControl(toFree);
+            }
+        } finally {
+            tileLock.unlock();
         }
     }
 
@@ -776,37 +846,44 @@ public class DiskMemTileCache extends Observable implements TileCache {
      *
      * @param newCapacity requested memory capacity for resident tiles
      */
-    public synchronized void setMemoryCapacity(long newCapacity) {
-        if (newCapacity < 0) {
-            throw new IllegalArgumentException("memory capacity must be >= 0");
-        }
+    public void setMemoryCapacity(long newCapacity) {
+        tileLock.lock();
 
-        long oldCapacity = memCapacity;
-        memCapacity = newCapacity;
+        try {
+            okToFlush.set(false);
+            if (newCapacity < 0) {
+                throw new IllegalArgumentException("memory capacity must be >= 0");
+            }
 
-        if (newCapacity == 0) {
-            flushMemory();
+            long oldCapacity = memCapacity;
+            memCapacity = newCapacity;
 
-        } else if (newCapacity < oldCapacity && curMemory > newCapacity) {
-            /*
-             * Note: we free memory here directly rather than using
-             * memoryControl or defaultMemoryControl methods because
-             * they will fail when memCapacity has been reduced
-             */
-            Collections.sort(sortedResidentTiles, comparator);
-            while (curMemory > newCapacity) {
-                Object key = sortedResidentTiles.get(sortedResidentTiles.size()-1).getTileId();
-                try {
-                    removeResidentTile(key, true);
-                } catch (DiskCacheFailedException ex) {
-                    /*
-                     * It would be nicer to just throw this exception
-                     * upwards be we can't in the overidden method
-                     */
-                    Logger.getLogger(DiskMemTileCache.class.getName()).
-                            log(Level.SEVERE, null, ex);
+            if (newCapacity == 0) {
+                flushMemory();
+
+            } else if (newCapacity < oldCapacity && curMemory > newCapacity) {
+                /*
+                 * Note: we free memory here directly rather than using
+                 * memoryControl or defaultMemoryControl methods because
+                 * they will fail when memCapacity has been reduced
+                 */
+                Collections.sort(sortedResidentTiles, comparator);
+                while (curMemory > newCapacity) {
+                    Object key = sortedResidentTiles.get(sortedResidentTiles.size() - 1).getTileId();
+                    try {
+                        removeResidentTile(key, true);
+                    } catch (DiskCacheFailedException ex) {
+                        /*
+                         * It would be nicer to just throw this exception
+                         * upwards be we can't in the overidden method
+                         */
+                        Logger.getLogger(DiskMemTileCache.class.getName()).
+                                log(Level.SEVERE, null, ex);
+                    }
                 }
             }
+        } finally {
+            tileLock.unlock();
         }
     }
 
@@ -870,20 +947,25 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * 
      * @param comp the comparator or {@code null} for the default
      */
-    public synchronized void setTileComparator(Comparator comp) {
+    public void setTileComparator(Comparator comp) {
+        tileLock.lock();
+        try {
+            if (comp == null) {
+                // switch to default comparator based on tile access time
+                comparator = new TileAccessTimeComparator();
+            } else {
+                comparator = comp;
+            }
 
-        if ( comp == null ) {
-            // switch to default comparator based on tile access time
-            comparator = new TileAccessTimeComparator();
-        } else {
-            comparator = comp;
+            sortedResidentTiles = new ArrayList<DiskCachedTile>();
+            for (Object key : residentTiles.keySet()) {
+                sortedResidentTiles.addAll(tiles.values());
+            }
+            Collections.sort(sortedResidentTiles, comparator);
+            
+        } finally {
+            tileLock.unlock();
         }
-
-        sortedResidentTiles = new ArrayList<DiskCachedTile>();
-        for (Object key : residentTiles.keySet()) {
-            sortedResidentTiles.addAll(tiles.values());
-        }
-        Collections.sort(sortedResidentTiles, comparator);
     }
 
     /**
@@ -960,21 +1042,26 @@ public class DiskMemTileCache extends Observable implements TileCache {
     public void setTileChanged(RenderedImage owner, int tileX, int tileY)
             throws TileNotResidentException, DiskCacheFailedException {
 
-        okToFlush.set(false);
-
-        Object tileId = getTileId(owner, tileX, tileY);
-        Raster r = residentTiles.get(tileId);
-        if (r == null) {
-            throw new TileNotResidentException(owner, tileX, tileY);
-        }
-
-        DiskCachedTile tile = tiles.get(tileId);
-        if (tile.cachedToDisk()) {
-            try {
-                tile.writeData(r);
-            } catch (IOException ioEx) {
-                throw new DiskCacheFailedException(owner, tileX, tileY);
+        tileLock.lock();
+        try {
+            okToFlush.set(false);
+            Object tileId = getTileId(owner, tileX, tileY);
+            Raster r = residentTiles.get(tileId);
+            if (r == null) {
+                throw new TileNotResidentException(owner, tileX, tileY);
             }
+
+            DiskCachedTile tile = tiles.get(tileId);
+            if (tile.cachedToDisk()) {
+                try {
+                    tile.writeData(r);
+                } catch (IOException ioEx) {
+                    throw new DiskCacheFailedException(owner, tileX, tileY);
+                }
+            }
+            
+        } finally {
+            tileLock.unlock();
         }
     }
 
@@ -1061,9 +1148,15 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * Accepts a {@code DiskMemCacheVisitor} object and calls its
      * {@code visit} method for each tile in the cache.
      */
-    public synchronized void accept(DiskMemTileCacheVisitor visitor) {
-        for (Object key : tiles.keySet()) {
-            visitor.visit(tiles.get(key), residentTiles.containsKey(key));
+    public void accept(DiskMemTileCacheVisitor visitor) {
+        tileLock.lock();
+        try {
+            okToFlush.set(false);
+            for (Object key : tiles.keySet()) {
+                visitor.visit(tiles.get(key), residentTiles.containsKey(key));
+            }
+        } finally {
+            tileLock.unlock();
         }
     }
 
@@ -1071,8 +1164,6 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * Adds a raster to those resident in memory.
      */
     private boolean makeResident(DiskCachedTile tile, Raster data) {
-        okToFlush.set(false);
-
         if (tile.getTileSize() > memCapacity) {
             return false;
         }
@@ -1116,8 +1207,6 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * written to disk again; otherwise no writing is done.
      */
     private void removeResidentTile(Object tileId, boolean writeData) throws DiskCacheFailedException {
-        okToFlush.set(false);
-
         DiskCachedTile tile = tiles.get(tileId);
         Raster raster = residentTiles.remove(tileId);
         sortedResidentTiles.remove(tile);
