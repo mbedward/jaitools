@@ -209,7 +209,7 @@ public class ContourOpImage extends AttributeOpImage {
                     Double max = r.getMax().doubleValue();
                     Range<Double> rd = new Range<Double>(
                             min, r.isMinIncluded(), max, r.isMaxIncluded());
-                    this.noDataRanges.add((Range)oelem);
+                    this.noDataRanges.add(rd);
 
                 } else {
                     // This should have been picked up by validateParameters
