@@ -141,20 +141,9 @@ public class ROIGeometryTest {
                 
         ROIShape rs1 = getEquivalentROIShape(rg1);
         ROIShape rs2 = getEquivalentROIShape(rg2);
-//        printRoiShape(rs1);
-//        printRoiShape(rs2);
-        
-        ROIGeometry rgUnion = (ROIGeometry) rg1.add(rg2);
-//        System.out.println("UNION\n " + rgUnion.getAsGeometry().toString());
-        
-        ROI rsUnion = rs1.add(rs2);
-//        printRoiShape((ROIShape) rsUnion); 
-          
 
         assertROIEquivalent(rg1, rs1, "circle 1 ROIG, circle 1 ROIS");
         assertROIEquivalent(rg2, rs2, "circle 2 ROIG, circle 2 ROIS");
-        
-//        assertROIEquivalent(rgUnion, rsUnion, "Union");
     }
     
     @Test
