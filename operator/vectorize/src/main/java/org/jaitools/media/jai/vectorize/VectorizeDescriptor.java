@@ -265,6 +265,15 @@ public class VectorizeDescriptor extends OperationDescriptorImpl {
                 );
     }
 
+    /**
+     * Validates supplied parameters.
+     * 
+     * @param modeName the rendering mode
+     * @param pb the parameter block
+     * @param msg a {@code StringBuffer} to receive error messages
+     * 
+     * @return {@code true} if parameters are valid; {@code false} otherwise
+     */
     @Override
     protected boolean validateParameters(String modeName, ParameterBlock pb, StringBuffer msg) {
 
