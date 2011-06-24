@@ -494,16 +494,14 @@ public class DiskMemImage
 
 
     /**
-     * Gets the image value for the given image position
-     * as an integer.
+     * Gets the image value for the given image position as an integer.
      *
      * @param x X ordinate
      * @param y Y ordinate
      * @param b band index
      *
      * @return image value
-     * @throws PixelOutsideImageException if the pixel coordinates or band index
-     *         are out of range for the image
+     * @throws PixelOutsideImageException  
      */
     public int getSample(int x, int y, int b) throws PixelOutsideImageException {
         int tileX = XToTileX(x);
@@ -516,16 +514,14 @@ public class DiskMemImage
     }
 
     /**
-     * Gets the image value for the given image position
-     * as a float.
+     * Gets the image value for the given image position as a float.
      *
      * @param x X ordinate
      * @param y Y ordinate
      * @param b band index
      *
      * @return image value
-     * @throws PixelOutsideImageException if the pixel coordinates or band index
-     *         are out of range for the image
+     * @throws PixelOutsideImageException  
      */
     public float getSampleFloat(int x, int y, int b) throws PixelOutsideImageException {
         int tileX = XToTileX(x);
@@ -538,16 +534,14 @@ public class DiskMemImage
     }
 
     /**
-     * Gets the image value for the given image position
-     * as a double.
+     * Gets the image value for the given image position as a double.
      *
      * @param x X ordinate
      * @param y Y ordinate
      * @param b band index
      *
      * @return image value
-     * @throws PixelOutsideImageException if the pixel coordinates or band index
-     *         are out of range for the image
+     * @throws PixelOutsideImageException 
      */
     public double getSampleDouble(int x, int y, int b) throws PixelOutsideImageException {
         int tileX = XToTileX(x);
@@ -560,16 +554,14 @@ public class DiskMemImage
     }
 
     /**
-     * Sets the image value for the given image position as
-     * an integer.
+     * Sets the image value for the given image position as an integer.
      *
      * @param x X ordinate
      * @param y Y ordinate
      * @param b band index
      * @param value the new value
      *
-     * @throws PixelOutsideImageException if the pixel coordinates or band index
-     *         are out of range for the image
+     * @throws PixelOutsideImageException 
      */
     public void setSample(int x, int y, int b, int value) throws PixelOutsideImageException {
         int tileX = XToTileX(x);
@@ -587,16 +579,14 @@ public class DiskMemImage
     }
 
     /**
-     * Sets the image value for the given image position as
-     * a float.
+     * Sets the image value for the given image position as a float.
      *
      * @param x X ordinate
      * @param y Y ordinate
      * @param b band index
      * @param value the new value
+     * @throws PixelOutsideImageException  
      *
-     * @throws PixelOutsideImageException if the pixel coordinates or band index
-     *         are out of range for the image
      */
     public void setSample(int x, int y, int b, float value) throws PixelOutsideImageException {
         int tileX = XToTileX(x);
@@ -614,16 +604,14 @@ public class DiskMemImage
     }
 
     /**
-     * Sets the image value for the given image position as
-     * a double.
+     * Sets the image value for the given image position as a double.
      *
      * @param x X ordinate
      * @param y Y ordinate
      * @param b band index
      * @param value the new value
+     * @throws PixelOutsideImageException  
      *
-     * @throws PixelOutsideImageException if the pixel coordinates or band index
-     *         are out of range for the image
      */
     public void setSample(int x, int y, int b, double value) throws PixelOutsideImageException {
         int tileX = XToTileX(x);

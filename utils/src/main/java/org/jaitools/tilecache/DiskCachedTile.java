@@ -64,8 +64,11 @@ import javax.media.jai.CachedTile;
  */
 public final class DiskCachedTile implements CachedTile {
 
-    public static final Logger LOGGER = Logger.getLogger("org.jaitools.tilecache");
+    private static final Logger LOGGER = Logger.getLogger("org.jaitools.tilecache");
 
+    /**
+     * Constants identifying tile actions.
+     */
     public enum TileAction {
 
         /**
@@ -153,11 +156,11 @@ public final class DiskCachedTile implements CachedTile {
 
         /**
          * Reverse lookup.
-         * @param actionValue int value associated with an action
+         * @param actionValue integer value of the action
          * @return the corresponding TileAction
          */
-        public static TileAction get(int value) {
-            return lookup.get(value);
+        public static TileAction get(int actionValue) {
+            return lookup.get(actionValue);
         }
 
         /**
@@ -325,34 +328,44 @@ public final class DiskCachedTile implements CachedTile {
     }
 
     /**
-     * Get the image that owns this tile
+     * Gets the image that owns this tile.
+     * 
+     * @return the owning image
      */
     public RenderedImage getOwner() {
         return ownerRef.get();
     }
 
     /**
-     * Get the last time of access for this tile
+     * Gets the last time of access for this tile.
+     * 
+     * @return the time stamp
      */
     public long getTileTimeStamp() {
         return timeStamp;
     }
 
-
+    /**
+     * Gets the tile cache metric for this tile.
+     * 
+     * @return the metric
+     */
     public Object getTileCacheMetric() {
         return tileCacheMetric;
     }
 
     /**
-     * Get the tile size in bytes. This is actually the
+     * Gets the tile size in bytes. This is actually the
      * size of the raster associated with this cached tile instance.
+     * 
+     * @return tile size in bytes
      */
     public long getTileSize() {
         return memorySize;
     }
 
     /**
-     * Get the most recent action for this tile. More information can be
+     * Gets the most recent action for this tile. More information can be
      * retrieved by getting the corresponding {@linkplain DiskCachedTile.TileAction}
      * constant as shown here:
      * <pre><code>
@@ -360,22 +373,28 @@ public final class DiskCachedTile implements CachedTile {
      * TileAction action = TileAction.get(code);
      * System.out.println("tile action: " + action.getDescription());
      * </code></pre>
+     * 
+     * @return the most recent action
      */
     public int getAction() {
         return action.ordinal();
     }
 
     /**
-     * Query if this tile has been cached to disk. This method is
-     * a short-cut for: {@code getFile() != null}
+     * Queries if this tile has been cached to disk. This method is
+     * a short-cut for: {@code getFile() != null}.
+     * 
+     * @return {@code true} if the tile is cached on disk; {@code false} otherwise
      */
     public boolean cachedToDisk() {
         return file != null;
     }
 
     /**
-     * Get this tile's disk cache file. If the tile has not
-     * been cached to disk, return {@code null}.
+     * Gets this tile's disk cache file. Returns {@code null} if the tile has not
+     * been cached to disk.
+     * 
+     * @return the disk cache file for this tile or {@code null}
      */
     public File getFile() {
         return file;
@@ -395,41 +414,48 @@ public final class DiskCachedTile implements CachedTile {
     }
 
     /**
-     * Get the unique ID for this tile. The ID is a combination of
+     * Gets the unique ID for this tile. The ID is a combination of
      * either the JAI-generated unique ID of the owning image or the image's
      * hash key if a unique ID was not available plus the tile index.
      * The returned object will be either Long or BigInteger.
+     * 
+     * @return tile ID
      */
     public Object getTileId() {
         return id;
     }
 
     /**
-     * Get this tile's location in its parent image in pixel coordinates
-     * @return a new Point instance for the location
+     * Gets this tile's location in its parent image in pixel coordinates
+     * 
+     * @return tile origin expressed in parent image coordinates
      */
     public Point getLocation() {
         return new Point(location);
     }
 
     /**
-     * Return the X location (column) of this tile
-     * @return tile X location
+     * Gets the X ordinate of this tile in the parent image tile grid.
+     * 
+     * @return tile grid X ordinate
      */
     public int getTileX() {
         return tileX;
     }
 
     /**
-     * Return the Y location (row) of this tile
-     * @return tile Y location
+     * Gets the Y ordinate of this tile in the parent image tile grid.
+     * 
+     * @return tile grid Y ordinate
      */
     public int getTileY() {
         return tileY;
     }
 
     /**
-     * Query if this tile is writable
+     * Queries if this tile is writable.
+     * 
+     * @return {@code true} if writable; {@code false} otherwise
      */
     public boolean isWritable() {
         return isWritable;

@@ -36,6 +36,7 @@ import org.jaitools.numeric.NumberOperations;
 
 /**
  *
+ * @param <K> 
  * @author michael
  */
 public class ImageSet<K> {
@@ -48,7 +49,10 @@ public class ImageSet<K> {
      * outside values as the input set. If the input set is {@code null} or
      * empty, an empty image set is created.
      * 
+     * @param <K> the key type
      * @param set the image set to copy
+     * 
+     * @return the new copy
      */
     public static <K> ImageSet<K> copy(ImageSet<K> set) {
         ImageSet<K> newSet = new ImageSet<K>();
@@ -164,7 +168,8 @@ public class ImageSet<K> {
     /**
      * Copies all key:image pairs from {@code otherSet} into this image set.
      * 
-     * @param other the other image set
+     * @param otherSet the image set to take contents from
+     * 
      * @throws IllegalArgumentException if otherSet is {@code null}
      */
     public void putAll(ImageSet<? extends K> otherSet) {
@@ -244,9 +249,7 @@ public class ImageSet<K> {
      * Gets a new iterator based on the bounds of the image with the 
      * specified key value.
      * 
-     * @param referenceImageKey the key of the image to use as the reference
-     *        for the iterator
-     * 
+     * @param bounds iterator bounds
      * @return the new iterator
      * 
      * @throws IllegalArgumentException if this image set is empty or if no 
@@ -331,10 +334,20 @@ public class ImageSet<K> {
 
 
 
+    /**
+     * An {@code ImageSet} element consisting of a {@code RenderedImage}
+     * and an associated outside value.
+     */
     public static class Element {
         private final RenderedImage image;
         private final Number outsideValue;
 
+        /**
+         * Creates a new element.
+         * 
+         * @param image the image
+         * @param outsideValue the outside value
+         */
         public Element(RenderedImage image, Number outsideValue) {
             this.image = image;
             this.outsideValue = NumberOperations.copy(outsideValue);

@@ -678,7 +678,7 @@ public class ROIGeometry extends ROI {
         throw new UnsupportedOperationException("Not implemented");
     }
 
-    /*
+    /**
      * Returns a new instance which is the difference of this ROI and {@code roi}. 
      * This is only possible if {@code roi} is an instance of ROIGeometry 
      * or {@link ROIShape}.

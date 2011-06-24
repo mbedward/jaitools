@@ -94,6 +94,8 @@ import org.jaitools.DaemonThreadFactory;
  * @see TileAccessTimeComparator
  */
 public class DiskMemTileCache extends Observable implements TileCache {
+    
+    private static final Logger LOGGER = Logger.getLogger("org.jaitools.tilecache");
 
     /**
      * The default memory capacity in bytes (64 * 2^20 = 64Mb)
@@ -236,6 +238,10 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * Implementation note: we use this in preference to a SortedSet or similar
      * because of the complications of using the remove(obj) method with a sorted
      * collection, where the comparator is used rather than the equals method.
+     */
+    
+    /**
+     * Tiles sorted according to the current tile priority comparator.
      */
     protected List<DiskCachedTile> sortedResidentTiles;
 
@@ -384,8 +390,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
             }
 
         } catch (IOException ex) {
-            Logger.getLogger(DiskMemTileCache.class.getName())
-                    .log(Level.SEVERE, "Unable to cache this tile on disk", ex);
+            LOGGER.log(Level.SEVERE, "Unable to cache this tile on disk", ex);
             
         } finally {
             tileLock.unlock();
@@ -420,8 +425,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
                      * It would be nicer to just throw this exception
                      * upwards but we can't in the overidden method
                      */
-                    Logger.getLogger(DiskMemTileCache.class.getName()).
-                            log(Level.SEVERE, null, ex);
+                    LOGGER.log(Level.SEVERE, null, ex);
                 }
             }
 
@@ -811,8 +815,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
                  * It would be nicer to just throw this exception
                  * upwards be we can't in the overidden method
                  */
-                Logger.getLogger(DiskMemTileCache.class.getName()).
-                        log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -821,8 +824,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
     /**
      * Does nothing.
      * 
-     * @param arg0
-     * @deprecated
+     * @deprecated Please do not use this method  
      */
     @Deprecated
     public void setTileCapacity(int arg0) {
@@ -831,9 +833,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
     /**
      * Always returns 0.
      * 
-     * @deprecated
+     * @deprecated Please do not use this method  
      */
-    @Deprecated
     public int getTileCapacity() {
         return 0;
     }
@@ -877,8 +878,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
                          * It would be nicer to just throw this exception
                          * upwards be we can't in the overidden method
                          */
-                        Logger.getLogger(DiskMemTileCache.class.getName()).
-                                log(Level.SEVERE, null, ex);
+                        LOGGER.log(Level.SEVERE, null, ex);
                     }
                 }
             }
@@ -913,7 +913,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * to this fraction of the total cache memory capacity. For example, a value
      * of .75 will cause 25% of the memory to be cleared, while retaining 75%.
      *
-     * @param memoryThreshold Retained fraction of memory
+     * @param newThreshold the new memory threshold between 0 and 1
+     * 
      * @throws IllegalArgumentException if the memoryThreshold is less than 0.0 or greater than 1.0
      */
     public void setMemoryThreshold(float newThreshold) {
@@ -1038,6 +1039,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * @param tileX tile column
      * @param tileY tile row
      * @throws TileNotResidentException if the tile is not resident
+     * @throws DiskCacheFailedException if the tile is cached to disk but its data could
+     *     not be updated
      */
     public void setTileChanged(RenderedImage owner, int tileX, int tileY)
             throws TileNotResidentException, DiskCacheFailedException {
@@ -1147,6 +1150,8 @@ public class DiskMemTileCache extends Observable implements TileCache {
     /**
      * Accepts a {@code DiskMemCacheVisitor} object and calls its
      * {@code visit} method for each tile in the cache.
+     * 
+     * @param visitor the visitor
      */
     public void accept(DiskMemTileCacheVisitor visitor) {
         tileLock.lock();

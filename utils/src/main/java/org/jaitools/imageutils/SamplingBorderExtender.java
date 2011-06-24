@@ -63,6 +63,12 @@ public class SamplingBorderExtender extends BorderExtender {
         this.rand = new Random();
     }
 
+    /**
+     * Creates the extended border.
+     * 
+     * @param raster the destination raster
+     * @param sourceImage the source image
+     */
     @Override
     public void extend(WritableRaster raster, PlanarImage sourceImage) {
 

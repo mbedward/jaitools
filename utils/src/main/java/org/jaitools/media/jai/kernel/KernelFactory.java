@@ -138,6 +138,17 @@ public class KernelFactory {
         return createConstantCircle(radius, 1.0f);
     }
     
+    /**
+     * Create a circular kernel where all elements within the circle
+     * have a constant value while those outside have value 0.0.
+     * Kernel width is {@code 2*radius + 1}.
+     * The key element is at position {@code x=radius, y=radius}.
+     *
+     * @param radius radius of the circle
+     * @param value constant value
+     * 
+     * @return a new {@code KernelJAI} object
+     */
     public static KernelJAI createConstantCircle(int radius, float value) {
         if (radius <= 0) {
             throw new IllegalArgumentException(

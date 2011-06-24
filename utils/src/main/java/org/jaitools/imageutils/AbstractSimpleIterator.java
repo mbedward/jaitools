@@ -75,6 +75,15 @@ public abstract class AbstractSimpleIterator {
      * delegate to be a final field.
      */
     protected static interface DelegateHelper {
+        
+        /**
+         * Creates the delegate iterator.
+         * 
+         * @param image the target image
+         * @param bounds the iterator bounds
+         * 
+         * @return the new iterator
+         */
         RectIter create(RenderedImage image, Rectangle bounds);
     }
     

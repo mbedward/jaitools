@@ -38,6 +38,13 @@ import java.awt.image.RenderedImage;
  */
 public class DiskCacheFailedException extends DiskMemCacheException {
 
+    /**
+     * Creates a new instance.
+     * 
+     * @param owner the owning image
+     * @param tileX tile X ordinate
+     * @param tileY tile Y ordinate
+     */
     public DiskCacheFailedException(RenderedImage owner, int tileX, int tileY) {
         super(owner, tileX, tileY, "could not be written to disk");
     }
