@@ -44,14 +44,12 @@ public class ImageGraphicsGeneralTest extends TiledImageTestBase {
     private final int XTILES = 2;
     private final int YTILES = 2;
 
-    private long tileMemSize;
     private DiskMemImage image;
     private Graphics2D gr;
 
     @Before
     public void setUp() {
         image = makeImage(TILE_WIDTH, XTILES, YTILES);
-        tileMemSize = image.getTileMemorySize();
         gr = image.createGraphics();
     }
 

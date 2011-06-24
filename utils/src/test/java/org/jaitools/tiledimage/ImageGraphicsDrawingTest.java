@@ -72,14 +72,12 @@ public class ImageGraphicsDrawingTest extends TiledImageTestBase {
     private final int BLUE_INDEX = 2;
     private final int ALPHA_INDEX = 3;
 
-    private long tileMemSize;
     private DiskMemImage image;
     private Graphics2D gr;
 
     @Before
     public void setUp() {
         image = makeImage(TILE_WIDTH, XTILES, YTILES);
-        tileMemSize = image.getTileMemorySize();
         gr = image.createGraphics();
     }
 

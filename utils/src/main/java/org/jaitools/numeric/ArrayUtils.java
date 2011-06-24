@@ -55,7 +55,7 @@ public class ArrayUtils {
      * @return a new array of the requested size
      */
     public static double[] resize(final double[] array, final int length) {
-        return resize(array, length);
+        return doResize(array, length);
     }
 
     /**
@@ -68,7 +68,7 @@ public class ArrayUtils {
      * @return a new array of the requested size
      */
     public static float[] resize(final float[] array, final int length) {
-        return resize(array, length);
+        return doResize(array, length);
     }
 
     /**
@@ -81,7 +81,7 @@ public class ArrayUtils {
      * @return a new array of the requested size
      */
     public static int[] resize(final int[] array, final int length) {
-        return resize(array, length);
+        return doResize(array, length);
     }
 
     /**

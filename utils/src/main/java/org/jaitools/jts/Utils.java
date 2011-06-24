@@ -116,7 +116,8 @@ public class Utils {
                 }
             } else {
                 if (!CompareOp.isZero(dx2)) {
-                    if (dy1 / dx1 == dy2 / dx2 && Math.signum(dx1) == Math.signum(dx2)) {
+                    if (CompareOp.aequal(dy1 / dx1, dy2 / dx2) && 
+                            Math.signum(dx1) == Math.signum(dx2)) {
                         redundant = true;
                     }
                 }

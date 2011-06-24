@@ -58,6 +58,7 @@ import java.awt.image.WritableRaster;
 import java.awt.image.renderable.RenderableImage;
 import java.lang.reflect.Method;
 import java.text.AttributedCharacterIterator;
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -255,7 +256,7 @@ public class DiskMemImageGraphics extends Graphics2D {
          * @return argument types
          */
         public Class<?>[] getArgTypes() {
-            return paramTypes;
+            return Arrays.copyOf(paramTypes, paramTypes.length);
         }
     }
 

@@ -94,7 +94,6 @@ public class KernelFactoryTest {
         assertEquals(mask.length, data.length);
         
         final int w = kernel.getWidth();
-        final int h = kernel.getHeight();
         Point p = new Point(kernel.getXOrigin(), kernel.getYOrigin());
         
         int x = 0, y = -1;
@@ -703,7 +702,6 @@ public class KernelFactoryTest {
 
         assertTrue(shpData.length == circleData.length);
 
-        KernelFactoryHelper kh = new KernelFactoryHelper();
         for (int i = 0; i < shpData.length; i++) {
             assertEquals(shpData[i], circleData[i], FTOL);
         }

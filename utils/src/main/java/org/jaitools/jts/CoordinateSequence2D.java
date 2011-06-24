@@ -36,7 +36,7 @@ import com.vividsolutions.jts.geom.Envelope;
  * @since 1.1
  * @version $Id$
  */
-public class CoordinateSequence2D implements CoordinateSequence {
+public final class CoordinateSequence2D implements CoordinateSequence, Cloneable {
 
     private final double[] x;
     private final double[] y;
