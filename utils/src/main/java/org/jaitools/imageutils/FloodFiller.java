@@ -72,8 +72,6 @@ public class FloodFiller {
     private double refValue;
     private int srcBand;
     private int destBand;
-    private double fillRadius;
-    private boolean usingRadius;
     private ROI roi;
 
     /**
@@ -118,22 +116,57 @@ public class FloodFiller {
          * @param other the other segment
          */
         public int compareTo(ScanSegment other) {
-            if (y < other.y) {
-                return -1;
-            } else if (y > other.y) {
-                return 1;
-            } else if (startX < other.startX) {
-                return -1;
-            } else if (startX > other.startX) {
-                return 1;
-            } else if (endX < other.endX) {
-                return -1;
-            } else if (endX > other.endX) {
-                return 1;
-            } else {
+            if (this.equals(other)) {
                 return 0;
             }
+            if (y < other.y) {
+                return -1;
+            } 
+            if (y > other.y) {
+                return 1;
+            } 
+            if (startX < other.startX) {
+                return -1;
+            } 
+            if (startX > other.startX) {
+                return 1;
+            } 
+            if (endX < other.endX) {
+                return -1;
+            } 
+                return 1;
+            }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null) {
+                return false;
         }
+            if (getClass() != obj.getClass()) {
+                return false;
+    }
+            final ScanSegment other = (ScanSegment) obj;
+            if (this.startX != other.startX) {
+                return false;
+            }
+            if (this.endX != other.endX) {
+                return false;
+            }
+            if (this.y != other.y) {
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 3;
+            hash = 31 * hash + this.startX;
+            hash = 31 * hash + this.endX;
+            hash = 31 * hash + this.y;
+            return hash;
+        }
+
     }
 
     private Queue<ScanSegment> segmentsPending;
@@ -277,7 +310,6 @@ public class FloodFiller {
 
         this.fillValue = fillValue;
         this.refValue = refValue;
-        this.fillRadius = radius;
 
         if (!Double.isNaN(radius)) {
             Ellipse2D shp = new Ellipse2D.Double(x-radius, y-radius, 2*radius, 2*radius);

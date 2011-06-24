@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2009, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2009-2011, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -63,6 +63,8 @@ import javax.media.jai.CachedTile;
  * @version $Id$
  */
 public final class DiskCachedTile implements CachedTile {
+
+    public static final Logger LOGGER = Logger.getLogger("org.jaitools.tilecache");
 
     public enum TileAction {
 
@@ -380,11 +382,15 @@ public final class DiskCachedTile implements CachedTile {
     }
 
     /**
-     * Delete this tile's disk cache file
+     * Deletes this tile's disk cache file. If the file could not be deleted
+     * a warning is logged.
      */
     public void deleteDiskCopy() {
         if (file != null) {
-            file.delete();
+            if (!file.delete()) {
+                LOGGER.log(Level.WARNING, 
+                        "Unable to delete cached image tile file: {0}", file.getPath());
+            }
         }
     }
 
@@ -465,7 +471,11 @@ public final class DiskCachedTile implements CachedTile {
                     case DataBuffer.TYPE_BYTE: {
                         byte[][] bankData = new byte[numBanks][dataLen];
                         for (int i = 0; i < numBanks; i++) {
-                            strm.read(bankData[i], 0, dataLen);
+                            int numRead = strm.read(bankData[i], 0, dataLen);
+                            if (numRead < numBanks) {
+                                throw new RuntimeException(
+                                        "Cached tile file appears to be truncated");
+                            }
                         }
                         dataBuf = new DataBufferByte(bankData, dataLen);
                     }
@@ -521,12 +531,11 @@ public final class DiskCachedTile implements CachedTile {
                 }
 
             } catch (FileNotFoundException ex) {
-                Logger.getLogger(DiskCachedTile.class.getName()).
-                        log(Level.SEVERE, "Failed to read image tile data", ex);
+                LOGGER.log(Level.SEVERE, "Failed to read image tile data", ex);
                 return null;
 
             } catch (IOException ex) {
-                Logger.getLogger(DiskCachedTile.class.getName()).log(Level.SEVERE, "Failed to read image tile data", ex);
+                LOGGER.log(Level.SEVERE, "Failed to read image tile data", ex);
                 return null;
             }
             finally{
@@ -635,11 +644,10 @@ public final class DiskCachedTile implements CachedTile {
 
 
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(DiskCachedTile.class.getName()).
-                    log(Level.SEVERE, "Failed to write image tile data", ex);
+            LOGGER.log(Level.SEVERE, "Failed to write image tile data", ex);
 
         } catch (IOException ex) {
-            Logger.getLogger(DiskCachedTile.class.getName()).log(Level.SEVERE, "Failed to write image tile data", ex);
+            LOGGER.log(Level.SEVERE, "Failed to write image tile data", ex);
         }
         finally{
         	if(strm!=null)

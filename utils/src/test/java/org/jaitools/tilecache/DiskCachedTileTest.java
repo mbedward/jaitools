@@ -86,21 +86,14 @@ public class DiskCachedTileTest {
         DiskCachedTile.setCacheFolder(oldFolder);
     }
 
-    @Test
+    @Test(expected=UnsupportedOperationException.class)
     public void testGetTile() throws Exception {
         System.out.println("   getTile (testing for exception)");
 
         DiskCachedTile instance = new DiskCachedTile(
                 Integer.valueOf(1234), image, 0, 0, raster, false, null);
 
-        boolean gotException = false;
-        try {
-            Raster result = instance.getTile();
-        } catch (UnsupportedOperationException uoe) {
-            gotException = true;
-        }
-
-        assertTrue(gotException);
+        instance.getTile();
     }
 
     @Test

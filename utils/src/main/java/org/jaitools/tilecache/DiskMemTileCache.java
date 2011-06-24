@@ -1265,7 +1265,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
 
         } else {
             tileId &= 0x00000000ffffffffL;
-            return new Long(((long)owner.hashCode() << 32) | tileId);
+            return Long.valueOf(((long)owner.hashCode() << 32) | tileId);
         }
     }
 

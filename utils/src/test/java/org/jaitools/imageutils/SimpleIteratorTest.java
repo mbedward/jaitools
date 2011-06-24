@@ -415,7 +415,6 @@ public class SimpleIteratorTest extends TestBase {
     }
 
     private void assertSample(int x, int y, int band, Number sample) {
-        final Rectangle iterBounds = iter.getBounds();
         final Rectangle imageBounds = image.getBounds();
         final int N = imageBounds.width * imageBounds.height;
 

@@ -33,7 +33,7 @@ import static org.junit.Assert.*;
  */
 public class RangeTest {
     
-    final int ivalue = 42;
+    private static final int ivalue = 42;
 
     @Test
     public void testCreateInterval() {

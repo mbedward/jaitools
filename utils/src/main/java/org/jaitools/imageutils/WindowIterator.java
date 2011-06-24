@@ -183,7 +183,7 @@ public class WindowIterator {
             keyElement.y < 0 || keyElement.y >= windowDim.height) {
             throw new IllegalArgumentException(String.format(
                     "The supplied key element position (%d, %d) is invalid for"
-                  + "data window dimensions: width=%d height=%D",
+                  + "data window dimensions: width=%d height=%d",
                     keyElement.x, keyElement.y, windowDim.width, windowDim.height));
         }
         if (xstep < 1 || ystep < 1) {

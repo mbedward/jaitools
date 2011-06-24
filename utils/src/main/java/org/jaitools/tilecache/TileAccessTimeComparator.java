@@ -25,6 +25,7 @@
 
 package org.jaitools.tilecache;
 
+import java.io.Serializable;
 import java.util.Comparator;
 import javax.media.jai.CachedTile;
 
@@ -38,7 +39,7 @@ import javax.media.jai.CachedTile;
  * @since 1.0
  * @version $Id$
  */
-public class TileAccessTimeComparator implements Comparator<CachedTile> {
+public class TileAccessTimeComparator implements Comparator<CachedTile>, Serializable {
 
     public int compare(CachedTile t1, CachedTile t2) {
         long time1 = t1.getTileTimeStamp();

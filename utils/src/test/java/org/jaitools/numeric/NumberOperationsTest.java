@@ -74,7 +74,7 @@ public class NumberOperationsTest {
     }
 
     @Test
-    public void DivideByteInteger() {
+    public void testDivideByteInteger() {
         System.out.println("   divide(Byte, Integer)");
 
         Number n1 = Byte.valueOf((byte)200);

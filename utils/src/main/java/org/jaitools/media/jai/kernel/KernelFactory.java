@@ -191,8 +191,6 @@ public class KernelFactory {
                     "Invalid radius (" + radius + "); must be > 0");
         }
 
-        KernelFactoryHelper kh = new KernelFactoryHelper();
-
         int width = 2 * radius + 1;
         float[] weights = new float[width * width];
 

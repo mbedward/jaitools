@@ -91,12 +91,12 @@ public class ROIGeometry extends ROI {
      * The default value is {@code true} which provides behaviour corresponding
      * to that of the standard JAI {@code ROIShape} class.
      */
-    public static boolean DEFAULT_ROIGEOMETRY_ANTIALISING = true;
+    public static final boolean DEFAULT_ROIGEOMETRY_ANTIALISING = true;
     
     /** 
      * Default setting for use of fixed precision ({@code true}).
      */
-    public static boolean DEFAULT_ROIGEOMETRY_USEFIXEDPRECISION = true;
+    public static final boolean DEFAULT_ROIGEOMETRY_USEFIXEDPRECISION = true;
     
     private boolean useAntialiasing = DEFAULT_ROIGEOMETRY_ANTIALISING;
     

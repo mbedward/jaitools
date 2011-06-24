@@ -220,25 +220,25 @@ public class WindowIteratorTest extends TestBase {
 
     @Test(expected=IllegalArgumentException.class)
     public void nullImage() {
-        WindowIterator iter = new WindowIterator(null, null, new Dimension(3, 3), new Point(1, 1));
+        new WindowIterator(null, null, new Dimension(3, 3), new Point(1, 1));
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void nullDimension() {
         image = ImageUtils.createConstantImage(WIDTH, HEIGHT, 0);
-        WindowIterator iter = new WindowIterator(image, null, null, new Point(1, 1));
+        new WindowIterator(image, null, null, new Point(1, 1));
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void nullKeyPoint() {
         image = ImageUtils.createConstantImage(WIDTH, HEIGHT, 0);
-        WindowIterator iter = new WindowIterator(image, null, new Dimension(3, 3), null);
+        new WindowIterator(image, null, new Dimension(3, 3), null);
     }
 
     @Test(expected=IllegalArgumentException.class)
     public void keyPointOutOfWindow() {
         image = ImageUtils.createConstantImage(WIDTH, HEIGHT, 0);
-        WindowIterator iter = new WindowIterator(image, null, new Dimension(3, 3), new Point(3, 3));
+        new WindowIterator(image, null, new Dimension(3, 3), new Point(3, 3));
     }
 
     @Test(expected=IllegalArgumentException.class)
