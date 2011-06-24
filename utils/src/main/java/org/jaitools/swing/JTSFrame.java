@@ -57,16 +57,33 @@ public class JTSFrame extends JFrame {
     private static final int MARGIN = 2;
     private Canvas canvas;
 
-    public JTSFrame(String title) throws HeadlessException {
+    /**
+     * Creates a new frame.
+     * 
+     * @param title the frame title
+     */
+    public JTSFrame(String title) {
         super(title);
         initComponents();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
-    public void addGeometry(Geometry p, Color col) {
-        canvas.elements.add(new Element(p, col));
+    /**
+     * Adds a {@code Geometry} to display
+     * 
+     * @param geom the geometry
+     * @param col the display color
+     */
+    public void addGeometry(Geometry geom, Color col) {
+        canvas.elements.add(new Element(geom, col));
     }
     
+    /**
+     * Adds a {@code Coordinate} to display as a point.
+     * 
+     * @param c the {@code Coordinate}
+     * @param col the display color
+     */
     public void addCoordinate(Coordinate c, Color col) {
         canvas.elements.add(new Element(c, col));
     }

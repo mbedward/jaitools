@@ -88,6 +88,11 @@ public class BasicCacheVisitor implements DiskMemTileCacheVisitor {
             this.clazz = clazz;
         }
 
+        /**
+         * Gets the value class.
+         * 
+         * @return the class
+         */
         public Class<?> getValueClass() {
             return clazz;
         }

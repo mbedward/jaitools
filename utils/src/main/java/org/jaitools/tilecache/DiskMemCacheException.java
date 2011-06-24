@@ -37,6 +37,14 @@ import java.awt.image.RenderedImage;
  */
 public class DiskMemCacheException extends Exception {
 
+    /**
+     * Creates a new instance.
+     * 
+     * @param owner the owning image
+     * @param tileX tile X ordinate
+     * @param tileY tile Y ordinate
+     * @param msg error message
+     */
     public DiskMemCacheException(RenderedImage owner, int tileX, int tileY, String msg) {
         super(String.format("tile at %d,%d of image %s %s",
                 tileX, tileY, owner.toString(), msg));

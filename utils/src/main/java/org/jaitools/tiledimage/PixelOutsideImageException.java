@@ -36,7 +36,8 @@ package org.jaitools.tiledimage;
 public class PixelOutsideImageException extends IndexOutOfBoundsException {
 
     /**
-     * Constructor
+     * Creates a new instance.
+     * 
      * @param x pixel x coordinate
      * @param y pixel y coordinate
      * @param b band index

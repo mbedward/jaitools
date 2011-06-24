@@ -34,8 +34,13 @@ import org.jaitools.CollectionFactory;
 
 
 /**
- *
- * @author michael
+ * An iterator to sample a stack of values from images in an {@link ImageSet}.
+ * 
+ * @param <K> the key type
+ * 
+ * @author Michael Bedward
+ * @since 1.2
+ * @version $Id: ROIGeometry.java 1816 2011-06-24 03:22:08Z michael.bedward $
  */
 public class ImageSetIterator<K> {
 
@@ -79,6 +84,7 @@ public class ImageSetIterator<K> {
      * Gets a value from the specified band of each image in this set
      * and returns them as a {@code Map} of key : value pairs. 
      * 
+     * @param band the image band to sample
      * @return image (or outside) values
      */
     public Map<K, Number> getSample(int band) {

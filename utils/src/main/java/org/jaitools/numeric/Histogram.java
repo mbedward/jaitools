@@ -33,9 +33,10 @@ import java.util.List;
 /**
  * A simple numeric histogram class that uses the {@linkplain Range} class
  * to define bins. New bins can be defined even after data had already been
- * added to allow a histrogram to adapt to the input data, however the new bins
- * must not overlap with existing bins.
+ * added to allow a histogram to adapt to the input data, however the new bins
+ * must <strong>not</strong> overlap with existing bins.
  *
+ * @param <T> the value type
  * @author Michael Bedward
  * @since 1.0
  * @version $Id$
@@ -58,8 +59,7 @@ public class Histogram<T extends Number & Comparable> {
      * Adds a new bin to the histogram.
      *
      * @param range the data range for this bin.
-     *
-     * @throws HistogramException if the new bin overlaps any existing bins
+     * @throws HistogramException if the new bin overlaps with an existing bin 
      */
     public void addBin(Range<T> range) throws HistogramException {
         for (Bin bin : bins) {
