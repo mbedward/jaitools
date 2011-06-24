@@ -43,7 +43,7 @@ public class NumberOperations {
 
     private static float floatTol = DEFAULT_FLOAT_TOL;
 
-    /* Default tolerance for double comparisons */
+    /** Default tolerance for double comparisons */
     public static final double DEFAULT_DOUBLE_TOL = 1.0e-8f;
 
     private static double doubleTol = DEFAULT_DOUBLE_TOL;

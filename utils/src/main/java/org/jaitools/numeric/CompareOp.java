@@ -142,6 +142,7 @@ public class CompareOp {
      * 
      * @param x1 first value
      * @param x2 second value
+     * @param tol comparison tolerance
      * 
      * @return a value less than 0 if x1 is less than x2; 0 if x1 is equal to x2;
      * a value greater than 0 if x1 is greater than x2
@@ -161,6 +162,7 @@ public class CompareOp {
      * 
      * @param x1 first value
      * @param x2 second value
+     * @param tol comparison tolerance
      * 
      * @return a value less than 0 if x1 is less than x2; 0 if x1 is equal to x2;
      * a value greater than 0 if x1 is greater than x2
@@ -257,6 +259,7 @@ public class CompareOp {
      * 
      * @param x1 first value
      * @param x2 second value
+     * @param tol comparison tolerance
      * 
      * @return {@code true} if equal; {@code false} otherwise
      */
@@ -272,6 +275,7 @@ public class CompareOp {
      * 
      * @param x1 first value
      * @param x2 second value
+     * @param tol comparison tolerance
      * 
      * @return {@code true} if equal; {@code false} otherwise
      */

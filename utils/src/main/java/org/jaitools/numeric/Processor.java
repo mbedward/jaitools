@@ -73,8 +73,7 @@ public interface Processor {
      * Sets a range of values to exclude from or include in calculations.
      * Note that you can only add ranges of the same type to a Processor.
      *
-     * @param range a range of values to be checked
-     * 
+     * @param range the range
      * @param rangeType the type of range
      * 
      * @throws IllegalArgumentException if {@code rangeType} is different to that

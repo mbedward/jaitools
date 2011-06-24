@@ -65,7 +65,7 @@ import java.util.Map.Entry;
 public class BasicCacheVisitor implements DiskMemTileCacheVisitor {
 
     /**
-     * Defines keys to filter the tles visited
+     * Defines keys to filter the tiles visited
      */
     public enum Key {
         /**
@@ -88,6 +88,11 @@ public class BasicCacheVisitor implements DiskMemTileCacheVisitor {
             this.clazz = clazz;
         }
 
+        /**
+         * Gets the value class.
+         * 
+         * @return the class
+         */
         public Class<?> getValueClass() {
             return clazz;
         }

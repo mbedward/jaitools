@@ -46,6 +46,8 @@ import org.jaitools.CollectionFactory;
  * <p>
  * Normally, client code will not need to use the methods defined in this class
  * directly but will work through the {@link Range} class.
+ * 
+ * @param <T> the numeric type
  *
  * @author Michael Bedward
  * @since 1.0

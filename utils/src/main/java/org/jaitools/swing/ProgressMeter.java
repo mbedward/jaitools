@@ -65,14 +65,19 @@ public class ProgressMeter extends JFrame {
     }
 
     /**
-     * Constructor. Sets the title but no label.
+     * Creates a new progress bar.
+     * 
+     * @param title the progress bar title
      */
     public ProgressMeter(String title) {
         this(title, null);
     }
 
     /**
-     * Constructor. Sets the title and progress bar label.
+     * Creates a new progress bar
+     * 
+     * @param title the progress bar title
+     * @param labelText label to display in the body of the progress bar
      */
     public ProgressMeter(String title, String labelText) {
         setTitle(title);
@@ -92,7 +97,7 @@ public class ProgressMeter extends JFrame {
     }
     
     /**
-     * Update the progress bar.
+     * Updates the progress bar. It is safe to call this method from any thread.
      * 
      * @param progress a proportion value between 0 and 1
      */
@@ -118,7 +123,9 @@ public class ProgressMeter extends JFrame {
     }
 
     /**
-     * Update the progress label
+     * Updates the progress label. It is safe to call this method from any thread.
+     * 
+     * @param text the new label text
      */
     public void setLabel(final String text) {
         if (!isVisible() || EventQueue.isDispatchThread()) {
