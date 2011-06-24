@@ -338,6 +338,7 @@ public class NumberOperations {
                 } else {
                     value = (int) Math.max( Math.min(number.floatValue(), Integer.MAX_VALUE), Integer.MIN_VALUE );
                 }
+                break;
 
             case DOUBLE:
                 Double d = (Double) number;
@@ -348,6 +349,7 @@ public class NumberOperations {
                 } else {
                     value = (int) Math.max( Math.min(number.doubleValue(), Integer.MAX_VALUE), Integer.MIN_VALUE );
                 }
+                break;
 
             default:
                 throw new IllegalStateException("Unrecognized number class: " + number.getClass().getName());
@@ -452,6 +454,7 @@ public class NumberOperations {
                 } else {
                     value = (float) Math.max( Math.min(number.doubleValue(), Float.POSITIVE_INFINITY), Float.NEGATIVE_INFINITY );
                 }
+                break;
 
             default:
                 throw new IllegalStateException("Unrecognized number class: " + number.getClass().getName());
