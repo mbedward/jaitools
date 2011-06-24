@@ -4,7 +4,7 @@
     <parent>
         <artifactId>operator</artifactId>
         <groupId>org.jaitools</groupId>
-        <version>1.2-SNAPSHOT</version>
+        <version>1.2.0</version>
     </parent>
   
     <artifactId>jt-contour</artifactId>
