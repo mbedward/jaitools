@@ -51,7 +51,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * </code></pre>
  * 
  * The vectors are JTS Polygon objects. Each polygon holds the value of its source image
- * region as a Double (regardless of the source image data type) as a <i>user data</>
+ * region as a Double (regardless of the source image data type) as a <i>user data</i>
  * attribute.
  * 
  * <pre><code>
