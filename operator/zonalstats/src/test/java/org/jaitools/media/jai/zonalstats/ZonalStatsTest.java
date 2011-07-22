@@ -35,8 +35,6 @@ import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
 import java.util.List;
 import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.media.jai.ImageLayout;
 import javax.media.jai.JAI;
@@ -65,9 +63,6 @@ import static org.junit.Assert.*;
  * @version $Id$
  */
 public class ZonalStatsTest {
-
-    private static final Logger LOGGER = Logger.getLogger("ZonalStatsTest");
-
     private static final double EPS = 1.0e-6;
 
     private static final int WIDTH = 128;
@@ -87,8 +82,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testValidateNumSources() {
-    	if(LOGGER.isLoggable(Level.INFO))
-    		LOGGER.info("   validate number of sources");
+        System.out.println("   validate number of sources");
 
         boolean gotException = false;
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
@@ -123,8 +117,8 @@ public class ZonalStatsTest {
 
     @Test
     public void testZoneImageType() {
-    	if(LOGGER.isLoggable(Level.INFO))
-    		LOGGER.info("   validate zone image type");
+        System.out.println("   validate zone image type");
+        
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
         pb.setSource("zoneImage", createConstantImage(new Float[]{0f}));
@@ -148,8 +142,8 @@ public class ZonalStatsTest {
 
     @Test
     public void testZoneImageOverlap() {
-    	if(LOGGER.isLoggable(Level.INFO))
-    		LOGGER.info("   validate data - zone image overlap");
+        System.out.println("   validate data - zone image overlap");
+        
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
         pb.setSource("zoneImage", createConstantImage(new Integer[]{0}, new Point(WIDTH, WIDTH)));
@@ -188,8 +182,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testMin() {
-        if(LOGGER.isLoggable(Level.INFO))
-    		LOGGER.info("   test min");
+        System.out.println("   test min");
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
@@ -200,8 +193,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testMax() {
-        if(LOGGER.isLoggable(Level.INFO))
-    		LOGGER.info("   test max");
+        System.out.println("   test max");
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
@@ -212,8 +204,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testMean() {
-        if(LOGGER.isLoggable(Level.INFO))
-    		LOGGER.info("   test mean");
+        System.out.println("   test mean");
 
         double expMean = 0d;
 
@@ -235,8 +226,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testStdDev() {
-        if(LOGGER.isLoggable(Level.INFO))
-    		LOGGER.info("   test standard deviation");
+        System.out.println("   test standard deviation");
 
         double expSD;
         double mOld = 0d, mNew;
@@ -270,8 +260,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testRange() {
-        if(LOGGER.isLoggable(Level.INFO))
-    		LOGGER.info("   test range");
+        System.out.println("   test range");
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
@@ -283,8 +272,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testSum() {
-        if(LOGGER.isLoggable(Level.INFO))
-    		LOGGER.info("   test sum");
+        System.out.println("   test sum");
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", constant1Image);
@@ -295,8 +283,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testExactMedian() {
-        if(LOGGER.isLoggable(Level.INFO))
-    		LOGGER.info("   test exact median");
+        System.out.println("   test exact median");
 
         final double expMedian = 0.0;
 
@@ -309,8 +296,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testApproxMedian() {
-        if(LOGGER.isLoggable(Level.INFO))
-    		LOGGER.info("   test approximate median");
+        System.out.println("   test approximate median");
 
         final double expMedian = 0.0;
 
@@ -323,8 +309,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testMultiband() {
-        if(LOGGER.isLoggable(Level.INFO))
-    		LOGGER.info("   test multiband");
+        System.out.println("   test multiband");
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", multibandImage);
@@ -369,8 +354,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testExclusionRanges() {
-        if(LOGGER.isLoggable(Level.INFO))
-    		LOGGER.info("   test excluding ranges of values");
+        System.out.println("   test excluding ranges of values");
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
@@ -398,8 +382,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testNoDataRanges() {
-        if(LOGGER.isLoggable(Level.INFO))
-                LOGGER.info("   test testNoDataRanges");
+        System.out.println("   test testNoDataRanges");
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", multibandImageNoData);
