@@ -32,6 +32,7 @@ import java.awt.image.RenderedImage;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
+import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RectIter;
 
 import org.jaitools.CollectionFactory;
@@ -505,6 +506,18 @@ public abstract class AbstractSimpleIterator {
             return getSample(band);
         } else {
             return null;
+        }
+    }
+    
+    /**
+     * Closes this iterator and frees resources including the iterator's 
+     * reference to the source image. Attempting to use the iterator after
+     * calling this method will result in an exception being thrown.
+     */
+    public void done() {
+        imageRef.clear();
+        if (delegateIter instanceof RandomIter) {
+            ((RandomIter) delegateIter).done();
         }
     }
 

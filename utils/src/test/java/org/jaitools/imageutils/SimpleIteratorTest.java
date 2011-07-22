@@ -25,6 +25,7 @@
 
 package org.jaitools.imageutils;
 
+import java.awt.image.RenderedImage;
 import java.util.Random;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -400,6 +401,27 @@ public class SimpleIteratorTest extends TestBase {
                 }
             }
         }
+    }
+    
+    @Test
+    public void doneClearsSourceImageRef() {
+        image = createSequentialImage(WIDTH, WIDTH, 1);
+        iter = new SimpleIterator(image, null, null);
+        assertTrue(image == iter.getImage());
+        
+        iter.done();
+        assertNull(iter.getImage());
+    }
+    
+    @Test(expected=IllegalStateException.class)
+    public void usingAfterDoneThrowsException() {
+        image = createSequentialImage(WIDTH, WIDTH, 1);
+        iter = new SimpleIterator(image, null, null);
+        assertNotNull(iter.getSample());
+        
+        iter.done();
+        // this should throw an exception
+        iter.getSample();
     }
 
     private void assertSamples() {
