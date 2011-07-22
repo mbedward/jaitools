@@ -338,6 +338,8 @@ public class ZonalStatsOpImage extends NullOpImage {
                 dataPos.y++;
 
             } while( !dataIter.nextLineDone() );
+            
+            zoneIter.done();
         }
 
 
