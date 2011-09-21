@@ -115,10 +115,6 @@ public abstract class TestBase {
         return polys;
     }
 
-    protected void assertPolygons(ExpectedPoly expected, List<Polygon> observed) throws Exception {
-        assertPolygons(new ExpectedPoly[]{expected}, observed);
-    }
-
     /**
      * Assert equality of expected and observed polygons.
      * 
@@ -132,14 +128,14 @@ public abstract class TestBase {
             Polygon poly = (Polygon) reader.read(ep.wkt);
             int index = pl.indexOf(poly);
             assertTrue("Polygon not found", index >= 0);
-            
+
             Polygon matchPoly = pl.get(index);
             Number value = (Number) matchPoly.getUserData();
             assertEquals("User data does not match",
                     0, NumberOperations.compare(value, ep.value));
         }
     }
-
+    
     /**
      * Class to hold WKT String and a numeric value for
      * an expected polygon.
