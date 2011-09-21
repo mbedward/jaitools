@@ -41,8 +41,8 @@ import javax.media.jai.ROI;
 import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 
-import com.vividsolutions.jts.algorithm.InteriorPointArea;
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.CoordinateArrays;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineSegment;
@@ -292,86 +292,27 @@ public class VectorizeOpImage extends AttributeOpImage {
                     poly = Utils.removeCollinearVertices(poly);
                 }
                 
-                InteriorPointArea ipa = new InteriorPointArea(poly);
-                Coordinate c = ipa.getInteriorPoint();
-                Point pt = GEOMETRY_FACTORY.createPoint(c);
+                // Get interior point by going to the minimum boundary
+                // coordinate and then addign half cell width to X and Y
+                // ordinates. Since we are vectorizing around the edges of
+                // raster cells this should always work.
+                Coordinate[] coords = poly.getExteriorRing().getCoordinates();
+                Coordinate minCoord = CoordinateArrays.minCoordinate(coords);
+                Coordinate insideCoord = new Coordinate(
+                        minCoord.x + 0.5, minCoord.y + 0.5);
 
-                if (!poly.contains(pt)) {
-                    //
-                    // try another method to generate an interior point, by
-                    // looking in every direction
-                    //
-
-                    boolean found = false;
-                    for (Coordinate ringC : poly.getExteriorRing().getCoordinates()) {
-
-                        c.x = ringC.x + 0.5;
-                        c.y = ringC.y;
-                        pt = GEOMETRY_FACTORY.createPoint(c);
-                        if (poly.contains(pt)) {
-                            found = true;
-                            break;
-                        }
-
-                        c.x = ringC.x + 0.5;
-                        c.y = ringC.y + 0.5;
-                        pt = GEOMETRY_FACTORY.createPoint(c);
-                        if (poly.contains(pt)) {
-                            found = true;
-                            break;
-                        }
-
-                        c.x = ringC.x;
-                        c.y = ringC.y + 0.5;
-                        pt = GEOMETRY_FACTORY.createPoint(c);
-                        if (poly.contains(pt)) {
-                            found = true;
-                            break;
-                        }
-
-                        c.x = ringC.x - 0.5;
-                        c.y = ringC.y + 0.5;
-                        pt = GEOMETRY_FACTORY.createPoint(c);
-                        if (poly.contains(pt)) {
-                            found = true;
-                            break;
-                        }
-
-                        c.x = ringC.x - 0.5;
-                        c.y = ringC.y;
-                        pt = GEOMETRY_FACTORY.createPoint(c);
-                        if (poly.contains(pt)) {
-                            found = true;
-                            break;
-                        }
-
-                        c.x = ringC.x;
-                        c.y = ringC.y - 0.5;
-                        pt = GEOMETRY_FACTORY.createPoint(c);
-                        if (poly.contains(pt)) {
-                            found = true;
-                            break;
-                        }
-
-                        c.x = ringC.x + 0.5;
-                        c.y = ringC.y - 0.5;
-                        pt = GEOMETRY_FACTORY.createPoint(c);
-                        if (poly.contains(pt)) {
-                            found = true;
-                            break;
-                        }
-                    }
-
-                    if (!found) {
-                        throw new IllegalStateException("Can't locate interior point for polygon");
-                    }
+                Point insidePt = GEOMETRY_FACTORY.createPoint(insideCoord);
+                if (!poly.contains(insidePt)) {
+                    throw new RuntimeException("Can't locate interior point for polygon");
                 }
 
                 //
                 // now get the value and save it for future usage
                 //
-                double val = imgIter.getSampleDouble((int) c.x, (int) c.y, band);
-                if ((roi == null || roi.contains(c.x, c.y)) && !isOutside(val)) {
+                double val = imgIter.getSampleDouble(
+                        (int) insideCoord.x, (int) insideCoord.y, band);
+                
+                if ((roi == null || roi.contains(insideCoord.x, insideCoord.y)) && !isOutside(val)) {
                     // if we don't clone the polygon the results will share coordinate objects
                     // which will backfire if any c.s. visitor is used later
                     // since all geometries end up in the heap also better use packed c.s.

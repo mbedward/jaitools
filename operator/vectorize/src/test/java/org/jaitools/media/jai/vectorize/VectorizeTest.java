@@ -84,7 +84,10 @@ public class VectorizeTest extends TestBase {
         RenderedOp dest = doOp(src, null);
         List<Polygon> polys = getPolygons(dest, 1);
 
-        ExpectedPoly expected = new ExpectedPoly("POLYGON((0 0, 0 10, 10 10, 10 0, 0 0))", 0);
+        ExpectedPoly[] expected = {
+            new ExpectedPoly("POLYGON((0 0, 0 10, 10 10, 10 0, 0 0))", 0)
+        };
+
         assertPolygons(expected, polys);
     }
 
@@ -144,7 +147,10 @@ public class VectorizeTest extends TestBase {
         RenderedOp dest = doOp(src, args);
         List<Polygon> polys = getPolygons(dest, 1);
 
-        ExpectedPoly expected = new ExpectedPoly("POLYGON((2 2, 2 8, 8 8, 8 2, 2 2))", 1);
+        ExpectedPoly[] expected = {
+            new ExpectedPoly("POLYGON((2 2, 2 8, 8 8, 8 2, 2 2))", 1)
+        };
+        
         assertPolygons(expected, polys);
     }
 
@@ -261,6 +267,36 @@ public class VectorizeTest extends TestBase {
             expected[i] = new ExpectedPoly(wkt, i);
         }
 
+        assertPolygons(expected, polys);
+    }
+    
+    /**
+     * Test vectorizing a small L-shaped pattern which caused failures in
+     * the GeoTools code from which the Vectorize operator was ported.
+     */
+    @Test
+    public void testLShape() throws Exception {
+        final int IMAGE_WIDTH = 5;
+        final int IMAGE_HEIGHT = 4;
+        RenderedImage src = ImageUtils.createImageFromArray(
+                new Integer[] {
+                    0, 0, 0, 0, 0,
+                    0, 1, 0, 0, 0,
+                    0, 1, 1, 1, 0,
+                    0, 0, 0, 0, 0
+                },
+                IMAGE_WIDTH, IMAGE_HEIGHT);
+
+        args.put("outsideValues", Collections.singleton(Integer.valueOf(0)));
+        RenderedOp dest = doOp(src, args);
+        List<Polygon> polys = getPolygons(dest, 1);
+
+        ExpectedPoly[] expected = {
+            new ExpectedPoly(
+                    "POLYGON ((1 3, 1 1, 2 1, 2 2, 4 2, 4 3, 1 3))",
+                    Integer.valueOf(1))
+        };
+        
         assertPolygons(expected, polys);
     }
     
@@ -398,8 +434,9 @@ public class VectorizeTest extends TestBase {
         
         String wkt = String.format("POLYGON((0 0, 0 %d, %d %d, %d 0, 0 0))", 
                 ROIW, ROIW, ROIW, ROIW);
-        ExpectedPoly ep = new ExpectedPoly(wkt, 0);
-        assertPolygons(ep, getPolygons(dest, 1));
+        
+        ExpectedPoly[] expected = { new ExpectedPoly(wkt, 0) };
+        assertPolygons(expected, getPolygons(dest, 1));
     }
     
     /**
