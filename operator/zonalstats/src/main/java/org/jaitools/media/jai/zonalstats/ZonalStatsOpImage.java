@@ -45,7 +45,7 @@ import javax.media.jai.OpImage;
 import javax.media.jai.ROI;
 
 import org.jaitools.CollectionFactory;
-import org.jaitools.imageutils.SimpleIterator;
+import org.jaitools.imageutils.iterator.SimpleIterator;
 import org.jaitools.numeric.Range;
 import org.jaitools.numeric.RangeUtils;
 import org.jaitools.numeric.Statistic;

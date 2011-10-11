@@ -29,7 +29,6 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Shape;
-import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
@@ -42,13 +41,13 @@ import javax.media.jai.ImageLayout;
 import javax.media.jai.RasterFactory;
 import javax.media.jai.SourcelessOpImage;
 
-import com.vividsolutions.jts.awt.ShapeWriter;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.geom.prep.PreparedGeometry;
-
+import org.jaitools.imageutils.shape.LiteShape;
 import org.jaitools.jts.CoordinateSequence2D;
+
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.TopologyException;
+import com.vividsolutions.jts.geom.prep.PreparedGeometry;
 
 
 /**
@@ -66,14 +65,6 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
     
     private final Shape shape;
 
-    private final CoordinateSequence2D testPointCS;
-
-    private final Point testPoint;
-
-    private final CoordinateSequence2D testRectCS;
-
-    private final Polygon testRect;
-
     private Raster solidTile;
     
     private Raster blankTile;
@@ -82,6 +73,8 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
     public static final boolean DEFAULT_ANTIALIASING = false;
     
     private boolean antiAliasing = DEFAULT_ANTIALIASING; 
+    
+    private GeometryFactory gf = new GeometryFactory();
 
     /**
      * Constructor.
@@ -101,15 +94,8 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
                 height);
 
         this.geom = geom;
-        this.shape = new ShapeWriter().toShape(geom.getGeometry());
+        this.shape = new LiteShape(geom.getGeometry());
         this.antiAliasing = antiAliasing;
-
-        GeometryFactory gf = new GeometryFactory();
-        testPointCS = new CoordinateSequence2D(1);
-        testPoint = gf.createPoint(testPointCS);
-
-        testRectCS = new CoordinateSequence2D(5);
-        testRect = gf.createPolygon(gf.createLinearRing(testRectCS), null);
     }
 
     /**
@@ -133,6 +119,8 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
         il.setMinY(minY);
         il.setWidth(width);
         il.setHeight(height);
+        il.setTileWidth(sm.getWidth());
+        il.setTileHeight(sm.getHeight());
         il.setSampleModel(sm);
 
         if (!il.isValid(ImageLayout.TILE_GRID_X_OFFSET_MASK)) {
@@ -179,39 +167,59 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
      */
     protected Raster getTileRaster(int minX, int minY) {
         // check relationship between geometry and the tile we're computing
-        updateTestRect(minX, minY);
-        if (geom.contains(testRect)) {
-            return getSolidTile();
-        } else if (geom.disjoint(testRect)) {
-            return getBlankTile();
-        } else {
-            // use java2d to quickly binarize the geometry
-            WritableRaster raster = RasterFactory.createWritableRaster(
-                    sampleModel, new java.awt.Point(0, 0));
-            BufferedImage bi = new BufferedImage(colorModel, raster, false, null);
-            Graphics2D graphics = null;
-            try {
-                graphics = bi.createGraphics();
-                
-                // translate the geometry to compensate for the tile origin at 0,0
-                graphics.setTransform(AffineTransform.getTranslateInstance(-minX, -minY));
-                
-                if (antiAliasing){
-                    graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                }
-                
-                // draw the shape
-                graphics.setColor(Color.WHITE);
-                graphics.fill(shape);
-            } finally {
-                if(graphics != null) {
-                    graphics.dispose();
+        Polygon testRect = getTestRect(minX, minY);
+        try {
+            // RasterOp need to be thread safe
+            synchronized (geom) {
+                if (geom.contains(testRect)) {
+                    return getSolidTile();
+                } else if (geom.disjoint(testRect)) {
+                    return getBlankTile();
                 }
             }
-
-            return raster;
+        } catch (TopologyException tpe){
+            // In case a Topology Exception have been raised, 
+            // use the standard rasterization instead of leveraging
+            // on the shared tiles
         }
+        
+        return drawGeometry(minX, minY);
     }
+    
+    /**
+     * Draw the geometry using Java2D
+     * 
+     * @return the binarized geometry
+     */
+    private Raster drawGeometry(final int minX, final int minY) {
+        final int offset = antiAliasing ? 2 : 0;
+        SampleModel tileSampleModel = sampleModel.createCompatibleSampleModel(tileWidth, tileHeight);
+        
+        WritableRaster raster = RasterFactory.createWritableRaster(tileSampleModel, new java.awt.Point(0, 0));
+        BufferedImage bi = new BufferedImage(colorModel, raster, false, null);
+        Graphics2D graphics = null;
+        try {
+            graphics = bi.createGraphics();
+            
+            graphics.setClip(-offset, -offset, tileWidth + offset*2, tileHeight + offset*2);
+            graphics.translate(-minX, -minY);
+            if (antiAliasing){
+                graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            }
+            
+            // draw the shape
+            graphics.setColor(Color.WHITE);
+            graphics.fill(shape);
+        } finally {
+            if(graphics != null) {
+                graphics.dispose();
+            }
+        }
+
+        return raster;
+        
+    }
+
 
     /**
      * Returns (creating and caching if the first call) a constant tile with 1 values
@@ -270,18 +278,21 @@ public class VectorBinarizeOpImage extends SourcelessOpImage {
     }
 
     /**
-     * Updates the bounds of the rectangle used to test inclusion in the 
+     * Builds the bounds of the rectangle used to test inclusion in the 
      * reference {@code PreparedGeometry}.
      * 
      * @param x origin X ordinate
      * @param y origin Y ordinate
      */
-    private void updateTestRect(int x, int y) {
-        testRectCS.setXY(0, x, y);
-        testRectCS.setXY(1, x, y + tileHeight);
-        testRectCS.setXY(2, x + tileWidth, y + tileHeight);
-        testRectCS.setXY(3, x + tileWidth, y);
-        testRectCS.setXY(4, x, y);
-        testRect.geometryChanged();
+    private Polygon getTestRect(int x, int y) {
+        CoordinateSequence2D testRectCS = new CoordinateSequence2D(5);
+        
+        testRectCS.setXY(0, x , y );
+        testRectCS.setXY(1, x , y + tileHeight );
+        testRectCS.setXY(2, x + tileWidth , y + tileHeight );
+        testRectCS.setXY(3, x + tileWidth , y );
+        testRectCS.setXY(4, x , y );
+
+        return  gf.createPolygon(gf.createLinearRing(testRectCS), null);
     }
 }

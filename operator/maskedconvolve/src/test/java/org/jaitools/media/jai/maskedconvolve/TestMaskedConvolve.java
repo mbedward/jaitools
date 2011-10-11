@@ -43,8 +43,9 @@ import javax.media.jai.RenderedOp;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 import javax.media.jai.registry.RenderedRegistryMode;
+
 import org.jaitools.imageutils.ImageUtils;
-import org.jaitools.imageutils.SimpleIterator;
+import org.jaitools.imageutils.iterator.SimpleIterator;
 import org.jaitools.numeric.CompareOp;
 
 import org.junit.BeforeClass;

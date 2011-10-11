@@ -84,28 +84,19 @@ public class VectorBinarizeRIF implements RenderedImageFactory {
             throw new IllegalArgumentException("The geometry must be a JTS polygon or multipolygon");
         }
         
-        /**
-         * TODO: this section seems to be working with respect to setting a default
-         * SampleModel, but if the user provides non-default tile dimensions via an
-         * ImageLayout in the hints JAI always seems to override them.
-         */
-        SampleModel sm = null;
+        // get the tile size from the image layout
         Dimension tileSize = null;
         if (renderHints != null && renderHints.containsKey(JAI.KEY_IMAGE_LAYOUT)) {
             ImageLayout il = (ImageLayout) renderHints.get(JAI.KEY_IMAGE_LAYOUT);
             if (il != null) {
-                sm = il.getSampleModel(null);
                 tileSize = new Dimension(il.getTileWidth(null), il.getTileHeight(null));
             }
         }
-        
-        if (sm == null) {
-            // use default SampleModel class
-            if (tileSize == null) {
-                tileSize = JAI.getDefaultTileSize();
-            }
-            sm = new MultiPixelPackedSampleModel(DataBuffer.TYPE_BYTE, tileSize.width, tileSize.height, 1);
+        if (tileSize == null) {
+            tileSize = JAI.getDefaultTileSize();
         }
+        // sample model wise we only build bw images
+        SampleModel sm = new MultiPixelPackedSampleModel(DataBuffer.TYPE_BYTE, tileSize.width, tileSize.height, 1);
         
         boolean antiAliasing = VectorBinarizeOpImage.DEFAULT_ANTIALIASING; 
         Object antiAlias = paramBlock.getObjectParameter(VectorBinarizeDescriptor.ANTIALIASING_ARG);

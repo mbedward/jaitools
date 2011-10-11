@@ -38,8 +38,8 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import org.jaitools.imageutils.ImageUtils;
-import org.jaitools.imageutils.WindowIterator;
-import org.jaitools.imageutils.WritableSimpleIterator;
+import org.jaitools.imageutils.iterator.WindowIterator;
+import org.jaitools.imageutils.iterator.WritableSimpleIterator;
 import org.jaitools.swing.SimpleImagePane;
  
 

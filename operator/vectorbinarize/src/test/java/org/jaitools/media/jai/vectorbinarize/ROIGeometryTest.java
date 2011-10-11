@@ -25,24 +25,37 @@
 
 package org.jaitools.media.jai.vectorbinarize;
 
+import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
+import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.PathIterator;
 import java.awt.image.DataBuffer;
+import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.media.jai.ImageLayout;
+import javax.media.jai.JAI;
 import javax.media.jai.ROI;
 import javax.media.jai.ROIShape;
+import javax.media.jai.RenderedOp;
+import javax.media.jai.TileScheduler;
 import javax.media.jai.operator.ExtremaDescriptor;
 import javax.media.jai.operator.FormatDescriptor;
 import javax.media.jai.operator.SubtractDescriptor;
 import javax.swing.JFrame;
 import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
+
+import org.jaitools.imageutils.ROIGeometry;
+import org.jaitools.imageutils.shape.LiteShape;
+import org.jaitools.swing.SimpleImagePane;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
@@ -53,13 +66,10 @@ import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
 import com.vividsolutions.jts.io.WKTReader;
 
-import org.jaitools.imageutils.ROIGeometry;
-import org.jaitools.swing.SimpleImagePane;
-
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 
 public class ROIGeometryTest {
@@ -85,6 +95,7 @@ public class ROIGeometryTest {
 
         String osname = System.getProperty("os.name").replaceAll("\\s", "");
         isOSX = "macosx".equalsIgnoreCase(osname);
+        JAI.setDefaultTileSize(new Dimension(512, 512));
     }
 
     @Test
@@ -99,6 +110,59 @@ public class ROIGeometryTest {
     }
     
     @Test
+    public void testLargeConcurrentCheckerBoard() throws Exception {
+        String wkt = "MULTIPOLYGON (((400 400, 400 0, 800 0, 800 400, 400 400)), ((400 400, 400 800, 0 800, 0 400, 400 400)))";
+        MultiPolygon poly = (MultiPolygon) new WKTReader().read(wkt);
+
+        ImageLayout layout = new ImageLayout(0, 0, 800, 800, 0, 0, 10, 10, null, null);
+        RenderingHints hints = new RenderingHints(JAI.KEY_IMAGE_LAYOUT, layout);
+        ROIGeometry g = new ROIGeometry(poly, hints);
+        RenderedOp image = (RenderedOp) g.getAsImage();
+
+        // start parallel prefetching
+        TileScheduler ts = (TileScheduler) image.getRenderingHint(JAI.KEY_TILE_SCHEDULER);
+        ts.setParallelism(32);
+        ts.setPrefetchParallelism(32);
+        List<java.awt.Point> tiles = new ArrayList<java.awt.Point>();
+        for (int i = 0; i < image.getNumXTiles(); i++) {
+            for (int j = 0; j < image.getNumYTiles(); j++) {
+                tiles.add(new java.awt.Point(image.getMinTileX() + i, image.getMinTileY() + j));
+            }
+        }
+        java.awt.Point[] tileArray = (java.awt.Point[]) tiles.toArray(new java.awt.Point[tiles.size()]);
+        ts.prefetchTiles(image, tileArray);
+        
+        // check tile by tile
+        assertEquals(0, image.getMinX());
+        assertEquals(0, image.getMinY());
+        assertEquals(10, image.getTileWidth());
+        assertEquals(10, image.getTileHeight());
+        for (int x = 0; x < image.getNumXTiles(); x++) {
+            for (int y = 0; y < image.getNumYTiles(); y++) {
+                Raster tile = image.getTile(x, y);
+                int[] pixel = new int[1];
+                tile.getPixel(tile.getMinX(), tile.getMinY(), pixel);
+                if(x < 40 && y < 40 || x >= 40 && y >= 40) {
+                    assertEquals("Expected 0 at x = " + x + ", y = " + y, 0, pixel[0]);
+                } else {
+                    assertEquals("Expected 1 at x = " + x + ", y = " + y, 1, pixel[0]);
+                }
+            }
+        }
+    }
+
+    
+    @Test
+    public void testTopologyException() throws Exception {
+        String wkt = "POLYGON ((4 4, 4 0, 8 0, 8 4, 4 4, 4 0, 8 0, 8 2, 4 4))";
+        Polygon poly = (Polygon) new WKTReader().read(wkt);
+
+        ROIGeometry g = new ROIGeometry(poly);
+        assertROIEquivalent(g, g, "Deal with Topology exception");
+        
+    }
+    
+    @Test
     public void testFractional() throws Exception {
         String wkt = "POLYGON ((0.4 0.4, 0.4 5.6, 4.4 5.6, 4.4 0.4, 0.4 0.4))";
         Polygon poly = (Polygon) new WKTReader().read(wkt);
@@ -107,6 +171,58 @@ public class ROIGeometryTest {
         ROIShape shape = getEquivalentROIShape(g);
         
         assertROIEquivalent(g, shape, "Fractional");
+    }
+    
+    @Test
+    public void testFractionalUnion() throws Exception {
+        // this odd beast is a real world case that was turned into a test
+        // due to the amount of blood and tears it took to get it to work
+        String[] coords = new String[] {
+                "1750 1312.5, 508 1312.5, 508 1609, 1750 1609, 1750 1312.5",
+                "508 875, 508 1312, 1750 1312, 1750 875, 508 875",
+                "508 875, 1750 875, 1750 437.5, 508 437.5, 508 875",
+                "508 377, 508 437, 1750 437, 1750 377, 508 377" };
+        String[] wkts = new String[] { "POLYGON ((" + coords[0] + "))",
+                "POLYGON ((" + coords[1] + "))", "POLYGON ((" + coords[2] + "))",
+                "POLYGON ((" + coords[3] + "))" };
+        final int size = wkts.length;
+        final Polygon[] polygons = new Polygon[size];
+        final ROIGeometry[] roiGeometries = new ROIGeometry[size];
+        final ROIShape[] roiShapes = new ROIShape[size];
+        ROI unionGeometry = null;
+        ROI unionShape = null;
+        for (int i = 0; i < size; i++) {
+            polygons[i] = (Polygon) new WKTReader().read(wkts[i]);
+            roiGeometries[i] = new ROIGeometry(polygons[i]);
+            final GeneralPath gp = new GeneralPath();
+            final String[] wkt = coords[i].split(",");
+            final int segments = wkt.length;
+            for (int k = 0; k < segments; k++) {
+                String[] x_y = wkt[k].trim().split(" ");
+                if (k == 0) {
+                    gp.moveTo(Float.valueOf(x_y[0]), Float.valueOf(x_y[1]));
+                } else {
+                    gp.lineTo(Float.valueOf(x_y[0]), Float.valueOf(x_y[1]));
+                }
+            }
+            roiShapes[i] = new ROIShape(gp);
+            if (i == 0) {
+                unionGeometry = new ROIGeometry(((ROIGeometry) roiGeometries[i]).getAsGeometry());
+                unionShape = roiShapes[0];
+            } else {
+                unionGeometry = unionGeometry.add(roiGeometries[i]);
+                unionShape = unionShape.add(roiShapes[i]);
+            }
+        }
+        Shape shape = new LiteShape(((ROIGeometry) unionGeometry).getAsGeometry());
+
+        if (INTERACTIVE) {
+            printRoiShape((ROIShape) unionShape, "unionShape");
+            System.out.println(((ROIGeometry) unionGeometry).getAsGeometry());
+            printShape(shape, "unionGeometry");
+        }
+
+        assertROIEquivalent(unionGeometry, unionShape, "Fractional union");
     }
     
     @Test 
@@ -315,10 +431,7 @@ public class ROIGeometryTest {
     ROIShape getEquivalentROIShape(ROIGeometry g) {
         // get the roi geometry as shape, this generate a JTS wrapper
         final Shape shape = g.getAsShape();
-        // the JTS wrapper sucks, build a general path out of it
-        final GeneralPath gp = new GeneralPath(shape);
-        // finally return the roi shape
-        return new ROIShape(gp);
+        return new ROIShape(shape);
     }
     
     /**
@@ -334,6 +447,35 @@ public class ROIGeometryTest {
         visualize(firstImage, secondImage, title);
         
         assertImagesEqual(firstImage, secondImage);
+    }
+    
+    private boolean assertReportErrorImagesEqual(ROI first, ROI second) {
+        RenderedImage image1 = first.getAsImage();
+        RenderedImage image2 = second.getAsImage();
+        boolean isOk = true;
+        isOk &= (image1.getWidth() == image2.getWidth());
+        isOk &= (image1.getHeight() == image2.getHeight());
+        double[][] extrema = computeExtrema(image1, image2);
+        for (int band = 0; band < extrema.length; band++) {
+            isOk &= (Math.abs(0d - extrema[0][band]) < 1e-9);
+            isOk &= (Math.abs(0d - extrema[1][band]) < 1e-9);
+        }
+        
+        return isOk;
+    }
+
+    private void printError(ROI first, ROI second) {
+        if (first == null || second == null){
+            System.out.println("A ROI is missing");
+        }
+        if (first instanceof ROIGeometry){
+            printGeometry(((ROIGeometry)first), "ROIGeometry");
+            printRoiShape(((ROIShape)second), "ROIShape");
+        } else {
+            printGeometry(((ROIGeometry)second), "ROIGeometry");
+            printRoiShape(((ROIShape)first), "ROIShape");
+        }
+        
     }
     
     void assertImagesEqual(final RenderedImage image1, final RenderedImage image2) {
@@ -352,6 +494,15 @@ public class ROIGeometryTest {
             assertEquals("Minimum should be 0", 0d, extrema[0][band], 1e-9);
             assertEquals("Maximum should be 0", 0d, extrema[1][band], 1e-9);
         }
+    }
+    
+    private double[][] computeExtrema(RenderedImage image1, RenderedImage image2) {
+        RenderedImage int1 = FormatDescriptor.create(image1, DataBuffer.TYPE_SHORT, null);
+        RenderedImage int2 = FormatDescriptor.create(image2, DataBuffer.TYPE_SHORT, null);
+        RenderedImage diff = SubtractDescriptor.create(int1, int2, null);
+        RenderedImage extremaImg = ExtremaDescriptor.create(diff, null, 1, 1, false, Integer.MAX_VALUE, null);
+        double[][] extrema = (double[][]) extremaImg.getProperty("extrema");
+        return extrema;
     }
     
     /**
@@ -418,4 +569,47 @@ public class ROIGeometryTest {
         }
         System.out.println("))/n");
     }
+    
+    private static void printShape(final Shape shape, final String title) {
+        PathIterator pt1 = shape.getPathIterator(null);
+        double [] coords = new double[2];
+        StringBuilder sb = new StringBuilder();
+        sb.append(title + " POLYGON ((");
+        while (!pt1.isDone()){
+            int type = pt1.currentSegment(coords);
+            
+            sb.append(getPathType(type) + "(" + coords[0] + " " + coords[1] + "),");
+            pt1.next();
+        }
+        final String string = sb.toString();
+        sb = new StringBuilder(string.substring(0, string.length()-1));
+        sb.append("))\n");
+        System.out.println(sb.toString());
+    }
+    
+    private static String getPathType (int pathType){
+        switch (pathType) {
+        case PathIterator.SEG_CLOSE:
+            return "]";
+        case PathIterator.SEG_LINETO:
+            return " ";
+        case PathIterator.SEG_MOVETO:
+            return "[";
+        case PathIterator.SEG_QUADTO:
+            return "QUADTO";
+        case PathIterator.SEG_CUBICTO:
+            return "CUBICTO";
+        }
+        return "UNKNOWN";
+    }
+    
+    private static void printRoiShape(final ROIShape rs1, final String title) {
+        printShape(rs1.getAsShape(), title);
+    }
+    
+    private static void printGeometry(ROIGeometry g, String title) {
+        // System.out.println(title + " " + g.getAsGeometry());
+        printShape(new LiteShape(g.getAsGeometry()), title);
+    }
+
 }
