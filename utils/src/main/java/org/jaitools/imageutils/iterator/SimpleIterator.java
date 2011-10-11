@@ -23,13 +23,14 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package org.jaitools.imageutils;
+package org.jaitools.imageutils.iterator;
 
 import java.awt.Rectangle;
 import java.awt.image.RenderedImage;
 
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
+import org.jaitools.imageutils.AbstractSimpleIterator;
 
 /**
  * A read-only image iterator which moves by column then row (pixel then line).

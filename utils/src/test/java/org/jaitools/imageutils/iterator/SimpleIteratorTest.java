@@ -23,14 +23,15 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package org.jaitools.imageutils;
+package org.jaitools.imageutils.iterator;
 
-import java.awt.image.RenderedImage;
-import java.util.Random;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.util.Random;
 
 import javax.media.jai.PlanarImage;
+
+import org.jaitools.imageutils.TestBase;
 
 import org.junit.Test;
 import static org.junit.Assert.*;

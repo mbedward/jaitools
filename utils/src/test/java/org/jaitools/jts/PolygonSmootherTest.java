@@ -25,6 +25,8 @@
 
 package org.jaitools.jts;
 
+import java.util.Locale;
+
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
@@ -108,7 +110,7 @@ public class PolygonSmootherTest {
         // min length
         final double base = MIN_LEN / 2.0;
         final double height = 10.0 * MIN_LEN;
-        String wkt = String.format("POLYGON((0 0, %f %f, %f 0, 0 0))",
+        String wkt = String.format(Locale.US, "POLYGON((0 0, %f %f, %f 0, 0 0))",
                 base / 2.0, height, base);
         Polygon p = (Polygon) reader.read(wkt);
 

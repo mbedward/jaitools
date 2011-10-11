@@ -23,7 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package org.jaitools.imageutils;
+package org.jaitools.imageutils.iterator;
 
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -34,6 +34,7 @@ import java.awt.image.WritableRenderedImage;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 import javax.media.jai.iterator.WritableRectIter;
+import org.jaitools.imageutils.AbstractSimpleIterator;
 
 /**
  * A read-write image iterator which moves by column then row (pixel then line).

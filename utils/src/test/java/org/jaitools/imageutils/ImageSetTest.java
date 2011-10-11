@@ -30,6 +30,7 @@ import java.util.Map;
 
 import javax.media.jai.TiledImage;
 
+import org.jaitools.imageutils.ImageSet.Iterator;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -73,7 +74,7 @@ public class ImageSetTest extends TestBase {
 
     @Test
     public void getIterSample() {
-        ImageSetIterator<String> iterator = theSet.getIterator();
+        ImageSet.Iterator<String> iterator = theSet.getIterator();
 
         int x = 0;
         int y = 0;
@@ -90,7 +91,7 @@ public class ImageSetTest extends TestBase {
 
     @Test
     public void getIterSampleByBand() {
-        ImageSetIterator<String> iterator = theSet.getIterator();
+        Iterator<String> iterator = theSet.getIterator();
 
         int x = 0;
         int y = 0;

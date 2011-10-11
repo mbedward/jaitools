@@ -21,17 +21,18 @@
  *  ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
- */   
-
+ */
 package org.jaitools.imageutils;
 
 import java.awt.Rectangle;
 import java.awt.image.RenderedImage;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.jaitools.CollectionFactory;
+import org.jaitools.imageutils.iterator.SimpleIterator;
 import org.jaitools.numeric.NumberOperations;
 
 /**
@@ -42,7 +43,6 @@ import org.jaitools.numeric.NumberOperations;
 public class ImageSet<K> {
 
     private final Map<K, Element> elements;
-
 
     /**
      * Creates a new image set which will contain the same keys, images and 
@@ -64,10 +64,9 @@ public class ImageSet<K> {
                 newSet.add(key, image, outsideValue);
             }
         }
-        
+
         return newSet;
     }
-
 
     /**
      * Creates a new, empty image set.
@@ -94,7 +93,7 @@ public class ImageSet<K> {
         if (image == null) {
             throw new IllegalArgumentException("image must not be null");
         }
-        
+
         elements.put(key, new Element(image, outsideValue));
     }
 
@@ -184,7 +183,7 @@ public class ImageSet<K> {
     public void clear() {
         elements.clear();
     }
-    
+
     /**
      * Retrieves a {@code Set} view of the keys in this image set.
      * Note that unlike Java collection classes, this method returns an
@@ -193,7 +192,7 @@ public class ImageSet<K> {
      * @return keys contained in this image set
      */
     public Set<K> keySet() {
-        return Collections.unmodifiableSet( elements.keySet() );
+        return Collections.unmodifiableSet(elements.keySet());
     }
 
     /**
@@ -220,7 +219,7 @@ public class ImageSet<K> {
      * 
      * @throws IllegalArgumentException if this image set is empty
      */
-    public ImageSetIterator<K> getIterator() {
+    public Iterator<K> getIterator() {
         return getIterator(elements.keySet().iterator().next());
     }
 
@@ -236,11 +235,11 @@ public class ImageSet<K> {
      * @throws IllegalArgumentException if this image set is empty or if no 
      * image corresponds to the key value
      */
-    public ImageSetIterator<K> getIterator(K referenceImageKey) {
+    public Iterator<K> getIterator(K referenceImageKey) {
         if (elements.isEmpty()) {
             throw new IllegalArgumentException("This image set is empty");
         }
-        
+
         Rectangle bounds = getBounds(referenceImageKey);
         return getIterator(bounds);
     }
@@ -255,8 +254,8 @@ public class ImageSet<K> {
      * @throws IllegalArgumentException if this image set is empty or if no 
      * image corresponds to the key value
      */
-    public ImageSetIterator<K> getIterator(Rectangle bounds) {
-        return new ImageSetIterator<K>(this, bounds);
+    public Iterator<K> getIterator(Rectangle bounds) {
+        return new Iterator<K>(this, bounds);
     }
 
     /**
@@ -332,13 +331,12 @@ public class ImageSet<K> {
         }
     }
 
-
-
     /**
      * An {@code ImageSet} element consisting of a {@code RenderedImage}
      * and an associated outside value.
      */
     public static class Element {
+
         private final RenderedImage image;
         private final Number outsideValue;
 
@@ -360,12 +358,97 @@ public class ImageSet<K> {
         private Number getOutsideValue() {
             return NumberOperations.copy(outsideValue);
         }
-        
+
         private Rectangle getBounds() {
-            return new Rectangle(image.getMinX(), image.getMinY(), 
+            return new Rectangle(image.getMinX(), image.getMinY(),
                     image.getWidth(), image.getHeight());
         }
     }
 
-}
+    
+    public static class Iterator<K> {
 
+        // It is more convenient to work with two lists 
+        // than a map in this class
+        private final List<K> keys;
+        private final List<SimpleIterator> delegates;
+
+        /**
+         * Private constructor.
+         * 
+         * @param set the target image set
+         * @param bounds the bounds for this iterator
+         */
+        private Iterator(ImageSet set, Rectangle bounds) {
+            if (set == null || set.isEmpty()) {
+                throw new IllegalArgumentException("The ImageSet must not be null or empty");
+            }
+
+            this.keys = CollectionFactory.list();
+            this.delegates = CollectionFactory.list();
+
+            Set<K> keySet = set.keySet();
+            for (K key : keySet) {
+                keys.add(key);
+                delegates.add(new SimpleIterator(set.get(key), bounds, set.getOutsideValue(key)));
+            }
+        }
+
+        /**
+         * Gets a value from the first band of each image in this set 
+         * and returns them as a {@code Map} of key : value pairs. 
+         * 
+         * @return image (or outside) values
+         */
+        public Map<K, Number> getSample() {
+            return getSample(0);
+        }
+
+        /**
+         * Gets a value from the specified band of each image in this set
+         * and returns them as a {@code Map} of key : value pairs. 
+         * 
+         * @param band the image band to sample
+         * @return image (or outside) values
+         */
+        public Map<K, Number> getSample(int band) {
+            Map<K, Number> sample = CollectionFactory.map();
+
+            for (int i = 0; i < keys.size(); i++) {
+                K key = keys.get(i);
+                Number value = delegates.get(i).getSample(band);
+                sample.put(key, value);
+            }
+
+            return sample;
+        }
+
+        /**
+         * Tests if the iterator has any more positions to sample.
+         * 
+         * @return {@code true} if more samples are available; 
+         *     {@code false} otherwise
+         */
+        public boolean hasNext() {
+            return delegates.get(0).hasNext();
+        }
+
+        /**
+         * Advances the iterator to the next position if possible.
+         * 
+         * @return {@code true} if the iterator was moved;
+         *     {@code false} if it is at the end of its bounds
+         */
+        public boolean next() {
+            if (hasNext()) {
+                for (SimpleIterator iter : delegates) {
+                    iter.next();
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+    }
+}
