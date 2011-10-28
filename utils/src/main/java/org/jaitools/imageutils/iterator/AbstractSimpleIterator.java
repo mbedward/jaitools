@@ -23,7 +23,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */   
 
-package org.jaitools.imageutils;
+package org.jaitools.imageutils.iterator;
 
 import java.awt.Point;
 import java.awt.Rectangle;

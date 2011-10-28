@@ -30,7 +30,6 @@ import java.awt.image.RenderedImage;
 
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
-import org.jaitools.imageutils.AbstractSimpleIterator;
 
 /**
  * A read-only image iterator which moves by column then row (pixel then line).

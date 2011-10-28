@@ -34,7 +34,6 @@ import java.awt.image.WritableRenderedImage;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 import javax.media.jai.iterator.WritableRectIter;
-import org.jaitools.imageutils.AbstractSimpleIterator;
 
 /**
  * A read-write image iterator which moves by column then row (pixel then line).

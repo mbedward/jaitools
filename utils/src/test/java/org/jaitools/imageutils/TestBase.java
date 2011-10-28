@@ -25,6 +25,7 @@
 
 package org.jaitools.imageutils;
 
+import org.jaitools.imageutils.iterator.AbstractSimpleIterator;
 import java.awt.Rectangle;
 import java.util.Arrays;
 import javax.media.jai.TiledImage;
