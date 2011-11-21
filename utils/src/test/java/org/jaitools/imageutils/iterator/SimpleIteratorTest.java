@@ -110,6 +110,31 @@ public class SimpleIteratorTest extends TestBase {
         iter = new SimpleIterator(image, null, OUTSIDE);
         assertTrue(image == iter.getImage());
     }
+    
+    @Test
+    public void getPosWithDestinationArg() throws Exception {
+        final Point origin = new Point(-7, 11);
+        image = createSequentialImage(origin.x, origin.y, WIDTH, HEIGHT, NUM_BANDS, 0);
+        iter = new SimpleIterator(image, null, OUTSIDE, SimpleIterator.Order.IMAGE_X_Y);
+        
+        Point pos = new Point();
+        Point posRtn = null;
+        posRtn = iter.getPos(pos);
+        assertEquals(origin, pos);
+        
+        // check object equality
+        assertTrue(posRtn == pos);  
+    }
+    
+    @Test
+    public void getPosWithNullDestinationArg() throws Exception {
+        final Point origin = new Point(-7, 11);
+        image = createSequentialImage(origin.x, origin.y, WIDTH, HEIGHT, NUM_BANDS, 0);
+        iter = new SimpleIterator(image, null, OUTSIDE, SimpleIterator.Order.IMAGE_X_Y);
+        
+        Point pos = iter.getPos(null);
+        assertEquals(origin, pos);
+    }
 
     @Test
     public void getStartPos() {
@@ -426,8 +451,9 @@ public class SimpleIteratorTest extends TestBase {
     }
 
     private void assertSamples() {
+        Point pos = new Point();
         do {
-            Point pos = iter.getPos();
+            iter.getPos(pos);
             
             for (int band = 0; band < NUM_BANDS; band++) {
                 Number sample = iter.getSample();
