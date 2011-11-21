@@ -312,7 +312,24 @@ public abstract class AbstractSimpleIterator {
      * @return current position
      */
     public Point getPos() {
-        return new Point(mainPos);
+        return getPos(null);
+    }
+
+    /**
+     * Gets the current iterator position. If {@code dest} is not {@code null}
+     * it will be set to the current position and returned, otherwise a new
+     * Point instance is returned. It is always safe to call this method.
+     * 
+     * @return current position
+     */
+    public Point getPos(Point dest) {
+        if (dest == null) {
+            dest = new Point(mainPos);
+        } else {
+            dest.setLocation(mainPos);
+        }
+        
+        return dest;
     }
 
     /**
