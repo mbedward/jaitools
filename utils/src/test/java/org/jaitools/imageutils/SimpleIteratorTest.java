@@ -25,9 +25,10 @@
 
 package org.jaitools.imageutils;
 
-import java.util.Random;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.util.List;
+import java.util.Random;
 
 import javax.media.jai.PlanarImage;
 
@@ -169,6 +170,100 @@ public class SimpleIteratorTest extends TestBase {
         iter = new SimpleIterator(image, null, null);
         Rectangle imageBounds = image.getBounds();
         assertEquals(imageBounds, iter.getBounds());
+    }
+
+    @Test
+    public void checkSubBoundsWhenUsingDefaultImageBounds() throws Exception {
+        final int minX = -3;
+        final int minY = 3;
+        final int tileWidth = 7;
+        final int tileHeight = 11;
+        
+        assertSubBounds(minX, minY, tileWidth, tileHeight, null);
+    }
+    
+    @Test
+    public void checkSubBoundsWhenIterBoundsPartlyOverlapImageBounds() throws Exception {
+        final int minX = -3;
+        final int minY = 3;
+        final int tileWidth = 7;
+        final int tileHeight = 11;
+        
+        Rectangle iterBounds = new Rectangle(-10, 0, WIDTH, HEIGHT);
+        
+        assertSubBounds(minX, minY, tileWidth, tileHeight, iterBounds);
+    }
+    
+    @Test
+    public void checkSubBoundsWhenIterBoundsLieWithinImageBounds() throws Exception {
+        final int minX = -3;
+        final int minY = 3;
+        final int tileWidth = 7;
+        final int tileHeight = 11;
+        
+        Rectangle iterBounds = new Rectangle(0, 6, WIDTH/2, HEIGHT/2);
+        
+        assertSubBounds(minX, minY, tileWidth, tileHeight, iterBounds);
+    }
+    
+    /**
+     * Tests that:
+     * <ul>
+     * <li>all sub-bounds are within iterator bounds</li>
+     * <li>no overlap between sub-bounds</li>
+     * <li>union of sub-bounds equals iterator bounds with no gaps between sub-bounds</li>
+     * </ul>
+     */
+    private void assertSubBounds(int minX, int minY, int tileWidth, int tileHeight, Rectangle iterBounds) {
+        image = createSequentialTiledImage(minX, minY, WIDTH, HEIGHT, tileWidth, tileHeight, 1, 0);
+
+        if (iterBounds == null) {
+            iterBounds = image.getBounds();
+        }
+        iter = new SimpleIterator(image, iterBounds, null, SimpleIterator.Order.TILE_X_Y);
+        List<Rectangle> subBounds = iter.getSubBounds();
+        
+        // Check all sub-bounds lie within the iterator bounds
+        for (Rectangle r : subBounds) {
+            assertTrue(iterBounds.contains(r));
+        }
+
+        // Check there is no overlap between sub-bounds
+        for (int i = 0; i < subBounds.size() - 1; i++) {
+            Rectangle ri = subBounds.get(i);
+            for (int j = i + 1; j < subBounds.size(); j++) {
+                Rectangle rj = subBounds.get(j);
+                if (ri.intersects(rj)) {
+                    String msg = String.format("Overlap between subBound %d [x=%d y=%d w=%d h=%d] "
+                            + "and subBound %d [x=%d y=%d w=%d h=%d]",
+                            i, ri.x, ri.y, ri.width, ri.height,
+                            j, rj.x, rj.y, rj.width, rj.height);
+                    fail(msg);
+                }
+            }
+        }
+        
+        // Check sub-bounds completely cover iterator bounds
+        // ie. no gaps
+        boolean[][] array = new boolean[iterBounds.height][iterBounds.width];
+        for (Rectangle r : subBounds) {
+            for (int y = r.y; y < r.y + r.height; y++) {
+                int yy = y - iterBounds.y;
+                for (int x = r.x; x < r.x + r.width; x++) {
+                    int xx = x - iterBounds.x;
+                    array[yy][xx] = true;
+                }
+            }
+        }
+        
+        for (int yy = 0; yy < iterBounds.height; yy++) {
+            for (int xx = 0; xx < iterBounds.width; xx++) {
+                if (!array[yy][xx]) {
+                    fail(String.format("gap between sub-bounds at image position: %d %d",
+                            xx + iterBounds.x, yy + iterBounds.y));
+                }
+            }
+        }
     }
 
     @Test
@@ -428,8 +523,9 @@ public class SimpleIteratorTest extends TestBase {
     }
 
     private void assertSamples() {
+        Point pos = new Point();
         do {
-            Point pos = iter.getPos();
+            iter.getPos(pos);
             
             for (int band = 0; band < NUM_BANDS; band++) {
                 Number sample = iter.getSample();

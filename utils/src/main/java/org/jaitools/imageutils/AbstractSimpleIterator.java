@@ -229,6 +229,32 @@ public abstract class AbstractSimpleIterator {
     }
 
     /**
+     * Gets the list of sub-bounds for this iterator. 
+     * When the iterator is working in {@linkplain Order#TILE_X_Y} processing order
+     * it creates a list of sub-bound rectangles by intersecting the iterator's overall 
+     * bounds with the bounds of the image tiles. The sub-bounds are held in the list
+     * in the order in which they will be visited by the iterator (if advanced with
+     * the {@linkplain #next()} method).
+     * <p>
+     * When working in the default {@linkplain Order#IMAGE_X_Y} processing order, this
+     * method will return a list containing a single rectangle, identical to that returned
+     * by {@linkplain #getBounds()}.
+     * <p>
+     * The returned {@code List} and the {@code Rectangles} within it are copies, so the 
+     * iterator will not be affected by subsequent modifications to them.
+     * 
+     * @return list of sub-bounds in visiting order
+     */
+    public List<Rectangle> getSubBounds() {
+        List<Rectangle> copy = CollectionFactory.list();
+        for (Rectangle r : subBoundList) {
+            copy.add(new Rectangle(r));
+        }
+        
+        return copy;
+    }
+
+    /**
      * Gets the starting position for this iterator. This is the upper-left
      * point of the iterator's bounding rectangle. Note that it may lie
      * outside the target image.
@@ -644,40 +670,30 @@ public abstract class AbstractSimpleIterator {
      * Builds a list of Rectangles, each of which is the intersection of the iterator
      * bounds and a tile's bounds. These are termed sub-bounds.
      * <p>
-     * If the iterator bounds extend beyond the iamge bounds some of the resulting 
-     * rectangles may be for non-existent tiles.
+     * If the iterator bounds extend beyond the image bounds some of the resulting 
+     * rectangles may be for non-existent tiles or tile parts.
      * 
      * @param image the target image
      * @param destList the list to receive the sub-bounds
      */
     private void getIntersectingTileBounds(RenderedImage image, List<Rectangle> destList) {
-        final int tw = image.getTileWidth();
-        final int th = image.getTileHeight();
-        final int ox = image.getTileGridXOffset();
-        final int oy = image.getTileGridYOffset();
+        final int tileWidth = image.getTileWidth();
+        final int tileHeight = image.getTileHeight();
+        final int xOffset = image.getTileGridXOffset();
+        final int yOffset = image.getTileGridYOffset();
 
-        final int lastX = iterBounds.x + iterBounds.width - 1;
-        final int lastY = iterBounds.y + iterBounds.height - 1;
+        // Min and max tile indices may differ from those of the image 
+        final int minTileX = pixelToTile(iterBounds.x, xOffset, tileWidth);
+        final int minTileY = pixelToTile(iterBounds.y, yOffset, tileHeight);
+        final int maxTileX = pixelToTile(iterBounds.x + iterBounds.width - 1, xOffset, tileWidth);
+        final int maxTileY = pixelToTile(iterBounds.y + iterBounds.height - 1, yOffset, tileHeight);
 
-        boolean moreY = true;
-        for (int y = iterBounds.y; moreY; y = Math.min(y + th, lastY)) {
-            moreY = y < lastY;
-            
-            boolean moreX = true;
-            for (int x = iterBounds.x; moreX; x = Math.min(x + tw, lastX)) {
-                moreX = x < lastX;
-
-                // Get tile X and Y ordinates. Remember that the tile might 
-                // not exist in the image if the iterator's bounds lie beyond the
-                // image bounds, but we allow this.
-                int tileX = pixelToTileOrdinate(x, ox, tw);
-                int tileY = pixelToTileOrdinate(y, oy, th);
-
-                Rectangle tileRect = new Rectangle(
-                        tileX * tw + ox, tileY * th + oy, tw, th);
-
+        for (int ty = minTileY; ty <= maxTileY; ty++) {
+            int y = ty * tileHeight + yOffset;
+            for (int tx = minTileX; tx <= maxTileX; tx++) {
+                int x = tx * tileWidth + xOffset;
+                Rectangle tileRect = new Rectangle(x, y, tileWidth, tileHeight);
                 Rectangle within = tileRect.intersection(iterBounds);
-
                 if (!within.isEmpty()) {
                     destList.add(within);
                 }
@@ -693,7 +709,7 @@ public abstract class AbstractSimpleIterator {
      * @param dim tile width (for X ordinate) or height (for Y ordinate)
      * @return tile ordinate
      */
-    private int pixelToTileOrdinate(int ordinate, int offset, int dim) {
+    private int pixelToTile(int ordinate, int offset, int dim) {
         ordinate -= offset;
         if (ordinate < 0) {
             ordinate += 1 - dim;
