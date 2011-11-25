@@ -80,6 +80,24 @@ public class WritableSimpleIterator extends AbstractSimpleIterator {
     }
 
     /**
+     * Creates a new iterator. The bounds are allowed to extend beyond the bounds
+     * of the target image. When the iterator is positioned outside the image the
+     * specified outside value will be returned.
+     * 
+     * @param image the target image
+     * @param bounds bounds for the iterator; if {@code null} the bounds of the target
+     *     image will be used
+     * @param outsideValue value to return when the iterator is positioned beyond
+     *     the bounds of the target image; may be {@code null} 
+     * @param order processing order for this iterator when using the {@link #next()}
+     *     method
+     */
+    public WritableSimpleIterator(WritableRenderedImage image, Rectangle bounds, Number outsideValue,
+            Order order) {
+        super(new Helper(), image, bounds, outsideValue, order);
+    }
+
+    /**
      * Sets the value in the first band of the image at the current position.
      * If the iterator is positioned outside the image bounds, no change is made
      * and this method returns {@code false}.

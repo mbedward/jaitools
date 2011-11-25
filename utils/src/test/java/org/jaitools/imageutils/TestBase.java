@@ -120,11 +120,8 @@ public abstract class TestBase {
             throw new IllegalStateException("You forgot to create the iterator first");
         }
         
-        Rectangle bounds = iter.getBounds();
-        int n = bounds.width * bounds.height;
-        while (n > 0) {
-            iter.next();
-            n-- ;
-        }
+        while (iter.next()) { 
+            // deliberately empty 
+        };
     }
 }
