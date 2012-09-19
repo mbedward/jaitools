@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2010, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2012, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -29,7 +29,6 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.HeadlessException;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
@@ -42,6 +41,11 @@ import javax.swing.JPanel;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.MultiLineString;
+import com.vividsolutions.jts.geom.MultiPoint;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 
 
@@ -56,6 +60,40 @@ public class JTSFrame extends JFrame {
 
     private static final int MARGIN = 2;
     private Canvas canvas;
+    
+    private static enum GeomType {
+        POINT,
+        LINESTRING,
+        POLYGON,
+        MULTIPOINT,
+        MULTILINESTRING,
+        MULTIPOLYGON;
+        
+        static GeomType get(Geometry geom) {
+            if (geom == null) {
+                throw new IllegalArgumentException("Geometry arg must not be null");
+            }
+            if (geom instanceof Point) {
+                return POINT;
+            }
+            if (geom instanceof MultiPoint) {
+                return MULTIPOINT;
+            }
+            if (geom instanceof LineString) {
+                return LINESTRING;
+            }
+            if (geom instanceof MultiLineString) {
+                return MULTILINESTRING;
+            }
+            if (geom instanceof Polygon) {
+                return POLYGON;
+            }
+            if (geom instanceof MultiPolygon) {
+                return MULTIPOLYGON;
+            }
+            throw new IllegalArgumentException("Unsupported geometry type: " + geom);
+        }
+    }
 
     /**
      * Creates a new frame.
@@ -117,28 +155,59 @@ public class JTSFrame extends JFrame {
                 setTransform();
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setStroke(new BasicStroke(2.0f));
-                Coordinate[] coords;
+                
                 for (Element e : elements) {
                     g2.setColor(e.color);
-                    if (e.geom instanceof Polygon) {
-                        Polygon poly = (Polygon) e.geom;
-                        coords = poly.getExteriorRing().getCoordinates();
-                        draw(g2, coords);
-                        for (int i = 0; i < poly.getNumInteriorRing(); i++) {
-                            coords = poly.getInteriorRingN(i).getCoordinates();
-                            draw(g2, coords);
-                        }
+                    
+                    if (e.geom instanceof Coordinate) {
+                        drawCoordinate(g2, (Coordinate) e.geom);
                     } else if (e.geom instanceof Geometry) {
-                        coords = ((Geometry)e.geom).getCoordinates();
-                        draw(g2, coords);
-                    } else if (e.geom instanceof Coordinate) {
-                        draw(g2, (Coordinate)e.geom);
+                        drawGeometry(g2, (Geometry) e.geom);
                     }
                 }
             }
         }
+        
+        private void drawGeometry(Graphics2D g2, Geometry geom) {
+            Coordinate[] coords;
+            
+            switch (GeomType.get(geom)) {
+                case POINT:
+                case LINESTRING:
+                    drawVertices(g2, geom.getCoordinates());
+                    break;
 
-        private void draw(Graphics2D g2, Coordinate[] coords) {
+                case POLYGON:
+                    drawPolygon(g2, (Polygon) geom);
+                    break;
+                    
+                case MULTIPOINT:
+                case MULTILINESTRING:
+                    for (int i = 0; i < geom.getNumGeometries(); i++) {
+                        drawVertices(g2, geom.getGeometryN(i).getCoordinates());
+                    }
+                    break;
+                    
+                case MULTIPOLYGON:
+                    for (int i = 0; i < geom.getNumGeometries(); i++) {
+                        Polygon px = (Polygon) geom.getGeometryN(i);
+                        drawPolygon(g2, px);
+                    }
+                    break;
+            }
+            
+        }
+        
+        private void drawPolygon(Graphics2D g2, Polygon poly) {
+            Coordinate[] coords = poly.getExteriorRing().getCoordinates();
+            drawVertices(g2, coords);
+            for (int i = 0; i < poly.getNumInteriorRing(); i++) {
+                coords = poly.getInteriorRingN(i).getCoordinates();
+                drawVertices(g2, coords);
+            }
+        }
+        
+        private void drawVertices(Graphics2D g2, Coordinate[] coords) {
             for (int i = 1; i < coords.length; i++) {
                 Point2D p0 = new Point2D.Double(coords[i - 1].x, coords[i - 1].y);
                 tr.transform(p0, p0);
@@ -148,13 +217,13 @@ public class JTSFrame extends JFrame {
             }
         }
         
-        private void draw(Graphics2D g2, Coordinate coord) {
+        private void drawCoordinate(Graphics2D g2, Coordinate coord) {
             Point2D p = new Point2D.Double(coord.x, coord.y);
             tr.transform(p, p);
             g2.fillOval((int)p.getX() - POINT_RADIUS, (int)p.getY() - POINT_RADIUS, 
                     2 * POINT_RADIUS, 2 * POINT_RADIUS );
         }
-
+        
         private void setTransform() {
             Envelope env = new Envelope();
             for (int i = 0; i < elements.size(); i++) {
