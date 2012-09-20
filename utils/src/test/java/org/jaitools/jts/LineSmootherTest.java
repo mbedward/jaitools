@@ -73,4 +73,21 @@ public class LineSmootherTest {
         assertEquals(coords.length, i);
         assertTrue(line.getEnvelopeInternal().contains(sline.getEnvelopeInternal()));
     }
+    
+    /**
+     * Tests that user data attached to the input line string is preserved
+     * in the smoothed output.
+     * @throws Exception 
+     */
+    @Test
+    public void userDataIsPreserved() throws Exception {
+        LineString input = (LineString) reader.read("LINESTRING(0 0, 10 10, 20 0)");
+        Object userData = "Some data";
+        input.setUserData(userData);
+        
+        LineString output = smoother.smooth(input, 0.0);
+        
+        assertNotNull(output.getUserData());
+        assertEquals(userData, output.getUserData());
+    }
 }

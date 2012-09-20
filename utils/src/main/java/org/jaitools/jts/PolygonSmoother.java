@@ -144,15 +144,15 @@ public class PolygonSmoother extends AbstractSmoother {
      * <p>
      * Note: this method presently ignores holes.
      * 
-     * @param p the input {@code Polygon}
+     * @param inputPoly the input {@code Polygon}
      * 
      * @param alpha a value between 0 and 1 (inclusive) specifying the tightness
      *        of fit of the smoothed boundary (0 is loose)
      * 
      * @return the smoothed {@code Polygon}
      */
-    public Polygon smooth(Polygon p, double alpha) {
-        Coordinate[] coords = p.getExteriorRing().getCoordinates();
+    public Polygon smooth(Polygon inputPoly, double alpha) {
+        Coordinate[] coords = inputPoly.getExteriorRing().getCoordinates();
         final int N = coords.length - 1;  // first coord == last coord
         final int LAST = N - 1;
         
@@ -189,7 +189,11 @@ public class PolygonSmoother extends AbstractSmoother {
         }
         
         LinearRing shell = geomFactory.createLinearRing(smoothCoords.toArray(new Coordinate[0]));
-        return geomFactory.createPolygon(shell, null);
+        Polygon smoothedPoly = geomFactory.createPolygon(shell, null);
+        
+        // Preserve user data from the input
+        smoothedPoly.setUserData(inputPoly.getUserData());
+        return smoothedPoly;
     }
     
 }

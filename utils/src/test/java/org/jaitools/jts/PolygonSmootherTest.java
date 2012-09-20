@@ -139,4 +139,17 @@ public class PolygonSmootherTest {
         // double check
         assertTrue(!ps.isEmpty() && ps.isValid());
     }
+    
+    @Test
+    public void userDataIsPreservedFromInput() throws Exception {
+        PolygonSmoother smoother = new PolygonSmoother(gf);
+        Polygon input = (Polygon) reader.read("POLYGON((0 0, 0 100, 100 100, 100 0, 0 0))");
+        
+        Object userData = "Some data";
+        input.setUserData(userData);
+        
+        Polygon output = smoother.smooth(input, 0.0);
+        assertNotNull(output.getUserData());
+        assertEquals(userData, output.getUserData());
+    }
 }

@@ -182,8 +182,13 @@ public class LineSmoother extends AbstractSmoother {
             }
         }
         smoothCoords.add(coords[N - 1]);
-
-        return geomFactory.createLineString(smoothCoords.toArray(new Coordinate[0]));
+        
+        LineString smoothedLine = geomFactory.createLineString(smoothCoords.toArray(new Coordinate[0]));
+        
+        // Preserve user data from the input line
+        smoothedLine.setUserData(ls.getUserData());
+        
+        return smoothedLine;
     }
     
 }
