@@ -338,4 +338,22 @@ public class ContourTest extends TestBase {
 
     }
 
+    @Test
+    public void smoothingPreservesContourLevels() throws Exception {
+        TiledImage src = createGradientImage(Gradient.VERTICAL);
+        
+        args.put("interval", 10);
+        args.put("smooth", Boolean.TRUE);
+        Collection<LineString> contours = doOp(src, args);
+        
+        for (LineString contour : contours) {
+            // confirm that level attribute is present
+            Double level = (Double) contour.getUserData();
+            assertNotNull(level);
+            
+            // check the level is valid
+            assertEquals(0d, level % 10, 0d);
+            assertTrue(level > 0 && level < 100);
+        }
+    }
 }
