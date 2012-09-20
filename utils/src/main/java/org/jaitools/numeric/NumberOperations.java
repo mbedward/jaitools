@@ -506,9 +506,22 @@ public class NumberOperations {
      */
     public static Number newInstance(Number number, Class<? extends Number> clazz) {
         ClassInfo ci = ClassInfo.get(clazz);
-        return newInstance(number, ci);
+        return newInstance(number, ci, false);
     }
-
+    
+    /**
+     * Cast the value from {@code number} to the class {@code clazz}  
+     *
+     * @param number the number object whose value will be copied
+     * @param clazz the class of the new instance
+     *
+     * @return a new instance of the request class with value {@code number}
+     */
+    public static Number castNumber(Number number, Class<? extends Number> clazz) {
+        ClassInfo ci = ClassInfo.get(clazz);
+        return newInstance(number, ci, true);
+    }
+    
     /**
      * Return a new instance of the class described by {@code ci} taking its value 
      * from {@code number}
@@ -519,23 +532,58 @@ public class NumberOperations {
      * @return a new instance of the request class with value {@code number}
      */
     private static Number newInstance(Number number, ClassInfo ci) {
+        return newInstance(number, ci, false);
+    }
+    
+    /**
+     * Return an instance of the class described by {@code ci} taking its value 
+     * from {@code number}. If {@code canReturnInput} is set to true, avoid 
+     * creating a new object when the input object conforms to the class info.
+     *
+     * @param number the number object whose value will be copied
+     * @param ci a ClassInfo object
+     * @param canReturnInput avoid creating a new object if we can just return
+     *     the input object
+     *
+     * @return a (possibly) new instance of the request class with value {@code number}
+     */
+    private static Number newInstance(Number number, ClassInfo ci, boolean canReturnInput) {
+        final Class<? extends Number> numberClass = number.getClass();
         switch (ci) {
             case BYTE:
+                if (number.getClass() == Byte.class) {
+                    return canReturnInput ? number : Byte.valueOf(number.byteValue());
+                }
                 return newByte(number);
 
             case SHORT:
+                if (numberClass == Short.class) {
+                    return canReturnInput ? number : Short.valueOf(number.shortValue());
+                }
                 return newShort(number);
 
             case INTEGER:
+                if (numberClass == Integer.class) {
+                    return canReturnInput ? number : Integer.valueOf(number.intValue());
+                }
                 return newInteger(number);
 
             case LONG:
+                if (numberClass == Long.class) {
+                    return canReturnInput ? number : Long.valueOf(number.longValue());
+                }
                 return newLong(number);
 
             case FLOAT:
+                if (numberClass == Float.class) {
+                    return canReturnInput ? number : Float.valueOf(number.floatValue());
+                }
                 return newFloat(number);
 
             case DOUBLE:
+                if (numberClass == Double.class) {
+                    return canReturnInput ? number : Double.valueOf(number.doubleValue());
+                }
                 return newDouble(number);
 
             default:
