@@ -87,6 +87,7 @@ public class LookupItem<T extends Number & Comparable<? super T>, U extends Numb
         return result;
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

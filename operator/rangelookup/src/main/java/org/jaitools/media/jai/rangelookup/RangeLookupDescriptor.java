@@ -25,13 +25,7 @@
 
 package org.jaitools.media.jai.rangelookup;
 
-import java.awt.RenderingHints;
-import java.awt.image.RenderedImage;
-
-import javax.media.jai.JAI;
 import javax.media.jai.OperationDescriptorImpl;
-import javax.media.jai.ParameterBlockJAI;
-import javax.media.jai.RenderedOp;
 import javax.media.jai.registry.RenderedRegistryMode;
 
 /**
@@ -79,12 +73,15 @@ import javax.media.jai.registry.RenderedRegistryMode;
  */
 public class RangeLookupDescriptor extends OperationDescriptorImpl {
 
+    /** serialVersionUID */
+    private static final long serialVersionUID = 6435703646431578734L;
+
     static final int TABLE_ARG_INDEX = 0;
 
     private static final String[] paramNames =
         {"table"};
 
-    private static final Class[] paramClasses =
+    private static final Class<?>[] paramClasses =
         {RangeLookupTable.class};
 
     private static final Object[] paramDefaults =

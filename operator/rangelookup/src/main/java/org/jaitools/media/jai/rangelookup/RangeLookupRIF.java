@@ -50,6 +50,7 @@ import com.sun.media.jai.util.JDKWorkarounds;
  * @since 1.0
  * @version $Id$
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class RangeLookupRIF implements RenderedImageFactory {
 
     /** Constructor */

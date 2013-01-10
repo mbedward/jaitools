@@ -44,6 +44,7 @@ import org.jaitools.numeric.RangeUtils;
  * @since 1.0
  * @version $Id$
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class RangeLookupTable<T extends Number & Comparable<? super T>, U extends Number & Comparable<? super U>> {
 
     /** Value returned when lookup value is outside all ranges. */
@@ -55,12 +56,6 @@ public class RangeLookupTable<T extends Number & Comparable<? super T>, U extend
     /** Lookup items */
     private List<LookupItem<T, U>> items;
     
-    /** 
-     * Records the last lookup item that matched a source value.
-     * Used to speed up lookups when source values are clustered.
-     */
-    private LookupItem<T, U> lastItem = null;
-
     /**
      * Creates a new table with no default value. The table 
      * will throw an IllegalArgumentException if a lookup value cannot
@@ -223,16 +218,10 @@ public class RangeLookupTable<T extends Number & Comparable<? super T>, U extend
      * destination image value
      */
     public U getDestValue(T srcValue) {
-        if (lastItem != null) {
-            if (lastItem.range.contains(srcValue)) {
-                return lastItem.value;
-            }
-        }
         
         int k = 0;
         for (LookupItem<T, U> item : items) {
             if (item.range.contains(srcValue)) {
-                lastItem = item;
                 return item.value;
             }
             k++ ;
@@ -243,6 +232,27 @@ public class RangeLookupTable<T extends Number & Comparable<? super T>, U extend
         } else {
             throw new IllegalArgumentException("Value cannot be matched: " + srcValue);
         }
+    }
+    
+    /**
+     * Lookup a source image value and return the corresponding destination image value
+     *
+     * @param srcValue source image value
+     * @return destination image value
+     *
+     * @throws IllegalStateException if the source image value is not contained in any
+     * of the ranges held by this table and the table was created without a default
+     * destination image value
+     */
+    public LookupItem<T, U> getLookupItem(T srcValue) {
+        
+        for (LookupItem<T, U> item : items) {
+            if (item.range.contains(srcValue)) {
+                return item;
+            }
+        }
+        // no match found
+        return null;
     }
 
     @Override
