@@ -53,11 +53,6 @@
                 <artifactId>wagon-webdav</artifactId>
                 <version>1.0-beta-2</version>
             </extension>
-            <extension>                                  
-              <groupId>org.apache.maven.wagon</groupId>   
-              <artifactId>wagon-ftp</artifactId>           
-              <version>1.0-beta-2</version>               
-            </extension>               
         </extensions>
 
         <pluginManagement>
@@ -191,37 +186,21 @@
         </dependency>
     </dependencies>
 
+    <distributionManagement>
+        <snapshotRepository>
+            <id>jaitools-snapshots</id>
+            <name>jaitools snapshots</name>
+            <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+            <uniqueVersion>false</uniqueVersion>
+        </snapshotRepository>
+        <repository>
+            <id>jaitools-staging</id>
+            <name>jaitools staging repository</name>
+            <url>http://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+        </repository>
+    </distributionManagement>
 
     <profiles>
-        <profile>
-          <id>geosolutions</id> 
-          <distributionManagement>
-            <repository>
-              <uniqueVersion>false</uniqueVersion>
-              <id>geosolutions</id>
-              <url>ftp://demo.geo-solutions.it</url>
-            </repository>
-          </distributionManagement>
-        </profile>    
-        <profile>
-          <id>sonatype</id>  
-          <activation>
-            <activeByDefault>true</activeByDefault>
-          </activation>          
-          <distributionManagement>       
-            <snapshotRepository>
-                <id>jaitools-snapshots</id>
-                <name>jaitools snapshots</name>
-                <url>http://oss.sonatype.org/content/repositories/snapshots</url>
-                <uniqueVersion>false</uniqueVersion>
-            </snapshotRepository>
-            <repository>
-                <id>jaitools-staging</id>
-                <name>jaitools staging repository</name>
-                <url>http://oss.sonatype.org/service/local/staging/deploy/maven2</url>
-            </repository>   
-          </distributionManagement>          
-        </profile>     
         <profile>
             <id>build-javadocs</id>
             <activation>
