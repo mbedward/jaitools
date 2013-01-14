@@ -27,5 +27,6 @@
         <module>vectorbinarize</module>
         <module>vectorize</module>
         <module>zonalstats</module>
+        <module>classifiedstats</module>
   </modules>
 </project>
