@@ -85,6 +85,11 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>jt-classifiedstats</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>jt-contour</artifactId>
             <version>${project.version}</version>
         </dependency>
