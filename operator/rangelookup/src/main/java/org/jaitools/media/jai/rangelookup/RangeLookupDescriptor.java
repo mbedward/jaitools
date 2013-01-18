@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2009, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2009-2013, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -63,6 +63,28 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * pb.setParameter("table", table);
  * RenderedImage luImg = JAI.create("rangelookup", pb);
  * </code></pre>
+ * 
+ * <b>Parameters</b>
+ * <table border="1">
+ * <tr>
+ * <th>Name</th><th>Type</th><th>Description</th><th>Default value</th>
+ * </tr>
+ * <tr>
+ * <td>table</td>
+ * <td>RangeLookupTable</td>
+ * <td>Table mapping source value ranges to destination values</td>
+ * <td>NO DEFAULT</td>
+ * </tr>
+ * <tr>
+ * <td>default</td>
+ * <td>Object</td>
+ * <td>Specifies the value to return for source values that do not map to any
+ * ranges in the lookup table. Can be either a single value (Number);
+ * or null to indicate that unmatched source values should be passed
+ * through</td>
+ * <td>null (pass-through)</td>
+ * </tr>
+ * </table>
  *
  * @see org.jaitools.numeric.Range
  * @see RangeLookupTable
@@ -76,27 +98,40 @@ public class RangeLookupDescriptor extends OperationDescriptorImpl {
     /** serialVersionUID */
     private static final long serialVersionUID = 6435703646431578734L;
 
-    static final int TABLE_ARG_INDEX = 0;
+    static final int TABLE_ARG = 0;
+    static final int DEFAULT_ARG = 1;
 
-    private static final String[] paramNames =
-        {"table"};
+    private static final String[] paramNames = {
+        "table", 
+        "default"
+    };
 
-    private static final Class<?>[] paramClasses =
-        {RangeLookupTable.class};
+    private static final Class<?>[] paramClasses = {
+        RangeLookupTable.class, 
+        Object.class
+    };
 
-    private static final Object[] paramDefaults =
-        {NO_PARAMETER_DEFAULT};
+    private static final Object[] paramDefaults = {
+        NO_PARAMETER_DEFAULT,
+        null
+    };
 
     /** Constructor. */
     public RangeLookupDescriptor() {
         super(new String[][]{
-                    {"GlobalName", "RangeLookup"},
-                    {"LocalName", "RangeLookup"},
-                    {"Vendor", "org.jaitools.media.jai"},
-                    {"Description", "Maps source image value ranges to destination image values"},
-                    {"DocURL", "http://code.google.com/p/jaitools/"},
-                    {"Version", "1.0.0"},
-                    {"arg0Desc", "table (RangeLookupTable)"}
+                {"GlobalName", "RangeLookup"},
+                {"LocalName", "RangeLookup"},
+                {"Vendor", "org.jaitools.media.jai"},
+                {"Description", "Maps source image value ranges to destination image values"},
+                {"DocURL", "http://code.google.com/p/jaitools/"},
+                {"Version", "1.0.0"},
+        
+                {"arg0Desc",
+                 String.format("%s - table holding source value ranges mapped to "
+                             + "destination values", paramNames[TABLE_ARG])},
+                {"arg1Desc",
+                 String.format("%s - value to use for unmatched source values "
+                             + "(default: null for pass-through)", paramNames[DEFAULT_ARG])},
                 },
 
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes

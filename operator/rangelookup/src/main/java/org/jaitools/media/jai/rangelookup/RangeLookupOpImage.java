@@ -32,7 +32,6 @@ import java.awt.image.RenderedImage;
 import java.awt.image.WritableRaster;
 import java.util.Map;
 
-import javax.media.jai.AreaOpImage;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.PointOpImage;
 import javax.media.jai.RasterAccessor;
@@ -56,28 +55,37 @@ import org.jaitools.numeric.Range;
 public class RangeLookupOpImage extends PointOpImage {
 
     private final RangeLookupTable table;
+    private final Number defaultValue;
     private final boolean hasDefault;
 
      /**
      * Constructor
      * @param source a RenderedImage.
-     * @param config configurable attributes of the image (see {@link AreaOpImage})
+     * @param config configurable attributes of the image
+     * 
      * @param layout an ImageLayout optionally containing the tile grid layout,
-     *        SampleModel, and ColorModel, or null.
+     *     SampleModel, and ColorModel, or null.
+     * 
      * @param table an instance of RangeLookupTable that defines the mappings from source
-     * image value ranges to destination image values
+     *     value ranges to destination values
+     * 
+     * @param defaultValue either a value to use for all unmatched source values
+     *     or null to indicate that unmatched values should pass-through to the
+     *     destination
      * 
      * @see RangeLookupDescriptor
      */
     public RangeLookupOpImage(RenderedImage source,
             Map config,
             ImageLayout layout,
-            RangeLookupTable table) {
+            RangeLookupTable table,
+            Number defaultValue) {
 
         super(source, layout, config, true);
 
         this.table = table;
-        hasDefault= table.getDefaultValue()!=null;
+        this.defaultValue = defaultValue;
+        this.hasDefault = defaultValue != null;
     }
 
     /**
@@ -153,8 +161,10 @@ public class RangeLookupOpImage extends PointOpImage {
         int srcScanlineStride = srcAcc.getScanlineStride();
 
         Range lastRange = null;
-        byte defaultValue=hasDefault?table.getDefaultValue().byteValue():Byte.MIN_VALUE;
-        byte destinationValue= defaultValue;
+        
+        byte typedDefaultValue = hasDefault ? defaultValue.byteValue() : Byte.MIN_VALUE;
+        byte destinationValue = typedDefaultValue;
+        
         for (int k = 0; k < destBands; k++) {
             int destY = destAcc.getY();
             byte destBandData[] = destData[k];
@@ -169,24 +179,21 @@ public class RangeLookupOpImage extends PointOpImage {
                 for (int i = 0; i < destWidth; i++, destX++) {
                     // input value
                     byte val = (byte) (srcBandData[srcPixelOffset] & 0xff);
-                    
+
                     // === destination value
-                    if(lastRange==null|| !lastRange.contains(val)){
+                    if (lastRange == null || !lastRange.contains(val)) {
                         // nullify the current rane
-                        lastRange=null;
-                        
+                        lastRange = null;
+
                         // get a new one if the value falls within some
                         LookupItem item = table.getLookupItem(val);
-                        if(item!=null){
-                            lastRange=item.range;
-                            destinationValue=item.getValue().byteValue();
+                        if (item != null) {
+                            lastRange = item.getRange();
+                            destinationValue = item.getValue().byteValue();
                         } else {
-                            if(hasDefault){
-                                // default value
-                                destinationValue=defaultValue;
-                            } else {
-                                throw new IllegalArgumentException("Value cannot be matched: " + val);
-                            }
+                            // no match: set destination to default value (if defined)
+                            // or source value
+                            destinationValue = hasDefault ? typedDefaultValue : val;
                         }
                     }
                     destBandData[dstPixelOffset] = destinationValue;
@@ -215,8 +222,10 @@ public class RangeLookupOpImage extends PointOpImage {
         int srcScanlineStride = srcAcc.getScanlineStride();    
         
         Range lastRange = null;
-        short defaultValue=hasDefault?table.getDefaultValue().shortValue():Short.MIN_VALUE;
-        short destinationValue= defaultValue;
+        
+        short typedDefaultValue = hasDefault ? defaultValue.shortValue() : Short.MIN_VALUE;
+        short destinationValue = typedDefaultValue;
+        
         for (int k = 0; k < destBands; k++) {
             int destY = destAcc.getY();
             short destBandData[] = destData[k];
@@ -231,24 +240,21 @@ public class RangeLookupOpImage extends PointOpImage {
                 for (int i = 0; i < destWidth; i++, destX++) {
                     short val = srcBandData[srcPixelOffset];
                     // === destination value
-                    if(lastRange==null|| !lastRange.contains(val)){
+                    if (lastRange == null || !lastRange.contains(val)) {
                         // nullify the current rane
-                        lastRange=null;
-                        
+                        lastRange = null;
+
                         // get a new one if the value falls within some
                         LookupItem item = table.getLookupItem(val);
-                        if(item!=null){
-                            lastRange=item.range;
-                            destinationValue=item.getValue().shortValue();
+                        if (item != null) {
+                            lastRange = item.getRange();
+                            destinationValue = item.getValue().shortValue();
                         } else {
-                            if(hasDefault){
-                                // default value
-                                destinationValue=defaultValue;
-                            } else {
-                                throw new IllegalArgumentException("Value cannot be matched: " + val);
-                            }
+                            // no match: set destination to default value (if defined)
+                            // or source value
+                            destinationValue = hasDefault ? typedDefaultValue : val;
                         }
-                    }                    
+                    }
                     destBandData[dstPixelOffset] = destinationValue;
                     srcPixelOffset += srcPixelStride;
                     dstPixelOffset += dstPixelStride;
@@ -275,8 +281,10 @@ public class RangeLookupOpImage extends PointOpImage {
         int srcScanlineStride = srcAcc.getScanlineStride();        
 
         Range lastRange = null;
-        short defaultValue=hasDefault?table.getDefaultValue().shortValue():0;
-        short destinationValue= defaultValue;        
+        
+        short typedDefaultValue = hasDefault ? defaultValue.shortValue() : 0;
+        short destinationValue = typedDefaultValue;
+
         for (int k = 0; k < destBands; k++) {
             int destY = destAcc.getY();
             short destBandData[] = destData[k];
@@ -298,16 +306,14 @@ public class RangeLookupOpImage extends PointOpImage {
                         
                         // get a new one if the value falls within some
                         LookupItem item = table.getLookupItem(val);
-                        if(item!=null){
-                            lastRange=item.range;
-                            destinationValue=item.getValue().shortValue();
+
+                        if (item != null) {
+                            lastRange = item.getRange();
+                            destinationValue = item.getValue().shortValue();
                         } else {
-                            if(hasDefault){
-                                // default value
-                                destinationValue=defaultValue;
-                            } else {
-                                throw new IllegalArgumentException("Value cannot be matched: " + val);
-                            }
+                            // no match: set destination to default value (if defined)
+                            // or source value
+                            destinationValue = hasDefault ? typedDefaultValue : (short) val;
                         }
                     }                    
                     destBandData[dstPixelOffset] = destinationValue;
@@ -336,8 +342,10 @@ public class RangeLookupOpImage extends PointOpImage {
         int srcScanlineStride = srcAcc.getScanlineStride();        
 
         Range lastRange = null;
-        int defaultValue=hasDefault?table.getDefaultValue().intValue():Integer.MIN_VALUE;
-        int destinationValue= defaultValue;
+        
+        int typedDefaultValue = hasDefault ? defaultValue.intValue() : Integer.MIN_VALUE;
+        int destinationValue = typedDefaultValue;
+
         for (int k = 0; k < destBands; k++) {
             int destY = destAcc.getY();
             int destBandData[] = destData[k];
@@ -352,24 +360,22 @@ public class RangeLookupOpImage extends PointOpImage {
                 for (int i = 0; i < destWidth; i++, destX++) {
                     int val = srcBandData[srcPixelOffset];
                     // === destination value
-                    if(lastRange==null|| !lastRange.contains(val)){
+                    if (lastRange == null || !lastRange.contains(val)) {
                         // nullify the current range
-                        lastRange=null;
-                        
+                        lastRange = null;
+
                         // get a new one if the value falls within some
                         LookupItem item = table.getLookupItem(val);
-                        if(item!=null){
-                            lastRange=item.range;
-                            destinationValue=item.getValue().shortValue();
+
+                        if (item != null) {
+                            lastRange = item.getRange();
+                            destinationValue = item.getValue().intValue();
                         } else {
-                            if(hasDefault){
-                                // default value
-                                destinationValue=defaultValue;
-                            } else {
-                                throw new IllegalArgumentException("Value cannot be matched: " + val);
-                            }
+                            // no match: set destination to default value (if defined)
+                            // or source value
+                            destinationValue = hasDefault ? typedDefaultValue : val;
                         }
-                    }                    
+                    }
                     destBandData[dstPixelOffset] = destinationValue;
                     srcPixelOffset += srcPixelStride;
                     dstPixelOffset += dstPixelStride;
@@ -396,8 +402,10 @@ public class RangeLookupOpImage extends PointOpImage {
         int srcScanlineStride = srcAcc.getScanlineStride();        
 
         Range lastRange = null;
-        float defaultValue=hasDefault?table.getDefaultValue().floatValue():Float.NaN;
-        float destinationValue= defaultValue;
+        
+        float typedDefaultValue = hasDefault ? defaultValue.floatValue() : Float.NaN;
+        float destinationValue = typedDefaultValue;
+
         for (int k = 0; k < destBands; k++) {
             int destY = destAcc.getY();
             float destBandData[] = destData[k];
@@ -412,24 +420,21 @@ public class RangeLookupOpImage extends PointOpImage {
                 for (int i = 0; i < destWidth; i++, destX++) {
                     float val = srcBandData[srcPixelOffset];
                     // === destination value
-                    if(lastRange==null|| !lastRange.contains(val)){
+                    if (lastRange == null || !lastRange.contains(val)) {
                         // nullify the current range
-                        lastRange=null;
-                        
+                        lastRange = null;
+
                         // get a new one if the value falls within some
                         LookupItem item = table.getLookupItem(val);
-                        if(item!=null){
-                            lastRange=item.range;
-                            destinationValue=item.getValue().shortValue();
+                        if (item != null) {
+                            lastRange = item.getRange();
+                            destinationValue = item.getValue().floatValue();
                         } else {
-                            if(hasDefault){
-                                // default value
-                                destinationValue=defaultValue;
-                            } else {
-                                throw new IllegalArgumentException("Value cannot be matched: " + val);
-                            }
+                            // no match: set destination to default value (if defined)
+                            // or source value
+                            destinationValue = hasDefault ? typedDefaultValue : val;
                         }
-                    }                    
+                    }
                     destBandData[dstPixelOffset] = destinationValue;
                     srcPixelOffset += srcPixelStride;
                     dstPixelOffset += dstPixelStride;
@@ -457,8 +462,10 @@ public class RangeLookupOpImage extends PointOpImage {
         int srcScanlineStride = srcAcc.getScanlineStride();
 
         Range lastRange = null;
-        double defaultValue=hasDefault?table.getDefaultValue().doubleValue():Double.NaN;
-        double destinationValue= defaultValue;
+        
+        double typedDefaultValue = hasDefault ? defaultValue.doubleValue() : Double.NaN;
+        double destinationValue = typedDefaultValue;
+
         for (int k = 0; k < destBands; k++) {
             int destY = destAcc.getY();
             double destBandData[] = destData[k];
@@ -473,24 +480,21 @@ public class RangeLookupOpImage extends PointOpImage {
                 for (int i = 0; i < destWidth; i++, destX++) {
                     double val = srcBandData[srcPixelOffset];
                     // === destination value
-                    if(lastRange==null|| !lastRange.contains(val)){
+                    if (lastRange == null || !lastRange.contains(val)) {
                         // nullify the current range
-                        lastRange=null;
-                        
+                        lastRange = null;
+
                         // get a new one if the value falls within some
                         LookupItem item = table.getLookupItem(val);
-                        if(item!=null){
-                            lastRange=item.range;
-                            destinationValue=item.getValue().shortValue();
+                        if (item != null) {
+                            lastRange = item.getRange();
+                            destinationValue = item.getValue().doubleValue();
                         } else {
-                            if(hasDefault){
-                                // default value
-                                destinationValue=defaultValue;
-                            } else {
-                                throw new IllegalArgumentException("Value cannot be matched: " + val);
-                            }
+                            // no match: set destination to default value (if defined)
+                            // or source value
+                            destinationValue = hasDefault ? typedDefaultValue : val;
                         }
-                    }                    
+                    }
                     destBandData[dstPixelOffset] = destinationValue;
                     srcPixelOffset += srcPixelStride;
                     dstPixelOffset += dstPixelStride;
@@ -501,4 +505,3 @@ public class RangeLookupOpImage extends PointOpImage {
         }
     }
 }
-

@@ -40,11 +40,11 @@ import org.jaitools.numeric.Range;
  */
 public class LookupItem<T extends Number & Comparable<? super T>, U extends Number & Comparable<? super U>> {
     
-    /** Lookup range. Package-access field. */
-    Range<T> range;
+    /** Lookup range */
+    private final Range<T> range;
     
-    /** Return value. Package-access field. */
-    U value;
+    /** Return value */
+    private final U value;
 
     /**
      * Creates a new instance.
@@ -62,17 +62,18 @@ public class LookupItem<T extends Number & Comparable<? super T>, U extends Numb
     }
     
     /**
-     * Gets a copy of this item's range. 
+     * Gets this items lookup range.
      * 
      * @return the range
      */
     public Range<T> getRange() {
-        return new Range<T>(range);
+        return range;
     }
     
     /**
      * Gets this item's return value.
-     * @return 
+     * 
+     * @return value
      */
     public U getValue() {
         return value;

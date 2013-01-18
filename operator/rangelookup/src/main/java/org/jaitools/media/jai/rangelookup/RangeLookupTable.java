@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2009-2011, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2009-2013, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -24,20 +24,34 @@
  */   
 package org.jaitools.media.jai.rangelookup;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.jaitools.CollectionFactory;
+import org.jaitools.numeric.NumberOperations;
 import org.jaitools.numeric.Range;
 import org.jaitools.numeric.RangeUtils;
 
 
 /**
- * Holds a collection of source image value ranges and their corresponding
- * destination image values for the RangeLookup operation.
+ * A lookup table which holds a collection of source value ranges, each mapped
+ * to a destination value. Instances of this class are immutable. 
+ * <p>
+ * Use the associated Builder class to construct a new table:
+ * <pre><code>
+ * // type parameters indicate lookup (source) and result 
+ * // (destination) types
+ * RangeLookupTable.Builder&lt;Double, Integer&gt; builder = RangeLookupTable.builder();
+ *
+ * // map all values &lt;= 0 to -1 and all values &gt; 0 to 1
+ * builder.add(Range.create(Double.NEGATIVE_INFINITY, false, 0.0, true), -1)
+ *        .add(Range.create(0.0, false, Double.POSITIVE_INFINITY, false), 1);
  * 
- * @param <T> type of the source range
- * @param <U> type of the return value
+ * RangeLookupTable&lt;Double, Integer&gt; table = builder.build();
+ * </code></pre>
+ * 
+ * @param <T> type of the lookup (source) value range
+ * @param <U> type of the result (destination) value
  * 
  * @author Michael Bedward
  * @author Simone Giannecchini, GeoSolutions
@@ -46,213 +60,58 @@ import org.jaitools.numeric.RangeUtils;
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class RangeLookupTable<T extends Number & Comparable<? super T>, U extends Number & Comparable<? super U>> {
-
-    /** Value returned when lookup value is outside all ranges. */
-    private U defaultValue = null;
     
-    /** Whether to allow overlapping lookup ranges to be added to the table. */
-    private boolean overlapAllowed;
-    
-    /** Lookup items */
-    private List<LookupItem<T, U>> items;
+    private final List<LookupItem<T, U>> items;
     
     /**
-     * Creates a new table with no default value. The table 
-     * will throw an IllegalArgumentException if a lookup value cannot
-     * be matched. It will allow ranges to be added that overlap existing 
-     * ranges.
+     * Private constructor called from the Builder's build method.
      */
-    public RangeLookupTable() {
-        this(null);
-    }
-
-    /**
-     * Creates a new table with a default value. The table will allow
-     * ranges to be added that overlap existing ranges.
-     * <p>
-     * If {@code defaultValue} is not {@code null} it will be returned when a
-     * lookup value cannot be matched; otherwise an unmatched value results in
-     * an {@code IllegalArgumentException}.
-     * 
-     * @param defaultValue the default destination value or {@code null} to
-     *        disable the default
-     */
-    public RangeLookupTable(U defaultValue) {
-        this(defaultValue, true);
-    }
-    
-    /**
-     * Creates a new table with specified default value and overlapping range
-     * behaviour. 
-     * <p>
-     * If {@code defaultValue} is not {@code null} it will be returned when a
-     * lookup value cannot be matched; otherwise an unmatched value results in
-     * an {@code IllegalArgumentException}.
-     * <p>
-     * If {@code overlap} is {@code true}, adding a new lookup range that overlaps
-     * existing ranges will result in the new range being reduced to its
-     * non-overlapping intervals, if any; if {@code false} adding an overlapping
-     * range will result in an {@code IllegalArgumentException}.
-     * 
-     * @param defaultValue the default destination value or {@code null} to
-     *        disable the default
-     * 
-     * @param overlap whether to allow overlapping ranges to be added to the table
-     */
-    public RangeLookupTable(U defaultValue, boolean overlap) {
-        items = CollectionFactory.list();
-        this.defaultValue = defaultValue;
-        this.overlapAllowed = overlap;
-    }
-
-    /**
-     * Sets whether the table should allow a range to be added that overlaps
-     * with one or more ranges in the table.
-     * 
-     * If allowed, a new range that overlaps one or more existing 
-     * ranges will be truncated or split into non-overlapping intervals.
-     * For example, if the lookup [5, 10] => 1 is already present in the table
-     * and a new range [0, 20] => 2 is added, then the following lookups
-     * will result:
-     * <pre>
-     *     [0, 5) => 2
-     *     [5, 10] => 1
-     *     (10, 20] => 2
-     * </pre>
-     * Where a new range is completely overlapped by existing ranges it will
-     * be ignored.
-     * <p>
-     * If overlapping ranges are not allowed the table will throw an
-     * {@code IllegalArgumentException} when one is detected.
-     * <p>
-     * 
-     * Note that it is possible to end up with unintended <i>leaks</i> in the
-     * lookup table. If the first range in the above example had been
-     * (5, 10] rather than [5, 10] then the table would have been:
-     * <pre>
-     *     [0, 5) => 2
-     *     (5, 10] => 1
-     *     (10, 20] => 2
-     * </pre>
-     * In this case the value 5 will not match any range.
-     * 
-     * @param overlap overlap setting 
-     */
-    public void setOverlapAllowed(boolean overlap) {
-        overlapAllowed = overlap;
-    }
-    
-    /**
-     * Checks whether it is allowable to add a range that overlaps with ranges
-     * already in the table.
-     * 
-     * @return {@code true} if adding an overlapping range is allowed; 
-     *         {@code false} otherwise
-     */
-    public boolean getOverlapAllowed() {
-        return overlapAllowed;
-    }
-
-    /**
-     * Gets the default value which is returned when a lookup
-     * value is outside all ranges in the table.
-     * 
-     * @return the default value or {@code null} if none is set
-     */
-    public U getDefaultValue() {
-        return defaultValue;
-    }
-    
-    /**
-     * Sets the default value to return when a lookup value is
-     * outside all ranges in the table. Setting the value to 
-     * {@code null} disables the default and causes the table to 
-     * throw an exception when a lookup value cannot be matched.
-     * 
-     * @param value the default value or {@code null} to disable
-     *        the default
-     */
-    public void setDefaultValue(U value) {
-        defaultValue = value;
-    }
-
-    /**
-     * Add source image value range and the corresponding destination
-     * image value
-     * 
-     * @param range the source image value range
-     * @param destValue the destination image value
-     */
-    public void add(Range<T> range, U destValue) {
-        if (range == null || destValue == null) {
-            throw new IllegalArgumentException("arguments must not be null");
-        }
+    private RangeLookupTable(Builder builder) {
+        this.items = new ArrayList<LookupItem<T, U>>(builder.items);
         
-        // Check for overlap with existing ranges
-        for (LookupItem item : items) {
-            if (range.intersects(item.range)) {
-                if (!overlapAllowed) {
-                    throw new IllegalArgumentException(
-                            "New range " + range + " overlaps existing lookup " + item);
-                }
-                
-                List<Range<T>> diffs = RangeUtils.subtract(item.range, range);
-                for (Range<T> diff : diffs) {
-                    add(diff, destValue);
-                }
-                return;
-            }
-        }
-
-        items.add(new LookupItem<T, U>(range, destValue));
+        // Sort the lookup items on the basis of their source ranges
+        Collections.sort(this.items, new LookupItemComparator<T, U>());
     }
 
     /**
-     * Lookup a source image value and return the corresponding destination image value
+     * Finds the LookupItem containing the given source value.
      *
      * @param srcValue source image value
-     * @return destination image value
-     *
-     * @throws IllegalStateException if the source image value is not contained in any
-     * of the ranges held by this table and the table was created without a default
-     * destination image value
-     */
-    public U getDestValue(T srcValue) {
-        
-        int k = 0;
-        for (LookupItem<T, U> item : items) {
-            if (item.range.contains(srcValue)) {
-                return item.value;
-            }
-            k++ ;
-        }
-        
-        if (defaultValue != null) {
-            return defaultValue;
-        } else {
-            throw new IllegalArgumentException("Value cannot be matched: " + srcValue);
-        }
-    }
-    
-    /**
-     * Lookup a source image value and return the corresponding destination image value
-     *
-     * @param srcValue source image value
-     * @return destination image value
-     *
-     * @throws IllegalStateException if the source image value is not contained in any
-     * of the ranges held by this table and the table was created without a default
-     * destination image value
+     * 
+     * @return the LookupItem containing the source value or null if no matching
+     *     item exists
      */
     public LookupItem<T, U> getLookupItem(T srcValue) {
-        
-        for (LookupItem<T, U> item : items) {
-            if (item.range.contains(srcValue)) {
-                return item;
+        if (items.isEmpty()) {
+            return null;
+            
+        } else {
+            /*
+             * Binary search for source value in items sorted by source range
+             */
+            int lo = 0;
+            int hi = items.size() - 1;
+            while (hi >= lo) {
+                // update mid position, avoiding int overflow
+                int mid = lo + (hi - lo) / 2;
+                
+                LookupItem<T, U> item = items.get(mid);
+                Range<T> r = item.getRange();
+
+                if (r.contains(srcValue)) {
+                    return item;
+                    
+                } else if (!r.isMinNegInf() &&
+                        NumberOperations.compare(srcValue, r.getMin()) <= 0) {
+                    hi = mid - 1;
+                
+                } else {
+                    lo = mid + 1;
+                }
             }
+            
+            return null;  // no match
         }
-        // no match found
-        return null;
     }
 
     @Override
@@ -273,4 +132,85 @@ public class RangeLookupTable<T extends Number & Comparable<? super T>, U extend
     List<LookupItem<T, U>> getItems() {
         return Collections.unmodifiableList(items);
     }
+
+
+    /**
+     * Builder to create an immutable lookup table.
+     * 
+     * @param <T> lookup (source) value type
+     * @param <U> result (destination) valuetype
+     */
+    public static class Builder<T extends Number & Comparable<? super T>, U extends Number & Comparable<? super U>> {
+        private final List<LookupItem<T, U>> items;
+        
+        /**
+         * Creates a new builder.
+         */
+        public Builder() {
+            this.items = new ArrayList<LookupItem<T, U>>();
+        }
+        
+        /**
+         * Creates a new table that will hold the lookup items added to
+         * this builder.
+         * 
+         * @return a new table instance
+         */
+        public RangeLookupTable<T, U> build() {
+            return new RangeLookupTable<T, U>(this);
+        }
+        
+        /**
+         * Adds a new lookup defined by a range of source values mapping to a 
+         * result value.
+         *
+         * A new lookup range that overlaps one or 
+         * more previously set ranges will be truncated or split into 
+         * non-overlapping intervals. For example, if the lookup [5, 10] => 1 
+         * has previously been set, and a new lookup [0, 20] => 2 is added, 
+         * then the following lookups will result:
+         * <pre>
+         *     [0, 5) => 2
+         *     [5, 10] => 1
+         *     (10, 20] => 2
+         * </pre> 
+         * Where a new range is completely overlapped by existing ranges it 
+         * will be ignored.
+         * <p> 
+         * 
+         * Note that it is possible to end up with unintended gaps in lookup 
+         * coverage. If the first range in the above example had been the 
+         * half-open interval (5, 10] rather than the closed interval [5, 10] 
+         * then the following would have resulted:
+         * <pre>
+         *     [0, 5) => 2
+         *     (5, 10] => 1
+         *     (10, 20] => 2
+         * </pre> In this case the value 5 would not be matched.
+         *
+         * @param srcRange the source value range
+         * @param resultValue the destination value
+         */
+        public Builder add(Range<T> srcRange, U resultValue) {
+            if (srcRange == null || resultValue == null) {
+                throw new IllegalArgumentException("arguments must not be null");
+            }
+
+            // Check for overlap with existing ranges
+            for (LookupItem item : items) {
+                if (srcRange.intersects(item.getRange())) {
+                    List<Range<T>> diffs = RangeUtils.subtract(item.getRange(), srcRange);
+                    for (Range<T> diff : diffs) {
+                        add(diff, resultValue);
+                    }
+                    return this;
+                }
+            }
+
+            items.add(new LookupItem<T, U>(srcRange, resultValue));
+            return this;
+        }
+
+    }
+    
 }

@@ -372,7 +372,7 @@ public class RangeLookupTest extends TestBase {
                     RenderedImage srcImg,
                     int destDataType) {
         
-        RangeLookupTable<T, U> table = createTable(breaks, values);
+        RangeLookupTable<T, U> table = createTableFromBreaks(breaks, values);
         RenderedOp destImg = doOp(srcImg, table);
 
         // check data type
@@ -510,7 +510,7 @@ public class RangeLookupTest extends TestBase {
         do {
             do {
                 Number srcVal = getSourceImageValue(srcIter, srcImgType);
-                Number expectedVal = table.getDestValue(srcVal);
+                Number expectedVal = table.getLookupItem(srcVal).getValue();
                 
                 switch (destImgType) {
                     case DataBuffer.TYPE_BYTE:

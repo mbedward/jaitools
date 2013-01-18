@@ -27,6 +27,7 @@ package org.jaitools.media.jai.rangelookup;
 
 import org.jaitools.numeric.Range;
 
+import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -42,13 +43,21 @@ import static org.junit.Assert.*;
  */
 public class RangeLookupTableTest extends TestBase {
     
+    private RangeLookupTable.Builder<Integer, Integer> builder;
+
+    
+    @Before
+    public void setup() {
+        builder = new RangeLookupTable.Builder<Integer, Integer>();
+    }
+    
     @Test
     public void simpleLookup() throws Exception {
         System.out.println("   simple integer lookup");
         
         Integer[] breaks = { -10, -5, 0, 5, 10 };
         Integer[] values = { -99, -1, 0, 1, 2, 99 };
-        RangeLookupTable<Integer, Integer> table = createTable(breaks, values);
+        RangeLookupTable<Integer, Integer> table = createTableFromBreaks(breaks, values);
 
         final int N = breaks.length;
         final int startVal = breaks[0] - 1;
@@ -56,60 +65,30 @@ public class RangeLookupTableTest extends TestBase {
         
         int k = 0;
         int expected = values[0];
+        LookupItem<Integer, Integer> match;
+        
         for (int val = startVal; val <= endVal; val++) {
             if (val >= breaks[k]) {
                 expected = values[k+1];
                 if (k < N-1) k++ ;
             }
-            assertEquals(expected, table.getDestValue(val).intValue());
+            
+            match = table.getLookupItem(val);
+            assertNotNull(match);
+            assertEquals(expected, match.getValue().intValue());
         }
-    }
-    
-    @Test
-    public void defaultValue() throws Exception {
-        System.out.println("   default lookup value");
-        
-        RangeLookupTable<Integer, Integer> table = new RangeLookupTable<Integer, Integer>(-1);
-        table.add(Range.create(5, false, 15, false), 1);
-        
-        for (int val = 0; val <= 20; val++) {
-            int expected = val > 5 && val < 15 ? 1 : -1; 
-            int destVal = table.getDestValue(val);
-            assertEquals(expected, destVal);
-        }
-    }
-    
-    @Test(expected=IllegalArgumentException.class)
-    public void defaultValueDisabled() throws Exception {
-        System.out.println("   default lookup value disabled");
-        
-        RangeLookupTable<Integer, Integer> table = new RangeLookupTable<Integer, Integer>();
-        table.add(Range.create(0, false, null, false), 1);
-
-        table.getDestValue(0);
-    }
-    
-    @Test(expected=IllegalArgumentException.class)
-    public void disallowOverlappingRange() throws Exception {
-        System.out.println("   throw exception on overlapping ranges");
-        RangeLookupTable<Integer, Integer> table = new RangeLookupTable<Integer, Integer>();
-        table.setOverlapAllowed(false);
-        
-        // lookup ranges that overlap between -10 and 10
-        table.add(Range.create(null, false, 10, true), 1);
-        table.add(Range.create(-10, true, null, false), 2);
     }
     
     @Test
     public void addOverlappedRange1() throws Exception {
         System.out.println("   add overlapping range");
-        RangeLookupTable<Integer, Integer> table = new RangeLookupTable<Integer, Integer>();
-        table.setOverlapAllowed(true);
         
-        table.add(Range.create(5, true, 10, true), 1);
+        builder.add(Range.create(5, true, 10, true), 1);
         
         // this range is overlapped by the first range
-        table.add(Range.create(0, true, 20, true), 2);
+        builder.add(Range.create(0, true, 20, true), 2);
+        
+        RangeLookupTable<Integer, Integer> table = builder.build();
         
         /*
          * The table should now be:
@@ -117,27 +96,32 @@ public class RangeLookupTableTest extends TestBase {
          *   [5, 10] => 1
          *   (10, 20] => 2
          */
+        
+        LookupItem<Integer, Integer> match;
         for (int val = 0; val <= 20; val++) {
             int expected = val < 5 || val > 10 ? 2 : 1; 
-            int destVal = table.getDestValue(val);
-            assertEquals(expected, destVal);
+            
+            match = table.getLookupItem(val);
+            assertNotNull(match);
+            assertEquals(expected, match.getValue().intValue());
         }
     }
 
     @Test
     public void addCompletelyOverlappedRange() throws Exception {
         System.out.println("   add completely overlapped range");
-        RangeLookupTable<Integer, Integer> table = new RangeLookupTable<Integer, Integer>();
-        table.setOverlapAllowed(true);
 
-        table.add(Range.create(0, true, 20, true), 1);
+        builder.add(Range.create(0, true, 20, true), 1);
 
         // this range is overlapped by the first range
-        table.add(Range.create(5, true, 10, true), 2);
+        builder.add(Range.create(5, true, 10, true), 2);
+
+        RangeLookupTable<Integer, Integer> table = builder.build();
 
         for (int val = 0; val <= 20; val++) {
-            int destVal = table.getDestValue(val);
-            assertEquals(1, destVal);
+            LookupItem<Integer, Integer> match = table.getLookupItem(val);
+            assertNotNull(match);
+            assertEquals(1, match.getValue().intValue());
         }
     }
 }

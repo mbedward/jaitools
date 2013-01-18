@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2011, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2013, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -21,51 +21,23 @@
  *  ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT 
  *  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
- */   
-
+ */
 package org.jaitools.media.jai.rangelookup;
 
-import org.jaitools.numeric.Range;
+import java.util.Comparator;
+import org.jaitools.numeric.RangeComparator;
 
 /**
- * Base class for unit tests.
+ * Compares LookupItems on the basis of their source value ranges.
  *
- * @author Michael Bedward
- * @since 1.0
- * @version $Id$
+ * @author michael
  */
-public abstract class TestBase {
-    /**
-     * Creates a lookup table.
-     * @param breaks array of breakpoints for source image values
-     * @param values array of lookup values for destination image value
-     * 
-     * @return the lookup table
-     */
-    protected <T extends Number & Comparable<? super T>, 
-             U extends Number & Comparable<? super U>> 
-            RangeLookupTable<T, U> createTableFromBreaks(T[] breaks, U[] values) {
-        
-        final int N = breaks.length;
-        if (values.length != N + 1) {
-            throw new IllegalArgumentException(
-                    "values array length should be breaks array length + 1");
-        }
-        
-        RangeLookupTable.Builder<T, U> builder = new RangeLookupTable.Builder<T, U>();
-        Range<T> r;
-        
-        r = Range.create(null, false, breaks[0], false);
-        builder.add(r, values[0]);
-        
-        for (int i = 1; i < N; i++) {
-            r = Range.create(breaks[i-1], true, breaks[i], false);
-            builder.add(r, values[i]);
-        }
-        
-        r = Range.create(breaks[N-1], true, null, false);
-        builder.add(r, values[N]);
-        
-        return builder.build();
+public class LookupItemComparator<
+        T extends Number & Comparable<? super T>, U extends Number & Comparable<? super U>> implements Comparator<LookupItem<T, U>> {
+
+    private final RangeComparator<T> delegate = new RangeComparator<T>();
+
+    public int compare(LookupItem<T, U> item1, LookupItem<T, U> item2) {
+        return delegate.compare(item1.getRange(), item2.getRange());
     }
 }
