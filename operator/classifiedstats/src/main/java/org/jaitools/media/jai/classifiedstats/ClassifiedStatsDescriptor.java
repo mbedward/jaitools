@@ -37,7 +37,7 @@ import javax.media.jai.ROI;
 import javax.media.jai.registry.RenderedRegistryMode;
 
 import org.jaitools.numeric.Range;
-import org.jaitools.numeric.RangeComparator;
+import org.jaitools.numeric.RangeExtendedComparator;
 import org.jaitools.numeric.RangeUtils;
 import org.jaitools.numeric.Statistic;
 
@@ -475,13 +475,13 @@ public class ClassifiedStatsDescriptor extends OperationDescriptorImpl {
                         List sortedRanges = RangeUtils.sort(coll);
                         final int elements = sortedRanges.size();
                         if (elements > 1) {
-                            RangeComparator rc = new RangeComparator();
+                            RangeExtendedComparator rc = new RangeExtendedComparator();
                             List<Range> rr = (List<Range>) sortedRanges;
                             for (int i = 0; i < elements - 1; i++) {
                                 Range r1 = rr.get(i);
                                 Range r2 = rr.get(i + 1);
-                                RangeComparator.Result result = rc.compare(r1, r2);
-                                if (RangeComparator.isIntersection(result)) {
+                                RangeExtendedComparator.Result result = rc.compare(r1, r2);
+                                if (RangeExtendedComparator.isIntersection(result)) {
                                     ok = false;
                                     msg.append(paramNames[RANGES_ARG]).append(" arg can't contain intersecting ranges");
                                     break;
