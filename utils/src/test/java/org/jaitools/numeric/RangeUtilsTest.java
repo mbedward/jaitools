@@ -192,22 +192,45 @@ public class RangeUtilsTest {
     public void testSortRanges() {
         System.out.println("   testSortRanges");
 
-        List<Range<Integer>> sortedInputs = CollectionFactory.list();
-        sortedInputs.add( Range.create(null, false, 5, true) );
-        sortedInputs.add( Range.create(-10, true, 5, true) );
-        sortedInputs.add( Range.create(0) );
-        sortedInputs.add( Range.create(5, true, 10, true) );
-        sortedInputs.add( Range.create(5, true, null, false) );
+        List<Range<Integer>> sorted = CollectionFactory.list();
+        sorted.add( Range.create(null, false, 5, true) );
+        sorted.add( Range.create(-10, true, 5, true) );
+        sorted.add( Range.create(0) );
+        sorted.add( Range.create(5, true, 10, true) );
+        sorted.add( Range.create(5, true, null, false) );
 
-        List<Range<Integer>> disorderedInputs = CollectionFactory.list();
+        List<Range<Integer>> raw = CollectionFactory.list();
         for (int i : new int[]{4, 2, 3, 1, 0}) {
-            disorderedInputs.add(sortedInputs.get(i));
+            raw.add(sorted.get(i));
         }
 
-        List<Range<Integer>> result = RangeUtils.sort(disorderedInputs);
+        List<Range<Integer>> result = RangeUtils.sort(raw);
         int k = 0;
         for (Range r : result) {
-            assertTrue(r.equals(sortedInputs.get(k++)));
+            assertTrue(r.equals(sorted.get(k++)));
+        }
+    }
+
+    @Test
+    public void testSortInPlaceRanges() {
+        System.out.println("   testSortInPlaceRanges");
+
+        List<Range<Integer>> sorted = CollectionFactory.list();
+        sorted.add( Range.create(null, false, 5, true) );
+        sorted.add( Range.create(-10, true, 5, true) );
+        sorted.add( Range.create(0) );
+        sorted.add( Range.create(5, true, 10, true) );
+        sorted.add( Range.create(5, true, null, false) );
+
+        List<Range<Integer>> raw = CollectionFactory.list();
+        for (int i : new int[]{4, 2, 3, 1, 0}) {
+            raw.add(sorted.get(i));
+        }
+
+        RangeUtils.sortInPlace(raw);
+        int k = 0;
+        for (Range r : raw) {
+            assertTrue(r.equals(sorted.get(k++)));
         }
     }
 

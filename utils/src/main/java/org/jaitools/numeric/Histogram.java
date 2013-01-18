@@ -208,10 +208,10 @@ public class Histogram<T extends Number & Comparable> {
      * lower bound.
      */
     private class BinComparator implements Comparator<Bin> {
-        private RangeComparator<T> rc = new RangeComparator<T>();
+        private RangeExtendedComparator<T> rc = new RangeExtendedComparator<T>();
 
         public int compare(Bin b1, Bin b2) {
-            RangeComparator.Result result = rc.compare(b1.range, b2.range);
+            RangeExtendedComparator.Result result = rc.compare(b1.range, b2.range);
             switch (result.getNotation().charAt(1)) {
                 case '<': return -1;
                 case '>': return 1;

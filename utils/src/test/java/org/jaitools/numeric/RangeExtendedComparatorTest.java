@@ -25,7 +25,7 @@
 
 package org.jaitools.numeric;
 
-import org.jaitools.numeric.RangeComparator.Result;
+import org.jaitools.numeric.RangeExtendedComparator.Result;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -38,14 +38,14 @@ import static org.junit.Assert.*;
  * @since 1.0
  * @version $Id$
  */
-public class RangeComparatorTest {
+public class RangeExtendedComparatorTest {
 
-    public RangeComparatorTest() {
+    public RangeExtendedComparatorTest() {
     }
 
     @Test
     public void testLLLL() {
-        Result expType = RangeComparator.Result.LLLL;
+        Result expType = RangeExtendedComparator.Result.LLLL;
         blurb(expType);
 
         Range<Integer> r1 = Range.create(null, false, 10, false);
@@ -64,7 +64,7 @@ public class RangeComparatorTest {
 
     @Test
     public void testLLLE() {
-        Result expType = RangeComparator.Result.LLLE;
+        Result expType = RangeExtendedComparator.Result.LLLE;
         blurb(expType);
 
         Range<Integer> r1 = Range.create(null, false, 10, true);
@@ -83,7 +83,7 @@ public class RangeComparatorTest {
 
     @Test
     public void testLLLG() {
-        Result expType = RangeComparator.Result.LLLG;
+        Result expType = RangeExtendedComparator.Result.LLLG;
         blurb(expType);
 
         Range<Integer> r1 = Range.create(null, false, 20, true);
@@ -99,7 +99,7 @@ public class RangeComparatorTest {
 
     @Test
     public void testLLEG() {
-        Result expType = RangeComparator.Result.LLEG;
+        Result expType = RangeExtendedComparator.Result.LLEG;
         blurb(expType);
 
         Range<Integer> r1 = Range.create(null, false, 20, true);
@@ -122,7 +122,7 @@ public class RangeComparatorTest {
 
     @Test
     public void testLEGG() {
-        Result expType = RangeComparator.Result.LEGG;
+        Result expType = RangeExtendedComparator.Result.LEGG;
         blurb(expType);
 
         Range<Integer> r1 = Range.create(0, true, 20, true);
@@ -148,7 +148,7 @@ public class RangeComparatorTest {
 
     @Test
     public void testLLEE() {
-        Result expType = RangeComparator.Result.LLEE;
+        Result expType = RangeExtendedComparator.Result.LLEE;
         blurb(expType);
 
         Range<Integer> r1 = Range.create(0, true, 10, true);
@@ -171,7 +171,7 @@ public class RangeComparatorTest {
 
     @Test
     public void testEEGG() {
-        Result expType = RangeComparator.Result.EEGG;
+        Result expType = RangeExtendedComparator.Result.EEGG;
         blurb(expType);
 
         Range<Integer> r1 = Range.create(10, true, null, false);
@@ -188,7 +188,7 @@ public class RangeComparatorTest {
 
     @Test
     public void testLEEG() {
-        Result expType = RangeComparator.Result.LEEG;
+        Result expType = RangeExtendedComparator.Result.LEEG;
         blurb(expType);
 
         Range<Integer> r1 = Range.create(10, true, 20, true);
@@ -214,7 +214,7 @@ public class RangeComparatorTest {
 
     @Test
     public void testEEEE() {
-        Result expType = RangeComparator.Result.EEEE;
+        Result expType = RangeExtendedComparator.Result.EEEE;
         blurb(expType);
 
         Range<Integer> r1 = Range.create(10);
@@ -238,7 +238,7 @@ public class RangeComparatorTest {
 
     @Test
     public void testLLGG() {
-        Result expType = RangeComparator.Result.LLGG;
+        Result expType = RangeExtendedComparator.Result.LLGG;
         blurb(expType);
 
         Range<Integer> r1 = Range.create(0, true, 30, true);
@@ -260,7 +260,7 @@ public class RangeComparatorTest {
 
     @Test
     public void testLGLG() {
-        Result expType = RangeComparator.Result.LGLG;
+        Result expType = RangeExtendedComparator.Result.LGLG;
         blurb(expType);
 
         Range<Integer> r1 = Range.create(10, true, 20, true);
@@ -282,7 +282,7 @@ public class RangeComparatorTest {
 
     @Test
     public void testLGGG() {
-        Result expType = RangeComparator.Result.LGGG;
+        Result expType = RangeExtendedComparator.Result.LGGG;
         blurb(expType);
 
         Range<Integer> r1 = Range.create(10, true, 30, true);
@@ -308,7 +308,7 @@ public class RangeComparatorTest {
 
     @Test
     public void testLGEG() {
-        Result expType = RangeComparator.Result.LGEG;
+        Result expType = RangeExtendedComparator.Result.LGEG;
         blurb(expType);
 
         Range<Integer> r1 = Range.create(10, true, 20, true);
@@ -334,7 +334,7 @@ public class RangeComparatorTest {
 
     @Test
     public void testLELG() {
-        Result expType = RangeComparator.Result.LELG;
+        Result expType = RangeExtendedComparator.Result.LELG;
         blurb(expType);
 
         Range<Integer> r1 = Range.create(0, true, 10, true);
@@ -354,7 +354,7 @@ public class RangeComparatorTest {
 
     @Test
     public void testEGEG() {
-        Result expType = RangeComparator.Result.EGEG;
+        Result expType = RangeExtendedComparator.Result.EGEG;
         blurb(expType);
 
         Range<Integer> r1 = Range.create(10);
@@ -380,7 +380,7 @@ public class RangeComparatorTest {
 
     @Test
     public void testLELE() {
-        Result expType = RangeComparator.Result.LELE;
+        Result expType = RangeExtendedComparator.Result.LELE;
         blurb(expType);
 
         Range<Integer> r1 = Range.create(0);
@@ -403,7 +403,7 @@ public class RangeComparatorTest {
 
     @Test
     public void testEGGG() {
-        Result expType = RangeComparator.Result.EGGG;
+        Result expType = RangeExtendedComparator.Result.EGGG;
         blurb(expType);
 
         Range<Integer> r1 = Range.create(10, true, 20, true);
@@ -419,7 +419,7 @@ public class RangeComparatorTest {
 
     @Test
     public void testGGGG() {
-        Result expType = RangeComparator.Result.GGGG;
+        Result expType = RangeExtendedComparator.Result.GGGG;
         blurb(expType);
 
         Range<Integer> r1 = Range.create(20, true, 30, true);
@@ -434,7 +434,7 @@ public class RangeComparatorTest {
     }
 
 
-    private void blurb(RangeComparator.Result t) {
+    private void blurb(RangeExtendedComparator.Result t) {
         System.out.println(String.format("   Type.%s (%s): %s",
                 t.name(), t.getNotation(), t.getDesc()));
     }
