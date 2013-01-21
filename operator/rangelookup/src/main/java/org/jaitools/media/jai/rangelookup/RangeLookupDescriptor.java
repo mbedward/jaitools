@@ -31,39 +31,57 @@ import javax.media.jai.registry.RenderedRegistryMode;
 /**
  * Describes the "RangeLookup" operation.
  * <p>
- * This is a variation on the JAI {@linkplain javax.media.jai.LookupDescriptor}.
+ * This is a variation on the JAI Lookup operation.
  * It works with a {@linkplain RangeLookupTable} object in which each entry maps
  * a source image value range to a destination image value.
  * <p>
- * Example of use...
+ * In the example below, double data values from a source image are mapped
+ * to integer values in a destination image.
  * <pre><code>
+ * RenderedImage srcImage = ...
  *
- * // Perform a lookup as follows:
- * //   Src Value     Dest Value
- * //     x < 5            1
- * //   5 <= x < 10        2
- * //  10 <= x <= 20       3
- * //  any other value    99
+ * // RangeLookupTable is an immutable class. Use the associated Builder class
+ * // to construct a new table. The type parameters define source data type 
+ * // and destination type respectively
+ * RangeLookupTable.Builder&lt;Double, Integer&gt; builder =
+ *         new RangeLookupTable.Builder&lt;Double, Integer&gt;();
+ *
+ * // Map all source values less than zero to -1
+ * Range&lt;Double&gt; r = Range.create(Double.NEGATIVE_INFINITY, false, 0.0, false);
+ * builder.add(r, -1);
+ *
+ * // Map all source values from 0.0 (inclusive) to 1.0 (exclusive) to 1
+ * r = Range.create(0.0, true, 1.0, false);
+ * builder.add(r, 1);
+ *
+ * // Map all source values from 1.0 (inclusive) to 2.0 (exclusive) to 2
+ * r = Range.create(1.0, true, 2.0, false);
+ * builder.add(r, 2);
  * 
- * RenderedImage myIntImg = ...
- *
- * RangeLookupTable<Integer> table = new RangeLookupTable<Integer>(99);
- *
- * Range<Integer> r = new Range<Integer>(null, true, 5, false);  // x < 5
- * table.add(r, 1);
- *
- * r = new Range<Integer>(5, true, 10, false);  // 5 <= x < 10
- * table.add(r, 2);
- *
- * r = new Range<Integer>(10, true, 20, true);  // 10 <= x <= 20
- * table.add(r, 2);
+ * // Map all source values greater than or equal to 2.0 to 3
+ * r = Range.create(2.0, true, Double.POSITIVE_INFINITY, false);
+ * builder.add(r, 3);
+ * 
+ * // Create the lookup table and the JAI operation
+ * RangeLookupTable&lt;Double, Integer&gt; table = builder.build();
  *
  * ParameterBlockJAI pb = new ParameterBlockJAI("rangelookup");
- * pb.setSource("source0", myIntImg);
+ * pb.setSource("source0", srcImage);
  * pb.setParameter("table", table);
- * RenderedImage luImg = JAI.create("rangelookup", pb);
+ * RenderedImage destImage = JAI.create("rangelookup", pb);
  * </code></pre>
  * 
+ * The example above uses a table with complete coverage of all source image
+ * values. It is also allowed to have a table that only covers parts of the
+ * source domain. In this case, a default destination value can be specified
+ * via the "default" parameter to RangeLookup, and this will be returned for
+ * all unmatched source values. If the "default" parameter is null (which is 
+ * its default setting) unmatched source values will be passed through to the
+ * destination image. Note that this may produce surprising results when 
+ * converting a float or double source image to an integral destination image
+ * due to value truncation and overflow.
+ * 
+ * <p>
  * <b>Parameters</b>
  * <table border="1">
  * <tr>
@@ -77,11 +95,11 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * </tr>
  * <tr>
  * <td>default</td>
- * <td>Object</td>
+ * <td>Number</td>
  * <td>Specifies the value to return for source values that do not map to any
- * ranges in the lookup table. Can be either a single value (Number);
- * or null to indicate that unmatched source values should be passed
- * through</td>
+ * ranges in the lookup table. If null, unmatched source values will be passed
+ * through to the destination image.
+ * </td>
  * <td>null (pass-through)</td>
  * </tr>
  * </table>
@@ -108,12 +126,12 @@ public class RangeLookupDescriptor extends OperationDescriptorImpl {
 
     private static final Class<?>[] paramClasses = {
         RangeLookupTable.class, 
-        Object.class
+        Number.class
     };
 
     private static final Object[] paramDefaults = {
         NO_PARAMETER_DEFAULT,
-        null
+        (Number) null
     };
 
     /** Constructor. */
@@ -131,7 +149,7 @@ public class RangeLookupDescriptor extends OperationDescriptorImpl {
                              + "destination values", paramNames[TABLE_ARG])},
                 {"arg1Desc",
                  String.format("%s - value to use for unmatched source values "
-                             + "(default: null for pass-through)", paramNames[DEFAULT_ARG])},
+                             + "(default: null to pass through source values)", paramNames[DEFAULT_ARG])},
                 },
 
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
