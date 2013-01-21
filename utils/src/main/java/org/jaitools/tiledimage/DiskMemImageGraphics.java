@@ -749,6 +749,9 @@ public class DiskMemImageGraphics extends Graphics2D {
         Method method = null;
         boolean rtnVal = false;
 
+        // Transform requested area to obtain actual bounds.
+        bounds = getTransform().createTransformedShape(bounds).getBounds();
+
         try {
             method = Graphics2D.class.getMethod(opType.getMethodName(), opType.getArgTypes());
 
