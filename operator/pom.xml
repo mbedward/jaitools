@@ -22,6 +22,7 @@
         <module>contour</module>
         <module>kernelstats</module>
         <module>maskedconvolve</module>
+        <module>random</module>
         <module>rangelookup</module>
         <module>regionalize</module>
         <module>vectorbinarize</module>
