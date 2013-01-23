@@ -20,9 +20,9 @@
     <modules>
         <module>attributeop</module>
         <module>contour</module>
+        <module>generate</module>
         <module>kernelstats</module>
         <module>maskedconvolve</module>
-        <module>random</module>
         <module>rangelookup</module>
         <module>regionalize</module>
         <module>vectorbinarize</module>
