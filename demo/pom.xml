@@ -27,6 +27,12 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>jt-generate</artifactId>
+            <version>${project.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>jt-kernelstats</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
