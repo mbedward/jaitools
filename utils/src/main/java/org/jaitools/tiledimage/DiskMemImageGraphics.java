@@ -99,7 +99,9 @@ public class DiskMemImageGraphics extends Graphics2D {
      * java.awt.Graphics parameters
      */
     private Point origin;
-    private Shape clip;
+    private Shape compClip;
+    private Shape devClip;
+    private Shape usrClip;
     private Color color;
     private Font  font;
     private PaintMode paintMode;
@@ -497,13 +499,18 @@ public class DiskMemImageGraphics extends Graphics2D {
 
     @Override
     public void clip(Shape s) {
-        if(clip == null) {
-            clip = s;
-        } else {
-            Area clipArea = (clip instanceof Area ? (Area)clip : new Area(clip));
-            clipArea.intersect(s instanceof Area ? (Area)s : new Area(s));
-            clip = clipArea;
+        if (s != null) {
+            s = transformShape(s);
+            if (usrClip != null) {
+                Area a1 = (usrClip instanceof Area) ? (Area) usrClip
+                                                    : new Area(usrClip);
+                Area a2 = (s instanceof Area) ? (Area) s : new Area(s);
+                a2.intersect(a1);
+                s = a2;
+            }
         }
+        usrClip = s;
+        validateCompClip();
     }
 
     @Override
@@ -570,7 +577,7 @@ public class DiskMemImageGraphics extends Graphics2D {
 
     @Override
     public Rectangle getClipBounds() {
-        return clip.getBounds();
+        return getClip().getBounds();
     }
 
     @Override
@@ -585,12 +592,13 @@ public class DiskMemImageGraphics extends Graphics2D {
 
     @Override
     public Shape getClip() {
-        return clip;
+        return untransformShape(usrClip);
     }
 
     @Override
     public void setClip(Shape clip) {
-        this.clip = clip;
+        usrClip = clip;
+        validateCompClip();
     }
 
     @Override
@@ -736,6 +744,64 @@ public class DiskMemImageGraphics extends Graphics2D {
          * No need to do anything here
          */
     }
+
+    /**
+     * Transform a shape with the current transform.
+     *
+     * @param s the shape to transform
+     * @return the transformed shape.
+     */
+    private Shape transformShape(Shape s) {
+        if (s == null) {
+            return null;
+        }
+        if (transform == null) {
+            return s;
+        }
+
+        return transform.createTransformedShape(s);
+    }
+
+    /**
+     * Transform a shape with the inverse of the current transform.
+     *
+     * @param s the shape to transform
+     * @return the transformed shape.
+     */
+    private Shape untransformShape(Shape s) {
+        if (s == null) {
+            return null;
+        }
+        if (transform == null) {
+            return s;
+        }
+
+        try {
+            return transform.createInverse().createTransformedShape(s);
+        } catch (NoninvertibleTransformException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Re-calculate the composite clip, based on both the device clip and
+     * the user clip, and the current transform. Call this every time
+     * any of these three (devClip, usrClip, transform) change.
+     */
+    private void validateCompClip() {
+        if (usrClip == null) {
+            compClip = devClip;
+
+        } else {
+            Area a1 = new Area(devClip);
+            Area a2 = (usrClip instanceof Area) ? (Area) usrClip
+                    : new Area(usrClip);
+            a1.intersect(a2);
+
+            compClip = a1;
+        }
+    }
+
 
     /**
      * Performs the graphics operation by partitioning the work across the image's
@@ -945,7 +1011,10 @@ public class DiskMemImageGraphics extends Graphics2D {
         Graphics2D gr = getProxy();
 
         origin = new Point(0, 0);
-        clip = targetImage.getBounds();
+        devClip = targetImage.getBounds();
+        usrClip = null;
+        compClip = null;
+        validateCompClip();
         color = gr.getColor();
         font = gr.getFont();
 
@@ -983,11 +1052,11 @@ public class DiskMemImageGraphics extends Graphics2D {
         gr.setColor(getColor());
         
         if (workingOrigin == null) {
-            gr.setClip(clip);
+            gr.setClip(compClip);
         } else {
             AffineTransform tr = AffineTransform.getTranslateInstance(
                     -workingOrigin.x, -workingOrigin.y);
-            Shape trclip = tr.createTransformedShape(clip);
+            Shape trclip = tr.createTransformedShape(compClip);
             gr.setClip(trclip);
         }
 
