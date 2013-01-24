@@ -144,8 +144,7 @@ public class ClipTest extends TiledImageTestBase {
                     1.0, -343.9285583496093, -502.5158386230469);
         grr.transform(transform);
 
-        AffineTransform t = new AffineTransform(transform);
-        t.invert();
+        AffineTransform t = transform.createInverse();
         s = t.createTransformedShape(s);
 
         assertTrue(s.getBounds().intersects(grr.getClip().getBounds2D()));
