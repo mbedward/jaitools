@@ -44,12 +44,12 @@ import javax.media.jai.RasterAccessor;
  */
 public class GenerateOpImage extends OpImage {
     
-    private final Generator[] generators;
+    private final Generator generator;
     
     public GenerateOpImage(
             ImageLayout layout,
             Map config,
-            Generator[] generators) {
+            Generator generator) {
 
         super(null, // source image vector arg not applicable
                 layout, 
@@ -57,7 +57,7 @@ public class GenerateOpImage extends OpImage {
                 false  // cobble sources arg not applicable
                 );
 
-        this.generators = generators;
+        this.generator = generator;
     }
 
     @Override
@@ -95,89 +95,98 @@ public class GenerateOpImage extends OpImage {
     }
     
     private void generateAsByteData(RasterAccessor dest) {
-        int destWidth = dest.getWidth();
-        int destHeight = dest.getHeight();
-        int numBands = dest.getNumBands();
+        final int destWidth = dest.getWidth();
+        final int destHeight = dest.getHeight();
+        final int numBands = dest.getNumBands();
 
-        int lineStride = dest.getScanlineStride();
-        int pixelStride = dest.getPixelStride();
-        int[] bandOffsets = dest.getBandOffsets();
-        byte[][] destData = dest.getByteDataArrays();
+        final int[] bandOffsets = dest.getBandOffsets();
+        final int lineStride = dest.getScanlineStride();
+        final int pixelStride = dest.getPixelStride();
+        
+        final byte[][] destData = dest.getByteDataArrays();
 
-        for (int b = 0; b < numBands; b++) {
-            byte[] bandData = destData[b];
-            int lineOffset = bandOffsets[b];
-            Generator gen = generators[b];
-
-            for (int h = 0; h < destHeight; h++) {
-                int y = dest.getY() + h;
-                int dstPixelOffset = lineOffset;
-                lineOffset += lineStride;
+        int lineOffset = 0;
+        for (int h = 0; h < destHeight; h++) {
+            int y = dest.getY() + h;
+            
+            int pixelOffset = lineOffset;
+            for (int w = 0; w < destWidth; w++) {
+                int x = dest.getX() + w;
                 
-                for (int w = 0; w < destWidth; w++) {
-                    int x = dest.getX() + w;
-		    bandData[dstPixelOffset] = gen.getValue(x, y).byteValue();
-                    dstPixelOffset += pixelStride;
+                Number[] values = generator.getValues(x, y);
+                for (int b = 0; b < numBands; b++) {
+                    int dataOffset = bandOffsets[b] + pixelOffset;
+                    destData[b][dataOffset] = values[b].byteValue();
                 }
+                
+                pixelOffset += pixelStride;
             }
+            
+            lineOffset += lineStride;
         }
     }
 
     private void generateAsIntData(RasterAccessor dest) {
-        int destWidth = dest.getWidth();
-        int destHeight = dest.getHeight();
-        int numBands = dest.getNumBands();
+        final int destWidth = dest.getWidth();
+        final int destHeight = dest.getHeight();
+        final int numBands = dest.getNumBands();
 
-        int lineStride = dest.getScanlineStride();
-        int pixelStride = dest.getPixelStride();
-        int[] bandOffsets = dest.getBandOffsets();
-        int[][] destData = dest.getIntDataArrays();
+        final int[] bandOffsets = dest.getBandOffsets();
+        final int lineStride = dest.getScanlineStride();
+        final int pixelStride = dest.getPixelStride();
+        
+        final int[][] destData = dest.getIntDataArrays();
 
-        for (int b = 0; b < numBands; b++) {
-            int[] bandData = destData[b];
-            int lineOffset = bandOffsets[b];
-            Generator gen = generators[b];
-
-            for (int h = 0; h < destHeight; h++) {
-                int y = dest.getY() + h;
-                int dstPixelOffset = lineOffset;
-                lineOffset += lineStride;
+        int lineOffset = 0;
+        for (int h = 0; h < destHeight; h++) {
+            int y = dest.getY() + h;
+            
+            int pixelOffset = lineOffset;
+            for (int w = 0; w < destWidth; w++) {
+                int x = dest.getX() + w;
                 
-                for (int w = 0; w < destWidth; w++) {
-                    int x = dest.getX() + w;
-		    bandData[dstPixelOffset] = gen.getValue(x, y).intValue();
-                    dstPixelOffset += pixelStride;
+                Number[] values = generator.getValues(x, y);
+                for (int b = 0; b < numBands; b++) {
+                    int dataOffset = bandOffsets[b] + pixelOffset;
+                    destData[b][dataOffset] = values[b].intValue();
                 }
+                
+                pixelOffset += pixelStride;
             }
+            
+            lineOffset += lineStride;
         }
     }
 
     private void generateAsShortData(RasterAccessor dest) {
-        int destWidth = dest.getWidth();
-        int destHeight = dest.getHeight();
-        int numBands = dest.getNumBands();
+        final int destWidth = dest.getWidth();
+        final int destHeight = dest.getHeight();
+        final int numBands = dest.getNumBands();
 
-        int lineStride = dest.getScanlineStride();
-        int pixelStride = dest.getPixelStride();
-        int[] bandOffsets = dest.getBandOffsets();
-        short[][] destData = dest.getShortDataArrays();
+        final int[] bandOffsets = dest.getBandOffsets();
+        final int lineStride = dest.getScanlineStride();
+        final int pixelStride = dest.getPixelStride();
+        
+        final short[][] destData = dest.getShortDataArrays();
 
-        for (int b = 0; b < numBands; b++) {
-            short[] bandData = destData[b];
-            int lineOffset = bandOffsets[b];
-            Generator gen = generators[b];
-
-            for (int h = 0; h < destHeight; h++) {
-                int y = dest.getY() + h;
-                int dstPixelOffset = lineOffset;
-                lineOffset += lineStride;
+        int lineOffset = 0;
+        for (int h = 0; h < destHeight; h++) {
+            int y = dest.getY() + h;
+            
+            int pixelOffset = lineOffset;
+            for (int w = 0; w < destWidth; w++) {
+                int x = dest.getX() + w;
                 
-                for (int w = 0; w < destWidth; w++) {
-                    int x = dest.getX() + w;
-		    bandData[dstPixelOffset] = gen.getValue(x, y).shortValue();
-                    dstPixelOffset += pixelStride;
+                Number[] values = generator.getValues(x, y);
+                for (int b = 0; b < numBands; b++) {
+                    int dataOffset = bandOffsets[b] + pixelOffset;
+                    destData[b][dataOffset] = values[b].shortValue();
                 }
+                
+                pixelOffset += pixelStride;
             }
+            
+            lineOffset += lineStride;
         }
     }
 
@@ -186,60 +195,66 @@ public class GenerateOpImage extends OpImage {
     }
 
     private void generateAsFloatData(RasterAccessor dest) {
-        int destWidth = dest.getWidth();
-        int destHeight = dest.getHeight();
-        int numBands = dest.getNumBands();
+        final int destWidth = dest.getWidth();
+        final int destHeight = dest.getHeight();
+        final int numBands = dest.getNumBands();
 
-        int lineStride = dest.getScanlineStride();
-        int pixelStride = dest.getPixelStride();
-        int[] bandOffsets = dest.getBandOffsets();
-        float[][] destData = dest.getFloatDataArrays();
+        final int[] bandOffsets = dest.getBandOffsets();
+        final int lineStride = dest.getScanlineStride();
+        final int pixelStride = dest.getPixelStride();
+        
+        final float[][] destData = dest.getFloatDataArrays();
 
-        for (int b = 0; b < numBands; b++) {
-            float[] bandData = destData[b];
-            int lineOffset = bandOffsets[b];
-            Generator gen = generators[b];
-
-            for (int h = 0; h < destHeight; h++) {
-                int y = dest.getY() + h;
-                int dstPixelOffset = lineOffset;
-                lineOffset += lineStride;
+        int lineOffset = 0;
+        for (int h = 0; h < destHeight; h++) {
+            int y = dest.getY() + h;
+            
+            int pixelOffset = lineOffset;
+            for (int w = 0; w < destWidth; w++) {
+                int x = dest.getX() + w;
                 
-                for (int w = 0; w < destWidth; w++) {
-                    int x = dest.getX() + w;
-		    bandData[dstPixelOffset] = gen.getValue(x, y).floatValue();
-                    dstPixelOffset += pixelStride;
+                Number[] values = generator.getValues(x, y);
+                for (int b = 0; b < numBands; b++) {
+                    int dataOffset = bandOffsets[b] + pixelOffset;
+                    destData[b][dataOffset] = values[b].floatValue();
                 }
+                
+                pixelOffset += pixelStride;
             }
+            
+            lineOffset += lineStride;
         }
     }
 
     private void generateAsDoubleData(RasterAccessor dest) {
-        int destWidth = dest.getWidth();
-        int destHeight = dest.getHeight();
-        int numBands = dest.getNumBands();
+        final int destWidth = dest.getWidth();
+        final int destHeight = dest.getHeight();
+        final int numBands = dest.getNumBands();
 
-        int lineStride = dest.getScanlineStride();
-        int pixelStride = dest.getPixelStride();
-        int[] bandOffsets = dest.getBandOffsets();
-        double[][] destData = dest.getDoubleDataArrays();
+        final int[] bandOffsets = dest.getBandOffsets();
+        final int lineStride = dest.getScanlineStride();
+        final int pixelStride = dest.getPixelStride();
+        
+        final double[][] destData = dest.getDoubleDataArrays();
 
-        for (int b = 0; b < numBands; b++) {
-            double[] bandData = destData[b];
-            int lineOffset = bandOffsets[b];
-            Generator gen = generators[b];
-
-            for (int h = 0; h < destHeight; h++) {
-                int y = dest.getY() + h;
-                int dstPixelOffset = lineOffset;
-                lineOffset += lineStride;
+        int lineOffset = 0;
+        for (int h = 0; h < destHeight; h++) {
+            int y = dest.getY() + h;
+            
+            int pixelOffset = lineOffset;
+            for (int w = 0; w < destWidth; w++) {
+                int x = dest.getX() + w;
                 
-                for (int w = 0; w < destWidth; w++) {
-                    int x = dest.getX() + w;
-		    bandData[dstPixelOffset] = gen.getValue(x, y).doubleValue();
-                    dstPixelOffset += pixelStride;
+                Number[] values = generator.getValues(x, y);
+                for (int b = 0; b < numBands; b++) {
+                    int dataOffset = bandOffsets[b] + pixelOffset;
+                    destData[b][dataOffset] = values[b].doubleValue();
                 }
+                
+                pixelOffset += pixelStride;
             }
+            
+            lineOffset += lineStride;
         }
     }
 

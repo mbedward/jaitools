@@ -47,16 +47,9 @@ public class GenerateRIF implements RenderedImageFactory {
     public RenderedImage create(ParameterBlock paramBlock, RenderingHints renderHints) {
         Number width = (Number) paramBlock.getObjectParameter(GenerateDescriptor.WIDTH_ARG);
         Number height = (Number) paramBlock.getObjectParameter(GenerateDescriptor.HEIGHT_ARG);
+        Generator generator = (Generator) paramBlock.getObjectParameter(GenerateDescriptor.GENERATOR_ARG);
         
-        Object obj = paramBlock.getObjectParameter(GenerateDescriptor.GENERATORS_ARG);
-        Generator[] generators;
-        if (obj instanceof Generator) {
-            generators = new Generator[] { (Generator) obj };
-        } else {
-            generators = (Generator[]) obj;
-        }
-        
-        ImageDataType dataType = generators[0].getDataType();
+        ImageDataType dataType = generator.getDataType();
         
         ImageLayout layout = RIFUtil.getImageLayoutHint(renderHints);
         if (layout == null) layout = new ImageLayout();
@@ -65,7 +58,7 @@ public class GenerateRIF implements RenderedImageFactory {
         layout.setHeight(height.intValue());
         
         SampleModel userSM = layout.getSampleModel(null);
-        if (userSM == null || userSM.getNumBands() != generators.length) {
+        if (userSM == null || userSM.getNumBands() != generator.getNumBands()) {
             int tileWidth = layout.getTileWidth(null);
             if (tileWidth == 0) {
                 tileWidth = JAI.getDefaultTileSize().width;
@@ -76,15 +69,16 @@ public class GenerateRIF implements RenderedImageFactory {
                 tileHeight = JAI.getDefaultTileSize().height;
             }
             
-            int numBands = generators.length;
 
             SampleModel workingSM = RasterFactory.createBandedSampleModel(
-                    dataType.getDataBufferType(), tileWidth, tileHeight, numBands);
+                    dataType.getDataBufferType(), 
+                    tileWidth, tileHeight, 
+                    generator.getNumBands());
 
             layout.setSampleModel(workingSM);
         }
         
-        return new GenerateOpImage(layout, renderHints, generators);
+        return new GenerateOpImage(layout, renderHints, generator);
     }
     
     private SampleModel makeSampleModel(int tileWidth, int tileHeight,

@@ -1,5 +1,6 @@
 package org.jaitools.demo.generate;
 
+import java.awt.Color;
 import java.util.Random;
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
@@ -25,17 +26,10 @@ public class GenerateDemo {
     }
 
     private void rgbGradient() {
-        Generator redGen = new ConstantByteGenerator((byte) 128);
-        Generator greenGen = redGen;
-        Generator blueGen = new DiagonalGradientGenerator();
-
         ParameterBlockJAI pb = new ParameterBlockJAI("generate");
         pb.setParameter("width", IMAGE_SIDE_LEN);
         pb.setParameter("height", IMAGE_SIDE_LEN);
-
-        Generator[] generators = {redGen, greenGen, blueGen};
-
-        pb.setParameter("generators", generators);
+        pb.setParameter("generator", new DiagonalGradientGenerator());
 
         RenderedOp image = JAI.create("generate", pb);
         ImageFrame.showImage(image.createInstance(), "RGB Diagonal gradient");
@@ -45,8 +39,7 @@ public class GenerateDemo {
         ParameterBlockJAI pb = new ParameterBlockJAI("generate");
         pb.setParameter("width", IMAGE_SIDE_LEN);
         pb.setParameter("height", IMAGE_SIDE_LEN);
-
-        pb.setParameter("generators", new UniformRandomGenerator());
+        pb.setParameter("generator", new UniformRandomGenerator());
 
         RenderedOp image = JAI.create("generate", pb);
         ImageFrame.showImage(image.createInstance(), "Single band uniform random");
@@ -56,9 +49,8 @@ public class GenerateDemo {
         ParameterBlockJAI pb = new ParameterBlockJAI("generate");
         pb.setParameter("width", IMAGE_SIDE_LEN);
         pb.setParameter("height", IMAGE_SIDE_LEN);
-        
-        Generator gen = new MandelbrotGenerator(IMAGE_SIDE_LEN, IMAGE_SIDE_LEN);
-        pb.setParameter("generators", gen);
+        pb.setParameter("generator", 
+                new MandelbrotGenerator(IMAGE_SIDE_LEN, IMAGE_SIDE_LEN));
 
         RenderedOp image = JAI.create("generate", pb);
         ImageFrame.showImage(image.createInstance(), "Fractal");
@@ -71,36 +63,24 @@ public class GenerateDemo {
      **************************************************************************/
     
     /*
-     * Generates a constant byte value
-     */
-    static class ConstantByteGenerator implements Generator {
-
-        private final byte value;
-
-        ConstantByteGenerator(byte value) {
-            this.value = value;
-        }
-
-        public ImageDataType getDataType() {
-            return ImageDataType.BYTE;
-        }
-
-        public Number getValue(int imageX, int imageY) {
-            return value;
-        }
-    }
-    
-    /*
-     * Returns byte values on a diagonal gradient.
+     * Returns values for RGB bands where the red and green components
+     * are constants and the blue component varies along a diagonal
+     * gradient.
      */
     static class DiagonalGradientGenerator implements Generator {
 
         public ImageDataType getDataType() {
             return ImageDataType.BYTE;
         }
+        
+        public int getNumBands() {
+            return 3;
+        }
 
-        public Number getValue(int imageX, int imageY) {
-            return (imageX + imageY) % 256;
+        public Number[] getValues(int imageX, int imageY) {
+            byte blue = (byte) ((imageX + imageY) % 256);
+            byte c = (byte) 128;
+            return new Number[] {c, c, blue};
         }
     }
     
@@ -115,8 +95,12 @@ public class GenerateDemo {
             return ImageDataType.DOUBLE;
         }
 
-        public Number getValue(int imageX, int imageY) {
-            return rand.nextDouble();
+        public int getNumBands() {
+            return 1;
+        }
+
+        public Number[] getValues(int imageX, int imageY) {
+            return new Number[] {rand.nextDouble()};
         }
     }
  
@@ -129,7 +113,7 @@ public class GenerateDemo {
         private static final double XMAX = 1;
         private static final double YMIN = -1.5;
         private static final double YMAX = 1.5;
-        private static final int MAX_ITERATIONS = 16;
+        private static final int MAX_ITERATIONS = 32;
         private final int width;
         private final int height;
 
@@ -142,28 +126,40 @@ public class GenerateDemo {
             return ImageDataType.BYTE;
         }
 
-        public Number getValue(int imageX, int imageY) {
-            double a = XMIN + imageX * (XMAX - XMIN) / width;
-            double b = YMIN + imageY * (YMAX - YMIN) / height;
-            return escapes(a, b) ? 255 : 0;
+        public int getNumBands() {
+            return 3;
         }
 
-        private boolean escapes(double a, double b) {
+        public Number[] getValues(int imageX, int imageY) {
+            double a = XMIN + imageX * (XMAX - XMIN) / width;
+            double b = YMIN + imageY * (YMAX - YMIN) / height;
+
+            Color c = getColor(a, b);
+            return new Number[] {c.getRed(), c.getGreen(), c.getBlue()};
+        }
+
+        /*
+         * A very quick and dirty Mandelbrot algorithm
+         */
+        private Color getColor(double a, double b) {
             double x = 0.0;
             double y = 0.0;
             int numIter = 0;
 
-            do {
+            while (numIter < MAX_ITERATIONS && x <= 2 && y <= 2) {
                 double xx = x * x - y * y + a;
                 double yy = 2 * x * y + b;
                 x = xx;
                 y = yy;
-                if (++numIter == MAX_ITERATIONS) {
-                    return false;
-                }
-            } while (x <= 2 && y <= 2);
+                numIter++ ;
+            }
 
-            return true;
+            if (numIter == MAX_ITERATIONS) {
+                return Color.BLACK;
+            } else {
+                float hue = (float) numIter / MAX_ITERATIONS;
+                return Color.getHSBColor(hue, 0.6f, 0.8f);
+            }
         }
     }
 }

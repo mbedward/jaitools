@@ -30,8 +30,6 @@ import java.awt.image.renderable.ParameterBlock;
 import javax.media.jai.OperationDescriptorImpl;
 import javax.media.jai.registry.RenderedRegistryMode;
 
-import org.jaitools.imageutils.ImageDataType;
-
 /**
  *
  * @author Michael Bedward
@@ -41,18 +39,18 @@ public class GenerateDescriptor extends OperationDescriptorImpl {
     
     public static final int WIDTH_ARG = 0;
     public static final int HEIGHT_ARG = 1;
-    public static final int GENERATORS_ARG = 2;
+    public static final int GENERATOR_ARG = 2;
     
     private static final String[] paramNames = {
         "width",
         "height",
-        "generators"
+        "generator"
     };
     
     private static final Class<?>[] paramClasses = {
         Number.class,
         Number.class,
-        Object.class
+        Generator.class
     };
     
     private static final Object[] paramDefaults = {
@@ -78,8 +76,8 @@ public class GenerateDescriptor extends OperationDescriptorImpl {
                  String.format("Image height", paramNames[HEIGHT_ARG])},
                 
                 {"arg2Desc",
-                 String.format("Generators (either a single object or an array)", 
-                         paramNames[GENERATORS_ARG])},
+                 String.format("Generator instance to provide image data", 
+                         paramNames[GENERATOR_ARG])},
                 },
 
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes
@@ -110,42 +108,14 @@ public class GenerateDescriptor extends OperationDescriptorImpl {
         /*
          * Generators parameter must be an non-empty array of Generators.
          */
-        obj = pb.getObjectParameter(GENERATORS_ARG);
+        obj = pb.getObjectParameter(GENERATOR_ARG);
         if (obj == null) {
-            makeMsg(sb, GENERATORS_ARG, "must not be null");
+            makeMsg(sb, GENERATOR_ARG, "must not be null");
             return false;
         }
-        if (!(obj instanceof Generator ||
-              obj instanceof Generator[])) {
-            makeMsg(sb, GENERATORS_ARG, 
-                    "must be either a Generator or an array of Generators");
+        if (!(obj instanceof Generator)) {
+            makeMsg(sb, GENERATOR_ARG, "must be an instance of Generator");
             return false;
-        }
-        
-        if (obj instanceof Generator[]) {
-            Generator[] generators = (Generator[]) obj;
-            if (generators.length < 1) {
-                makeMsg(sb, GENERATORS_ARG, "array must have at least one element");
-                return false;
-            }
-            
-            ImageDataType firstType = null;
-            for (Generator rg : generators) {
-                if (rg == null) {
-                    makeMsg(sb, GENERATORS_ARG, "array must not contain nulls");
-                    return false;
-                }
-                
-                ImageDataType type = rg.getDataType();
-                if (firstType == null) {
-                    firstType = type;
-                } else {
-                    if (type != firstType) {
-                        makeMsg(sb, GENERATORS_ARG, "array contains generators of different data types");
-                        return false;
-                    }
-                }
-            }
         }
         
         return true;

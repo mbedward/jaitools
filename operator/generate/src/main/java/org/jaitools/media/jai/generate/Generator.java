@@ -28,13 +28,38 @@ package org.jaitools.media.jai.generate;
 import org.jaitools.imageutils.ImageDataType;
 
 /**
+ * Implemented by data generating classes used with the "Generate" operation.
+ * 
+ * @see GenerateDescriptor
  *
  * @author Michael Bedward
  * @since 1.3
  */
 public interface Generator {
     
+    /**
+     * Gets the image data type supported by this generator. Implementing
+     * classes must ensure that values returned by {@linkplain #getValues(int, int)}
+     * conform to this data type.
+     * 
+     * @return image data type
+     */
     ImageDataType getDataType();
     
-    Number getValue(int imageX, int imageY);
+    /**
+     * Gets the number of bands that this generator supports.
+     * 
+     * @return number of bands (must be greater than zero)
+     */
+    int getNumBands();
+    
+    /**
+     * Gets band value(s) for the given image location.
+     * 
+     * @param imageX image X ordinate
+     * @param imageY image Y ordinate
+     * 
+     * @return image values
+     */
+    Number[] getValues(int imageX, int imageY);
 }
