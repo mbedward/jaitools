@@ -49,13 +49,12 @@ import org.jaitools.imageutils.ImageDataType;
  * @see RangeLookupDescriptor
  * 
  * @author Michael Bedward
+ * @author Simone Giannecchini, GeoSolutions
  * @since 1.0
- * @version $Id$
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class RangeLookupRIF implements RenderedImageFactory {
 
-    /** Constructor */
     public RangeLookupRIF() {
     }
 

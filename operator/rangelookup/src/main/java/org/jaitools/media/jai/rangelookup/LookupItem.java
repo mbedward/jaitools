@@ -28,15 +28,15 @@ package org.jaitools.media.jai.rangelookup;
 import org.jaitools.numeric.Range;
 
 /**
- * Used by {@link RangeLookupTable} to define a single lookup range and return value.
+ * Used by {@link RangeLookupTable} to associate a source value lookup range 
+ * with a destination value.
  * 
  * @param <T> type of the source range
- * @param <U> type of the return value
+ * @param <U> type of the destination value
  * 
  * @author Michael Bedward
  * @author Simone Giannecchini, GeoSolutions
  * @since 1.1
- * @version $Id$
  */
 public class LookupItem<T extends Number & Comparable<? super T>, U extends Number & Comparable<? super U>> {
     
@@ -49,8 +49,8 @@ public class LookupItem<T extends Number & Comparable<? super T>, U extends Numb
     /**
      * Creates a new instance.
      * 
-     * @param range the lookup range
-     * @param value the return value
+     * @param range the source value lookup range
+     * @param value the destination value associated with this range
      * @throws IllegalArgumentException if either arg is {@code null}
      */
     public LookupItem(Range<T> range, U value) {
@@ -62,7 +62,7 @@ public class LookupItem<T extends Number & Comparable<? super T>, U extends Numb
     }
     
     /**
-     * Gets this items lookup range.
+     * Gets the source value lookup range.
      * 
      * @return the range
      */
@@ -71,9 +71,9 @@ public class LookupItem<T extends Number & Comparable<? super T>, U extends Numb
     }
     
     /**
-     * Gets this item's return value.
+     * Gets the destination value.
      * 
-     * @return value
+     * @return the value
      */
     public U getValue() {
         return value;

@@ -34,8 +34,9 @@ import org.jaitools.numeric.RangeUtils;
 
 
 /**
- * A lookup table which holds a collection of source value ranges, each mapped
- * to a destination value. Instances of this class are immutable. 
+ * A lookup table for the RangeLookup operation. 
+ * It holds a collection of source value ranges, each mapped to a destination 
+ * value. Instances of this class are immutable. 
  * <p>
  * Use the associated Builder class to construct a new table:
  * <pre><code>
@@ -56,7 +57,6 @@ import org.jaitools.numeric.RangeUtils;
  * @author Michael Bedward
  * @author Simone Giannecchini, GeoSolutions
  * @since 1.0
- * @version $Id$
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class RangeLookupTable<T extends Number & Comparable<? super T>, U extends Number & Comparable<? super U>> {

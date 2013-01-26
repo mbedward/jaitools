@@ -37,8 +37,8 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * operation and its associated image factories.
  *
  * @author Michael Bedward
+ * @author Simone Giannecchini, GeoSolutions
  * @since 1.0
- * @version $Id$
  */
 public class RangeLookupSpi implements OperationRegistrySpi {
 

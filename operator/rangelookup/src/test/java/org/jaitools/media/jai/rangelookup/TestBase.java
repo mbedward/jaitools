@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2011, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2011-13, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -25,6 +25,11 @@
 
 package org.jaitools.media.jai.rangelookup;
 
+import java.awt.image.RenderedImage;
+import java.lang.reflect.Array;
+import org.jaitools.imageutils.ImageDataType;
+import org.jaitools.imageutils.ImageUtils;
+import org.jaitools.numeric.NumberOperations;
 import org.jaitools.numeric.Range;
 
 /**
@@ -68,4 +73,31 @@ public abstract class TestBase {
         
         return builder.build();
     }
+    
+    /**
+     * Creates a test image with sequential values.
+     * 
+     * @param startVal min image value
+     * @param data array to fill and use as pixel values
+     * 
+     * @return  the test image
+     */
+    protected RenderedImage createTestImage(
+            Number startVal, 
+            ImageDataType dataType, 
+            int width, int height) {
+        
+        Number value = startVal;
+        Number delta = NumberOperations.newInstance(1, startVal.getClass());
+        
+        Number[] data = (Number[]) Array.newInstance(dataType.getDataClass(), width * height);
+        
+        for (int i = 0; i < data.length; i++) {
+            data[i] = value;
+            value = NumberOperations.add(value, delta);
+        }
+
+        return ImageUtils.createImageFromArray(data, width, height);
+    }
+
 }

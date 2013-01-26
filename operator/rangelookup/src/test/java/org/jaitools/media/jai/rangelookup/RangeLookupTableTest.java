@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2011, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2011-13, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -80,7 +80,7 @@ public class RangeLookupTableTest extends TestBase {
     }
     
     @Test
-    public void addOverlappedRange1() throws Exception {
+    public void addOverlappedRange() throws Exception {
         System.out.println("   add overlapping range");
         
         builder.add(Range.create(5, true, 10, true), 1);
@@ -123,5 +123,36 @@ public class RangeLookupTableTest extends TestBase {
             assertNotNull(match);
             assertEquals(1, match.getValue().intValue());
         }
+    }
+    
+    @Test
+    public void lookupWithIntervalGap() throws Exception {
+        System.out.println("   lookup with interval gaps");
+        
+        builder.add(Range.create(null, false, -1, false), 1);
+        builder.add(Range.create(1, false, null, false), 1);
+        
+        RangeLookupTable<Integer, Integer> table = builder.build();
+        
+        assertEquals(1, table.getLookupItem(-2).getValue().intValue());
+        assertNull( table.getLookupItem(-1) );
+        assertNull( table.getLookupItem(0) );
+        assertNull( table.getLookupItem(1) );
+        assertEquals(1, table.getLookupItem(2).getValue().intValue());
+    }
+    
+    @Test
+    public void lookupWithPointGap() throws Exception {
+        System.out.println("   lookup with interval gaps");
+        
+        // all numbers excluding 0
+        builder.add(Range.create(null, false, 0, false), 1);
+        builder.add(Range.create(0, false, null, false), 1);
+        
+        RangeLookupTable<Integer, Integer> table = builder.build();
+        
+        assertEquals(1, table.getLookupItem(-1).getValue().intValue());
+        assertNull( table.getLookupItem(0) );
+        assertEquals(1, table.getLookupItem(1).getValue().intValue());
     }
 }

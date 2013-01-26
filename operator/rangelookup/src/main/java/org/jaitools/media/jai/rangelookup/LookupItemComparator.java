@@ -30,7 +30,8 @@ import org.jaitools.numeric.RangeComparator;
 /**
  * Compares LookupItems on the basis of their source value ranges.
  *
- * @author michael
+ * @author Michael Bedward
+ * @since 1.3
  */
 public class LookupItemComparator<
         T extends Number & Comparable<? super T>, U extends Number & Comparable<? super U>> implements Comparator<LookupItem<T, U>> {

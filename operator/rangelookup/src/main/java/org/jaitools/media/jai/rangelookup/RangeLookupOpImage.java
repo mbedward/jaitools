@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2009, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2009-2013, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -48,8 +48,8 @@ import org.jaitools.numeric.Range;
  * @see RangeLookupDescriptor
  * 
  * @author Michael Bedward
+ * @author Simone Giannecchini, GeoSolutions
  * @since 1.0
- * @version $Id$
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class RangeLookupOpImage extends PointOpImage {
