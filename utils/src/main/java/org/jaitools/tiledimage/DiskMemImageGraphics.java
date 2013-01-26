@@ -575,9 +575,17 @@ public class DiskMemImageGraphics extends Graphics2D {
         return fm;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The bounds returned by this method may only be approximately equal to
+     * those originally set if a transform is active. See {@linkplain #getClip()}
+     * for explanation.
+     */
     @Override
     public Rectangle getClipBounds() {
-        return getClip().getBounds();
+        Shape s = getClip();
+        return s == null ? null : s.getBounds();
     }
 
     @Override
@@ -590,6 +598,15 @@ public class DiskMemImageGraphics extends Graphics2D {
         setClip(new Rectangle(x, y, width, height));
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Note that if a transform has been
+     * applied the result of this method may only be approximately equal to
+     * the clip region originally set. This is because the clip region is stored
+     * internally in its transformed state, and the result of this method is 
+     * calculated by applying the inverse of the transform to stored region.
+     */
     @Override
     public Shape getClip() {
         return untransformShape(usrClip);
