@@ -113,19 +113,19 @@ public class DemoImages {
         return image;
     }
     
-    public static RenderedImage createBandedImage(int width, int height, int numBands) {
-        int bandWidth = (int) Math.ceil((double)height / numBands);
-        int bandIndex = 0;
+    public static RenderedImage createStripedImage(int width, int height, int numBands) {
+        int stripeWidth = (int) Math.ceil((double)height / numBands);
+        int stripe = 0;
         
         TiledImage image = ImageUtils.createConstantImage(width, height, Integer.valueOf(0));
         
         for (int y = 0; y < height; y++) {
-            if (y % bandWidth == 0) {
-                bandIndex++;
+            if (y % stripeWidth == 0) {
+                stripe++;
             }
             
             for (int x = 0; x < width; x++) {
-                image.setSample(x, y, 0, bandIndex);
+                image.setSample(x, y, 0, stripe);
             }
         }
         
