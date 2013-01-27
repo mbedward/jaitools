@@ -11,11 +11,11 @@
     <description>
         Raster image processing for Java
     </description>
-    <url>http://code.google.com/p/jaitools/</url>
+    <url>http://jaitools.org/</url>
     <inceptionYear>2009</inceptionYear>
 
     <issueManagement>
-        <url>http://code.google.com/p/jaitools/issues/list</url>
+        <url>https://github.com/mbedward/jaitools/issues</url>
     </issueManagement>
 
     <mailingLists>
@@ -29,9 +29,9 @@
     </mailingLists>
 
     <scm>
-        <connection>scm:git:http://jaitools.googlecode.com/git/</connection>
-        <developerConnection>scm:git:https://jaitools.googlecode.com/git/</developerConnection>
-        <url>http://code.google.com/p/jaitools/source/browse/</url>
+        <connection>scm:git:https://github.com/mbedward/jaitools.git/</connection>
+        <developerConnection>scm:git:https://github.com/mbedward/jaitools.git/</developerConnection>
+        <url>https://github.com/mbedward/jaitools/</url>
     </scm>
 
     <licenses>
