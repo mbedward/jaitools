@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jaitools</groupId>
         <artifactId>jaitools</artifactId>
-        <version>1.3-SNAPSHOT</version>
+        <version>1.3.1</version>
     </parent>
     <artifactId>jt-demo</artifactId>
     <packaging>jar</packaging>
@@ -22,12 +22,6 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>jt-contour</artifactId>
-            <version>${project.version}</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>jt-generate</artifactId>
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
