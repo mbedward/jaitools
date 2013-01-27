@@ -34,6 +34,7 @@
                                 <excludes>
                                     <exclude>org.jaitools:jt-demo</exclude>
                                     <exclude>com.vividsolutions:jts</exclude>
+                                    <exclude>commons.collections:commons.collections</exclude>
                                     <exclude>junit:junit</exclude>
                                     <exclude>xerces:xercesImpl</exclude>
                                 </excludes>
