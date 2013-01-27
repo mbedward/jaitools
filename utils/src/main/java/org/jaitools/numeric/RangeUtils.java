@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2010, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2010-2013, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -39,38 +39,6 @@ import java.util.List;
  * @version $Id$
  */
 public class RangeUtils {
-
-    private static class RangeSortComparator<T extends Number & Comparable> implements Comparator<Range<T>> {
-        private RangeComparator<T> rc;
-
-        public RangeSortComparator(RangeComparator<T> rc) {
-            this.rc = rc;
-        }
-
-        public int compare(Range<T> r1, Range<T> r2) {
-            RangeComparator.Result result = rc.compare(r1, r2);
-            switch (result.getAt(RangeComparator.MIN_MIN)) {
-                case RangeComparator.LT:
-                    return -1;
-
-                case RangeComparator.GT:
-                    return 1;
-
-                default:
-                    switch (result.getAt(RangeComparator.MAX_MAX)) {
-                        case RangeComparator.LT:
-                            return -1;
-
-                        case RangeComparator.GT:
-                            return 1;
-
-                        default:
-                            return 0;
-                    }
-            }
-        }
-
-    }
 
 
     /**
@@ -159,6 +127,7 @@ public class RangeUtils {
 
     /**
      * Sorts a collection of ranges into ascending order of min value, then max value.
+     * Returns a new List of sorted ranges, leaving the input collection unmodified.
      *
      * @param <T> the value type
      * @param ranges the ranges to sort
@@ -166,9 +135,19 @@ public class RangeUtils {
      * @return sorted ranges as a {@code List}
      */
     public static <T extends Number & Comparable> List<Range<T>> sort(Collection<Range<T>> ranges) {
-        List<Range<T>> inputs = new ArrayList<Range<T>>(ranges);
-        Collections.sort(inputs, new RangeSortComparator(new RangeComparator<T>()));
-        return inputs;
+        List<Range<T>> copy = new ArrayList<Range<T>>(ranges);
+        Collections.sort(copy, new RangeComparator(new RangeExtendedComparator<T>()));
+        return copy;
+    }
+
+    /**
+     * Sorts a list of ranges into ascending order of min value, then max value.
+     *
+     * @param <T> the value type
+     * @param ranges the ranges to sort
+     */
+    public static <T extends Number & Comparable> void sortInPlace(List<Range<T>> ranges) {
+        Collections.sort(ranges, new RangeComparator(new RangeExtendedComparator<T>()));
     }
 
     /**
@@ -181,7 +160,7 @@ public class RangeUtils {
      */
     public static <T extends Number & Comparable> List<Range<T>> simplify(Collection<Range<T>> ranges) {
         List<Range<T>> inputs = new ArrayList<Range<T>>(ranges);
-        RangeComparator<T> comparator = new RangeComparator<T>();
+        RangeExtendedComparator<T> comparator = new RangeExtendedComparator<T>();
 
         boolean changed;
         do {
@@ -190,8 +169,8 @@ public class RangeUtils {
                 Range<T> r1 = inputs.get(i);
                 for (int j = i+1; j < inputs.size() && !changed; j++) {
                     Range<T> r2 = inputs.get(j);
-                    RangeComparator.Result result = comparator.compare(r1, r2);
-                    if (RangeComparator.isIntersection(result)) {
+                    RangeExtendedComparator.Result result = comparator.compare(r1, r2);
+                    if (RangeExtendedComparator.isIntersection(result)) {
                         switch (result) {
                             case EEEE:  // r1 and r2 are equal points
                             case EEGG:  // r2 is a point at min of r1
@@ -235,7 +214,7 @@ public class RangeUtils {
         /*
          * Next, look for any pairs of the form [A, B) [B, C] that can be joined as [A, C]
          */
-        Collections.sort(inputs, new RangeSortComparator(comparator));
+        Collections.sort(inputs, new RangeComparator(comparator));
         do {
             changed = false;
             for (int i = 0; i < inputs.size() - 1 && !changed; i++) {
@@ -299,18 +278,18 @@ public class RangeUtils {
         /*
          * From here, we are comparing two interval ranges
          */
-        RangeComparator<T> rc = new RangeComparator<T>();
-        RangeComparator.Result result = rc.compare(r1, r2);
-        if (RangeComparator.isIntersection(result)) {
+        RangeExtendedComparator<T> rc = new RangeExtendedComparator<T>();
+        RangeExtendedComparator.Result result = rc.compare(r1, r2);
+        if (RangeExtendedComparator.isIntersection(result)) {
             T min;
             boolean minIncluded;
-            switch (result.getAt(RangeComparator.MIN_MIN)) {
-                case RangeComparator.LT:
+            switch (result.getAt(RangeExtendedComparator.MIN_MIN)) {
+                case RangeExtendedComparator.LT:
                     min = r2.getMin();
                     minIncluded = r2.isMinIncluded();
                     break;
 
-                case RangeComparator.GT:
+                case RangeExtendedComparator.GT:
                     min = r1.getMin();
                     minIncluded = r1.isMinIncluded();
                     break;
@@ -323,13 +302,13 @@ public class RangeUtils {
 
             T max;
             boolean maxIncluded;
-            switch (result.getAt(RangeComparator.MAX_MAX)) {
-                case RangeComparator.LT:
+            switch (result.getAt(RangeExtendedComparator.MAX_MAX)) {
+                case RangeExtendedComparator.LT:
                     max = r1.getMax();
                     maxIncluded = r1.isMaxIncluded();
                     break;
 
-                case RangeComparator.GT:
+                case RangeExtendedComparator.GT:
                     max = r2.getMax();
                     maxIncluded = r2.isMaxIncluded();
                     break;
@@ -384,16 +363,16 @@ public class RangeUtils {
             return difference;  // empty list
         }
 
-        RangeComparator<T> rc = new RangeComparator<T>();
-        RangeComparator.Result result = rc.compare(common, r2);
+        RangeExtendedComparator<T> rc = new RangeExtendedComparator<T>();
+        RangeExtendedComparator.Result result = rc.compare(common, r2);
 
-        int minComp = result.getAt(RangeComparator.MIN_MIN);
-        int maxComp = result.getAt(RangeComparator.MAX_MAX);
+        int minComp = result.getAt(RangeExtendedComparator.MIN_MIN);
+        int maxComp = result.getAt(RangeExtendedComparator.MAX_MAX);
 
-        if (minComp == RangeComparator.EQ) {
+        if (minComp == RangeExtendedComparator.EQ) {
             difference.add(new Range<T>(common.getMax(), !common.isMaxIncluded(), r2.getMax(), r2.isMaxIncluded()));
         } else {  // minComp == GT
-            if (maxComp == RangeComparator.EQ) {
+            if (maxComp == RangeExtendedComparator.EQ) {
                 difference.add(new Range<T>(r2.getMin(), r2.isMinIncluded(), common.getMin(), !common.isMinIncluded()));
             } else {
                 // common lies within r2

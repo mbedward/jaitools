@@ -4,7 +4,7 @@
     <parent>
         <artifactId>jaitools</artifactId>
         <groupId>org.jaitools</groupId>
-        <version>1.3.0</version>
+        <version>1.3.1</version>
     </parent>
     
     <artifactId>jt-all</artifactId>
@@ -81,6 +81,11 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>jt-attributeop</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>jt-classifiedstats</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

@@ -599,8 +599,8 @@ public class Range<T extends Number & Comparable> {
      * @return {@code true} if the ranges intersect; {@code false} otherwise
      */
     public boolean intersects(Range<T> other) {
-        RangeComparator.Result comp = this.compareTo(other);
-        return RangeComparator.isIntersection(comp);
+        RangeExtendedComparator.Result comp = this.compareTo(other);
+        return RangeExtendedComparator.isIntersection(comp);
     }
 
     /**
@@ -706,8 +706,8 @@ public class Range<T extends Number & Comparable> {
      * @return a RangeComparator.Result enum identifying the relationship from the
      * point of view of this Range
      */
-    RangeComparator.Result compareTo(Range<T> other) {
-        RangeComparator<T> rc = new RangeComparator<T>();
+    RangeExtendedComparator.Result compareTo(Range<T> other) {
+        RangeExtendedComparator<T> rc = new RangeExtendedComparator<T>();
         return rc.compare(this, other);
     }
 }

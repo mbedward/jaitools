@@ -85,7 +85,15 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * pb.setParameter("filterThreshold", 5.1);
  * pb.setParameter("filterMethod", VectorizeDescriptor.FILTER_MERGE_LARGEST);
  * </code></pre>
- * 
+ *
+ * While the Vectorize parameters allow substantial control over the 
+ * polygons generated from a source image, sometimes it is not possible to
+ * avoid generating unwanted polygons. An example is where the same pixel
+ * value is used for a target region in one part of the image, but is 
+ * treated as an outside value in other parts of the image. Generally it will
+ * be straightforward to identify such unwanted polygons and filter them from
+ * the result set.
+ * <p>
  * 
  * The following parameters control the vectorizing process:
  * <table border="1" cellpadding="3">

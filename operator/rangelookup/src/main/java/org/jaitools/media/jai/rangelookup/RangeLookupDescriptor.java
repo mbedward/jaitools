@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2009, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2009-2013, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -25,81 +25,132 @@
 
 package org.jaitools.media.jai.rangelookup;
 
-import java.awt.RenderingHints;
-import java.awt.image.RenderedImage;
-
-import javax.media.jai.JAI;
 import javax.media.jai.OperationDescriptorImpl;
-import javax.media.jai.ParameterBlockJAI;
-import javax.media.jai.RenderedOp;
 import javax.media.jai.registry.RenderedRegistryMode;
 
 /**
  * Describes the "RangeLookup" operation.
  * <p>
- * This is a variation on the JAI {@linkplain javax.media.jai.LookupDescriptor}.
+ * This is a variation on the JAI Lookup operation.
  * It works with a {@linkplain RangeLookupTable} object in which each entry maps
  * a source image value range to a destination image value.
  * <p>
- * Example of use...
+ * In the example below, double data values from a source image are mapped
+ * to integer values in a destination image.
  * <pre><code>
+ * RenderedImage srcImage = ...
  *
- * // Perform a lookup as follows:
- * //   Src Value     Dest Value
- * //     x < 5            1
- * //   5 <= x < 10        2
- * //  10 <= x <= 20       3
- * //  any other value    99
+ * // RangeLookupTable is an immutable class. Use the associated Builder class
+ * // to construct a new table. The type parameters define source data type 
+ * // and destination type respectively
+ * RangeLookupTable.Builder&lt;Double, Integer&gt; builder =
+ *         new RangeLookupTable.Builder&lt;Double, Integer&gt;();
+ *
+ * // Map all source values less than zero to -1
+ * Range&lt;Double&gt; r = Range.create(Double.NEGATIVE_INFINITY, false, 0.0, false);
+ * builder.add(r, -1);
+ *
+ * // Map all source values from 0.0 (inclusive) to 1.0 (exclusive) to 1
+ * r = Range.create(0.0, true, 1.0, false);
+ * builder.add(r, 1);
+ *
+ * // Map all source values from 1.0 (inclusive) to 2.0 (exclusive) to 2
+ * r = Range.create(1.0, true, 2.0, false);
+ * builder.add(r, 2);
  * 
- * RenderedImage myIntImg = ...
- *
- * RangeLookupTable<Integer> table = new RangeLookupTable<Integer>(99);
- *
- * Range<Integer> r = new Range<Integer>(null, true, 5, false);  // x < 5
- * table.add(r, 1);
- *
- * r = new Range<Integer>(5, true, 10, false);  // 5 <= x < 10
- * table.add(r, 2);
- *
- * r = new Range<Integer>(10, true, 20, true);  // 10 <= x <= 20
- * table.add(r, 2);
+ * // Map all source values greater than or equal to 2.0 to 3
+ * r = Range.create(2.0, true, Double.POSITIVE_INFINITY, false);
+ * builder.add(r, 3);
+ * 
+ * // Create the lookup table and the JAI operation
+ * RangeLookupTable&lt;Double, Integer&gt; table = builder.build();
  *
  * ParameterBlockJAI pb = new ParameterBlockJAI("rangelookup");
- * pb.setSource("source0", myIntImg);
+ * pb.setSource("source0", srcImage);
  * pb.setParameter("table", table);
- * RenderedImage luImg = JAI.create("rangelookup", pb);
+ * RenderedImage destImage = JAI.create("rangelookup", pb);
  * </code></pre>
+ * 
+ * The example above uses a table with complete coverage of all source image
+ * values. It is also allowed to have a table that only covers parts of the
+ * source domain. In this case, a default destination value can be specified
+ * via the "default" parameter to RangeLookup, and this will be returned for
+ * all unmatched source values. If the "default" parameter is null (which is 
+ * its default setting) unmatched source values will be passed through to the
+ * destination image. Note that this may produce surprising results when 
+ * converting a float or double source image to an integral destination image
+ * due to value truncation and overflow.
+ * 
+ * <p>
+ * <b>Parameters</b>
+ * <table border="1">
+ * <tr>
+ * <th>Name</th><th>Type</th><th>Description</th><th>Default value</th>
+ * </tr>
+ * <tr>
+ * <td>table</td>
+ * <td>RangeLookupTable</td>
+ * <td>Table mapping source value ranges to destination values</td>
+ * <td>NO DEFAULT</td>
+ * </tr>
+ * <tr>
+ * <td>default</td>
+ * <td>Number</td>
+ * <td>Specifies the value to return for source values that do not map to any
+ * ranges in the lookup table. If null, unmatched source values will be passed
+ * through to the destination image.
+ * </td>
+ * <td>null (pass-through)</td>
+ * </tr>
+ * </table>
  *
  * @see org.jaitools.numeric.Range
  * @see RangeLookupTable
  * 
  * @author Michael Bedward
+ * @author Simone Giannecchini, GeoSolutions
+ * 
  * @since 1.0
- * @version $Id$
  */
 public class RangeLookupDescriptor extends OperationDescriptorImpl {
 
-    static final int TABLE_ARG_INDEX = 0;
+    /** serialVersionUID */
+    private static final long serialVersionUID = 6435703646431578734L;
 
-    private static final String[] paramNames =
-        {"table"};
+    static final int TABLE_ARG = 0;
+    static final int DEFAULT_ARG = 1;
 
-    private static final Class[] paramClasses =
-        {RangeLookupTable.class};
+    private static final String[] paramNames = {
+        "table", 
+        "default"
+    };
 
-    private static final Object[] paramDefaults =
-        {NO_PARAMETER_DEFAULT};
+    private static final Class<?>[] paramClasses = {
+        RangeLookupTable.class, 
+        Number.class
+    };
+
+    private static final Object[] paramDefaults = {
+        NO_PARAMETER_DEFAULT,
+        (Number) null
+    };
 
     /** Constructor. */
     public RangeLookupDescriptor() {
         super(new String[][]{
-                    {"GlobalName", "RangeLookup"},
-                    {"LocalName", "RangeLookup"},
-                    {"Vendor", "org.jaitools.media.jai"},
-                    {"Description", "Maps source image value ranges to destination image values"},
-                    {"DocURL", "http://code.google.com/p/jaitools/"},
-                    {"Version", "1.0.0"},
-                    {"arg0Desc", "table (RangeLookupTable)"}
+                {"GlobalName", "RangeLookup"},
+                {"LocalName", "RangeLookup"},
+                {"Vendor", "org.jaitools.media.jai"},
+                {"Description", "Maps source image value ranges to destination image values"},
+                {"DocURL", "http://code.google.com/p/jaitools/"},
+                {"Version", "1.0.0"},
+        
+                {"arg0Desc",
+                 String.format("%s - table holding source value ranges mapped to "
+                             + "destination values", paramNames[TABLE_ARG])},
+                {"arg1Desc",
+                 String.format("%s - value to use for unmatched source values "
+                             + "(default: null to pass through source values)", paramNames[DEFAULT_ARG])},
                 },
 
                 new String[]{RenderedRegistryMode.MODE_NAME},   // supported modes

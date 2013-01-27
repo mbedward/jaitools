@@ -33,6 +33,7 @@ import java.awt.image.RenderedImage;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 
 /**
@@ -56,6 +57,52 @@ public class ImageFrame extends JFrame {
 
     private JTextField statusBar;
     private StringBuilder sb;
+    
+    /**
+     * Displays the given image in a new ImageFrame. This method can be
+     * safely called from any thread. The frame's closing behaviour will be
+     * {@linkplain #EXIT_ON_CLOSE}.
+     * 
+     * @param img image to display
+     * @param title frame title
+     */
+    public static void showImage(
+            final RenderedImage img, 
+            final String title) {
+        
+        showImage(img, title, true);
+    }
+    
+    /**
+     * Displays the given image in a new ImageFrame. This method can be
+     * safely called from any thread. The frame's closing behaviour will be
+     * either {@linkplain #EXIT_ON_CLOSE} or {@linkplain #DISPOSE_ON_CLOSE}
+     * depending on the {@code exitOnClose} argument.
+     * 
+     * @param img image to display
+     * @param title frame title
+     * @param exitOnClose true for exit on close; false for dispose on close
+     */
+    public static void showImage(
+            final RenderedImage img, 
+            final String title, 
+            boolean exitOnClose) {
+        
+        if (SwingUtilities.isEventDispatchThread()) {
+            doShowImage(img, title);
+        } else {
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    doShowImage(img, title);
+                }
+            });
+        }
+    }
+    
+    private static void doShowImage(RenderedImage img, String title) {
+        ImageFrame f = new ImageFrame(img, title);
+        f.setVisible(true);
+    }
 
     /**
      * Constructor to display and draw data from a single image

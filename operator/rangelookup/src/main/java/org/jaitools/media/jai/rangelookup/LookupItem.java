@@ -28,29 +28,29 @@ package org.jaitools.media.jai.rangelookup;
 import org.jaitools.numeric.Range;
 
 /**
- * Used by {@link RangeLookupTable} to define a single lookup range and return value.
+ * Used by {@link RangeLookupTable} to associate a source value lookup range 
+ * with a destination value.
  * 
  * @param <T> type of the source range
- * @param <U> type of the return value
+ * @param <U> type of the destination value
  * 
  * @author Michael Bedward
  * @author Simone Giannecchini, GeoSolutions
  * @since 1.1
- * @version $Id$
  */
 public class LookupItem<T extends Number & Comparable<? super T>, U extends Number & Comparable<? super U>> {
     
-    /** Lookup range. Package-access field. */
-    Range<T> range;
+    /** Lookup range */
+    private final Range<T> range;
     
-    /** Return value. Package-access field. */
-    U value;
+    /** Return value */
+    private final U value;
 
     /**
      * Creates a new instance.
      * 
-     * @param range the lookup range
-     * @param value the return value
+     * @param range the source value lookup range
+     * @param value the destination value associated with this range
      * @throws IllegalArgumentException if either arg is {@code null}
      */
     public LookupItem(Range<T> range, U value) {
@@ -62,17 +62,18 @@ public class LookupItem<T extends Number & Comparable<? super T>, U extends Numb
     }
     
     /**
-     * Gets a copy of this item's range. 
+     * Gets the source value lookup range.
      * 
      * @return the range
      */
     public Range<T> getRange() {
-        return new Range<T>(range);
+        return range;
     }
     
     /**
-     * Gets this item's return value.
-     * @return 
+     * Gets the destination value.
+     * 
+     * @return the value
      */
     public U getValue() {
         return value;
@@ -87,6 +88,7 @@ public class LookupItem<T extends Number & Comparable<? super T>, U extends Numb
         return result;
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

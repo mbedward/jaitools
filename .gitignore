@@ -1,0 +1,6 @@
+build-full.bat
+target
+.settings
+.classpath
+.project
+*.class

@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2011, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2011-13, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -25,6 +25,11 @@
 
 package org.jaitools.media.jai.rangelookup;
 
+import java.awt.image.RenderedImage;
+import java.lang.reflect.Array;
+import org.jaitools.imageutils.ImageDataType;
+import org.jaitools.imageutils.ImageUtils;
+import org.jaitools.numeric.NumberOperations;
 import org.jaitools.numeric.Range;
 
 /**
@@ -44,7 +49,7 @@ public abstract class TestBase {
      */
     protected <T extends Number & Comparable<? super T>, 
              U extends Number & Comparable<? super U>> 
-            RangeLookupTable<T, U> createTable(T[] breaks, U[] values) {
+            RangeLookupTable<T, U> createTableFromBreaks(T[] breaks, U[] values) {
         
         final int N = breaks.length;
         if (values.length != N + 1) {
@@ -52,21 +57,47 @@ public abstract class TestBase {
                     "values array length should be breaks array length + 1");
         }
         
-        RangeLookupTable<T, U> table = new RangeLookupTable<T, U>();
+        RangeLookupTable.Builder<T, U> builder = new RangeLookupTable.Builder<T, U>();
         Range<T> r;
         
         r = Range.create(null, false, breaks[0], false);
-        table.add(r, values[0]);
+        builder.add(r, values[0]);
         
         for (int i = 1; i < N; i++) {
             r = Range.create(breaks[i-1], true, breaks[i], false);
-            table.add(r, values[i]);
+            builder.add(r, values[i]);
         }
         
         r = Range.create(breaks[N-1], true, null, false);
-        table.add(r, values[N]);
+        builder.add(r, values[N]);
         
-        return table;
+        return builder.build();
+    }
+    
+    /**
+     * Creates a test image with sequential values.
+     * 
+     * @param startVal min image value
+     * @param data array to fill and use as pixel values
+     * 
+     * @return  the test image
+     */
+    protected RenderedImage createTestImage(
+            Number startVal, 
+            ImageDataType dataType, 
+            int width, int height) {
+        
+        Number value = startVal;
+        Number delta = NumberOperations.newInstance(1, startVal.getClass());
+        
+        Number[] data = (Number[]) Array.newInstance(dataType.getDataClass(), width * height);
+        
+        for (int i = 0; i < data.length; i++) {
+            data[i] = value;
+            value = NumberOperations.add(value, delta);
+        }
+
+        return ImageUtils.createImageFromArray(data, width, height);
     }
 
 }

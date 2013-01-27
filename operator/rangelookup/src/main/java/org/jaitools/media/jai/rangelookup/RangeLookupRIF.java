@@ -40,6 +40,8 @@ import javax.media.jai.RasterFactory;
 import com.sun.media.jai.opimage.RIFUtil;
 import com.sun.media.jai.util.JDKWorkarounds;
 
+import org.jaitools.imageutils.ImageDataType;
+
 
 /**
  * The image factory for the RangeLookup operation.
@@ -47,12 +49,12 @@ import com.sun.media.jai.util.JDKWorkarounds;
  * @see RangeLookupDescriptor
  * 
  * @author Michael Bedward
+ * @author Simone Giannecchini, GeoSolutions
  * @since 1.0
- * @version $Id$
  */
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class RangeLookupRIF implements RenderedImageFactory {
 
-    /** Constructor */
     public RangeLookupRIF() {
     }
 
@@ -68,9 +70,16 @@ public class RangeLookupRIF implements RenderedImageFactory {
 
         final RenderedImage src = paramBlock.getRenderedSource(0);
         ImageLayout layout = RIFUtil.getImageLayoutHint(renderHints);
+        
         final RangeLookupTable table =
-                (RangeLookupTable) paramBlock.getObjectParameter(RangeLookupDescriptor.TABLE_ARG_INDEX);
+                (RangeLookupTable) paramBlock.getObjectParameter(RangeLookupDescriptor.TABLE_ARG);
 
+        /*
+         * Default value may be null, indicating unmatched source values 
+         * should be passed through.
+         */
+        final Number defaultValue = 
+                (Number) paramBlock.getObjectParameter(RangeLookupDescriptor.DEFAULT_ARG);
 
         /*
          * Set the destination type based on the
@@ -79,18 +88,22 @@ public class RangeLookupRIF implements RenderedImageFactory {
         final Class<? extends Number> destClazz;
         List<LookupItem> items = table.getItems();
         if (items.size() > 0) {
-            destClazz = items.get(0).value.getClass();
+            destClazz = items.get(0).getValue().getClass();
+        } else if (defaultValue != null) {
+            destClazz = defaultValue.getClass();
         } else {
-            destClazz = table.getDefaultValue().getClass();
+            // fall back to source value class
+            int typeCode = paramBlock.getRenderedSource(0).getSampleModel().getDataType();
+            ImageDataType dataType = ImageDataType.getForDataBufferType(typeCode);
+            destClazz = dataType.getDataClass();
         }
+        
         int dataType = -1;
-        if (destClazz.equals(Byte.class)) {
-            dataType = DataBuffer.TYPE_BYTE;
-        } else if (destClazz.equals(Short.class)) {
+        if (destClazz.equals(Short.class)) {
 
             // if the values are positive we should go with USHORT
             for (int i = items.size() - 1; i >= 0; i--) {
-                if (items.get(i).value.shortValue() < 0) {
+                if (items.get(i).getValue().shortValue() < 0) {
                     dataType = DataBuffer.TYPE_SHORT;
                     break;
                 }
@@ -99,16 +112,18 @@ public class RangeLookupRIF implements RenderedImageFactory {
             // No negative values so USHORT can be used
             if (dataType == -1) {
                 dataType = DataBuffer.TYPE_USHORT;
-            }
+            } 
+            
+        } else { // All data classes other than Short
+            try {
+                ImageDataType t = ImageDataType.getForClass(destClazz);
+                dataType = t.getDataBufferType();
 
-        } else if (destClazz.equals(Integer.class)) {
-            dataType = DataBuffer.TYPE_INT;
-        } else if (destClazz.equals(Float.class)) {
-            dataType = DataBuffer.TYPE_FLOAT;
-        } else if (destClazz.equals(Double.class)) {
-            dataType = DataBuffer.TYPE_DOUBLE;
-        } else {
-            throw new IllegalArgumentException("Illegal destination class for this rangelookuptable:" + destClazz.toString());
+            } catch (IllegalArgumentException ex) {
+                throw new IllegalArgumentException(
+                        "Illegal destination class for this rangelookuptable:"
+                        + destClazz.toString());
+            }
         }
 
         final boolean isDataTypeChanged;
@@ -156,6 +171,7 @@ public class RangeLookupRIF implements RenderedImageFactory {
         return new RangeLookupOpImage(src,
                 renderHints,
                 layout,
-                table);
+                table,
+                defaultValue);
     }
 }

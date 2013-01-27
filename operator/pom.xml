@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.jaitools</groupId>
         <artifactId>jaitools</artifactId>
-        <version>1.3.0</version>
+        <version>1.3.1</version>
     </parent>
 
     <artifactId>operator</artifactId>
@@ -27,5 +27,6 @@
         <module>vectorbinarize</module>
         <module>vectorize</module>
         <module>zonalstats</module>
+        <module>classifiedstats</module>
   </modules>
 </project>

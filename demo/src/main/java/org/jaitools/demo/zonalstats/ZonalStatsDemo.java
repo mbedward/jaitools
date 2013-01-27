@@ -67,7 +67,7 @@ public class ZonalStatsDemo {
      */
     public ZonalStatsDemo() {
         dataImg = DemoImages.createUniformRandomImage(500, 500, 10.0);
-        zoneImg = DemoImages.createBandedImage(500, 500, 5);
+        zoneImg = DemoImages.createStripedImage(500, 500, 5);
     }
 
     /**

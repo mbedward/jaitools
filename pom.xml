@@ -4,7 +4,7 @@
 
     <groupId>org.jaitools</groupId>
     <artifactId>jaitools</artifactId>
-    <version>1.3.0</version>
+    <version>1.3.1</version>
 
     <packaging>pom</packaging>
     <name>JAITools</name>
@@ -66,14 +66,6 @@
         </pluginManagement>
         
         <plugins>
-            <plugin>
-                <artifactId>maven-release-plugin</artifactId>
-                <version>2.0-beta-9</version>
-                <configuration>
-                    <autoVersionSubmodules>true</autoVersionSubmodules>
-                    <mavenExecutorId>forked-path</mavenExecutorId>
-                </configuration>
-            </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
