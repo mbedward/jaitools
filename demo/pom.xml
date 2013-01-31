@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jaitools</groupId>
         <artifactId>jaitools</artifactId>
-        <version>1.3-SNAPSHOT</version>
+        <version>1.4-SNAPSHOT</version>
     </parent>
     <artifactId>jt-demo</artifactId>
     <packaging>jar</packaging>
