@@ -293,7 +293,7 @@ public class ROIGeometryTest {
         ROIGeometry empty = createEmptyROI();
         ROI result = empty.add(nonEmpty);
         
-        result.getBounds().equals(nonEmpty.getBounds());
+        assertTrue( result.getBounds().equals(nonEmpty.getBounds()) );
     }
     
     @Test
@@ -303,7 +303,7 @@ public class ROIGeometryTest {
         ROIGeometry empty = createEmptyROI();
         ROI result = nonEmpty.add(empty);
         
-        result.getBounds().equals(nonEmpty.getBounds());
+        assertTrue( result.getBounds().equals(nonEmpty.getBounds()) );
     }
 
     @Ignore
