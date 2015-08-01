@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2010-2011, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2010-2015, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -38,8 +38,6 @@ import javax.media.jai.ROI;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 
-import com.vividsolutions.jts.geom.LineString;
-
 import org.jaitools.CollectionFactory;
 import org.jaitools.jts.LineSmoother;
 import org.jaitools.jts.SmootherControl;
@@ -47,6 +45,8 @@ import org.jaitools.jts.Utils;
 import org.jaitools.media.jai.AttributeOpImage;
 import org.jaitools.numeric.CompareOp;
 import org.jaitools.numeric.Range;
+
+import com.vividsolutions.jts.geom.LineString;
 
 
 /**
@@ -370,6 +370,8 @@ public class ContourOpImage extends AttributeOpImage {
         int[] sh = new int[5];
         double temp1, temp2, temp3, temp4;
 
+        // config left for completeless, but only the elements at position 0 and 2 are actually
+        // used, the ones at position 1 caused the contour to generated into a grid on flat areas
         int[][][] configLookup = {
             {{0, 0, 8}, {0, 2, 5}, {7, 6, 9}},
             {{0, 3, 4}, {1, 3, 1}, {4, 3, 0}},
@@ -464,28 +466,28 @@ public class ContourOpImage extends AttributeOpImage {
                             h[4] = sample[TL_VERTEX4] - levelValue;
                             xh[4] = x - 1;
                             yh[4] = y + 1;
-                            sh[4] = Double.compare(h[4], 0.0);
+                            sh[4] = aboveBelowZero(h[4]);
                         }
 
                         if (!nodata[TR_VERTEX3]) {
                             h[3] = sample[TR_VERTEX3] - levelValue;
                             xh[3] = x;
                             yh[3] = y + 1;
-                            sh[3] = Double.compare(h[3], 0.0);
+                            sh[3] = aboveBelowZero(h[3]);
                         }
 
                         if (!nodata[BR_VERTEX2]) {
                             h[2] = sample[BR_VERTEX2] - levelValue;
                             xh[2] = x;
                             yh[2] = y;
-                            sh[2] = Double.compare(h[2], 0.0);
+                            sh[2] = aboveBelowZero(h[2]);
                         }
 
                         if (!nodata[BL_VERTEX1]) {
                             h[1] = sample[BL_VERTEX1] - levelValue;
                             xh[1] = x - 1;
                             yh[1] = y;
-                            sh[1] = Double.compare(h[1], 0.0);
+                            sh[1] = aboveBelowZero(h[1]);
                         }
 
                         h[0] = 0.0;
@@ -506,7 +508,7 @@ public class ContourOpImage extends AttributeOpImage {
                         h[0] /= nh;
                         xh[0] = x - 0.5;
                         yh[0] = y + 0.5;
-                        sh[0] = Double.compare(h[0], 0.0);
+                        sh[0] = aboveBelowZero(h[0]);
 
                         /* Scan each triangle in the box */
                         int m1, m2, m3;
@@ -628,6 +630,20 @@ public class ContourOpImage extends AttributeOpImage {
         }
         
         return segments;
+    }
+
+    /**
+     * Compares h to zero, return 1 if above or equal to zero, -1 otherwise
+     * 
+     * @param h
+     * @return
+     */
+    private int aboveBelowZero(double h) {
+        int result = Double.compare(h, 0.0);
+        if (result == 0) {
+            result = 1;
+        }
+        return result;
     }
     
 
