@@ -626,10 +626,19 @@ public class ContourOpImage extends AttributeOpImage {
             
             iter1.nextLine();
             iter2.nextLine();
+            lineComplete(segments, y);
             y++;
         }
+        // once more to make it offload all residual segments
+        lineComplete(segments, y);
         
         return segments;
+    }
+
+    private void lineComplete(Map<Integer, Segments> segments, int line) {
+        for (Segments s : segments.values()) {
+            s.lineComplete(line);
+        }
     }
 
     /**
