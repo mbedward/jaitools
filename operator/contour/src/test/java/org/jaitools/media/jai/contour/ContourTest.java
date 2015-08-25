@@ -116,6 +116,7 @@ public class ContourTest extends TestBase {
         // implementation is free to be changed and eventually result in a different order)
         boolean[] found = new boolean[10];
         for (LineString contour : contours) {
+            assertSingleSegment(contour);
             double level = (Double) contour.getUserData();
             
             // check the level is multiple of 10 and within the expected limits
@@ -144,9 +145,14 @@ public class ContourTest extends TestBase {
         assertEquals(1, contours.size());
         
         LineString contour = contours.iterator().next();
+        assertSingleSegment(contour);
         assertContour(contour, 0, IMAGE_WIDTH/2, IMAGE_WIDTH-1, IMAGE_WIDTH/2);
     }
     
+    private void assertSingleSegment(LineString contour) {
+        assertEquals(2, contour.getNumPoints());
+    }
+
     /**
      * Same as test singleContourVerticalGradient but contour simplification 
      * is turned off so we should get one coordinate per pixel.
@@ -179,6 +185,7 @@ public class ContourTest extends TestBase {
         assertEquals(1, contours.size());
 
         LineString contour = contours.iterator().next();
+        assertSingleSegment(contour);
         assertContour(contour, IMAGE_WIDTH/2, 0, IMAGE_WIDTH/2, IMAGE_WIDTH-1);
     }
 
@@ -301,6 +308,7 @@ public class ContourTest extends TestBase {
         }
         
         for (LineString contour : contours) {
+            assertSingleSegment(contour);
             int z = ((Number)contour.getUserData()).intValue();
             assertTrue(levels.contains(z));
             levels.remove(Integer.valueOf(z)); // remove by value, not index !

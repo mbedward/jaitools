@@ -95,8 +95,8 @@ final class Segment {
         this.yEnd = y2;
         this.dxEnd = x2 - x1;
         this.dyEnd = y2 - y1;
-        this.dxStart = -dxEnd;
-        this.dyStart = -dyEnd;
+        this.dxStart = dxEnd;
+        this.dyStart = dyEnd;
     }
 
     Segment(double x1, double y1, double x2, double y2, boolean simplify) {
@@ -221,7 +221,10 @@ final class Segment {
             this.ordinates = newOrdinates;
             assert isConsistent();
         }
-
+        if (simplify && sameSlope(dxEnd, dyEnd, -other.dxEnd, -other.dyEnd)) {
+            // skip our ending point
+            idxLast -= 2;
+        }
         for (int i = other.idxLast - 2; i > other.idxFirst;) {
             double y = other.ordinates[--i];
             double x = other.ordinates[--i];
@@ -244,6 +247,10 @@ final class Segment {
             this.ordinates = newOrdinates;
             assert isConsistent();
         }
+        if (simplify && sameSlope(dxEnd, dyEnd, other.dxStart, other.dyStart)) {
+            // skip our original starting point
+            idxLast -= 2;
+        }
         System.arraycopy(other.ordinates, other.idxFirst + 2, ordinates, idxLast, lengthOther);
         idxLast += lengthOther;
         this.xEnd = other.xEnd;
@@ -262,6 +269,10 @@ final class Segment {
             idxFirst += extra;
             idxLast += extra;
             assert isConsistent();
+        }
+        if (simplify && sameSlope(dxStart, dyStart, other.dxEnd, other.dyEnd)) {
+            // skip our original starting point
+            idxFirst += 2;
         }
         for (int i = other.idxLast - 2; i > other.idxFirst;) {
             double y = other.ordinates[--i];
@@ -285,6 +296,10 @@ final class Segment {
             idxFirst += extra;
             idxLast += extra;
             assert isConsistent();
+        }
+        if (simplify && sameSlope(dxStart, dyStart, -other.dxStart, -other.dyStart)) {
+            // skip our original starting point
+            idxFirst += 2;
         }
         for (int i = other.idxFirst + 2; i < other.idxLast;) {
             double x = other.ordinates[i++];
@@ -325,6 +340,10 @@ final class Segment {
         }
 
         return sb.append("]").toString();
+    }
+
+    int getNumCoordinates() {
+        return (idxLast - idxFirst) / 2;
     }
 
     private static final class StartComparator implements Comparator<Segment> {
