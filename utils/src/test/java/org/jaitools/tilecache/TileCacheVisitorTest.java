@@ -25,7 +25,7 @@
 
 package org.jaitools.tilecache;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import javax.media.jai.JAI;
@@ -60,10 +60,11 @@ public class TileCacheVisitorTest {
     @After
     public void tearDown() {
         JAI.getDefaultInstance().setTileCache(origCache);
+        cache.flush();
     }
 
     @Test
-    public void testVisitor(){
+    public void testVisitor() throws InterruptedException{
         System.out.println("   cache visitor");
         final int XTILES = 4;
         final int YTILES = 4;
@@ -89,25 +90,32 @@ public class TileCacheVisitorTest {
         RenderedOp op1 = helper.simpleJAIOp(XTILES, YTILES);
         op1.getTiles();
 
+        //This forces Tile access time to be different. This is needed to find the
+        //right tiles to dispose within memory. Otherwise fast computers could make
+        //this test fail.
+        Thread.sleep(1000);
+        
         RenderedOp op2 = helper.simpleJAIOp(XTILES, YTILES);
         op2.getTiles();
 
         /*
          * Visit the cache and check that we get the correct tile stats
          */
-        Map<BasicCacheVisitor.Key, Object> filters = new HashMap<BasicCacheVisitor.Key, Object>();
+        Map<BasicCacheVisitor.Key, Object> filters = new LinkedHashMap<BasicCacheVisitor.Key, Object>();
         filters.put(BasicCacheVisitor.Key.OWNER, op1.getCurrentRendering());
         filters.put(BasicCacheVisitor.Key.RESIDENT, Boolean.TRUE);
 
         BasicCacheVisitor visitor = new BasicCacheVisitor();
         visitor.setFilters(filters);
         cache.accept(visitor);
+        
         assertTrue(visitor.getTiles().size() == EXTRA);
 
         visitor.clear();
         filters.put(BasicCacheVisitor.Key.OWNER, op2.getCurrentRendering());
         visitor.setFilters(filters);
         cache.accept(visitor);
+
         assertTrue(visitor.getTiles().size() == XTILES * YTILES);
 
         visitor.setFilter(BasicCacheVisitor.Key.RESIDENT, Boolean.TRUE);

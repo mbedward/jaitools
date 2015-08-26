@@ -1095,7 +1095,7 @@ public class DiskMemImageGraphics extends Graphics2D {
             gr.setRenderingHints(renderingHints);
         }
         gr.setStroke(stroke);
-        gr.setTransform(transform);
+        gr.setTransform(new AffineTransform(transform));
     }
 
     /**

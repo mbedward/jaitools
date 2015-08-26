@@ -78,7 +78,7 @@ public class DiskCachedTileTest {
         
         File oldFolder = DiskCachedTile.getCacheFolder();
         
-        File newFolder = new File("/foo/bar");
+        File newFolder = new File(System.getProperty("java.io.tmpdir"));
         DiskCachedTile.setCacheFolder(newFolder);
 
         assertEquals(newFolder, DiskCachedTile.getCacheFolder());
