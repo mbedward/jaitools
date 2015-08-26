@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2010-2011, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2010-2015, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -25,6 +25,10 @@
 
 package org.jaitools.media.jai.contour;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -35,13 +39,11 @@ import javax.media.jai.PlanarImage;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.TiledImage;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.LineString;
-
 import org.jaitools.CollectionFactory;
 import org.jaitools.imageutils.ImageUtils;
 
-import static org.junit.Assert.*;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.LineString;
 
 /**
  * Base class for unit test of the Contour operator.
@@ -173,6 +175,50 @@ public abstract class TestBase {
                     }
                 }
                 break;
+        }
+
+        return src;
+    }
+
+    /**
+     * Creates a binary image with a horizontal, vertical or radial split
+     * 
+     * @param gradient direction of the split
+     * 
+     * @return the image
+     */
+    protected TiledImage createBinaryImage(Gradient gradient) {
+        TiledImage src = ImageUtils.createConstantImage(IMAGE_WIDTH, IMAGE_WIDTH,
+                Double.valueOf(0));
+
+        final double mid = IMAGE_WIDTH / 2;
+        switch (gradient) {
+        case HORIZONTAL:
+            for (int y = 0; y < IMAGE_WIDTH; y++) {
+                for (int x = 0; x < IMAGE_WIDTH; x++) {
+                    src.setSample(x, y, 0, x > mid ? 1 : 0);
+                }
+            }
+            break;
+
+        case RADIAL:
+
+            for (int y = 0; y < IMAGE_WIDTH; y++) {
+                double yd2 = (y - mid) * (y - mid);
+                for (int x = 0; x < IMAGE_WIDTH; x++) {
+                    double xd2 = (x - mid) * (x - mid);
+                    src.setSample(x, y, 0, Math.sqrt(yd2 + xd2) > (mid - 2) ? 1 : 0);
+                }
+            }
+            break;
+
+        case VERTICAL:
+            for (int y = 0; y < IMAGE_WIDTH; y++) {
+                for (int x = 0; x < IMAGE_WIDTH; x++) {
+                    src.setSample(x, y, 0, y > mid ? 1 : 0);
+                }
+            }
+            break;
         }
 
         return src;

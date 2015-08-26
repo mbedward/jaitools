@@ -26,6 +26,7 @@ package org.jaitools.tiledimage;
 
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -111,5 +112,23 @@ public class ImageGraphicsGeneralTest extends TiledImageTestBase {
         
         gr.setFont(null);
         assertNotNull(gr.getFont());
+    }
+    
+    @Test
+    public void testTransformationCopyOnCreation() {        
+        //ensure base behaviour
+        assertNotNull(gr.getTransform());
+        assertEquals(1.0,gr.getTransform().getScaleX(), 0.0001);
+        gr.scale(2, 2);
+        assertEquals(2.0,gr.getTransform().getScaleX(), 0.0001);
+        assertTrue(gr instanceof DiskMemImageGraphics);
+        
+        Graphics2D subgr = (Graphics2D) gr.create();
+        assertEquals(2, subgr.getTransform().getScaleX(), 0.0001);
+        subgr.scale(3, 3);
+        assertEquals(6, subgr.getTransform().getScaleX(), 0.0001);
+        
+        //but the original transformation is not touched
+        assertEquals(2.0,gr.getTransform().getScaleX(), 0.0001);
     }
 }

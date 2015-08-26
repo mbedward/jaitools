@@ -29,7 +29,7 @@ import java.awt.image.RenderedImage;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -99,7 +99,7 @@ public class BasicCacheVisitor implements DiskMemTileCacheVisitor {
     }
 
     private List<DiskCachedTile> tiles = new ArrayList<DiskCachedTile>();
-    private Map<Key, Object> filters = new HashMap<Key, Object>();
+    private Map<Key, Object> filters = new LinkedHashMap<Key, Object>();
 
 
     /**

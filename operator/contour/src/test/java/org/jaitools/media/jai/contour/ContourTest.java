@@ -1,5 +1,5 @@
 /* 
- *  Copyright (c) 2010-2011, Michael Bedward. All rights reserved. 
+ *  Copyright (c) 2010-2015, Michael Bedward. All rights reserved. 
  *   
  *  Redistribution and use in source and binary forms, with or without modification, 
  *  are permitted provided that the following conditions are met: 
@@ -25,6 +25,10 @@
 
 package org.jaitools.media.jai.contour;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.awt.Point;
 import java.awt.Transparency;
 import java.awt.color.ColorSpace;
@@ -46,16 +50,15 @@ import javax.media.jai.FloatDoubleColorModel;
 import javax.media.jai.PlanarImage;
 import javax.media.jai.TiledImage;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.io.WKTReader;
-
 import org.jaitools.imageutils.ImageUtils;
 import org.jaitools.numeric.Range;
-
-import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.io.ParseException;
+import com.vividsolutions.jts.io.WKTReader;
 
 /**
  * Unit tests for the "Contour" operation.
@@ -113,6 +116,7 @@ public class ContourTest extends TestBase {
         // implementation is free to be changed and eventually result in a different order)
         boolean[] found = new boolean[10];
         for (LineString contour : contours) {
+            assertSingleSegment(contour);
             double level = (Double) contour.getUserData();
             
             // check the level is multiple of 10 and within the expected limits
@@ -141,9 +145,14 @@ public class ContourTest extends TestBase {
         assertEquals(1, contours.size());
         
         LineString contour = contours.iterator().next();
+        assertSingleSegment(contour);
         assertContour(contour, 0, IMAGE_WIDTH/2, IMAGE_WIDTH-1, IMAGE_WIDTH/2);
     }
     
+    private void assertSingleSegment(LineString contour) {
+        assertEquals(2, contour.getNumPoints());
+    }
+
     /**
      * Same as test singleContourVerticalGradient but contour simplification 
      * is turned off so we should get one coordinate per pixel.
@@ -176,6 +185,7 @@ public class ContourTest extends TestBase {
         assertEquals(1, contours.size());
 
         LineString contour = contours.iterator().next();
+        assertSingleSegment(contour);
         assertContour(contour, IMAGE_WIDTH/2, 0, IMAGE_WIDTH/2, IMAGE_WIDTH-1);
     }
 
@@ -200,6 +210,65 @@ public class ContourTest extends TestBase {
         for (Coordinate c : contour.getCoordinates()) {
             assertEquals(value, c.distance(mid), tol);
         }
+    }
+
+    /**
+     * Trace a single ring contour from a binary image split in two and ensure there is a single
+     * line made of just two points
+     * 
+     * @throws ParseException
+     */
+    @Test
+    public void singleContourVerticalBinaryGradient() throws ParseException {
+        TiledImage src = createBinaryImage(Gradient.VERTICAL);
+
+        args.put("levels", Collections.singleton(1));
+        Collection<LineString> contours = doOp(src, args);
+
+        assertEquals(1, contours.size());
+
+        LineString contour = contours.iterator().next();
+        assertTrue(contour.equalsTopo(new WKTReader().read("LINESTRING(0 51, 99 51)")));
+        assertEquals(1d, contour.getUserData());
+    }
+
+    /**
+     * Trace a single ring contour from a binary image split in two and ensure there is a single
+     * line made of just two points
+     * 
+     * @throws ParseException
+     */
+    @Test
+    public void singleContourHorizontalBinaryGradient() throws ParseException {
+        TiledImage src = createBinaryImage(Gradient.HORIZONTAL);
+
+        args.put("levels", Collections.singleton(1));
+        Collection<LineString> contours = doOp(src, args);
+
+        assertEquals(1, contours.size());
+
+        LineString contour = contours.iterator().next();
+        assertTrue(contour.equalsTopo(new WKTReader().read("LINESTRING(51 0, 51 99)")));
+        assertEquals(1d, contour.getUserData());
+    }
+
+    /**
+     * Trace a single ring contour from a binary image split in two and ensure there is a single
+     * line
+     * 
+     * @throws ParseException
+     */
+    @Test
+    public void singleContourRadialBinaryGradient() throws ParseException {
+        TiledImage src = createBinaryImage(Gradient.RADIAL);
+
+        args.put("levels", Collections.singleton(1));
+        Collection<LineString> contours = doOp(src, args);
+
+        assertEquals(1, contours.size());
+
+        LineString contour = contours.iterator().next();
+        assertEquals(1d, contour.getUserData());
     }
 
     @Test
@@ -239,6 +308,7 @@ public class ContourTest extends TestBase {
         }
         
         for (LineString contour : contours) {
+            assertSingleSegment(contour);
             int z = ((Number)contour.getUserData()).intValue();
             assertTrue(levels.contains(z));
             levels.remove(Integer.valueOf(z)); // remove by value, not index !

@@ -32,6 +32,8 @@ import java.awt.geom.Rectangle2D;
 
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.GeometryFactory;
+import javax.media.jai.ROI;
+import javax.media.jai.ROIShape;
 
 import org.jaitools.jts.CoordinateSequence2D;
 
@@ -263,6 +265,46 @@ public class ROIGeometryTest {
         assertTrue(roi.intersects(-5.0, -5.0, 5.0, 5.0));
         assertFalse(roi.intersects(-10.0, -10.0, 5.0, 5.0));
     }
+    
+    @Test
+    public void canCreateFromEmptyGeometry() {
+        System.out.println("can create empty ROI");
+        createEmptyROI();
+    }
+    
+    @Test
+    public void emptyROIContainsPoint() {
+        System.out.println("empty ROI should not contain point");
+        ROIGeometry roi = createEmptyROI();
+        assertFalse(roi.contains(0, 0));
+    }
+    
+    @Test
+    public void emptyROIContainsRect() {
+        System.out.println("empty ROI should not contain rectangle");
+        ROIGeometry empty = createEmptyROI();
+        assertFalse(empty.contains(0, 0, 1, 1));
+    }
+    
+    @Test 
+    public void addNonEmptyROIToEmpty() {
+        System.out.println("add ROI to empty ROI");
+        ROIGeometry nonEmpty = createRectROI(0, 0, 10, 10);
+        ROIGeometry empty = createEmptyROI();
+        ROI result = empty.add(nonEmpty);
+        
+        assertTrue( result.getBounds().equals(nonEmpty.getBounds()) );
+    }
+    
+    @Test
+    public void addEmptyROIToNonEmptyROI() {
+        System.out.println("add empty ROI to non-empty ROI");
+        ROIGeometry nonEmpty = createRectROI(0, 0, 10, 10);
+        ROIGeometry empty = createEmptyROI();
+        ROI result = nonEmpty.add(empty);
+        
+        assertTrue( result.getBounds().equals(nonEmpty.getBounds()) );
+    }
 
     @Ignore
     @Test
@@ -314,4 +356,8 @@ public class ROIGeometryTest {
         return new ROIGeometry(poly, false);
     }
 
+    private ROIGeometry createEmptyROI() {
+        Polygon poly = gf.createPolygon(null, null);
+        return new ROIGeometry(poly, false);
+    }
 }
