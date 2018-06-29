@@ -37,10 +37,10 @@ import java.awt.image.renderable.RenderedImageFactory;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.JAI;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Polygonal;
-import com.vividsolutions.jts.geom.prep.PreparedGeometry;
-import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Polygonal;
+import org.locationtech.jts.geom.prep.PreparedGeometry;
+import org.locationtech.jts.geom.prep.PreparedGeometryFactory;
 
 /**
  * The image factory for the VectorBinarize operator.
@@ -75,7 +75,7 @@ public class VectorBinarizeRIF implements RenderedImageFactory {
         
         if (obj instanceof Polygonal) {
             // defensively copy the input Geometry
-            Geometry g = (Geometry) ((Geometry)obj).clone();
+            Geometry g = ((Geometry)obj).copy();
             pg = PreparedGeometryFactory.prepare(g);
             
         } else if (obj instanceof PreparedGeometry) {

@@ -46,13 +46,13 @@ import org.jaitools.media.jai.AttributeOpImage;
 import org.jaitools.numeric.CompareOp;
 import org.jaitools.numeric.Range;
 
-import com.vividsolutions.jts.geom.LineString;
+import org.locationtech.jts.geom.LineString;
 
 
 /**
  * Generates contours for user-specified levels of values in the source image.
  * The contours are returned as a {@code Collection} of
- * {@link com.vividsolutions.jts.geom.LineString}s.
+ * {@link org.locationtech.jts.geom.LineString}s.
  * <p>
  * The interpolation algorithm used is that of Paul Bourke: originally published
  * in Byte magazine (1987) as the CONREC contouring subroutine written in

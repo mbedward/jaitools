@@ -33,7 +33,7 @@
                             <artifactSet>
                                 <excludes>
                                     <exclude>org.jaitools:jt-demo</exclude>
-                                    <exclude>com.vividsolutions:jts</exclude>
+                                    <exclude>org.locationtech.jts:jts</exclude>
                                     <exclude>commons.collections:commons.collections</exclude>
                                     <exclude>junit:junit</exclude>
                                     <exclude>xerces:xercesImpl</exclude>
@@ -134,8 +134,8 @@
         <!--           3rd party dependencies             -->
         <!--                                              -->
         <dependency>
-            <groupId>com.vividsolutions</groupId>
-            <artifactId>jts</artifactId>
+            <groupId>org.locationtech.jts</groupId>
+            <artifactId>jts-core</artifactId>
             <!-- version is specified in parent pom -->
         </dependency>
         

@@ -32,7 +32,7 @@ import java.util.Map;
 
 import javax.media.jai.RenderedOp;
 
-import com.vividsolutions.jts.geom.Polygon;
+import org.locationtech.jts.geom.Polygon;
 
 import org.jaitools.CollectionFactory;
 import org.jaitools.imageutils.ImageUtils;

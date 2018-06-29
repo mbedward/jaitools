@@ -45,9 +45,9 @@ import org.jaitools.numeric.Range;
  * preference.
  * <p>
  * Contours are returned as a destination image property in the form of
- * a {@code Collection} of {@link com.vividsolutions.jts.geom.LineString} objects.
+ * a {@code Collection} of {@link org.locationtech.jts.geom.LineString} objects.
  * The source image value associated with each contour can be retrieved
- * with the {@link com.vividsolutions.jts.geom.LineString#getUserData()} method.
+ * with the {@link org.locationtech.jts.geom.LineString#getUserData()} method.
  * <p>
  * Source image pixels are passed through to the destination image unchanged.
  * <p>

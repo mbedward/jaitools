@@ -44,10 +44,10 @@ import javax.media.jai.SourcelessOpImage;
 import org.jaitools.imageutils.shape.LiteShape;
 import org.jaitools.jts.CoordinateSequence2D;
 
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.geom.TopologyException;
-import com.vividsolutions.jts.geom.prep.PreparedGeometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.TopologyException;
+import org.locationtech.jts.geom.prep.PreparedGeometry;
 
 
 /**

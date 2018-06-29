@@ -34,14 +34,14 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryCollection;
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.LinearRing;
-import com.vividsolutions.jts.geom.Point;
-import com.vividsolutions.jts.geom.Polygon;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryCollection;
+import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.LinearRing;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.Polygon;
 
 
 /**
@@ -66,7 +66,7 @@ public class LiteShape implements Shape, Cloneable {
      */
     public LiteShape(Geometry geom) {
         if (geom != null){
-            this.geometry = (Geometry) geom.clone();
+            this.geometry = geom.copy();
         }
     }
 
@@ -77,7 +77,7 @@ public class LiteShape implements Shape, Cloneable {
      * @param g
      */
     public void setGeometry(Geometry g) {
-        this.geometry = (Geometry) g.clone();
+        this.geometry = g.copy();
     }
 
     /**

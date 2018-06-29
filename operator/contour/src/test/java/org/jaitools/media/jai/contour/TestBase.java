@@ -42,8 +42,8 @@ import javax.media.jai.TiledImage;
 import org.jaitools.CollectionFactory;
 import org.jaitools.imageutils.ImageUtils;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.LineString;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.LineString;
 
 /**
  * Base class for unit test of the Contour operator.

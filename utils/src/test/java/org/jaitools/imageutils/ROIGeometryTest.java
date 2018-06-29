@@ -30,8 +30,8 @@ import java.awt.Rectangle;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.GeometryFactory;
 import javax.media.jai.ROI;
 import javax.media.jai.ROIShape;
 

@@ -43,6 +43,7 @@
     </licenses>
     
     <properties>
+        <jts.version>1.15.1</jts.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -137,9 +138,9 @@
                 <version>1.1</version>
             </dependency>
             <dependency>
-                <groupId>com.vividsolutions</groupId>
-                <artifactId>jts</artifactId>
-                <version>1.12</version>
+                <groupId>org.locationtech.jts</groupId>
+                <artifactId>jts-core</artifactId>
+                <version>${jts.version}</version>
             </dependency>
             <dependency>
                 <groupId>junit</groupId>
@@ -191,6 +192,14 @@
             <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
         </repository>
     </distributionManagement>
+
+    <repositories>
+        <repository>
+            <id>osgeo</id>
+            <name>Open Source Geospatial Foundation - Maven 2 repo</name>
+            <url>dav:http://download.osgeo.org/webdav/geotools/</url>
+        </repository>
+    </repositories>
 
     <profiles>
         <profile>

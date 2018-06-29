@@ -4,10 +4,10 @@ import java.util.Comparator;
 
 import org.jaitools.jts.Utils;
 
-import com.vividsolutions.jts.geom.LineString;
-import com.vividsolutions.jts.geom.impl.PackedCoordinateSequence;
-import com.vividsolutions.jts.geom.impl.PackedCoordinateSequence.Double;
-import com.vividsolutions.jts.geom.impl.PackedCoordinateSequenceFactory;
+import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
+import org.locationtech.jts.geom.impl.PackedCoordinateSequence.Double;
+import org.locationtech.jts.geom.impl.PackedCoordinateSequenceFactory;
 
 final class Segment {
     enum MergePoint {

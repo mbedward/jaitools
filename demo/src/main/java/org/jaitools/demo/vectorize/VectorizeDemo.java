@@ -41,7 +41,7 @@ import javax.media.jai.ROIShape;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.TiledImage;
 
-import com.vividsolutions.jts.geom.Polygon;
+import org.locationtech.jts.geom.Polygon;
 
 import org.jaitools.imageutils.ImageUtils;
 import org.jaitools.media.jai.vectorize.VectorizeDescriptor;

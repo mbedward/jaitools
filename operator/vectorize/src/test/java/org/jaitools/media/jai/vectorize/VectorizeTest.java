@@ -43,7 +43,7 @@ import javax.media.jai.RenderedOp;
 import javax.media.jai.TiledImage;
 import javax.media.jai.registry.RenderedRegistryMode;
 
-import com.vividsolutions.jts.geom.Polygon;
+import org.locationtech.jts.geom.Polygon;
 
 import org.jaitools.imageutils.ImageUtils;
 

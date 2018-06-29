@@ -36,7 +36,7 @@ import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
 
-import com.vividsolutions.jts.geom.LineString;
+import org.locationtech.jts.geom.LineString;
 
 import org.jaitools.demo.DemoImages;
 import org.jaitools.media.jai.contour.ContourDescriptor;

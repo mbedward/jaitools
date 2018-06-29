@@ -34,7 +34,7 @@ import java.util.TreeSet;
 
 import org.jaitools.media.jai.contour.Segment.MergePoint;
 
-import com.vividsolutions.jts.geom.LineString;
+import org.locationtech.jts.geom.LineString;
 
 
 /**

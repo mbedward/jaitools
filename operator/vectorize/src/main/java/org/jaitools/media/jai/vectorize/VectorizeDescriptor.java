@@ -165,7 +165,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * </tr>
  * </table>
  * 
- * @see com.vividsolutions.jts.geom.Polygon
+ * @see org.locationtech.jts.geom.Polygon
  * @see org.jaitools.media.jai.regionalizeRegionalizeDescriptor
  * @see org.jaitools.media.jai.rangelookup.RangeLookupDescriptor
  * 
