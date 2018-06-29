@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jaitools</groupId>
         <artifactId>operator</artifactId>
-        <version>1.5.0</version>
+        <version>1.6-SNAPSHOT</version>
     </parent>
 
     <artifactId>jt-rangelookup</artifactId>
