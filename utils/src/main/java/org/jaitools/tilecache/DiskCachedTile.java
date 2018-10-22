@@ -318,10 +318,8 @@ public final class DiskCachedTile implements CachedTile {
     /**
      * <b>Do not use this method.</b>
      * <p>
-     * It is implemented to satisfy the CAchedTile interface but calling it will
+     * It is implemented to satisfy the CachedTile interface but calling it will
      * provoke an UnsupportedOperationException.
-     * <p>
-     * To get a tile, use {@linkplain DiskBasedTileCache#getTile(java.awt.image.RenderedImage, int, int) }
      */
     public Raster getTile() {
         throw new UnsupportedOperationException("Can't get a tile directly from a DiskCachedTile object");

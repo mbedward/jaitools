@@ -37,10 +37,11 @@ import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
+import javax.media.jai.util.ImagingListener;
 
 import org.jaitools.numeric.Statistic;
 import org.jaitools.numeric.SampleStats;
-
+import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -50,6 +51,24 @@ import static org.junit.Assert.*;
  * @author Michael Bedward
  */
 public class TestKernelStats {
+    
+    @BeforeClass
+    public static void quiet() {
+    	JAI jai = JAI.getDefaultInstance();
+		final ImagingListener imagingListener = jai.getImagingListener();
+    	if( imagingListener == null || imagingListener.getClass().getName().contains("ImagingListenerImpl")) {
+    		jai.setImagingListener( new ImagingListener() {
+				@Override
+				public boolean errorOccurred(String message, Throwable thrown, Object where, boolean isRetryable)
+						throws RuntimeException {
+					if (message.contains("Continuing in pure Java mode")) {
+						return false;
+					}
+					return imagingListener.errorOccurred(message, thrown, where, isRetryable);
+				}    			
+    		});
+    	}
+    }
     
     private static final double TOL = 1.0e-4;
 

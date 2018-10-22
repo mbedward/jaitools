@@ -45,7 +45,7 @@ import java.util.Map.Entry;
  * DiskMemTileCache cache = ...
  * RenderedImage owner = ...
  *
- * Map<BasicCacheVisitor.Key, Object> filters = CollectionFactory.newMap();
+ * Map&lt;BasicCacheVisitor.Key, Object&gt; filters = CollectionFactory.newMap();
  * filters.put(BasicCacheVisitor.Key.OWNER, owner);
  * filters.put(BasicCachevisitor.Key.RESIDENT, Boolean.TRUE);
  *

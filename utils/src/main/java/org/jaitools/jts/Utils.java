@@ -30,6 +30,7 @@ import java.util.List;
 
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryCollection;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.LinearRing;
@@ -46,6 +47,7 @@ import org.jaitools.numeric.CompareOp;
  * @since 1.1
  * @version $Id$
  */
+@SuppressWarnings("unused")
 public class Utils {
 
     private static GeometryFactory geomFactory;
@@ -191,10 +193,10 @@ public class Utils {
      * For the moment this implementation only accepts, {@link Polygon}, {@link LinearRing} and {@link LineString}.
      * It return <code>null</code> in case the geometry is not of these types. 
      * 
-     * @todo implement submethods for {@link GeometryCollection} sublcaases.
      * @param g the instance of a {@link Geometry} to remove collinear vertices from.
      * @return a new instance of the provided  {@link Geometry} without collinear vertices.
      */
+    // TODO: implement submethods for {@link GeometryCollection} sublcaases.
     public static Geometry removeCollinearVertices(final Geometry g) {
         if (g == null) {
             throw new NullPointerException("The provided Geometry is null");

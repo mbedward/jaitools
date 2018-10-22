@@ -35,12 +35,14 @@ import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.ParameterListDescriptor;
 import javax.media.jai.RenderedOp;
+import javax.media.jai.util.ImagingListener;
 
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.io.WKTReader;
 import org.locationtech.jts.geom.Polygon;
 
 import org.jaitools.numeric.NumberOperations;
+import org.junit.BeforeClass;
 
 import static org.junit.Assert.*;
 
@@ -55,6 +57,24 @@ public abstract class TestBase {
     
     protected static final GeometryFactory gf = new GeometryFactory();
     protected static final WKTReader reader = new WKTReader(gf);
+    
+    @BeforeClass
+    public static void quiet() {
+    	JAI jai = JAI.getDefaultInstance();
+		final ImagingListener imagingListener = jai.getImagingListener();
+    	if( imagingListener == null || imagingListener.getClass().getName().contains("ImagingListenerImpl")) {
+    		jai.setImagingListener( new ImagingListener() {
+				@Override
+				public boolean errorOccurred(String message, Throwable thrown, Object where, boolean isRetryable)
+						throws RuntimeException {
+					if (message.contains("Continuing in pure Java mode")) {
+						return false;
+					}
+					return imagingListener.errorOccurred(message, thrown, where, isRetryable);
+				}    			
+    		});
+    	}
+    }
     
     /**
      * Helper function. Builds parameter block and runs the operation.

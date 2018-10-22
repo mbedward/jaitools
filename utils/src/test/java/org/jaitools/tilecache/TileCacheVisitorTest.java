@@ -31,9 +31,11 @@ import java.util.Map;
 import javax.media.jai.JAI;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.TileCache;
+import javax.media.jai.util.ImagingListener;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -50,6 +52,24 @@ public class TileCacheVisitorTest {
     private TileCache origCache;
     private DiskMemTileCache cache;
 
+    @BeforeClass
+    public static void quiet() {
+    	JAI jai = JAI.getDefaultInstance();
+		final ImagingListener imagingListener = jai.getImagingListener();
+    	if( imagingListener == null || imagingListener.getClass().getName().contains("ImagingListenerImpl")) {
+    		jai.setImagingListener( new ImagingListener() {
+				@Override
+				public boolean errorOccurred(String message, Throwable thrown, Object where, boolean isRetryable)
+						throws RuntimeException {
+					if (message.contains("Continuing in pure Java mode")) {
+						return false;
+					}
+					return imagingListener.errorOccurred(message, thrown, where, isRetryable);
+				}    			
+    		});
+    	}
+    }
+    
     @Before
     public void setup() {
         cache = new DiskMemTileCache();
