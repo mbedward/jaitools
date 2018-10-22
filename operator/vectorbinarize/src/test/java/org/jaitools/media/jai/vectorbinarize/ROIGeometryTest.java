@@ -49,6 +49,7 @@ import javax.media.jai.TileScheduler;
 import javax.media.jai.operator.ExtremaDescriptor;
 import javax.media.jai.operator.FormatDescriptor;
 import javax.media.jai.operator.SubtractDescriptor;
+import javax.media.jai.util.ImagingListener;
 import javax.swing.JFrame;
 import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
@@ -86,10 +87,23 @@ public class ROIGeometryTest {
 
     // Flag for running on OSX, used to skip some tests
     private static boolean isOSX;
-    
-    
+        
     @BeforeClass
     public static void beforeClass() {
+    	JAI jai = JAI.getDefaultInstance();
+		final ImagingListener imagingListener = jai.getImagingListener();
+    	if( imagingListener == null || imagingListener.getClass().getName().contains("ImagingListenerImpl")) {
+    		jai.setImagingListener( new ImagingListener() {
+				@Override
+				public boolean errorOccurred(String message, Throwable thrown, Object where, boolean isRetryable)
+						throws RuntimeException {
+					if (message.contains("Continuing in pure Java mode")) {
+						return false;
+					}
+					return imagingListener.errorOccurred(message, thrown, where, isRetryable);
+				}    			
+    		});
+    	}
         GraphicsEnvironment grEnv = GraphicsEnvironment.getLocalGraphicsEnvironment(); 
         headless = grEnv.isHeadless();
 

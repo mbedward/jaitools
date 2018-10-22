@@ -38,10 +38,12 @@ import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
+import javax.media.jai.util.ImagingListener;
 
 import org.jaitools.tiledimage.DiskMemImage;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -62,6 +64,20 @@ public class TestRegionalize {
 
     @Before
     public void setup() {
+    	JAI jai = JAI.getDefaultInstance();
+		final ImagingListener imagingListener = jai.getImagingListener();
+    	if( imagingListener == null || imagingListener.getClass().getName().contains("ImagingListenerImpl")) {
+    		jai.setImagingListener( new ImagingListener() {
+				@Override
+				public boolean errorOccurred(String message, Throwable thrown, Object where, boolean isRetryable)
+						throws RuntimeException {
+					if (message.contains("Continuing in pure Java mode")) {
+						return false;
+					}
+					return imagingListener.errorOccurred(message, thrown, where, isRetryable);
+				}    			
+    		});
+    	}
         assert(WIDTH % SQUARE_WIDTH == 0);
         assert(HEIGHT % SQUARE_WIDTH == 0);
 

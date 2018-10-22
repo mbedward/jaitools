@@ -38,10 +38,11 @@ import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.PlanarImage;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.TiledImage;
+import javax.media.jai.util.ImagingListener;
 
 import org.jaitools.CollectionFactory;
 import org.jaitools.imageutils.ImageUtils;
-
+import org.junit.BeforeClass;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 
@@ -60,7 +61,23 @@ public abstract class TestBase {
     
     protected static final int IMAGE_WIDTH = 100;
     
-    
+    @BeforeClass
+    public static void quiet() {
+    	JAI jai = JAI.getDefaultInstance();
+		final ImagingListener imagingListener = jai.getImagingListener();
+    	if( imagingListener == null || imagingListener.getClass().getName().contains("ImagingListenerImpl")) {
+    		jai.setImagingListener( new ImagingListener() {
+				@Override
+				public boolean errorOccurred(String message, Throwable thrown, Object where, boolean isRetryable)
+						throws RuntimeException {
+					if (message.contains("Continuing in pure Java mode")) {
+						return false;
+					}
+					return imagingListener.errorOccurred(message, thrown, where, isRetryable);
+				}    			
+    		});
+    	}
+    }
     /**
      * Runs the operation and retrieves the contours.
      * 

@@ -43,6 +43,7 @@ import javax.media.jai.RenderedOp;
 import javax.media.jai.iterator.RectIter;
 import javax.media.jai.iterator.RectIterFactory;
 import javax.media.jai.registry.RenderedRegistryMode;
+import javax.media.jai.util.ImagingListener;
 
 import org.jaitools.imageutils.ImageUtils;
 import org.jaitools.imageutils.iterator.SimpleIterator;
@@ -65,9 +66,23 @@ public class TestMaskedConvolve {
 
     @BeforeClass
     public static void setupClass() {
-        ensureRegistered();
+    	JAI jai = JAI.getDefaultInstance();
+		final ImagingListener imagingListener = jai.getImagingListener();
+    	if( imagingListener == null || imagingListener.getClass().getName().contains("ImagingListenerImpl")) {
+    		jai.setImagingListener( new ImagingListener() {
+				@Override
+				public boolean errorOccurred(String message, Throwable thrown, Object where, boolean isRetryable)
+						throws RuntimeException {
+					if (message.contains("Continuing in pure Java mode")) {
+						return false;
+					}
+					return imagingListener.errorOccurred(message, thrown, where, isRetryable);
+				}    			
+    		});
+    	}
+    	ensureRegistered();
     }
-
+    
     /**
      * Compare the results of JAI's standard Convolve
      * with MaskedConvolve for an symmetric kernel with

@@ -26,16 +26,37 @@
 package org.jaitools.imageutils;
 
 import org.jaitools.imageutils.iterator.AbstractSimpleIterator;
+import org.junit.BeforeClass;
+
 import java.awt.Rectangle;
 import java.util.Arrays;
+
+import javax.media.jai.JAI;
 import javax.media.jai.TiledImage;
+import javax.media.jai.util.ImagingListener;
 
 /**
  *
  * @author michael
  */
 public abstract class TestBase {
-    
+    @BeforeClass
+    public static void quiet() {
+    	JAI jai = JAI.getDefaultInstance();
+		final ImagingListener imagingListener = jai.getImagingListener();
+    	if( imagingListener == null || imagingListener.getClass().getName().contains("ImagingListenerImpl")) {
+    		jai.setImagingListener( new ImagingListener() {
+				@Override
+				public boolean errorOccurred(String message, Throwable thrown, Object where, boolean isRetryable)
+						throws RuntimeException {
+					if (message.contains("Continuing in pure Java mode")) {
+						return false;
+					}
+					return imagingListener.errorOccurred(message, thrown, where, isRetryable);
+				}    			
+    		});
+    	}
+    }
     
     /**
      * Creates an image filled with sequential integer values, ordered by pixel, line, band.

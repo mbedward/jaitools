@@ -73,6 +73,7 @@ public enum ImageDataType {
     
     /**
      * Gets the DataBuffer integer constant for this data type.
+     * @return return DataBuffer code
      */
     public int getDataBufferType() {
         return dataBufferCode;
@@ -80,6 +81,7 @@ public enum ImageDataType {
 
     /**
      * Gets the class associated with this data type.
+     * @return data class of Number
      */
     public Class<? extends Number> getDataClass() {
         return clazz;

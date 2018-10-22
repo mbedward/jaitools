@@ -61,15 +61,16 @@ import org.jaitools.DaemonThreadFactory;
  * tiled image data without being limited by available memory. A subset of tiles 
  * (by default, the most recently accessed) are cached in memory to reduce access
  * time.
- * <p>
  * 
- * The default behaviour is to cache newly added tiles into memory. If the cache
+ * <p>
+ *  * The default behaviour is to cache newly added tiles into memory. If the cache
  * needs to free memory to accommodate a tile, it does so by removing lowest priority
  * tiles from memory and caching them to disk. Optionally, the user can specify
  * that newly added tiles are cached to disk immediately.
- * <p>
+ * </p>
  * 
- * Unlike the standard JAI {@code TileCache} implementation, resident tiles are cached
+ * <p>
+ *  * Unlike the standard JAI {@code TileCache} implementation, resident tiles are cached
  * using strong references. This is to support the use of this class with
  * {@linkplain org.jaitools.tiledimage.DiskMemImage} as well as operations that need to
  * cache tiles that are expensive to create (e.g. output of a time-consuming analysis).
@@ -77,12 +78,14 @@ import org.jaitools.DaemonThreadFactory;
  * generated tiles it can end up unnecessarily holding memory that is more urgently
  * required by other parts of an application. To avoid this happening, the cache can
  * be set to auto-flush resident tiles at regular intervals.
- * <p>
+ * </p>
  * 
- * <h4>Implementation note</h4>
+ * <h3>Implementation note</h3>
+ * <p>
  * Tile polling and auto-flushing of memory resident tiles (if enabled) both run
  * on low-priority background threads. These are marked as daemon threads to 
  * avoid these services blocking application shutdown.
+ * </p>
  *
  * @author Michael Bedward
  * @author Simone Giannecchini, GeoSolutions SAS
@@ -730,7 +733,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
      * removed from memory and all files for disk-cached tiles will
      * be discarded.
      * <p>
-     * The update action of each tile will be set to {@linkplain DiskCachedTile#ACTION_REMOVED}.
+     * The update action of each tile will be set to {@linkplain DiskCachedTile.TileAction#ACTION_REMOVED}.
      */
     public void flush() {
         tileLock.lock();
@@ -932,7 +935,7 @@ public class DiskMemTileCache extends Observable implements TileCache {
     /**
      * Returns the memory threshold, which is the fractional amount of cache memory
      * to retain during tile removal. This only applies if memory thresholding has
-     * been enabled by passing the parameter {@linkplain #KEY_USE_MEMORY_THRESHOLD} to
+     * been enabled by passing the parameter KEY_USE_MEMORY_THRESHOLD to
      * the constructor with a value of {@code Boolean.TRUE}.
      *
      * @return the retained fraction of memory

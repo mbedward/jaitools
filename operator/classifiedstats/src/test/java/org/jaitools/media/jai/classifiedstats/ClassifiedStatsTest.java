@@ -39,11 +39,13 @@ import javax.imageio.ImageIO;
 import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedOp;
+import javax.media.jai.util.ImagingListener;
 
 import org.apache.commons.collections.keyvalue.MultiKey;
 import org.jaitools.CollectionFactory;
 import org.jaitools.numeric.Range;
 import org.jaitools.numeric.Statistic;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -56,6 +58,23 @@ public class ClassifiedStatsTest {
 
     private static final Logger LOGGER = Logger.getLogger("ClassifiedStatsTest");
     
+    @BeforeClass
+    public static void quiet() {
+    	JAI jai = JAI.getDefaultInstance();
+		final ImagingListener imagingListener = jai.getImagingListener();
+    	if( imagingListener == null || imagingListener.getClass().getName().contains("ImagingListenerImpl")) {
+    		jai.setImagingListener( new ImagingListener() {
+				@Override
+				public boolean errorOccurred(String message, Throwable thrown, Object where, boolean isRetryable)
+						throws RuntimeException {
+					if (message.contains("Continuing in pure Java mode")) {
+						return false;
+					}
+					return imagingListener.errorOccurred(message, thrown, where, isRetryable);
+				}    			
+    		});
+    	}
+    }
     
     @Test
 //    @Ignore

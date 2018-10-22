@@ -28,6 +28,11 @@ package org.jaitools.tiledimage;
 import java.awt.image.ColorModel;
 import java.awt.image.SampleModel;
 
+import javax.media.jai.JAI;
+import javax.media.jai.util.ImagingListener;
+
+import org.junit.BeforeClass;
+
 /**
  * Base class for unit tests of DiskMemTilesImage
  * 
@@ -36,7 +41,24 @@ import java.awt.image.SampleModel;
  * @version $Id$
  */
 public abstract class TiledImageTestBase {
-
+    @BeforeClass
+    public static void quiet() {
+    	JAI jai = JAI.getDefaultInstance();
+		final ImagingListener imagingListener = jai.getImagingListener();
+    	if( imagingListener == null || imagingListener.getClass().getName().contains("ImagingListenerImpl")) {
+    		jai.setImagingListener( new ImagingListener() {
+				@Override
+				public boolean errorOccurred(String message, Throwable thrown, Object where, boolean isRetryable)
+						throws RuntimeException {
+					if (message.contains("Continuing in pure Java mode")) {
+						return false;
+					}
+					return imagingListener.errorOccurred(message, thrown, where, isRetryable);
+				}    			
+    		});
+    	}
+    }
+    
     protected DiskMemImage makeImage(int tileWidth, int xTiles, int yTiles) {
         ColorModel cm = ColorModel.getRGBdefault();
         SampleModel sm = cm.createCompatibleSampleModel(tileWidth, tileWidth);
