@@ -53,7 +53,7 @@ public class RangeLookupTableTest extends TestBase {
     
     @Test
     public void simpleLookup() throws Exception {
-        System.out.println("   simple integer lookup");
+        // System.out.println("   simple integer lookup");
         
         Integer[] breaks = { -10, -5, 0, 5, 10 };
         Integer[] values = { -99, -1, 0, 1, 2, 99 };
@@ -81,7 +81,7 @@ public class RangeLookupTableTest extends TestBase {
     
     @Test
     public void addOverlappedRange() throws Exception {
-        System.out.println("   add overlapping range");
+        // System.out.println("   add overlapping range");
         
         builder.add(Range.create(5, true, 10, true), 1);
         
@@ -109,7 +109,7 @@ public class RangeLookupTableTest extends TestBase {
 
     @Test
     public void addCompletelyOverlappedRange() throws Exception {
-        System.out.println("   add completely overlapped range");
+        // System.out.println("   add completely overlapped range");
 
         builder.add(Range.create(0, true, 20, true), 1);
 
@@ -127,7 +127,7 @@ public class RangeLookupTableTest extends TestBase {
     
     @Test
     public void lookupWithIntervalGap() throws Exception {
-        System.out.println("   lookup with interval gaps");
+        // System.out.println("   lookup with interval gaps");
         
         builder.add(Range.create(null, false, -1, false), 1);
         builder.add(Range.create(1, false, null, false), 1);
@@ -143,7 +143,7 @@ public class RangeLookupTableTest extends TestBase {
     
     @Test
     public void lookupWithPointGap() throws Exception {
-        System.out.println("   lookup with interval gaps");
+        // System.out.println("   lookup with interval gaps");
         
         // all numbers excluding 0
         builder.add(Range.create(null, false, 0, false), 1);

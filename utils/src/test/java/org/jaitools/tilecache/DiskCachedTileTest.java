@@ -67,14 +67,14 @@ public class DiskCachedTileTest {
 
     @Test
     public void testGetCacheFolder() throws Exception {
-        System.out.println("   getCacheFolder");
+        // System.out.println("   getCacheFolder");
 
         assertNull(DiskCachedTile.getCacheFolder());
     }
 
     @Test
     public void testSetCacheFolder() {
-        System.out.println("   setCacheFolder");
+        // System.out.println("   setCacheFolder");
         
         File oldFolder = DiskCachedTile.getCacheFolder();
         
@@ -88,7 +88,7 @@ public class DiskCachedTileTest {
 
     @Test(expected=UnsupportedOperationException.class)
     public void testGetTile() throws Exception {
-        System.out.println("   getTile (testing for exception)");
+        // System.out.println("   getTile (testing for exception)");
 
         DiskCachedTile instance = new DiskCachedTile(
                 Integer.valueOf(1234), image, 0, 0, raster, false, null);
@@ -98,7 +98,7 @@ public class DiskCachedTileTest {
 
     @Test
     public void testGetOwner() throws Exception {
-        System.out.println("   getOwner");
+        // System.out.println("   getOwner");
 
         DiskCachedTile instance = new DiskCachedTile(
                 Integer.valueOf(1234), image, 0, 0, raster, false, null);
@@ -109,7 +109,7 @@ public class DiskCachedTileTest {
 
     @Test
     public void testGetTileTimeStamp() throws Exception {
-        System.out.println("   getTileTimeStamp");
+        // System.out.println("   getTileTimeStamp");
 
         long t0 = System.currentTimeMillis();
 
@@ -124,7 +124,7 @@ public class DiskCachedTileTest {
 
     @Test
     public void testGetTileSize() throws Exception {
-        System.out.println("   getTileSize");
+        // System.out.println("   getTileSize");
 
         DiskCachedTile instance = new DiskCachedTile(
                 Integer.valueOf(1234), image, 0, 0, raster, false, null);
@@ -141,7 +141,7 @@ public class DiskCachedTileTest {
      */
     @Test
     public void testCachedToDisk() throws Exception {
-        System.out.println("   cachedToDisk");
+        // System.out.println("   cachedToDisk");
 
         DiskCachedTile instance1 = new DiskCachedTile(
                 Integer.valueOf(1234), image, 0, 0, raster, false, null);
@@ -159,7 +159,7 @@ public class DiskCachedTileTest {
 
     @Test
     public void testDeleteDiskCopy() throws Exception {
-        System.out.println("   deleteDiskCopy");
+        // System.out.println("   deleteDiskCopy");
 
         DiskCachedTile instance = new DiskCachedTile(
                 Integer.valueOf(1234), image, 0, 0, raster, true, null);
@@ -174,7 +174,7 @@ public class DiskCachedTileTest {
 
     @Test
     public void testGetTileId() throws Exception {
-        System.out.println("   getTileId");
+        // System.out.println("   getTileId");
 
         DiskCachedTile instance = new DiskCachedTile(
                 Integer.valueOf(1234), image, 0, 0, raster, false, null);
@@ -186,7 +186,7 @@ public class DiskCachedTileTest {
 
     @Test
     public void testGetLocation() throws Exception {
-        System.out.println("   getLocation");
+        // System.out.println("   getLocation");
 
         DiskCachedTile instance = new DiskCachedTile(
                 Integer.valueOf(1234), image, 0, 0, raster, false, null);
@@ -197,7 +197,7 @@ public class DiskCachedTileTest {
 
     @Test
     public void testGetTileX() throws Exception {
-        System.out.println("   getTileX");
+        // System.out.println("   getTileX");
 
         Point p = new Point(1, 2);
         DiskCachedTile instance = new DiskCachedTile(
@@ -209,7 +209,7 @@ public class DiskCachedTileTest {
 
     @Test
     public void testGetTileY() throws Exception {
-        System.out.println("   getTileY");
+        // System.out.println("   getTileY");
 
         Point p = new Point(1, 2);
         DiskCachedTile instance = new DiskCachedTile(
@@ -221,7 +221,7 @@ public class DiskCachedTileTest {
 
     @Test
     public void testIsWritable() throws Exception {
-        System.out.println("   isWritable");
+        // System.out.println("   isWritable");
 
         DiskCachedTile instance = new DiskCachedTile(
                 Integer.valueOf(1234), image, 0, 0, raster, false, null);
@@ -232,7 +232,7 @@ public class DiskCachedTileTest {
     //@Ignore
     @Test
     public void testReadWrite() throws Exception {
-        System.out.println("   writing and reading data");
+        // System.out.println("   writing and reading data");
 
         testReadWriteImageType(DataBuffer.TYPE_BYTE, "TYPE_BYTE");
         testReadWriteImageType(DataBuffer.TYPE_DOUBLE, "TYPE_DOUBLE");
@@ -243,7 +243,7 @@ public class DiskCachedTileTest {
     }
 
     private void testReadWriteImageType(int dataType, String typeName) throws Exception {
-        System.out.println("      " + typeName);
+        // System.out.println("      " + typeName);
 
         final int w = 10;
         SampleModel sm = new ComponentSampleModel(dataType, w, w, 1, w, new int[]{0});

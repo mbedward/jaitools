@@ -84,7 +84,7 @@ public class ImageGraphicsDrawingTest extends TiledImageTestBase {
 
     @Test
     public void drawShape() {
-        System.out.println("   draw(Shape s)");
+        // System.out.println("   draw(Shape s)");
 
         Rectangle shp = new Rectangle(
                 imgMinX + TILE_WIDTH / 2,
@@ -144,7 +144,7 @@ public class ImageGraphicsDrawingTest extends TiledImageTestBase {
 
     @Test
     public void fillShape() {
-        System.out.println("   fill(Shape s)");
+        // System.out.println("   fill(Shape s)");
 
         Rectangle shp = new Rectangle(
                 imgMinX + TILE_WIDTH / 2,
@@ -189,7 +189,7 @@ public class ImageGraphicsDrawingTest extends TiledImageTestBase {
 
     @Test
     public void drawLine() {
-        System.out.println("   drawLine");
+        // System.out.println("   drawLine");
 
         gr.setColor(new Color(argb));
 
@@ -215,7 +215,7 @@ public class ImageGraphicsDrawingTest extends TiledImageTestBase {
 
     @Test
     public void setStroke() {
-        System.out.println("   drawing with set stroke width");
+        // System.out.println("   drawing with set stroke width");
         
         gr.setColor(new Color(argb));
         gr.setStroke(new BasicStroke(3.0f));
@@ -238,7 +238,7 @@ public class ImageGraphicsDrawingTest extends TiledImageTestBase {
 
     @Test
     public void drawPolyline() {
-        System.out.println("   drawPolyline");
+        // System.out.println("   drawPolyline");
 
         int minX = imgMinX + 10;
         int midX = imgMinX + imgW / 2;

@@ -67,7 +67,7 @@ public class ImageWritingTest extends TiledImageTestBase {
      */
     @Test
     public void testPixelInt() {
-        System.out.println("   setting and getting int values");
+        // System.out.println("   setting and getting int values");
 
         Rectangle bounds = new Rectangle(TILE_WIDTH / 2, TILE_WIDTH / 2, TILE_WIDTH, TILE_WIDTH);
         int numBands = image.getNumBands();
@@ -123,7 +123,7 @@ public class ImageWritingTest extends TiledImageTestBase {
      */
     @Test
     public void testWriteIter() {
-        System.out.println("   read/write using JAI iterators");
+        // System.out.println("   read/write using JAI iterators");
 
         WritableRectIter writeIter = RectIterFactory.createWritable(image, null);
         int i = 1;
@@ -163,7 +163,7 @@ public class ImageWritingTest extends TiledImageTestBase {
      */
     @Test
     public void testSetData() {
-        System.out.println("   setting a rectangle of image data");
+        // System.out.println("   setting a rectangle of image data");
 
         // create a raster that overlaps the image but extends partly
         // beyond it
