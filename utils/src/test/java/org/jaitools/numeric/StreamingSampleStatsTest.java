@@ -48,7 +48,7 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testMean() {
-        System.out.println("   testMean");
+        // System.out.println("   testMean");
 
         StreamingSampleStats stats = new StreamingSampleStats();
         stats.setStatistic(Statistic.MEAN);
@@ -63,7 +63,7 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testMeanWithExcludedRange() {
-        System.out.println("   testMeanWithExcludedRange");
+        // System.out.println("   testMeanWithExcludedRange");
 
         StreamingSampleStats stats = new StreamingSampleStats();
         stats.setStatistic(Statistic.MEAN);
@@ -79,7 +79,7 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testMeanSingleValue() {
-        System.out.println("   testMeanSingleValue");
+        // System.out.println("   testMeanSingleValue");
 
         StreamingSampleStats stats = new StreamingSampleStats();
         stats.setStatistic(Statistic.MEAN);
@@ -90,7 +90,7 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testZeroVariance() {
-        System.out.println("   testZeroVariance");
+        // System.out.println("   testZeroVariance");
 
         StreamingSampleStats stats = new StreamingSampleStats();
         stats.setStatistic(Statistic.VARIANCE);
@@ -105,7 +105,7 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testVariance() {
-        System.out.println("   testVariance");
+        // System.out.println("   testVariance");
 
         StreamingSampleStats stats = new StreamingSampleStats();
         stats.setStatistic(Statistic.VARIANCE);
@@ -121,7 +121,7 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testVarianceSingleValue() {
-        System.out.println("   testVarianceSingleValue");
+        // System.out.println("   testVarianceSingleValue");
 
         StreamingSampleStats stats = new StreamingSampleStats();
         stats.setStatistic(Statistic.VARIANCE);
@@ -132,7 +132,7 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testMinMaxRange() {
-        System.out.println("   testMinMaxRange");
+        // System.out.println("   testMinMaxRange");
 
         StreamingSampleStats streamStats = new StreamingSampleStats();
         Statistic[] stats = {
@@ -163,7 +163,7 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testMinMaxRangeSingleValue() {
-        System.out.println("   testMinMaxRangeSingleValue");
+        // System.out.println("   testMinMaxRangeSingleValue");
 
         StreamingSampleStats streamStats = new StreamingSampleStats();
         Statistic[] stats = {
@@ -179,7 +179,7 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testMedian() {
-        System.out.println("   testMedian");
+        // System.out.println("   testMedian");
 
         StreamingSampleStats streamStats = new StreamingSampleStats();
         streamStats.setStatistic(Statistic.MEDIAN);
@@ -205,7 +205,7 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testMedianWithRange() {
-        System.out.println("   testMedianWithRange");
+        // System.out.println("   testMedianWithRange");
         StreamingSampleStats streamStats = new StreamingSampleStats();
         streamStats.setStatistic(Statistic.MEDIAN);
         streamStats.setStatistic(Statistic.APPROX_MEDIAN);
@@ -231,7 +231,7 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testSum() {
-        System.out.println("   testSum");
+        // System.out.println("   testSum");
         StreamingSampleStats stats = new StreamingSampleStats();
         stats.setStatistic(Statistic.SUM);
 
@@ -245,7 +245,7 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testExactMedianSingleValue() {
-        System.out.println("   testExactMedianSingleValue");
+        // System.out.println("   testExactMedianSingleValue");
         StreamingSampleStats streamStats = new StreamingSampleStats();
         streamStats.setStatistic(Statistic.MEDIAN);
 
@@ -255,7 +255,7 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testApproxMedianSingleValue() {
-        System.out.println("   testApproxMedianSingleValue");
+        // System.out.println("   testApproxMedianSingleValue");
 
         StreamingSampleStats streamStats = new StreamingSampleStats();
         streamStats.setStatistic(Statistic.APPROX_MEDIAN);
@@ -266,7 +266,7 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testNaNValues() {
-        System.out.println("   testNaNValues");
+        // System.out.println("   testNaNValues");
 
         StreamingSampleStats streamStats = new StreamingSampleStats();
         streamStats.setStatistic(Statistic.SUM);
@@ -278,7 +278,7 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testNoDataValues() {
-        System.out.println("   testNoDataValues");
+        // System.out.println("   testNoDataValues");
 
         StreamingSampleStats streamStats = new StreamingSampleStats();
 
@@ -303,7 +303,7 @@ public class StreamingSampleStatsTest {
 
     @Test
     public void testNumNoData() {
-        System.out.println("   testNumNoData");
+        // System.out.println("   testNumNoData");
 
         StreamingSampleStats streamStats = new StreamingSampleStats();
 

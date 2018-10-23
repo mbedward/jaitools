@@ -55,7 +55,7 @@ public class TileWritingTest extends TiledImageTestBase {
 
     @Test
     public void testTileWriting(){
-        System.out.println("   read/write with individual tiles");
+        // System.out.println("   read/write with individual tiles");
 
         int numBands = image.getNumBands();
         int[] data = new int[numBands];

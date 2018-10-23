@@ -58,7 +58,7 @@ public class BasicAccessTest extends TiledImageTestBase {
 
     @Test
     public void testGetTile() {
-        System.out.println("   getTile");
+        // System.out.println("   getTile");
         for (int y = 0; y < YTILES; y++) {
             for (int x = 0; x < XTILES; x++) {
                 Raster tile = image.getTile(x, y);
@@ -71,7 +71,7 @@ public class BasicAccessTest extends TiledImageTestBase {
 
     @Test
     public void testGetWritableTile() {
-        System.out.println("   getting and releasing writable tiles");
+        // System.out.println("   getting and releasing writable tiles");
         WritableRaster r = image.getWritableTile(1, 1);
         assertTrue(r != null);
         Rectangle bounds = r.getBounds();
@@ -82,7 +82,7 @@ public class BasicAccessTest extends TiledImageTestBase {
 
     @Test
     public void testIsTileWritable() {
-        System.out.println("   isTileWritable");
+        // System.out.println("   isTileWritable");
 
         assertFalse(image.isTileWritable(0, 0));
 
@@ -96,7 +96,7 @@ public class BasicAccessTest extends TiledImageTestBase {
 
     @Test
     public void testGetWritableTileIndices() {
-        System.out.println("   getWritableTileIndices");
+        // System.out.println("   getWritableTileIndices");
         
         Point[] pi = {new Point(0, 0), new Point(XTILES-1, YTILES-1)};
 
@@ -125,7 +125,7 @@ public class BasicAccessTest extends TiledImageTestBase {
 
     @Test
     public void testHasTileWriters() {
-        System.out.println("   hasTileWriters");
+        // System.out.println("   hasTileWriters");
 
         assertFalse(image.hasTileWriters());
 

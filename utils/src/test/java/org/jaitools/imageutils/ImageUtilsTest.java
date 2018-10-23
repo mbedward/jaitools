@@ -44,7 +44,7 @@ public class ImageUtilsTest {
 
     @Test
     public void createConstantImage1() {
-        System.out.println("   createConstantImage(w, h, value)");
+        // System.out.println("   createConstantImage(w, h, value)");
 
         Dimension tileSize = JAI.getDefaultTileSize();
         int w = (int)(2.5 * tileSize.width);
@@ -60,7 +60,7 @@ public class ImageUtilsTest {
 
     @Test
     public void createConstantImage2() {
-        System.out.println("   createConstantImage - all args");
+        // System.out.println("   createConstantImage - all args");
         Dimension defTileSize = JAI.getDefaultTileSize();
         int tileW = defTileSize.width / 2;
         int tileH = defTileSize.height / 2;

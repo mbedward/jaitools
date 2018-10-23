@@ -58,12 +58,12 @@ public class ROIGeometryTest {
     @Ignore
     @Test
     public void testAdd() {
-        System.out.println("add");
+        // System.out.println("add");
     }
 
     @Test
     public void testContains_Point() {
-        System.out.println("contains Point");
+        //System.out.println("contains Point");
 
         ROIGeometry roi = createRectROI(-1.1, -2.2, 3.3, 4.4);
         Point p0 = new Point(-1, 2);
@@ -75,7 +75,7 @@ public class ROIGeometryTest {
 
     @Test
     public void testContains_Point2D() {
-        System.out.println("contains Point2D");
+        // System.out.println("contains Point2D");
 
         ROIGeometry roi = createRectROI(-1.1, -2.2, 3.3, 4.4);
         Point2D p0 = new Point2D.Double(-1.0, 2.5);
@@ -87,7 +87,7 @@ public class ROIGeometryTest {
 
     @Test
     public void testContains_int_int() {
-        System.out.println("contains (int int)");
+        // System.out.println("contains (int int)");
 
         ROIGeometry roi = createRectROI(-1.1, -2.2, 3.3, 4.4);
         assertTrue(roi.contains(-1, 2));
@@ -96,7 +96,7 @@ public class ROIGeometryTest {
 
     @Test
     public void testContains_double_double() {
-        System.out.println("contains (double double)");
+        // System.out.println("contains (double double)");
 
         ROIGeometry roi = createRectROI(-1.1, -2.2, 3.3, 4.4);
         assertTrue(roi.contains(-1.0, 2.5));
@@ -105,7 +105,7 @@ public class ROIGeometryTest {
 
     @Test
     public void testContains_Rectangle() {
-        System.out.println("contains Rectangle");
+        // System.out.println("contains Rectangle");
         
         ROIGeometry roi = createRectROI(-1.1, -2.2, 3.3, 4.4);
         Rectangle r = new Rectangle(-1, -2, 4, 6);
@@ -117,7 +117,7 @@ public class ROIGeometryTest {
 
     @Test
     public void testContains_Rectangle2D() {
-        System.out.println("contains Rectangle2D");
+        // System.out.println("contains Rectangle2D");
 
         ROIGeometry roi = createRectROI(-1.1, -2.2, 3.3, 4.4);
         Rectangle2D r = new Rectangle2D.Double(-1.0, -2.0, 4.0, 6.0);
@@ -129,7 +129,7 @@ public class ROIGeometryTest {
 
     @Test
     public void testContains_intRectArgs() {
-        System.out.println("contains int rect args");
+        // System.out.println("contains int rect args");
 
         ROIGeometry roi = createRectROI(-1.1, -2.2, 3.3, 4.4);
         assertTrue(roi.contains(-1, -2, 4, 6));
@@ -138,7 +138,7 @@ public class ROIGeometryTest {
 
     @Test
     public void testContains_doubleRectArgs() {
-        System.out.println("contains double rect args");
+        // System.out.println("contains double rect args");
 
         ROIGeometry roi = createRectROI(-1.1, -2.2, 3.3, 4.4);
         assertTrue(roi.contains(-1.0, -2.0, 4.0, 6.0));
@@ -148,48 +148,48 @@ public class ROIGeometryTest {
     @Ignore
     @Test
     public void testExclusiveOr() {
-        System.out.println("exclusiveOr");
+        // System.out.println("exclusiveOr");
         fail("not implemented");
     }
 
     @Ignore
     @Test
     public void testGetAsBitmask() {
-        System.out.println("getAsBitmask");
+        // System.out.println("getAsBitmask");
         fail("not implemented");
     }
 
     @Ignore
     @Test
     public void testGetAsImage() {
-        System.out.println("getAsImage");
+        // System.out.println("getAsImage");
         fail("not implemented");
     }
 
     @Ignore
     @Test
     public void testGetAsRectangleList_4args() {
-        System.out.println("getAsRectangleList");
+        // System.out.println("getAsRectangleList");
         fail("not implemented");
     }
 
     @Ignore
     @Test
     public void testGetAsRectangleList_5args() {
-        System.out.println("getAsRectangleList");
+        // System.out.println("getAsRectangleList");
         fail("not implemented");
     }
 
     @Ignore
     @Test
     public void testGetAsShape() {
-        System.out.println("getAsShape");
+        // System.out.println("getAsShape");
         fail("not implemented");
     }
 
     @Test
     public void testGetBounds() {
-        System.out.println("getBounds");
+        // System.out.println("getBounds");
         
         ROIGeometry roi = createRectROI(-1.1, -2.2, 3.3, 4.4);
         Rectangle expected = new Rectangle(-1, -2, 4, 6);
@@ -198,7 +198,7 @@ public class ROIGeometryTest {
 
     @Test
     public void testGetBounds2D() {
-        System.out.println("getBounds2D");
+        // System.out.println("getBounds2D");
         
         ROIGeometry roi = createRectROI(-1.1, -2.2, 3.3, 4.4);
         Rectangle2D expected = new Rectangle2D.Double(-1.1, -2.2, 4.4, 6.6);
@@ -213,20 +213,20 @@ public class ROIGeometryTest {
     @Ignore
     @Test
     public void testGetThreshold() {
-        System.out.println("getThreshold");
+        // System.out.println("getThreshold");
         fail("not implemented");
     }
 
     @Ignore
     @Test
     public void testIntersect() {
-        System.out.println("intersect");
+        // System.out.println("intersect");
         fail("not implemented");
     }
 
     @Test
     public void testIntersects_Rectangle() {
-        System.out.println("intersects Rectangle");
+        // System.out.println("intersects Rectangle");
 
         ROIGeometry roi = createRectROI(-1.1, -2.2, 3.3, 4.4);
         Rectangle r = new Rectangle(0, 0, 10, 10);
@@ -238,7 +238,7 @@ public class ROIGeometryTest {
 
     @Test
     public void testIntersects_Rectangle2D() {
-        System.out.println("intersects Rectangle2D");
+        // System.out.println("intersects Rectangle2D");
 
         ROIGeometry roi = createRectROI(-1.1, -2.2, 3.3, 4.4);
         Rectangle2D r = new Rectangle2D.Double(0.0, 0.0, 10.0, 10.0);
@@ -250,7 +250,7 @@ public class ROIGeometryTest {
 
     @Test
     public void testIntersects_intRectArgs() {
-        System.out.println("intersects int rect args");
+        // System.out.println("intersects int rect args");
 
         ROIGeometry roi = createRectROI(-1.1, -2.2, 3.3, 4.4);
         assertTrue(roi.intersects(0, 0, 10, 10));
@@ -259,7 +259,7 @@ public class ROIGeometryTest {
 
     @Test
     public void testIntersects_doubleRectArgs() {
-        System.out.println("intersects double rect args");
+        // System.out.println("intersects double rect args");
 
         ROIGeometry roi = createRectROI(-1.1, -2.2, 3.3, 4.4);
         assertTrue(roi.intersects(-5.0, -5.0, 5.0, 5.0));
@@ -268,27 +268,27 @@ public class ROIGeometryTest {
     
     @Test
     public void canCreateFromEmptyGeometry() {
-        System.out.println("can create empty ROI");
+        // System.out.println("can create empty ROI");
         createEmptyROI();
     }
     
     @Test
     public void emptyROIContainsPoint() {
-        System.out.println("empty ROI should not contain point");
+        // System.out.println("empty ROI should not contain point");
         ROIGeometry roi = createEmptyROI();
         assertFalse(roi.contains(0, 0));
     }
     
     @Test
     public void emptyROIContainsRect() {
-        System.out.println("empty ROI should not contain rectangle");
+        // System.out.println("empty ROI should not contain rectangle");
         ROIGeometry empty = createEmptyROI();
         assertFalse(empty.contains(0, 0, 1, 1));
     }
     
     @Test 
     public void addNonEmptyROIToEmpty() {
-        System.out.println("add ROI to empty ROI");
+        // System.out.println("add ROI to empty ROI");
         ROIGeometry nonEmpty = createRectROI(0, 0, 10, 10);
         ROIGeometry empty = createEmptyROI();
         ROI result = empty.add(nonEmpty);
@@ -298,7 +298,7 @@ public class ROIGeometryTest {
     
     @Test
     public void addEmptyROIToNonEmptyROI() {
-        System.out.println("add empty ROI to non-empty ROI");
+        // System.out.println("add empty ROI to non-empty ROI");
         ROIGeometry nonEmpty = createRectROI(0, 0, 10, 10);
         ROIGeometry empty = createEmptyROI();
         ROI result = nonEmpty.add(empty);
@@ -309,42 +309,42 @@ public class ROIGeometryTest {
     @Ignore
     @Test
     public void testPerformImageOp_4args_1() {
-        System.out.println("performImageOp");
+        // System.out.println("performImageOp");
         fail("not implemented");
     }
 
     @Ignore
     @Test
     public void testPerformImageOp_4args_2() {
-        System.out.println("performImageOp");
+        // System.out.println("performImageOp");
         fail("not implemented");
     }
 
     @Ignore
     @Test
     public void testSetThreshold() {
-        System.out.println("setThreshold");
+        // System.out.println("setThreshold");
         fail("not implemented");
     }
 
     @Ignore
     @Test
     public void testSubtract() {
-        System.out.println("subtract");
+        // System.out.println("subtract");
         fail("not implemented");
     }
 
     @Ignore
     @Test
     public void testTransform_AffineTransform_Interpolation() {
-        System.out.println("transform");
+        // System.out.println("transform");
         fail("not implemented");
     }
 
     @Ignore
     @Test
     public void testTransform_AffineTransform() {
-        System.out.println("transform");
+        // System.out.println("transform");
         fail("not implemented");
     }
 

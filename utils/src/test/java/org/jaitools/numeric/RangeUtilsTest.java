@@ -44,7 +44,7 @@ public class RangeUtilsTest {
 
     @Test
     public void testCreateComplementOfFinitePoint() {
-        System.out.println("   testCreateComplementOfFinitePoint");
+        // System.out.println("   testCreateComplementOfFinitePoint");
 
         final int value = 42;
         Range<Integer> point = Range.create(value);
@@ -65,7 +65,7 @@ public class RangeUtilsTest {
      */
     @Test
     public void testCreateComplementOfInfinitePoint() {
-        System.out.println("   testCreateComplementOfInfinitePoint");
+        // System.out.println("   testCreateComplementOfInfinitePoint");
 
         Range<Integer> point = Range.create(null, Range.INF);
 
@@ -80,7 +80,7 @@ public class RangeUtilsTest {
     
     @Test
     public void testCreateComplementOfFiniteInterval() {
-        System.out.println("   testCreateComplementOfFiniteInterval");
+        // System.out.println("   testCreateComplementOfFiniteInterval");
 
         Range<Integer> input = Range.create(-10, true, 10, false);
         List<Range<Integer>> compList = RangeUtils.createComplement(input);
@@ -96,7 +96,7 @@ public class RangeUtilsTest {
 
     @Test
     public void createComplementOfOpenInterval() {
-        System.out.println("   createComplementOfOpenInterval");
+        // System.out.println("   createComplementOfOpenInterval");
 
         // min open
         Range<Integer> input = Range.create(null, false, 10, true);
@@ -121,7 +121,7 @@ public class RangeUtilsTest {
 
     @Test
     public void testCreateComplementOfTwoFiniteIntervals() {
-        System.out.println("   testCreateComplementOfTwoFiniteIntervals");
+        // System.out.println("   testCreateComplementOfTwoFiniteIntervals");
 
         List<Range<Integer>> ranges = CollectionFactory.list();
         ranges.add(Range.create(-10, true, -5, false));
@@ -139,7 +139,7 @@ public class RangeUtilsTest {
 
     @Test
     public void testCreateComplementOfOverlappingIntervals() {
-        System.out.println("   testCreateComplementOfTwoFiniteIntervals");
+        // System.out.println("   testCreateComplementOfTwoFiniteIntervals");
 
         List<Range<Integer>> ranges = CollectionFactory.list();
         ranges.add(Range.create(-10, true, 5, false));
@@ -156,7 +156,7 @@ public class RangeUtilsTest {
 
     @Test
     public void testCreateComplementOfOpenIntervals() {
-        System.out.println("   testCreateComplementOfOpenIntervals");
+        // System.out.println("   testCreateComplementOfOpenIntervals");
 
         List<Range<Integer>> ranges = CollectionFactory.list();
         ranges.add(Range.create(null, false, -5, false));
@@ -172,7 +172,7 @@ public class RangeUtilsTest {
 
     @Test
     public void testCreateComplementOfFinitePoints() {
-        System.out.println("   testCreateComplementOfFinitePoints");
+        // System.out.println("   testCreateComplementOfFinitePoints");
 
         List<Range<Integer>> ranges = CollectionFactory.list();
         ranges.add(Range.create(-5));
@@ -190,7 +190,7 @@ public class RangeUtilsTest {
 
     @Test
     public void testSortRanges() {
-        System.out.println("   testSortRanges");
+        // System.out.println("   testSortRanges");
 
         List<Range<Integer>> sorted = CollectionFactory.list();
         sorted.add( Range.create(null, false, 5, true) );
@@ -213,7 +213,7 @@ public class RangeUtilsTest {
 
     @Test
     public void testSortInPlaceRanges() {
-        System.out.println("   testSortInPlaceRanges");
+        // System.out.println("   testSortInPlaceRanges");
 
         List<Range<Integer>> sorted = CollectionFactory.list();
         sorted.add( Range.create(null, false, 5, true) );
@@ -236,7 +236,7 @@ public class RangeUtilsTest {
 
     @Test
     public void testSimplify() {
-        System.out.println("   testSimplify");
+        // System.out.println("   testSimplify");
 
         List<Range<Integer>> inputs = CollectionFactory.list();
         inputs.add( Range.create(null, false, 5, false));
@@ -253,7 +253,7 @@ public class RangeUtilsTest {
 
     @Test
     public void testIntersection() {
-        System.out.println("   testIntersection");
+        // System.out.println("   testIntersection");
         
         Range<Integer> r1 = Range.create(null, false, 5, false);
         Range<Integer> r2 = Range.create(-5, false, null, false);
@@ -269,7 +269,7 @@ public class RangeUtilsTest {
 
     @Test
     public void testSubtract() {
-        System.out.println("   testSubtract");
+        // System.out.println("   testSubtract");
 
         Range<Integer> r1 = Range.create(null, false, null, false);
         Range<Integer> r2 = Range.create(-5, false, 5, true);

@@ -44,7 +44,7 @@ public class LookupTest {
 
     @Test
     public void testLookup() {
-        System.out.println("   testLookup");
+        // System.out.println("   testLookup");
 
         final Class clazz = org.jaitools.numeric.Processor.class;
 
@@ -58,7 +58,7 @@ public class LookupTest {
 
     @Test
     public void testLookupCache() {
-        System.out.println("   testLookupCache");
+        // System.out.println("   testLookupCache");
 
         final Class clazz = org.jaitools.numeric.Processor.class;
 

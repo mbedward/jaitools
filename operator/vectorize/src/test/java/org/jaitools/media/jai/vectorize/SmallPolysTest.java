@@ -72,7 +72,7 @@ public class SmallPolysTest extends TestBase {
 
     @Test
     public void removeSmallPolys() throws Exception {
-        System.out.println("   remove small polygons");
+        // System.out.println("   remove small polygons");
         RenderedImage img = ImageUtils.createImageFromArray(DATA, WIDTH, WIDTH);
         
         args.put("filterThreshold", 1.1);
@@ -84,7 +84,7 @@ public class SmallPolysTest extends TestBase {
     
     @Test
     public void mergeSmallPolysIntoLargestNbr() throws Exception {
-        System.out.println("   merge small polygons into largest neighbour");
+        // System.out.println("   merge small polygons into largest neighbour");
         RenderedImage img = ImageUtils.createImageFromArray(DATA, WIDTH, WIDTH);
         
         args.put("filterThreshold", 1.1);
@@ -120,7 +120,7 @@ public class SmallPolysTest extends TestBase {
     
     @Test
     public void smallIslandPoly() throws Exception {
-        System.out.println("   small polygon surrounded by nodata");
+        // System.out.println("   small polygon surrounded by nodata");
         
         // Set 3 to nodata so that 4 will be an island poly
         args.put("outsideValues", Collections.singleton(3d));
@@ -137,7 +137,7 @@ public class SmallPolysTest extends TestBase {
     
     @Test
     public void thresholdBelowMinPolySize() throws Exception {
-        System.out.println("   filter threshold below min poly size");
+        // System.out.println("   filter threshold below min poly size");
         
         args.put("filterThreshold", 0.5);
         args.put("filterMethod", VectorizeDescriptor.FILTER_DELETE);

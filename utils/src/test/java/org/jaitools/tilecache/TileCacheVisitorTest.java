@@ -85,7 +85,7 @@ public class TileCacheVisitorTest {
 
     @Test
     public void testVisitor() throws InterruptedException{
-        System.out.println("   cache visitor");
+        // System.out.println("   cache visitor");
         final int XTILES = 4;
         final int YTILES = 4;
         final int EXTRA = 2;

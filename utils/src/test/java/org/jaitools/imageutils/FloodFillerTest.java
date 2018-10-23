@@ -57,7 +57,7 @@ public class FloodFillerTest {
      */
     @Test
     public void testFill() {
-        System.out.println("   flood fill with single image");
+        // System.out.println("   flood fill with single image");
 
         boolean diagonal;
         int fillValue;

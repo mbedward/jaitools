@@ -82,7 +82,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testValidateNumSources() {
-        System.out.println("   validate number of sources");
+        // System.out.println("   validate number of sources");
 
         boolean gotException = false;
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
@@ -117,7 +117,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testZoneImageType() {
-        System.out.println("   validate zone image type");
+        // System.out.println("   validate zone image type");
         
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
@@ -142,7 +142,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testZoneImageOverlap() {
-        System.out.println("   validate data - zone image overlap");
+        // System.out.println("   validate data - zone image overlap");
         
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
@@ -182,7 +182,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testMin() {
-        System.out.println("   test min");
+        // System.out.println("   test min");
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
@@ -193,7 +193,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testMax() {
-        System.out.println("   test max");
+        // System.out.println("   test max");
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
@@ -204,7 +204,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testMean() {
-        System.out.println("   test mean");
+        // System.out.println("   test mean");
 
         double expMean = 0d;
 
@@ -226,7 +226,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testStdDev() {
-        System.out.println("   test standard deviation");
+        // System.out.println("   test standard deviation");
 
         double expSD;
         double mOld = 0d, mNew;
@@ -260,7 +260,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testRange() {
-        System.out.println("   test range");
+        // System.out.println("   test range");
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
@@ -272,7 +272,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testSum() {
-        System.out.println("   test sum");
+        // System.out.println("   test sum");
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", constant1Image);
@@ -283,7 +283,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testExactMedian() {
-        System.out.println("   test exact median");
+        // System.out.println("   test exact median");
 
         final double expMedian = 0.0;
 
@@ -296,7 +296,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testApproxMedian() {
-        System.out.println("   test approximate median");
+        // System.out.println("   test approximate median");
 
         final double expMedian = 0.0;
 
@@ -309,7 +309,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testMultiband() {
-        System.out.println("   test multiband");
+        // System.out.println("   test multiband");
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", multibandImage);
@@ -354,7 +354,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testExclusionRanges() {
-        System.out.println("   test excluding ranges of values");
+        // System.out.println("   test excluding ranges of values");
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", dataImage);
@@ -382,7 +382,7 @@ public class ZonalStatsTest {
 
     @Test
     public void testNoDataRanges() {
-        System.out.println("   test testNoDataRanges");
+        // System.out.println("   test testNoDataRanges");
 
         ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
         pb.setSource("dataImage", multibandImageNoData);

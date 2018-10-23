@@ -37,7 +37,7 @@ public class RangeTest {
 
     @Test
     public void testCreateInterval() {
-        System.out.println("   testCreateInterval");
+        // System.out.println("   testCreateInterval");
 
 
         Range<Integer> r = Range.create(null, false, ivalue, true);
@@ -53,7 +53,7 @@ public class RangeTest {
     
     @Test
     public void testValueInRange() {
-        System.out.println("   testValueInRange");
+        // System.out.println("   testValueInRange");
         
         Range<Integer> r = Range.create(ivalue / 2, true, 2 * ivalue, true);
         assertTrue(r.contains(ivalue));
@@ -61,7 +61,7 @@ public class RangeTest {
     
     @Test
     public void testValueOutOfRange() {
-        System.out.println("   testValueOutOfRange");
+        // System.out.println("   testValueOutOfRange");
         
         Range<Integer> r = Range.create(ivalue + 1, true, 2 * ivalue, true);
         assertFalse(r.contains(ivalue));
@@ -69,7 +69,7 @@ public class RangeTest {
     
     @Test
     public void testValueAtIncludedEndpoint() {
-        System.out.println("   testValueAtIncludedEndpoint");
+        // System.out.println("   testValueAtIncludedEndpoint");
         
         Range<Integer> r = Range.create(ivalue, true, 2 * ivalue, true);
         assertTrue(r.contains(ivalue));
@@ -77,7 +77,7 @@ public class RangeTest {
     
     @Test
     public void testValueAtExcludedEndpoint() {
-        System.out.println("   testValueAtExcludedEndpoint");
+        // System.out.println("   testValueAtExcludedEndpoint");
         
         Range<Integer> r = Range.create(ivalue, false, 2 * ivalue, true);
         assertFalse(r.contains(ivalue));
@@ -85,7 +85,7 @@ public class RangeTest {
 
     @Test
     public void testCreateInfiniteInterval() {
-        System.out.println("   testCreateInfiniteInterval");
+        // System.out.println("   testCreateInfiniteInterval");
         Range<Integer> r1 = Range.create(null, true, null, true);
         assertTrue(r1.isMinNegInf());
         assertTrue(r1.isMaxInf());
@@ -93,7 +93,7 @@ public class RangeTest {
 
     @Test
     public void testEquals() {
-        System.out.println("   testEquals");
+        // System.out.println("   testEquals");
         
         Range<Integer> r = Range.create(-10, true, 10, false);
         Range<Integer> same = Range.create(-10, true, 10, false);
@@ -105,7 +105,7 @@ public class RangeTest {
 
     @Test
     public void testInfinitePointNEQInfiniteInterval() {
-        System.out.println("   testInfinitePointNEQInfiniteInterval");
+        // System.out.println("   testInfinitePointNEQInfiniteInterval");
 
         Range<Integer> p = Range.create(null, Range.INF);
         Range<Integer> r = Range.create(null, false, null, false);
@@ -116,7 +116,7 @@ public class RangeTest {
 
     @Test
     public void testFinitePointToString() {
-        System.out.println("   testPointToString");
+        // System.out.println("   testPointToString");
 
         Range<Integer> r = Range.create(10);
         assertEquals("[10]", r.toString());
@@ -124,7 +124,7 @@ public class RangeTest {
 
     @Test
     public void testInfinitePointToString() {
-        System.out.println("   testInfinitePointToString");
+        // System.out.println("   testInfinitePointToString");
 
         Range<Integer> r = Range.create(null, Range.INF);
         assertEquals("(Inf)", r.toString());
@@ -135,7 +135,7 @@ public class RangeTest {
     
     @Test
     public void testFiniteIntervalToString() {
-        System.out.println("   testFiniteIntervalToString");
+        // System.out.println("   testFiniteIntervalToString");
 
         Range<Integer> r = Range.create(-10, true, 10, false);
         assertEquals("[-10, 10)", r.toString());
@@ -143,7 +143,7 @@ public class RangeTest {
 
     @Test
     public void testOpenIntervalToString() {
-        System.out.println("   testOpenIntervalToString");
+        // System.out.println("   testOpenIntervalToString");
 
         Range<Integer> r = Range.create(null, true, 10, true);
         assertEquals("(-Inf, 10]", r.toString());

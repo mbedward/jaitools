@@ -39,7 +39,7 @@ public class NumberOperationsTest {
 
     @Test
     public void testAddByteInteger() {
-        System.out.println("   add(Byte, Integer)");
+        // System.out.println("   add(Byte, Integer)");
 
         Number n1 = Byte.valueOf((byte)200);
         Number n2 = Integer.valueOf(0);
@@ -51,7 +51,7 @@ public class NumberOperationsTest {
 
     @Test
     public void testSubtractByteInteger() {
-        System.out.println("   subtract(Byte, Integer)");
+        // System.out.println("   subtract(Byte, Integer)");
 
         Number n1 = Byte.valueOf((byte)200);
         Number n2 = Integer.valueOf(100);
@@ -63,7 +63,7 @@ public class NumberOperationsTest {
 
     @Test
     public void testMultiplyByteInteger() {
-        System.out.println("   multiply(Byte, Integer)");
+        // System.out.println("   multiply(Byte, Integer)");
 
         Number n1 = Byte.valueOf((byte)200);
         Number n2 = Integer.valueOf(100);
@@ -75,7 +75,7 @@ public class NumberOperationsTest {
 
     @Test
     public void testDivideByteInteger() {
-        System.out.println("   divide(Byte, Integer)");
+        // System.out.println("   divide(Byte, Integer)");
 
         Number n1 = Byte.valueOf((byte)200);
         Number n2 = Integer.valueOf(100);
@@ -87,7 +87,7 @@ public class NumberOperationsTest {
 
     @Test
     public void copy() {
-        System.out.println("   copy");
+        // System.out.println("   copy");
         Number[] numbers = {
             Byte.valueOf((byte) 0),
             Short.valueOf((short) 0),
@@ -105,7 +105,7 @@ public class NumberOperationsTest {
 
     @Test
     public void copyWithNull() {
-        System.out.println("   copy with null arg");
+        // System.out.println("   copy with null arg");
         Number result = NumberOperations.copy(null);
         assertNull(result);
     }
@@ -280,8 +280,8 @@ public class NumberOperationsTest {
     }
 
     public void doNewInstance(Number number, Class<? extends Number> clazz, Number expected) {
-        System.out.println("   newInstance " + number.getClass().getSimpleName() +
-                " to " + clazz.getSimpleName());
+        // System.out.println("   newInstance " + number.getClass().getSimpleName() +
+        //        " to " + clazz.getSimpleName());
 
         Number result = NumberOperations.newInstance(number, clazz);
         
@@ -295,7 +295,7 @@ public class NumberOperationsTest {
 
     @Test
     public void testHighestClass() {
-        System.out.println("   highestClass");
+        // System.out.println("   highestClass");
 
         Number[] numbers = {
             Byte.valueOf((byte)0),
@@ -316,7 +316,7 @@ public class NumberOperationsTest {
 
     @Test
     public void testLowestClass() {
-        System.out.println("   lowestClass");
+        // System.out.println("   lowestClass");
 
         Number[] numbers = {
             Byte.valueOf((byte)0),
@@ -337,7 +337,7 @@ public class NumberOperationsTest {
 
     @Test
     public void testIntegralComparison() {
-        System.out.println("   testIntegralComparison");
+        // System.out.println("   testIntegralComparison");
 
         Number a = Integer.valueOf(1);
         Number b = Integer.valueOf(2);
@@ -349,7 +349,7 @@ public class NumberOperationsTest {
 
     @Test
     public void testFloatComparison() {
-        System.out.println("   testFloatComparison");
+        // System.out.println("   testFloatComparison");
 
         Number a = Float.valueOf(1);
         Number b = Float.valueOf(2);
@@ -361,7 +361,7 @@ public class NumberOperationsTest {
 
     @Test
     public void testFloatComparisonSpecialValues() {
-        System.out.println("   testFloatComparisonSpecialValues");
+        // System.out.println("   testFloatComparisonSpecialValues");
 
         assertEquals(0, NumberOperations.compare(Float.NaN, Float.NaN));
         assertEquals(1, NumberOperations.compare(Float.NaN, Float.POSITIVE_INFINITY));
@@ -370,7 +370,7 @@ public class NumberOperationsTest {
 
     @Test
     public void testDoubleComparison() {
-        System.out.println("   testDoubleComparison");
+        // System.out.println("   testDoubleComparison");
 
         Number a = Double.valueOf(1);
         Number b = Double.valueOf(2);
@@ -382,7 +382,7 @@ public class NumberOperationsTest {
 
     @Test
     public void testDoubleComparisonSpecialValues() {
-        System.out.println("   testDoubleComparisonSpecialValues");
+        // System.out.println("   testDoubleComparisonSpecialValues");
 
         assertEquals(0, NumberOperations.compare(Double.NaN, Double.NaN));
         assertEquals(1, NumberOperations.compare(Double.NaN, Double.POSITIVE_INFINITY));

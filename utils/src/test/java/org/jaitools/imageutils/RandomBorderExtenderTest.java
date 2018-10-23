@@ -58,7 +58,7 @@ public class RandomBorderExtenderTest {
 
     @Test
     public void testExtendByte() {
-        System.out.println("   image type BYTE");
+        // System.out.println("   image type BYTE");
 
         WritableRaster raster = createRaster(DataBuffer.TYPE_BYTE);
 
@@ -70,7 +70,7 @@ public class RandomBorderExtenderTest {
 
     @Test
     public void testExtendShort() {
-        System.out.println("   image type SHORT");
+        // System.out.println("   image type SHORT");
 
         WritableRaster raster = createRaster(DataBuffer.TYPE_SHORT);
 
@@ -82,7 +82,7 @@ public class RandomBorderExtenderTest {
 
     @Test
     public void testExtendUShort() {
-        System.out.println("   image type USHORT");
+        // System.out.println("   image type USHORT");
 
         WritableRaster raster = createRaster(DataBuffer.TYPE_USHORT);
 
@@ -94,7 +94,7 @@ public class RandomBorderExtenderTest {
 
     @Test
     public void testExtendInt() {
-        System.out.println("   image type INT");
+        // System.out.println("   image type INT");
 
         WritableRaster raster = createRaster(DataBuffer.TYPE_INT);
 
@@ -106,7 +106,7 @@ public class RandomBorderExtenderTest {
 
     @Test
     public void testExtendFloat() {
-        System.out.println("   image type FLOAT");
+        // System.out.println("   image type FLOAT");
 
         WritableRaster raster = createRaster(DataBuffer.TYPE_FLOAT);
 
@@ -118,7 +118,7 @@ public class RandomBorderExtenderTest {
 
     @Test
     public void testExtendDouble() {
-        System.out.println("   image type DOUBLE");
+        // System.out.println("   image type DOUBLE");
 
         WritableRaster raster = createRaster(DataBuffer.TYPE_DOUBLE);
 

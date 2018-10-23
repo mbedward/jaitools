@@ -112,7 +112,7 @@ public class KernelFactoryTest {
 
     @Test
     public void defaultCircle() {
-        System.out.println("   circle");
+        // System.out.println("   circle");
         KernelJAI kernel = KernelFactory.createCircle(3);
 
         Evaluator e = new Evaluator() {
@@ -126,7 +126,7 @@ public class KernelFactoryTest {
      
     @Test
     public void binaryCircle() {
-        System.out.println("   binary circle");
+        // System.out.println("   binary circle");
 
         KernelJAI kernel = KernelFactory.createCircle(
                 RADIUS, KernelFactory.ValueType.BINARY);
@@ -142,7 +142,7 @@ public class KernelFactoryTest {
     
     @Test
     public void cosineCircle() {
-        System.out.println("   cosine circle");
+        // System.out.println("   cosine circle");
 
         KernelJAI kernel = KernelFactory.createCircle(RADIUS, KernelFactory.ValueType.COSINE);
 
@@ -164,7 +164,7 @@ public class KernelFactoryTest {
     
     @Test
     public void distanceCircle() {
-        System.out.println("   distance circle");
+        // System.out.println("   distance circle");
 
         KernelJAI kernel = KernelFactory.createCircle(RADIUS, KernelFactory.ValueType.DISTANCE);
 
@@ -183,7 +183,7 @@ public class KernelFactoryTest {
     
     @Test
     public void epanechnikovCircle() {
-        System.out.println("   Epanenchnikov circle");
+        // System.out.println("   Epanenchnikov circle");
 
         KernelJAI kernel = KernelFactory.createCircle(RADIUS, KernelFactory.ValueType.EPANECHNIKOV);
 
@@ -204,7 +204,7 @@ public class KernelFactoryTest {
     
     @Test
     public void gaussianCircle() {
-        System.out.println("   Gaussian circle");
+        // System.out.println("   Gaussian circle");
 
         KernelJAI kernel = KernelFactory.createCircle(RADIUS, KernelFactory.ValueType.GAUSSIAN);
 
@@ -226,7 +226,7 @@ public class KernelFactoryTest {
     
     @Test
     public void inverseDistanceCircle() {
-        System.out.println("   Inverse distance circle");
+        // System.out.println("   Inverse distance circle");
 
         KernelJAI kernel = KernelFactory.createCircle(RADIUS, KernelFactory.ValueType.INVERSE_DISTANCE);
 
@@ -247,7 +247,7 @@ public class KernelFactoryTest {
     
     @Test
     public void quarticCircle() {
-        System.out.println("   quartic circle");
+        // System.out.println("   quartic circle");
 
         KernelJAI kernel = KernelFactory.createCircle(RADIUS, KernelFactory.ValueType.QUARTIC);
 
@@ -269,7 +269,7 @@ public class KernelFactoryTest {
     
     @Test
     public void triangularCircle() {
-        System.out.println("   triangular circle");
+        // System.out.println("   triangular circle");
 
         KernelJAI kernel = KernelFactory.createCircle(RADIUS, KernelFactory.ValueType.TRIANGULAR);
 
@@ -288,7 +288,7 @@ public class KernelFactoryTest {
     
     @Test
     public void triweightCircle() {
-        System.out.println("   triweight circle");
+        // System.out.println("   triweight circle");
 
         KernelJAI kernel = KernelFactory.createCircle(RADIUS, KernelFactory.ValueType.TRIWEIGHT);
 
@@ -310,7 +310,7 @@ public class KernelFactoryTest {
     
     @Test
     public void binaryAnnulus() {
-        System.out.println("   binary annulua");
+        // System.out.println("   binary annulua");
 
         KernelJAI kernel = KernelFactory.createAnnulus(
                 OUTER_RADIUS, INNER_RADIUS, KernelFactory.ValueType.BINARY);
@@ -326,7 +326,7 @@ public class KernelFactoryTest {
     
     @Test
     public void cosineAnnulus() {
-        System.out.println("   cosine annulus");
+        // System.out.println("   cosine annulus");
 
         KernelJAI kernel = KernelFactory.createAnnulus(
                 OUTER_RADIUS, INNER_RADIUS, KernelFactory.ValueType.COSINE);
@@ -349,7 +349,7 @@ public class KernelFactoryTest {
     
     @Test
     public void distanceAnnulus() {
-        System.out.println("   distance annulus");
+        // System.out.println("   distance annulus");
 
         KernelJAI kernel = KernelFactory.createAnnulus(
                 OUTER_RADIUS, INNER_RADIUS, KernelFactory.ValueType.DISTANCE);
@@ -369,7 +369,7 @@ public class KernelFactoryTest {
     
     @Test
     public void epanechnikovAnnulus() {
-        System.out.println("   Epanenchnikov annulus");
+        // System.out.println("   Epanenchnikov annulus");
 
         KernelJAI kernel = KernelFactory.createAnnulus(
                 OUTER_RADIUS, INNER_RADIUS, KernelFactory.ValueType.EPANECHNIKOV);
@@ -391,7 +391,7 @@ public class KernelFactoryTest {
     
     @Test
     public void gaussianAnnulus() {
-        System.out.println("   Gaussian annulus");
+        // System.out.println("   Gaussian annulus");
 
         KernelJAI kernel = KernelFactory.createAnnulus(
                 OUTER_RADIUS, INNER_RADIUS, KernelFactory.ValueType.GAUSSIAN);
@@ -414,7 +414,7 @@ public class KernelFactoryTest {
     
     @Test
     public void inverseDistanceAnnulus() {
-        System.out.println("   Inverse distance annulus");
+        // System.out.println("   Inverse distance annulus");
 
         KernelJAI kernel = KernelFactory.createAnnulus(
                 OUTER_RADIUS, INNER_RADIUS, KernelFactory.ValueType.INVERSE_DISTANCE);
@@ -434,7 +434,7 @@ public class KernelFactoryTest {
     
     @Test
     public void quarticAnnulus() {
-        System.out.println("   quartic annulus");
+        // System.out.println("   quartic annulus");
 
         KernelJAI kernel = KernelFactory.createAnnulus(
                 OUTER_RADIUS, INNER_RADIUS, KernelFactory.ValueType.QUARTIC);
@@ -457,7 +457,7 @@ public class KernelFactoryTest {
     
     @Test
     public void triangularAnnulus() {
-        System.out.println("   triangular annulus");
+        // System.out.println("   triangular annulus");
 
         KernelJAI kernel = KernelFactory.createAnnulus(
                 OUTER_RADIUS, INNER_RADIUS, KernelFactory.ValueType.TRIANGULAR);
@@ -477,7 +477,7 @@ public class KernelFactoryTest {
     
     @Test
     public void triweightAnnulus() {
-        System.out.println("   triweight annulus");
+        // System.out.println("   triweight annulus");
 
         KernelJAI kernel = KernelFactory.createAnnulus(
                 OUTER_RADIUS, INNER_RADIUS, KernelFactory.ValueType.TRIWEIGHT);
@@ -500,7 +500,7 @@ public class KernelFactoryTest {
         
     @Test
     public void binaryRectangle() {
-        System.out.println("   binary rectangle");
+        // System.out.println("   binary rectangle");
 
         KernelJAI kernel = KernelFactory.createRectangle(
                 RECTW, RECTH, KernelFactory.ValueType.BINARY, RECT_KEYX, RECT_KEYY);
@@ -516,7 +516,7 @@ public class KernelFactoryTest {
     
     @Test
     public void cosineRectangle() {
-        System.out.println("   cosine rectangle");
+        // System.out.println("   cosine rectangle");
 
         KernelJAI kernel = KernelFactory.createRectangle(
                 RECTW, RECTH, KernelFactory.ValueType.COSINE, RECT_KEYX, RECT_KEYY);
@@ -540,7 +540,7 @@ public class KernelFactoryTest {
     
     @Test
     public void distanceRectangle() {
-        System.out.println("   distance rectangle");
+        // System.out.println("   distance rectangle");
 
         KernelJAI kernel = KernelFactory.createRectangle(
                 RECTW, RECTH, KernelFactory.ValueType.DISTANCE, RECT_KEYX, RECT_KEYY);
@@ -560,7 +560,7 @@ public class KernelFactoryTest {
     
     @Test
     public void epanechnikovRectangle() {
-        System.out.println("   Epanenchnikov rectangle");
+        // System.out.println("   Epanenchnikov rectangle");
 
         KernelJAI kernel = KernelFactory.createRectangle(
                 RECTW, RECTH, KernelFactory.ValueType.EPANECHNIKOV, RECT_KEYX, RECT_KEYY);
@@ -580,7 +580,7 @@ public class KernelFactoryTest {
     
     @Test
     public void gaussianRectangle() {
-        System.out.println("   Gaussian rectangle");
+        // System.out.println("   Gaussian rectangle");
 
         KernelJAI kernel = KernelFactory.createRectangle(
                 RECTW, RECTH, KernelFactory.ValueType.GAUSSIAN, RECT_KEYX, RECT_KEYY);
@@ -602,7 +602,7 @@ public class KernelFactoryTest {
     
     @Test
     public void inverseDistanceRectangle() {
-        System.out.println("   Inverse distance rectangle");
+        // System.out.println("   Inverse distance rectangle");
 
         KernelJAI kernel = KernelFactory.createRectangle(
                 RECTW, RECTH, KernelFactory.ValueType.INVERSE_DISTANCE, RECT_KEYX, RECT_KEYY);
@@ -624,7 +624,7 @@ public class KernelFactoryTest {
     
     @Test
     public void quarticRectangle() {
-        System.out.println("   quartic rectangle");
+        // System.out.println("   quartic rectangle");
 
         KernelJAI kernel = KernelFactory.createRectangle(
                 RECTW, RECTH, KernelFactory.ValueType.QUARTIC, RECT_KEYX, RECT_KEYY);
@@ -645,7 +645,7 @@ public class KernelFactoryTest {
     
     @Test
     public void triangularRectangle() {
-        System.out.println("   triangular rectangle");
+        // System.out.println("   triangular rectangle");
 
         KernelJAI kernel = KernelFactory.createRectangle(
                 RECTW, RECTH, KernelFactory.ValueType.TRIANGULAR, RECT_KEYX, RECT_KEYY);
@@ -667,7 +667,7 @@ public class KernelFactoryTest {
     
     @Test
     public void triweightRectangle() {
-        System.out.println("   triweight rectangle");
+        // System.out.println("   triweight rectangle");
 
         KernelJAI kernel = KernelFactory.createRectangle(
                 RECTW, RECTH, KernelFactory.ValueType.TRIWEIGHT, RECT_KEYX, RECT_KEYY);
@@ -689,7 +689,7 @@ public class KernelFactoryTest {
         
     @Test
     public void testCreateFromShape() {
-        System.out.println("   create from shape");
+        // System.out.println("   create from shape");
 
         final int width = 2 * RADIUS;
         Shape shape = new Ellipse2D.Float(100, 200, width, width);

@@ -57,7 +57,7 @@ public class ImageGraphicsGeneralTest extends TiledImageTestBase {
     
     @Test
     public void setAndGetHint() {
-        System.out.println("   set and get a rendering hint");
+        // System.out.println("   set and get a rendering hint");
         
         gr.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         assertEquals(RenderingHints.VALUE_ANTIALIAS_ON, gr.getRenderingHint(RenderingHints.KEY_ANTIALIASING));
@@ -68,7 +68,7 @@ public class ImageGraphicsGeneralTest extends TiledImageTestBase {
 
     @Test
     public void addHints() {
-        System.out.println("   add rendering hints");
+        // System.out.println("   add rendering hints");
         
         // set an initial hint that will not be over-written
         gr.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
@@ -90,7 +90,7 @@ public class ImageGraphicsGeneralTest extends TiledImageTestBase {
         
     @Test
     public void setHints() {
-        System.out.println("   set and get rendering hints");
+        // System.out.println("   set and get rendering hints");
         
         // set initial hints that will be over-written
         gr.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
@@ -108,7 +108,7 @@ public class ImageGraphicsGeneralTest extends TiledImageTestBase {
      
     @Test
     public void nullFontIsSilentlyIgnored() {
-        System.out.println("   null arg to setFont is silently ignored");
+        // System.out.println("   null arg to setFont is silently ignored");
         
         gr.setFont(null);
         assertNotNull(gr.getFont());

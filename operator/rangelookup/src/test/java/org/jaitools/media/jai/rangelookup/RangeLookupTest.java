@@ -52,7 +52,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void byteToByte() {
-        System.out.println("   byte source to byte destination");
+        // System.out.println("   byte source to byte destination");
         Byte[] breaks = { 2, 4, 6, 8 };
         Byte[] values = { 0, 1, 2, 3, 4 };
         RenderedImage srcImg = createByteTestImage((byte)0);
@@ -61,7 +61,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void byteToShort() {
-        System.out.println("   byte source to short destination");
+        // System.out.println("   byte source to short destination");
         Byte[] breaks = { 2, 4, 6, 8 };
         Short[] values = { -50, -10, 0, 10, 50 };
         RenderedImage srcImg = createByteTestImage((byte)0);
@@ -70,7 +70,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void byteToInt() {
-        System.out.println("   byte source to int destination");
+        // System.out.println("   byte source to int destination");
         Byte[] breaks = { 2, 4, 6, 8 };
         Integer[] values = { -50, -10, 0, 10, 50 };
         RenderedImage srcImg = createByteTestImage((byte)0);
@@ -79,7 +79,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void byteToFloat() {
-        System.out.println("   byte source to float destination");
+        // System.out.println("   byte source to float destination");
         Byte[] breaks = { 2, 4, 6, 8 };
         Float[] values = { -50f, -10f, 0f, 10f, 50f };
         RenderedImage srcImg = createByteTestImage((byte)0);
@@ -88,7 +88,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void byteToDouble() {
-        System.out.println("   byte source to double destination");
+        // System.out.println("   byte source to double destination");
         Byte[] breaks = { 2, 4, 6, 8 };
         Double[] values = { -50d, -10d, 0d, 10d, 50d };
         RenderedImage srcImg = createByteTestImage((byte)0);
@@ -97,7 +97,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void shortToByte() {
-        System.out.println("   short source to byte destination");
+        // System.out.println("   short source to byte destination");
         Short[] breaks = { 2, 4, 6, 8 };
         Byte[] values = { 0, 1, 2, 3, 4 };
         RenderedImage srcImg = createShortTestImage((short)0);
@@ -106,7 +106,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void shortToShort() {
-        System.out.println("   short source to short destination");
+        // System.out.println("   short source to short destination");
         Short[] breaks = { 2, 4, 6, 8 };
         Short[] values = { -50, -10, 0, 10, 50 };
         RenderedImage srcImg = createShortTestImage((short)0);
@@ -115,7 +115,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void shortToInt() {
-        System.out.println("   short source to int destination");
+        // System.out.println("   short source to int destination");
         Short[] breaks = { 2, 4, 6, 8 };
         Integer[] values = { -50, -10, 0, 10, 50 };
         RenderedImage srcImg = createShortTestImage((short)0);
@@ -124,7 +124,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void shortToFloat() {
-        System.out.println("   short source to float destination");
+        // System.out.println("   short source to float destination");
         Short[] breaks = { 2, 4, 6, 8 };
         Float[] values = { -50f, -10f, 0f, 10f, 50f };
         RenderedImage srcImg = createShortTestImage((short)0);
@@ -133,7 +133,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void shortToDouble() {
-        System.out.println("   short source to double destination");
+        // System.out.println("   short source to double destination");
         Short[] breaks = { 2, 4, 6, 8 };
         Double[] values = { -50d, -10d, 0d, 10d, 50d };
         RenderedImage srcImg = createShortTestImage((short)0);
@@ -142,7 +142,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void ushortToByte() {
-        System.out.println("   ushort source to byte destination");
+        // System.out.println("   ushort source to byte destination");
         Short[] breaks = { 2, 4, 6, 8 };
         Byte[] values = { 0, 1, 2, 3, 4 };
         RenderedImage srcImg = createUShortTestImage((short)0);
@@ -151,7 +151,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void ushortToShort() {
-        System.out.println("   ushort source to short destination");
+        // System.out.println("   ushort source to short destination");
         Short[] breaks = { 2, 4, 6, 8 };
         Short[] values = { -50, -10, 0, 10, 50 };
         RenderedImage srcImg = createUShortTestImage((short)0);
@@ -160,7 +160,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void ushortToInt() {
-        System.out.println("   ushort source to int destination");
+        // System.out.println("   ushort source to int destination");
         Short[] breaks = { 2, 4, 6, 8 };
         Integer[] values = { -50, -10, 0, 10, 50 };
         RenderedImage srcImg = createUShortTestImage((short)0);
@@ -169,7 +169,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void ushortToFloat() {
-        System.out.println("   ushort source to float destination");
+        // System.out.println("   ushort source to float destination");
         Short[] breaks = { 2, 4, 6, 8 };
         Float[] values = { -50f, -10f, 0f, 10f, 50f };
         RenderedImage srcImg = createUShortTestImage((short)0);
@@ -178,7 +178,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void ushortToDouble() {
-        System.out.println("   ushort source to double destination");
+        // System.out.println("   ushort source to double destination");
         Short[] breaks = { 2, 4, 6, 8 };
         Double[] values = { -50d, -10d, 0d, 10d, 50d };
         RenderedImage srcImg = createUShortTestImage((short)0);
@@ -187,7 +187,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void intToByte() {
-        System.out.println("   int source to byte destination");
+        // System.out.println("   int source to byte destination");
         Integer[] breaks = { 2, 4, 6, 8 };
         Byte[] values = { 0, 1, 2, 3, 4 };
         RenderedImage srcImg = createIntTestImage(0);
@@ -196,7 +196,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void intToShort() {
-        System.out.println("   int source to short destination");
+        // System.out.println("   int source to short destination");
         Integer[] breaks = { 2, 4, 6, 8 };
         Short[] values = { -50, -10, 0, 10, 50 };
         RenderedImage srcImg = createIntTestImage(0);
@@ -205,7 +205,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void intToInt() {
-        System.out.println("   int source to int destination");
+        // System.out.println("   int source to int destination");
         Integer[] breaks = { 2, 4, 6, 8 };
         Integer[] values = { -50, -10, 0, 10, 50 };
         RenderedImage srcImg = createIntTestImage(0);
@@ -214,7 +214,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void intToFloat() {
-        System.out.println("   int source to float destination");
+        // System.out.println("   int source to float destination");
         Integer[] breaks = { 2, 4, 6, 8 };
         Float[] values = { -50f, -10f, 0f, 10f, 50f };
         RenderedImage srcImg = createIntTestImage(0);
@@ -223,7 +223,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void intToDouble() {
-        System.out.println("   int source to double destination");
+        // System.out.println("   int source to double destination");
         Integer[] breaks = { 2, 4, 6, 8 };
         Double[] values = { -50d, -10d, 0d, 10d, 50d };
         RenderedImage srcImg = createIntTestImage(0);
@@ -233,7 +233,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void floatToByte() {
-        System.out.println("   float source to byte destination");
+        // System.out.println("   float source to byte destination");
         Float[] breaks = { 2f, 4f, 6f, 8f };
         Byte[] values = { 0, 1, 2, 3, 4 };
         RenderedImage srcImg = createFloatTestImage(0);
@@ -242,7 +242,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void floatToShort() {
-        System.out.println("   float source to short destination");
+        // System.out.println("   float source to short destination");
         Float[] breaks = { 2f, 4f, 6f, 8f };
         Short[] values = { -50, -10, 0, 10, 50 };
         RenderedImage srcImg = createFloatTestImage(0);
@@ -251,7 +251,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void floatToInt() {
-        System.out.println("   float source to int destination");
+        // System.out.println("   float source to int destination");
         Float[] breaks = { 2f, 4f, 6f, 8f };
         Integer[] values = { -50, -10, 0, 10, 50 };
         RenderedImage srcImg = createFloatTestImage(0);
@@ -260,7 +260,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void floatToFloat() {
-        System.out.println("   float source to float destination");
+        // System.out.println("   float source to float destination");
         Float[] breaks = { 2f, 4f, 6f, 8f };
         Float[] values = { -50f, -10f, 0f, 10f, 50f };
         RenderedImage srcImg = createFloatTestImage(0);
@@ -269,7 +269,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void floatToDouble() {
-        System.out.println("   float source to double destination");
+        // System.out.println("   float source to double destination");
         Float[] breaks = { 2f, 4f, 6f, 8f };
         Double[] values = { -50d, -10d, 0d, 10d, 50d };
         RenderedImage srcImg = createFloatTestImage(0);
@@ -278,7 +278,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void doubleToByte() {
-        System.out.println("   double source to byte destination");
+        // System.out.println("   double source to byte destination");
         Double[] breaks = { 2d, 4d, 6d, 8d };
         Byte[] values = { 0, 1, 2, 3, 4 };
         RenderedImage srcImg = createDoubleTestImage(0);
@@ -287,7 +287,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void doubleToShort() {
-        System.out.println("   double source to short destination");
+        // System.out.println("   double source to short destination");
         Double[] breaks = { 2d, 4d, 6d, 8d };
         Short[] values = { -50, -10, 0, 10, 50 };
         RenderedImage srcImg = createDoubleTestImage(0);
@@ -296,7 +296,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void doubleToInt() {
-        System.out.println("   double source to int destination");
+        // System.out.println("   double source to int destination");
         Double[] breaks = { 2d, 4d, 6d, 8d };
         Integer[] values = { -50, -10, 0, 10, 50 };
         RenderedImage srcImg = createDoubleTestImage(0);
@@ -305,7 +305,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void doubleToFloat() {
-        System.out.println("   double source to float destination");
+        // System.out.println("   double source to float destination");
         Double[] breaks = { 2d, 4d, 6d, 8d };
         Float[] values = { -50f, -10f, 0f, 10f, 50f };
         RenderedImage srcImg = createDoubleTestImage(0);
@@ -314,7 +314,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void doubleToDouble() {
-        System.out.println("   double source to double destination");
+        // System.out.println("   double source to double destination");
         Double[] breaks = { 2d, 4d, 6d, 8d };
         Double[] values = { -50d, -10d, 0d, 10d, 50d };
         RenderedImage srcImg = createDoubleTestImage(0);
@@ -323,7 +323,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void shortToShortWithNoNegativeValues() throws Exception {
-        System.out.println("   short source to short dest");
+        // System.out.println("   short source to short dest");
         
         Short[] breaks = { 2, 4, 6, 8 };
         Short[] values = { 0, 1, 2, 3, 4 };
@@ -335,7 +335,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void ushortToUShort() throws Exception {
-        System.out.println("   ushort source to ushort dest");
+        // System.out.println("   ushort source to ushort dest");
 
         Short[] breaks = { 2, 4, 6, 8 };
         Short[] values = { 0, 1, 2, 3, 4 };
@@ -345,7 +345,7 @@ public class RangeLookupTest extends TestBase {
     
     @Test
     public void ushortSourceWithNegativeDestValues() throws Exception {
-        System.out.println("   ushort source and negative lookup values");
+        // System.out.println("   ushort source and negative lookup values");
 
         Short[] breaks = { 2, 4, 6, 8 };
         Short[] values = { -50, -10, 0, 10, 50 };

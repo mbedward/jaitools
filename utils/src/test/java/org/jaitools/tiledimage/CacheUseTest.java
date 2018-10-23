@@ -44,7 +44,7 @@ public class CacheUseTest extends TiledImageTestBase {
      */
     @Test
     public void testCommonCache() {
-        System.out.println("   using common cache");
+        // System.out.println("   using common cache");
 
         DiskMemTileCache common = DiskMemImage.getCommonTileCache();
 
@@ -66,7 +66,7 @@ public class CacheUseTest extends TiledImageTestBase {
      */
     @Test
     public void testSwapCache() {
-        System.out.println("   swapping tile cache");
+        // System.out.println("   swapping tile cache");
 
         DiskMemTileCache common = DiskMemImage.getCommonTileCache();
 
@@ -93,7 +93,7 @@ public class CacheUseTest extends TiledImageTestBase {
      */
     @Test
     public void testShareCache() {
-        System.out.println("   tile cache shared between images");
+        // System.out.println("   tile cache shared between images");
 
         DiskMemTileCache common = DiskMemImage.getCommonTileCache();
 
