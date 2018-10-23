@@ -65,8 +65,8 @@ public final class GeomCollectionIterator extends AbstractLiteIterator {
     }
     
     /**
-     * @param gc
-     * @param at
+     * @param gc collection
+     * @param at transform
      */
     public void init(GeometryCollection gc, AffineTransform at) {
         this.gc = gc;

@@ -81,7 +81,7 @@ import org.jaitools.numeric.Statistic;
  * Statistic computations made on pixels which belong to the same age value and job value will 
  * be grouped together. So you will potentially have in output statistics for the group of pixels
  * related to the set of pixels classifier belonging:
- *   
+ * <pre>{@code   
  * age = 18 & job = 0 
  * age = 18 & job = 1
  * age = 18 & job = 2
@@ -90,11 +90,12 @@ import org.jaitools.numeric.Statistic;
  * age = 19 & job = 1
  * age = 19 & job = 2
  * ...
+ * }</pre>
  * 
  * A MultiKey object will be used to represent these tuples of key.
  * Only the tuples found during the computation will be reported as output results.
- * As an instance, in case there isn't any pixel belonging to age = 70 & job = 20 (professional dancer),
- * the output won't contain a <80,20> tuple.
+ * As an instance, in case there isn't any pixel belonging to {@code age = 70} &amp; {@code job = 20} (professional dancer),
+ * the output won't contain a {@code <80,20>} tuple.
  * <p>
  * The optional "noDataClassifiers" parameter allows you to define a specific value to treat as NODATA 
  * for each classifier image. When specifying the noDataClassifierRanges array entries, make sure to 
@@ -125,7 +126,7 @@ import org.jaitools.numeric.Statistic;
  * 
  * 
  * Example of use...
- * <pre><code>
+ * <pre>{@code
  * RenderedImage myData = ...
  * RenderedImage myClassifierImage0 = ...
  * RenderedImage myClassifierImage1 = ...
@@ -165,19 +166,19 @@ import org.jaitools.numeric.Statistic;
  *              System.out.println(r.toString());
  *      }
  * }
- * </code></pre>
+ * }</pre>
  * 
  * The {@code ClassifiedStats} object returned by the {@code getProperty} method above allows
  * you to examine results by image band, classifier key, pivot, statistic, range.
  * As output, you will get the List of results where the i-th element is related to the 
  * classified stats computed on top of the i-th pivot element
  *  
- * <pre><code>
+ * <pre>{@code
  * List<Map<MultiKey, List<Result>>> results = stats.results();
  * Map<MultiKey, List<Result>> pivot0Results = results.get(0);
  * Map<MultiKey, List<Result>> pivot1Results = results.get(1);
  * Map<MultiKey, List<Result>> pivot2Results = results.get(2);
- * </code></pre>
+ * }</pre>
  *
  * <b>Parameters</b>
  * <table border="1">
@@ -210,7 +211,7 @@ import org.jaitools.numeric.Statistic;
  * <td>roi</td><td>ROI</td><td>An optional ROI to constrain sampling</td><td>null</td>
  * </tr>
  * <tr>
- * <td>ranges</td><td>Collection&lt;Range></td><td>Ranges of values to include or exclude</td><td>null (include all data values)</td>
+ * <td>ranges</td><td>{@code Collection<Range>}</td><td>Ranges of values to include or exclude</td><td>null (include all data values)</td>
  * </tr>
  * <tr>
  * <td>rangesType</td><td>Range.Type</td>
@@ -224,7 +225,7 @@ import org.jaitools.numeric.Statistic;
  * <td>Boolean.FALSE</td>
  * </tr>
  * <tr>
- * <td>noDataRanges</td><td>Collection&lt;Range></td>
+ * <td>noDataRanges</td><td>{@code Collection<Range>}</td>
  * <td>Ranges of values to treat specifically as NODATA
  * </td><td>null (no NODATA values defined)</td>
  * </tr>
@@ -250,7 +251,7 @@ import org.jaitools.numeric.Statistic;
  * 1 and 4 (starting from index 0).
  * </td><td>null (no NODATA values defined)</td>
  * </tr>
-
+ * <Caption>Parameters</Caption>
  * </table>
  *
  * @see Result

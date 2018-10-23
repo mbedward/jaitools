@@ -90,7 +90,7 @@ import org.jaitools.numeric.Statistic;
  * NODATA values is tracked by the operator and can be retrieved from the results.
  * <p>
  * Example of use...
- * <pre><code>
+ * <pre>{@code
  * RenderedImage myData = ...
  * RenderedImage myZones = ...
  *
@@ -115,11 +115,11 @@ import org.jaitools.numeric.Statistic;
  * for (Result r : stats.results()) {
  *     System.out.println(r);
  * }
- * </code></pre>
+ * }</pre>
  *
  * The {@code ZonalStats} object returned by the {@code getProperty} method above allows
  * you to examine results by image band, zone and statistic as shown here...
- * <pre><code>
+ * <pre>{@code
  * ZonalStats stats = (ZonalStats) op.getProperty(ZonalStatsDescriptor.ZONAL_STATS_PROPERTY);
  *
  * // print all results for band 0
@@ -136,10 +136,10 @@ import org.jaitools.numeric.Statistic;
  * for (Result r : stats.band(0).statistics(Statistic.MEAN).results()) {
  *     System.out.println(r);
  * }
- * </code></pre>
+ * }</pre>
  *
  * Using the operator to calculate statistics for an area within the data image...
- * <pre><code>
+ * <pre>{@code
  * RenderedImage myData = ...
  * Rectangle areaBounds = ...
  * ROI roi = new ROIShape(areaBounds);
@@ -158,10 +158,10 @@ import org.jaitools.numeric.Statistic;
  *     System.out.println(r);
  * }
  *
- * </code></pre>
+ * }</pre>
  *
  * Using an {@code AffineTransform} to map data image position to zone image position...
- * <pre><code>
+ * <pre>{@code
  * ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
  * pb.setSource("dataImage", myDataImage);
  * pb.setSource("zoneImage", myZoneImage);
@@ -169,14 +169,14 @@ import org.jaitools.numeric.Statistic;
  *
  * AffineTransform tr = new AffineTransform( ... );
  * pb.setParameter("zoneTransform", tr);
- * </code></pre>
+ * }</pre>
  *
  * Asking for statistics on multiple bands.
  * <p>
  * By default the stats are calculated on a single default 0 index band. It
  * is possible also to request calculations on multiple bands, by passing the
  * band indexes as a parameter.
- * <pre><code>
+ * <pre>{@code
  * ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
  * pb.setSource("dataImage", myDataImage);
  * pb.setSource("zoneImage", myZoneImage);
@@ -192,10 +192,10 @@ import org.jaitools.numeric.Statistic;
  * // results by band
  * List<Result> resultsBand0 = stats.band(0).results;
  * List<Result> resultsBand2 = stats.band(2).results;
- * </code></pre>
+ * }</pre>
  *
  * Excluding data values from the analysis with the "noDataRanges" parameter:
- * <pre><code>
+ * <pre>{@code
  * ParameterBlockJAI pb = new ParameterBlockJAI("ZonalStats");
  * ...
  *
@@ -212,10 +212,11 @@ import org.jaitools.numeric.Statistic;
  *     int numExcluded = r.getNumOffered() - numUsed;
  *     ...
  * }
- * </code></pre>
+ * }</pre>
  *
  * <b>Parameters</b>
  * <table border="1">
+ * <caption>Zonal Status Parameters</caption>
  * <tr>
  * <th>Name</th><th>Type</th><th>Description</th><th>Default value</th>
  * </tr>
@@ -234,7 +235,7 @@ import org.jaitools.numeric.Statistic;
  * <td>null (identity transform)</td>
  * </tr>
  * <tr>
- * <td>ranges</td><td>Collection&lt;Range></td><td>Ranges of values to include or exclude</td><td>null (include all data values)</td>
+ * <td>ranges</td><td>{@code Collection<Range>}</td><td>Ranges of values to include or exclude</td><td>null (include all data values)</td>
  * </tr>
  * <tr>
  * <td>rangesType</td><td>Range.Type</td>
@@ -248,7 +249,7 @@ import org.jaitools.numeric.Statistic;
  * <td>Boolean.FALSE</td>
  * </tr>
  * <tr>
- * <td>noDataRanges</td><td>Collection&lt;Range></td>
+ * <td>noDataRanges</td><td>{@code Collection<Range>}</td>
  * <td>Ranges of values to treat specifically as NODATA
  * </td><td>null (no NODATA values defined)</td>
  * </tr>

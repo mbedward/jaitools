@@ -84,6 +84,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * <p>
  * <b>Parameters</b>
  * <table border="1">
+ * <caption>Parameters</caption>
  * <tr>
  * <th>Name</th><th>Type</th><th>Description</th><th>Default value</th>
  * </tr>

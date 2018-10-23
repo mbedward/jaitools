@@ -41,7 +41,7 @@ import org.jaitools.numeric.Range;
 
 
 /**
- * This is a variation on the JAI {@linkplain javax.media.jai.LookupDescriptor}.
+ * This is a variation on the JAI {@linkplain javax.media.jai.operator.LookupDescriptor}.
  * It works with a {@linkplain RangeLookupTable} object in which each entry maps
  * a source image value range to a destination image value.
  *

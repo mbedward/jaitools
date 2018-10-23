@@ -38,7 +38,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * vector polygons. The source image passes through to thedestination unchanged, 
  * similar to a JAI statistics operator, while the vectors are returned as
  * an image property.
- * <pre><code>
+ * <pre>{@code
  * // Vectorize regions using default parameter settings
  * RenderedImage image = ...
  * ParameterBlockJAI pb = new ParameterBlockJAI("Vectorize");
@@ -48,13 +48,13 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * // retrieve the vectors
  * Collection&lt;Polygon&gt; polys = (Collection&lt;Polygon&gt;) dest.getProperty(
  *         VectorizeDescriptor.VECTOR_PROPERTY_NAME);
- * </code></pre>
+ * }</pre>
  * 
  * The vectors are JTS Polygon objects. Each polygon holds the value of its source image
  * region as a Double (regardless of the source image data type) as a <i>user data</i>
  * attribute.
  * 
- * <pre><code>
+ * <pre>{@code
  * // report source image region value and area (expressed as pixel units)
  * Collection&lt;Polygon&gt; polys = (Collection&lt;Polygon&gt;) dest.getProperty(
  *         VectorizeDescriptor.VECTOR_PROPERTY_NAME);
@@ -66,7 +66,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  *     double area = poly.getArea();
  *     System.out.printf("%12.2f %10.2f %10.2f\n", value, perimeter, area);
  * }
- * </code></pre>
+ * }</pre>
  * 
  * Optionally, polygons below a threshold area can be filtered from the output
  * by simple deletion, or by merging with a neighbour (where possible).
@@ -74,7 +74,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * with the target polygon (ie. lineal intersection). Two polygons that only
  * touch at a single vertex are not considered neighbours.
  * 
- * <pre><code>
+ * <pre>{@code
  * ParameterBlockJAI pb = new ParameterBlockJAI("Vectorize");
  * pb.setSource("source0", myImage);
  * 
@@ -84,7 +84,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * // will be discarded.
  * pb.setParameter("filterThreshold", 5.1);
  * pb.setParameter("filterMethod", VectorizeDescriptor.FILTER_MERGE_LARGEST);
- * </code></pre>
+ * }</pre>
  *
  * While the Vectorize parameters allow substantial control over the 
  * polygons generated from a source image, sometimes it is not possible to
@@ -96,7 +96,9 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * <p>
  * 
  * The following parameters control the vectorizing process:
+ * 
  * <table border="1" cellpadding="3">
+ * <caption>vectorizing parameters</caption>
  * <tr>
  * <th>Name</th>
  * <th>Class</th>
@@ -166,7 +168,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * </table>
  * 
  * @see org.locationtech.jts.geom.Polygon
- * @see org.jaitools.media.jai.regionalizeRegionalizeDescriptor
+ * @see org.jaitools.media.jai.regionalize.RegionalizeDescriptor
  * @see org.jaitools.media.jai.rangelookup.RangeLookupDescriptor
  * 
  * @author Michael Bedward

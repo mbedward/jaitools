@@ -44,7 +44,7 @@ import com.sun.media.jai.opimage.RIFUtil;
  * The image factory for the Regionalize operation.
  *
  * @see RegionalizeDescriptor
- * @see RegionData
+ * @see Region
  * 
  * @author Michael Bedward
  * @since 1.0

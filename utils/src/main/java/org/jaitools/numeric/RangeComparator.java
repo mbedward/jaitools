@@ -31,9 +31,8 @@ import java.util.Comparator;
  * Compares ranges by min end-point, then max end-point. This reduces the
  * detailed comparison available from {@linkplain RangeExtendedComparator} to
  * an integer result that is compatible with generic sorting methods such
- * as 
- * {@link java.util.Collections#sort(java.util.List, Comparator)}.
- * <p>
+ * as {@link java.util.Collections#sort(java.util.List, Comparator)}.
+ * 
  * <table border="1">
  * <tr>
  * <th>Result</th><th>Meaning</th>
@@ -50,6 +49,7 @@ import java.util.Comparator;
  * <td>positive</td>
  * <td>either r1 min is greater than r2 min or r1 max is greater than r2 max</td>
  * </tr>
+ * <caption>RangeComparator Functionality</caption>
  * </table>
  * 
  * @param <T> range value type
@@ -84,7 +84,7 @@ public class RangeComparator<T extends Number & Comparable> implements Comparato
      * @param r1 first range
      * @param r2 second range
      * 
-     * @returns an integer value indicating r1 compared to r2
+     * @return an integer value indicating r1 compared to r2
      */
     public int compare(Range<T> r1, Range<T> r2) {
         RangeExtendedComparator.Result result = delegate.compare(r1, r2);

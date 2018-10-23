@@ -251,7 +251,7 @@ public class ClassifiedStats {
     }
 
     /**
-     * Returns the {@code Result} objects as a List<Map<MultiKey, List<Result>>> 
+     * Returns the {@code Result} objects as a {@code List<Map<MultiKey, List<Result>>>} 
      * The keys are multiKey setup on top of the classifier pixel values. For each of them,
      * a List of {@code Result}s is provided. In case of classified stats against local ranges,
      * the list will contain the Result for each range.

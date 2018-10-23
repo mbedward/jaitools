@@ -68,7 +68,7 @@ import org.jaitools.tiledimage.DiskMemImage;
  *
  *
  * @see RegionalizeDescriptor
- * @see RegionData
+ * @see Region
  * 
  * @author Michael Bedward
  * @since 1.0
@@ -176,7 +176,7 @@ public class RegionalizeOpImage extends PointOpImage {
 
     /**
      * Gets a property associated with this operator. Use this
-     * to retrieve the {@linkplain RegionData} object with the
+     * to retrieve the {@linkplain Region} object with the
      * property name {@linkplain RegionalizeDescriptor#REGION_DATA_PROPERTY}
      *
      * @param name property name
@@ -196,7 +196,7 @@ public class RegionalizeOpImage extends PointOpImage {
 
     /**
      * Gets the properties for this operator. These will
-     * include the {@linkplain RegionData} object.
+     * include the {@linkplain Region} object.
      * 
      * @return the properties
      */

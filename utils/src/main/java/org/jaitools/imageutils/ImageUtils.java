@@ -498,7 +498,7 @@ public class ImageUtils {
      * operator into separate result images.
      *
      * @param img the multi-band image
-     * @param bandIndices a Collection of Integer indices in the range 0 <= i < number of bands
+     * @param bandIndices a Collection of Integer indices in the range 0 &lt;= i &lt; number of bands
      * @return a List of new single-band images
      */
     public static List<RenderedImage> getBandsAsImages(RenderedImage img, Collection<Integer> bandIndices) {

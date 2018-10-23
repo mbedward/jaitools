@@ -36,8 +36,8 @@ import org.jaitools.imageutils.iterator.SimpleIterator;
 import org.jaitools.numeric.NumberOperations;
 
 /**
- *
- * @param <K> 
+ * ImageSet of &lt;K&gt;.
+ * 
  * @author michael
  */
 public class ImageSet<K> {

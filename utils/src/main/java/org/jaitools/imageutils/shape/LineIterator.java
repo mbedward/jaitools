@@ -74,8 +74,8 @@ public final class LineIterator extends AbstractLiteIterator {
     }
 
     /**
-     * @param ls
-     * @param at
+     * @param ls linestring
+     * @param at transform
      */
     public void init(LineString ls, AffineTransform at) {
         if (at == null) {

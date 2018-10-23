@@ -166,14 +166,14 @@ public class RangeLookupTable<T extends Number & Comparable<? super T>, U extend
          *
          * A new lookup range that overlaps one or 
          * more previously set ranges will be truncated or split into 
-         * non-overlapping intervals. For example, if the lookup [5, 10] => 1 
-         * has previously been set, and a new lookup [0, 20] => 2 is added, 
+         * non-overlapping intervals. For example, if the lookup {@code [5, 10] => 1} 
+         * has previously been set, and a new lookup {@code [0, 20] => 2} is added, 
          * then the following lookups will result:
-         * <pre>
-         *     [0, 5) => 2
-         *     [5, 10] => 1
-         *     (10, 20] => 2
-         * </pre> 
+         * <pre>{@code
+         * [0, 5) => 2
+         * [5, 10] => 1
+         * (10, 20] => 2
+         * }</pre> 
          * Where a new range is completely overlapped by existing ranges it 
          * will be ignored.
          * <p> 
@@ -182,14 +182,15 @@ public class RangeLookupTable<T extends Number & Comparable<? super T>, U extend
          * coverage. If the first range in the above example had been the 
          * half-open interval (5, 10] rather than the closed interval [5, 10] 
          * then the following would have resulted:
-         * <pre>
-         *     [0, 5) => 2
-         *     (5, 10] => 1
-         *     (10, 20] => 2
-         * </pre> In this case the value 5 would not be matched.
+         * <pre>{@code
+         * [0, 5) => 2
+         * (5, 10] => 1
+         * (10, 20] => 2
+         * }</pre> In this case the value 5 would not be matched.
          *
          * @param srcRange the source value range
          * @param resultValue the destination value
+         * @return builder 
          */
         public Builder add(Range<T> srcRange, U resultValue) {
             if (srcRange == null || resultValue == null) {
