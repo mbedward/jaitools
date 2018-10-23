@@ -386,7 +386,7 @@ public class ClassifiedStatsOpImage extends NullOpImage {
     }
 
     /**
-     * Called by {@link #compileClassifiedStatistics()} to lazily create a
+     * Called by {@link #compileClassifiedStatistics} to lazily create a
      * {@link StreamingSampleStats} object for each classifier. The new object
      * is added to the provided {@code resultsPerBand} {@code Map}.
      * 

@@ -44,9 +44,9 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * flood-filling in a paint program). The value of the starting pixel is
  * recorded as the reference value for the new region. The search works
  * its way outwards from the starting pixel, testing other pixels for
- * inclusion in the region. A pixel will be included if: <br>
- * <pre>      |value - reference value| <= tolerance </pre>
- * where tolerance is a user-specified parameter.
+ * inclusion in the region. A pixel will be included if: <br> {@code
+ * |value - reference value| <= tolerance} where tolerance is a
+ * user-specified parameter.
  * <p>
  * If the diagonal parameter is set to true, the flood-fill search will
  * include pixels that can only be reached via a diagonal step; if false,
@@ -57,12 +57,12 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * (bounds, number of pixels, reference value) are recorded for it.
  * <p>
  * The output of the operation is an image of data type TYPE_INT, where each
- * pixel's value is its region ID. A {@linkplain RegionData} object can be
+ * pixel's value is its region ID. A {@linkplain Region} object can be
  * retrieved as a property of the output image using the property name
  * {@linkplain RegionalizeDescriptor#REGION_DATA_PROPERTY}).
  * <p>
  * <b>Example</b>
- * <pre><code>
+ * <pre>{@code
  * RenderedImage myImg = ...
  *
  * ParameterBlockJAI pb = new ParameterBlockJAI("regionalize");
@@ -92,16 +92,18 @@ import javax.media.jai.registry.RenderedRegistryMode;
  *         r.getMaxX(),
  *         r.getMinY(),
  *         r.getMaxY() ));
- * </code></pre>
+ * }
+ * }
+ * </pre>
  *
  * <b>Summary of parameters:</b>
- * <table border="1", cellpadding="3">
+ * <table border="1" cellpadding="3">
+ * <caption>Summary of parameters</caption>
  * <tr>
  * <th>Name</th>
  * <th>Class</th>
  * <th>Default</th>
  * <th>Description</th>
- * </tr>
  * </tr>
  * 
  * <tr>
@@ -136,7 +138,7 @@ import javax.media.jai.registry.RenderedRegistryMode;
 public class RegionalizeDescriptor extends OperationDescriptorImpl {
 
     /**
-     * The propoerty name to retrieve the {@linkplain RegionData}
+     * The propoerty name to retrieve the {@linkplain Region}
      * object which holds summary data for regions identified in
      * the source image and depicted in the destination image
      */

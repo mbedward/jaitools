@@ -64,7 +64,7 @@ import org.jaitools.numeric.StreamingSampleStats;
  * 
  * For most uses it may be easier to use the chaining methods provided by {@code ZonalStats}
  * to select the subset of results required...
- * <pre><code>
+ * <pre>{@code
  * ZonalStats allStats = ...
  *
  * // Get results for a given band
@@ -100,7 +100,7 @@ import org.jaitools.numeric.StreamingSampleStats;
  *     }
  * }
  *
- * </code></pre>
+ * }</pre>
  *
  * @see Result
  * @see ZonalStatsDescriptor

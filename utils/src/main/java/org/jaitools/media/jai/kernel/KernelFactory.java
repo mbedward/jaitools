@@ -330,7 +330,7 @@ public class KernelFactory {
      * @throws IllegalArgumentException if {@code outerRadius <= 0} or 
      *         {@code innerRadius >= outerRadius}
      * 
-     * @deprecated Please use {@link #createAnnulua(int, int, ValueType)} instead and
+     * @deprecated Please use {@link #createAnnulus(int, int, ValueType)} instead and
      *             set the centre element value on the returned kernel if that is
      *             required.
      */

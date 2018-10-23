@@ -112,13 +112,13 @@ public class Range<T extends Number & Comparable> {
      * Static create method. This just relieves the tedium of having to specify
      * the type parameter on both sides of the creation expression. So instead
      * of this...
-     * <pre><code>
-     *    Range&lt;Integer> r = new Range&lt;Integer>(10, false, 20, true);
-     * </code></pre>
+     * <pre>{@code
+     *    Range<Integer> r = new Range<Integer>(10, false, 20, true);
+     * }</pre>
      * you can do this...
-     * <pre><code>
-     *    Range&lt;Integer> r = Range.create(10, false, 20, true);
-     * </code></pre>
+     * <pre>{@code
+     *    Range<Integer> r = Range.create(10, false, 20, true);
+     * }</pre>
      *
      * @param <T> value type
      * 
@@ -304,14 +304,14 @@ public class Range<T extends Number & Comparable> {
      * set to the relevant POSITIVE_INFINITY or NEGATIVE_INFINITY. For
      * other types such as Integer which lack infinity flag values a
      * point range at infinity can be created as in this example...
-     * <pre><code>
+     * <pre>{@code
      *
-     *    Range&lt;Integer> rInf = new Range&lt;Integer>(null, Range.INF);
-     *    Range&lt;Integer> rNegInf = new Range&lt;Integer>(null, Range.NEG_INF);
+     *    Range<Integer> rInf = new Range<Integer>(null, Range.INF);
+     *    Range<Integer> rNegInf = new Range&lt;Integer>(null, Range.NEG_INF);
      *
      *    // or with the static create method...
-     *    Range&lt;Integer> rInf2 = Range.create(null, Range.INF);
-     * </code></pre>
+     *    Range<Integer> rInf2 = Range.create(null, Range.INF);
+     * }</pre>
      * <p>
      * For a point interval at positive or negative infinity the following apply:
      * <ul>

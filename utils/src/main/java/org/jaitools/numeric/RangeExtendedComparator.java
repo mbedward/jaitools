@@ -42,7 +42,7 @@ import org.jaitools.CollectionFactory;
  * </blockquote>
  *
  * Constants describing each of these possible comparisons are defined in the
- * {@link RangeComparator.Result} class.
+ * {@link Result} class.
  * <p>
  * Normally, client code will not need to use the methods defined in this class
  * directly but will work through the {@link Range} class.
@@ -215,7 +215,7 @@ public class RangeExtendedComparator<T extends Number & Comparable> {
 
         /**
          * Gets the notation form of this comparison. For example,
-         * for Result.LLEG the notation form is "<<=>".
+         * for Result.LLEG the notation form is {@code "<<=>" }.
          * 
          * @return the Hayes notation
          */
@@ -227,12 +227,12 @@ public class RangeExtendedComparator<T extends Number & Comparable> {
          * Returns a description for this comparison type. The description is
          * worded so that it makes grammatical sense when placed between two
          * Range object names. For example...
-         * <pre><code>
-         * Range&lt;Integer> r1 = ...
-         * Range&lt;Integer> r2 = ...
+         * <pre>{@code
+         * Range<Integer> r1 = ...
+         * Range<Integer> r2 = ...
          * RangeComparator.Result comp = r1.compareTo(r2);
          * System.out.println(String.format("Range r1 %s Range r2", comp.getDesc()));
-         * </code></pre>
+         * }</pre>
          * 
          * @return the description
          */
@@ -243,15 +243,14 @@ public class RangeExtendedComparator<T extends Number & Comparable> {
         /**
          * Gets the result element at the given index. The index can be
          * specified as an int from 0 to 3 or one of the constants:
-         * {@link RangeComparator#MAX_MAX},
-         * {@link RangeComparator#MAX_MIN},
-         * {@link RangeComparator#MIN_MAX},
-         * {@link RangeComparator#MIN_MIN}.
+         * {@link #MAX_MAX},
+         * {@link #MAX_MIN},
+         * {@link #MIN_MAX},
+         * {@link #MIN_MIN}.        
          *
          * @param pos index of the element to retrieve
          *
-         * @return one of {@link RangeComparator#LT}, {@link RangeComparator#GT},
-         *         or {@link RangeComparator#EQ}
+         * @return one of {@link #LT}, {@link #GT}, or {@link #EQ}
          */
         public int getAt(int pos) {
             return flags[pos];
@@ -274,10 +273,10 @@ public class RangeExtendedComparator<T extends Number & Comparable> {
          * that have the given end-point comparison flag at the specified position.
          * Repeated calls of this method can be used for incremental matching;
          * for example...
-         * <pre><code>
+         * <pre>{@code
          * // first call uses two-arg method to select from all Types that have
          * // the given flag at pos 0 (Types with names L***)
-         * List&lt;Result> types = match(RangeComparator.LT, 0);
+         * List<Result> types = match(RangeComparator.LT, 0);
          *
          * // now winnow down to those Types that match LL*G
          * types = match(RangeComparator.LT, 1, types);
@@ -286,11 +285,11 @@ public class RangeExtendedComparator<T extends Number & Comparable> {
          * for (Result t : types) {
          *     System.out.println(t.toString() + ": " + t.getDesc());
          * }
-         * </code></pre>
+         * }</pre>
          *
          * @param op one of the RangeComparator constants: LT, EQ, GT
          * @param pos flag position 0-3
-         * @param typesToSearch 
+         * @param typesToSearch collection of results to search 
          * @return the List of matching Types (may be empty)
          */
         public List<Result> match(int op, int pos, Collection<Result> typesToSearch) {
@@ -315,7 +314,7 @@ public class RangeExtendedComparator<T extends Number & Comparable> {
 
         /**
          * Get the Result that matches the given array of comparison flags.
-         * @param compFlags 
+         * @param compFlags comparison flags 
          * @return the Result that matches the given array of comparison flags or
          *         {@code null} if there is no match
          */
@@ -356,13 +355,13 @@ public class RangeExtendedComparator<T extends Number & Comparable> {
     }
 
     /**
-     * Compares two Range objects and return the {@link RangeComparator.Result}
+     * Compares two Range objects and return the {@link Result}
      * that describes the relationship between them from the point of view of the first Range
      *
      * @param r1 the first Range
      * @param r2 the second Range
      * 
-     * @return a {@link RangeComparator.Result} constant
+     * @return a {@link Result} constant
      */
     public Result compare(Range<T> r1, Range<T> r2) {
 

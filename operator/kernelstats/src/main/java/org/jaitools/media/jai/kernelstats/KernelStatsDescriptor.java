@@ -53,7 +53,8 @@ import org.jaitools.numeric.Statistic;
  *
  * <p>
  * <b>Summary of parameters:</b>
- * <table border="1", cellpadding="3">
+ * <table border="1" cellpadding="3">
+ * <caption>Summary of parameters</caption>
  * <tr>
  * <th>Name</th>
  * <th>Class</th>

@@ -74,7 +74,7 @@ public class LiteShape implements Shape, Cloneable {
      * Sets the geometry contained in this lite shape. Convenient to reuse this
      * object instead of creating it again and again during rendering
      *
-     * @param g
+     * @param g geometry
      */
     public void setGeometry(Geometry g) {
         this.geometry = g.copy();
@@ -162,6 +162,7 @@ public class LiteShape implements Shape, Cloneable {
      * 
      * <p>
      * This method might conservatively return <code>false</code> when:
+     * </p>
      * 
      * <ul>
      * <li>
@@ -173,6 +174,7 @@ public class LiteShape implements Shape, Cloneable {
      * </li>
      * </ul>
      * 
+     * <p>
      * This means that this method might return <code>false</code> even though
      * the <code>Shape</code> contains the rectangular area. The
      * <code>Area</code> class can be used to perform more accurate
@@ -411,6 +413,7 @@ public class LiteShape implements Shape, Cloneable {
      * 
      * <p>
      * This method might conservatively return <code>true</code> when:
+     * </p>
      * 
      * <ul>
      * <li>
@@ -423,6 +426,7 @@ public class LiteShape implements Shape, Cloneable {
      * </li>
      * </ul>
      * 
+     * <p> 
      * This means that this method might return <code>true</code> even though
      * the rectangular area does not intersect the <code>Shape</code>. The
      * {@link java.awt.geom.Area Area} class can be used to perform more

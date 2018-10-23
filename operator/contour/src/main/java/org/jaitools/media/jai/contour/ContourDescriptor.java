@@ -69,20 +69,20 @@ import org.jaitools.numeric.Range;
  * </li>
  * </ol>
  * Example of use:
- * <pre><code>
+ * <pre>{@code
  * RenderedImage src = ...
  * ParameterBlockJAI pb = new ParameterBlockJAI("Contour");
  * pb.setSource("source0", src);
  * 
  * // For contours at specific levels set the levels parameter
- * List&lt;Double&gt; levels = Arrays.asList(new double[]{1.0, 5.0, 10.0, 20.0, 50.0, 100.0});
+ * List<Double> levels = Arrays.asList(new double[]{1.0, 5.0, 10.0, 20.0, 50.0, 100.0});
  * pb.setParameter("levels", levels);
  * 
  * // Alternatively, set a constant interval between contours
  * pb.setParameter("interval", 10.0);
  * 
  * RenderedOp dest = JAI.create("Contour", pb);
- * Collection&lt;LineString&gt; contours = (Collection&lt;LineString&gt;) 
+ * Collection<LineString> contours = (Collection<LineString>) 
  *         dest.getProperty(ContourDescriptor.CONTOUR_PROPERTY_NAME);
  * 
  * for (LineString contour : contours) {
@@ -90,18 +90,21 @@ import org.jaitools.numeric.Range;
  *   Double contourValue = (Double) contour.getUserData();
  *   ...
  * }
- * </code></pre>
+ * }</pre>
  * 
+ * <p>
  * The interpolation algorithm used is that of Paul Bourke: originally published
  * in Byte magazine (1987) as the CONREC contouring subroutine written in
  * FORTRAN. The implementation here was adapted from Paul Bourke's C code for the
  * algorithm available at: 
  * <a href="http://local.wasp.uwa.edu.au/~pbourke/papers/conrec/">
  * http://local.wasp.uwa.edu.au/~pbourke/papers/conrec/</a>
+ * </p>
  * 
- * <p>
  * <b>Summary of parameters:</b>
- * <table border="1", cellpadding="3">
+ * 
+ * <table border="1" cellpadding="3">
+ * <caption>Summary of parameters</caption>
  * <tr>
  * <th>Name</th>
  * <th>Class</th>

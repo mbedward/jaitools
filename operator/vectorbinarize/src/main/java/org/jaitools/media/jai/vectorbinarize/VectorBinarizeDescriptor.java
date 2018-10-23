@@ -47,7 +47,7 @@ import org.locationtech.jts.geom.prep.PreparedGeometry;
  * on the "coordtype" parameter.
  * <p>
  * Example of use:
- * <pre><code>
+ * <pre>{@code
  * // Using a JTS polygon object as the reference geometry
  * Polygon triangle = WKTReader.read("POLYGON((100 100, 4900 4900, 4900 100, 100 100))"); 
  * 
@@ -62,21 +62,22 @@ import org.locationtech.jts.geom.prep.PreparedGeometry;
  * pb.setParameter("coordtype", PixelCoordType.CENTER);
  * 
  * RenderedOp dest = JAI.create("VectorBinarize", pb);
- * </code></pre>
+ * }</pre>
  * 
  * By default, the destination image is type BYTE, with a {@link java.awt.image.MultiPixelPackedSampleModel}
  * and JAI's default tile size. If an alternative image type is desired this can be specified via
  * rendering hints as in this example:
- * <pre><code>
+ * <pre>{@code
  * SampleModel sm = ...
  * ImageLayout il = new ImageLayout();
  * il.setSampleModel(sm);
  * RenderingHints hints = new RenderingHints(JAI.KEY_IMAGE_LAYOUT, il);
  * RenderedOp dest = JAI.create("VectorBinarize", pb, hints);
- * </code></pre>
+ * }</pre>
  * 
  * <b>Summary of parameters:</b>
- * <table border="1", cellpadding="3">
+ * <table border="1" cellpadding="3">
+ * <caption>Summary of parameters</caption>
  * <tr>
  * <th>Name</th>
  * <th>Class</th>
