@@ -52,7 +52,7 @@ package org.jaitools.numeric;
  *
  * @param <T> 
  * @see RangeComparator
- * @see org.jaitools.media.jai.rangelookup.RangeLookupDescriptor
+ * see org.jaitools.media.jai.rangelookup.RangeLookupDescriptor
  *
  * @author Michael Bedward
  * @since 1.0

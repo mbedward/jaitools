@@ -168,8 +168,8 @@ import javax.media.jai.registry.RenderedRegistryMode;
  * </table>
  * 
  * @see org.locationtech.jts.geom.Polygon
- * @see org.jaitools.media.jai.regionalize.RegionalizeDescriptor
- * @see org.jaitools.media.jai.rangelookup.RangeLookupDescriptor
+ * see org.jaitools.media.jai.regionalize.RegionalizeDescriptor
+ * see org.jaitools.media.jai.rangelookup.RangeLookupDescriptor
  * 
  * @author Michael Bedward
  * @since 1.1
