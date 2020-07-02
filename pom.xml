@@ -44,7 +44,7 @@
     </licenses>
     
     <properties>
-        <jts.version>1.15.1</jts.version>
+        <jts.version>1.17.0</jts.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
