@@ -232,7 +232,7 @@ public class ROIGeometryTest {
 
         if (INTERACTIVE) {
             printRoiShape((ROIShape) unionShape, "unionShape");
-            System.out.println(((ROIGeometry) unionGeometry).getAsGeometry());
+            // System.out.println(((ROIGeometry) unionGeometry).getAsGeometry());
             printShape(shape, "unionGeometry");
         }
 
